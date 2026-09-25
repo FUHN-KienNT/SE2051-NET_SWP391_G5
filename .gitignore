@@ -8,9 +8,6 @@ target/
 *.jar
 *.war
 
-# Maven wrapper
-!.mvn/wrapper/maven-wrapper.jar
-
 # IDE & Editor files
 .idea/
 *.iml
