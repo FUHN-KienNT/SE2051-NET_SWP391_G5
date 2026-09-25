@@ -8,7 +8,16 @@ target/
 *.jar
 *.war
 
-# NetBeans private settings
+# Maven wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
 nbproject/private/
 
 # Logs
