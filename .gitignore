@@ -1,0 +1,22 @@
+# Build output
+build/
+dist/
+target/
+
+# Java
+*.class
+*.jar
+*.war
+
+# NetBeans private settings
+nbproject/private/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# OS
+.DS_Store
+Thumbs.db
