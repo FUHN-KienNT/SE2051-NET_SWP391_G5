@@ -22,29 +22,45 @@
                     </a>
                 </li>
                 <c:if test="${sessionScope.CURRENT_USER != null}">
-                    <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/registrations/my">
-                            <i class="bi bi-journal-bookmark me-1"></i>Khóa học của tôi
-                        </a>
-                    </li>
-                    <c:if test="${sessionScope.CURRENT_USER.roleName == 'INSTRUCTOR' || sessionScope.CURRENT_USER.roleName == 'MANAGER' || sessionScope.CURRENT_USER.roleName == 'EXPERT' || sessionScope.CURRENT_USER.roleName == 'ADMIN'}">
+                    <c:if test="${sessionScope.CURRENT_USER.roleName == 'STUDENT'}">
                         <li class="nav-item">
-                            <a class="nav-link" href="${pageContext.request.contextPath}/courses/manage">
-                                <i class="bi bi-pencil-square me-1"></i>Quản lý khóa học
+                            <a class="nav-link" href="${pageContext.request.contextPath}/registrations/my">
+                                <i class="bi bi-journal-bookmark me-1"></i>Khóa học của tôi
                             </a>
                         </li>
                     </c:if>
-                    <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN'}">
+
+                    <c:if test="${sessionScope.CURRENT_USER.roleName == 'EXPERT'}">
                         <li class="nav-item">
-                            <a class="nav-link" href="${pageContext.request.contextPath}/users/list">
-                                <i class="bi bi-people me-1"></i>Người dùng
+                            <a class="nav-link text-primary fw-semibold" href="${pageContext.request.contextPath}/expert/dashboard">
+                                <i class="bi bi-mortarboard me-1"></i>Expert Dashboard
+                            </a>
+                        </li>
+                    </c:if>
+
+                    <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN' || sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                        <li class="nav-item">
+                            <a class="nav-link text-danger fw-semibold" href="${pageContext.request.contextPath}/admin/dashboard">
+                                <i class="bi bi-speedometer2 me-1"></i>Admin Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="${pageContext.request.contextPath}/settings/list">
-                                <i class="bi bi-gear me-1"></i>Cấu hình
+                            <a class="nav-link" href="${pageContext.request.contextPath}/admin/courses">
+                                <i class="bi bi-collection me-1"></i>Quản lý Khóa học
                             </a>
                         </li>
+                        <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN'}">
+                            <li class="nav-item">
+                                <a class="nav-link" href="${pageContext.request.contextPath}/users/list">
+                                    <i class="bi bi-people me-1"></i>Người dùng
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="${pageContext.request.contextPath}/settings/list">
+                                    <i class="bi bi-gear me-1"></i>Cấu hình
+                                </a>
+                            </li>
+                        </c:if>
                     </c:if>
                 </c:if>
             </ul>

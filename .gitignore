@@ -20,6 +20,7 @@ nb-configuration.xml
 
 # Logs
 *.log
+doc/
 
 # Environment variables
 .env

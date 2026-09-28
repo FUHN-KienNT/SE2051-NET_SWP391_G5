@@ -18,6 +18,8 @@ import entity.LessonProgress;
 import entity.Module;
 import entity.Quiz;
 import entity.Registration;
+import entity.User;
+import dto.UserDto;
 import entity.enums.CourseStatus;
 import entity.enums.LessonProgressStatus;
 import entity.enums.RegistrationStatus;
@@ -81,6 +83,42 @@ public class CourseService {
             return dtos;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy danh sách khóa học quản lý: " + e.getMessage(), e);
+        }
+    }
+
+    public List<CourseDto> getAllCourses() {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Course> list = courseDao.findAll(con);
+            List<CourseDto> dtos = new ArrayList<>();
+            for (Course c : list) {
+                dtos.add(buildCourseTree(c));
+            }
+            return dtos;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy toàn bộ danh sách khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public List<UserDto> getExperts() {
+        try (Connection con = DbConnection.getConnection()) {
+            UserDao uDao = new UserDao();
+            List<User> list = uDao.findByRoleId(con, 4L); // Role 4 = EXPERT
+            List<UserDto> dtos = new ArrayList<>();
+            for (User u : list) {
+                UserDto dto = new UserDto();
+                dto.setId(u.getId());
+                dto.setUsername(u.getUsername());
+                dto.setEmail(u.getEmail());
+                dto.setFullName(u.getFullName());
+                dto.setRoleId(u.getRoleId());
+                dto.setRoleName("EXPERT");
+                dto.setAuthProvider(u.getAuthProvider());
+                dto.setStatus(u.getStatus());
+                dtos.add(dto);
+            }
+            return dtos;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy danh sách chuyên gia: " + e.getMessage(), e);
         }
     }
 

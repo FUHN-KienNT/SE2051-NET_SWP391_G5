@@ -42,6 +42,15 @@ public class RegistrationServlet extends HttpServlet {
 
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         switch (action) {
+            case "checkout":
+                showCheckout(req, resp);
+                break;
+            case "payment":
+                showPayment(req, resp);
+                break;
+            case "confirm-payment":
+                confirmPayment(req, resp);
+                break;
             case "my":
                 showMyRegistrations(req, resp);
                 break;
@@ -67,6 +76,58 @@ public class RegistrationServlet extends HttpServlet {
                 showMyRegistrations(req, resp);
                 break;
         }
+    }
+
+    private void showCheckout(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr != null) {
+            long courseId = Long.parseLong(courseIdStr);
+            try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                new CourseDao().findById(con, courseId).ifPresent(c -> req.setAttribute("course", c));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        req.getRequestDispatcher("/WEB-INF/views/registration/checkout.jsp").forward(req, resp);
+    }
+
+    private void showPayment(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr != null) {
+            long courseId = Long.parseLong(courseIdStr);
+            try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                new CourseDao().findById(con, courseId).ifPresent(c -> req.setAttribute("course", c));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        req.setAttribute("paymentCode", "CR" + System.currentTimeMillis() % 1000000);
+        req.getRequestDispatcher("/WEB-INF/views/registration/payment.jsp").forward(req, resp);
+    }
+
+    private void confirmPayment(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr != null) {
+            long courseId = Long.parseLong(courseIdStr);
+            RegistrationDto reg = registrationService.enroll(currentUser.getId(), courseId);
+            registrationService.updatePayment(reg.getId(), PaymentStatus.SUCCESS, "PAY-" + System.currentTimeMillis(), OffsetDateTime.now());
+        }
+        resp.sendRedirect(req.getContextPath() + "/registrations/my?success=true");
     }
 
     private void showMyRegistrations(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

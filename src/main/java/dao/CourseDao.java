@@ -14,11 +14,23 @@ import java.util.List;
 import java.util.Optional;
 
 public class CourseDao {
+    private static final String SQL_FIND_ALL = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses ORDER BY id DESC";
     private static final String SQL_FIND_BY_ID = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE id = ?";
     private static final String SQL_FIND_BY_MANAGER_OR_EXPERT = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE manager_id = ? OR expert_id = ? ORDER BY id DESC";
     private static final String SQL_INSERT = "INSERT INTO courses (title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE = "UPDATE courses SET title = ?, category_id = ?, category_type = ?, description = ?, price = ?, status = ?, manager_id = ?, expert_id = ?, updated_at = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM courses WHERE id = ?";
+
+    public List<Course> findAll(Connection con) throws SQLException {
+        List<Course> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_ALL);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
 
     public List<Course> searchPublished(Connection con, String keyword, Long categoryId) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE status = 'PUBLISHED'");

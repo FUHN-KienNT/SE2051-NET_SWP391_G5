@@ -82,12 +82,9 @@
                         </span>
                     </div>
 
-                    <form action="${pageContext.request.contextPath}/registrations/enroll" method="POST">
-                        <input type="hidden" name="courseId" value="${course.id}">
-                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold mb-3">
-                            <i class="bi bi-lightning-charge-fill me-1"></i>Đăng ký học ngay
-                        </button>
-                    </form>
+                    <a href="${pageContext.request.contextPath}/registrations/checkout?courseId=${course.id}" class="btn btn-primary btn-lg w-100 fw-semibold mb-3">
+                        <i class="bi bi-lightning-charge-fill me-1"></i>Đăng ký học ngay
+                    </a>
 
                     <div class="small text-muted">
                         <div class="d-flex align-items-center mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập trọn đời tất cả tài liệu</div>

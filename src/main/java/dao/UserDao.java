@@ -46,6 +46,20 @@ public class UserDao {
         return Optional.empty();
     }
 
+    public List<User> findByRoleId(Connection con, long roleId) throws SQLException {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at FROM users WHERE role_id = ? ORDER BY full_name ASC";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, roleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public Optional<User> findByUsernameOrEmail(Connection con, String value) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_USERNAME_OR_EMAIL)) {
             ps.setString(1, value);
