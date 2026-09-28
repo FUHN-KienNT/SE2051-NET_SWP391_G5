@@ -16,7 +16,6 @@ import util.SessionUtil;
 
 @WebServlet(name = "AuthServlet", urlPatterns = {"/auth/*"})
 public class AuthServlet extends HttpServlet {
-    private static final String MAPPING = "/auth/*";
     private AuthService authService;
 
     @Override

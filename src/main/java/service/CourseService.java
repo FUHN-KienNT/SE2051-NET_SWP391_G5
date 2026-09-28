@@ -303,18 +303,6 @@ public class CourseService {
         ValidationUtil.requirePositive(dto.getPrice(), "Học phí");
     }
 
-    private void verifyCourseOwnership(long courseId, long userId) {
-        try (Connection con = DbConnection.getConnection()) {
-            Optional<Course> c = courseDao.findById(con, courseId);
-            if (!c.isPresent() || ((c.get().getManagerId() == null || c.get().getManagerId() != userId) &&
-                    (c.get().getExpertId() == null || c.get().getExpertId() != userId))) {
-                throw new IllegalStateException("Bạn không có quyền quản lý khóa học này.");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi kiểm tra quyền sở hữu khóa học", e);
-        }
-    }
-
     private CourseDto buildCourseTree(Course course) {
         if (course == null) return null;
         CourseDto dto = new CourseDto();

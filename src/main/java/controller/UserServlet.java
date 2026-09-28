@@ -17,7 +17,6 @@ import util.SessionUtil;
 
 @WebServlet(name = "UserServlet", urlPatterns = {"/users/*"})
 public class UserServlet extends HttpServlet {
-    private static final String MAPPING = "/users/*";
     private UserService userService;
 
     @Override

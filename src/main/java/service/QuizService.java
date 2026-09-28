@@ -25,10 +25,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import util.DbConnection;
 import util.ValidationUtil;
 
@@ -333,8 +330,6 @@ public class QuizService {
             Quiz quiz = quizDao.findById(con, dto.getQuizId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi."));
             List<QuizQuestion> assignments = quizDao.findAssignments(con, quiz.getId());
-            Map<Long, QuizQuestion> assignMap = assignments.stream()
-                    .collect(Collectors.toMap(QuizQuestion::getQuestionId, Function.identity()));
 
             List<QuizAnswer> gradedAnswers = new ArrayList<>();
             BigDecimal totalScore = BigDecimal.ZERO;

@@ -19,7 +19,6 @@ import util.SessionUtil;
 
 @WebServlet(name = "RegistrationServlet", urlPatterns = {"/registrations/*"})
 public class RegistrationServlet extends HttpServlet {
-    private static final String MAPPING = "/registrations/*";
     private RegistrationService registrationService;
 
     @Override

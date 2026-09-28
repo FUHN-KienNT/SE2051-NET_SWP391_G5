@@ -18,7 +18,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +25,6 @@ import service.QuizService;
 
 @WebServlet(name = "QuizServlet", urlPatterns = {"/quizzes/*"})
 public class QuizServlet extends HttpServlet {
-    private static final String MAPPING = "/quizzes/*";
     private QuizService quizService;
 
     @Override

@@ -308,12 +308,12 @@ ON CONFLICT (type, name) DO NOTHING;
 -- Cập nhật sequence của bảng settings lên giá trị tiếp theo
 SELECT setval('settings_id_seq', (SELECT MAX(id) FROM settings));
 
--- 3. Initial Users (Mật khẩu mặc định: 'admin123' băm bằng BCrypt $2a$12)
+-- 3. Initial Users (Mật khẩu mặc định:  )
 INSERT INTO users (id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status) VALUES
-    (1, 'admin', 'admin@courson.edu.vn', '$2a$12$K82jZ3U8s2p0kHj2e3gEGe8R9pC8j4s6yKq8j2h9P3u6M7n4O1pQq', 'Quản trị viên Hệ thống', 5, 'USER_ROLE', 'LOCAL', 'ACTIVE'),
-    (2, 'manager1', 'manager@courson.edu.vn', '$2a$12$K82jZ3U8s2p0kHj2e3gEGe8R9pC8j4s6yKq8j2h9P3u6M7n4O1pQq', 'Quản lý Khóa học', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE'),
-    (3, 'expert1', 'expert@courson.edu.vn', '$2a$12$K82jZ3U8s2p0kHj2e3gEGe8R9pC8j4s6yKq8j2h9P3u6M7n4O1pQq', 'Chuyên gia Nội dung', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE'),
-    (4, 'student1', 'student@courson.edu.vn', '$2a$12$K82jZ3U8s2p0kHj2e3gEGe8R9pC8j4s6yKq8j2h9P3u6M7n4O1pQq', 'Học viên Nguyễn Văn A', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE')
+    (1, 'admin', 'admin@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản trị viên Hệ thống', 5, 'USER_ROLE', 'LOCAL', 'ACTIVE'),
+    (2, 'manager1', 'manager@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản lý Khóa học', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE'),
+    (3, 'expert1', 'expert@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Chuyên gia Nội dung', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE'),
+    (4, 'student1', 'student@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Học viên Nguyễn Văn A', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE')
 ON CONFLICT (username) DO NOTHING;
 
 -- Cập nhật sequence của bảng users

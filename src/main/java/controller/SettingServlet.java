@@ -15,7 +15,6 @@ import service.SettingService;
 
 @WebServlet(name = "SettingServlet", urlPatterns = {"/settings/*"})
 public class SettingServlet extends HttpServlet {
-    private static final String MAPPING = "/settings/*";
     private SettingService settingService;
 
     @Override

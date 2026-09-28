@@ -17,7 +17,6 @@ import service.CourseService;
 
 @WebServlet(name = "HomeServlet", urlPatterns = {"/home"})
 public class HomeServlet extends HttpServlet {
-    private static final String MAPPING = "/home";
     private CourseService courseService;
 
     @Override
