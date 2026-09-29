@@ -20,6 +20,7 @@ import util.PasswordUtil;
 import util.ValidationUtil;
 
 public class AuthService {
+
     private final UserDao userDao;
     private final SettingDao settingDao;
 
@@ -146,19 +147,37 @@ public class AuthService {
         if (dto == null) {
             throw new IllegalArgumentException("Thông tin đăng ký không được để trống.");
         }
+
+        ValidationUtil.requireText(dto.getFullName(), "Họ và tên");
+        if (!ValidationUtil.isValidFullName(dto.getFullName())) {
+            throw new IllegalArgumentException("Họ và tên phải từ 3 đến 50 ký tự.");
+        }
+
         ValidationUtil.requireText(dto.getUsername(), "Tên đăng nhập");
+        if (!ValidationUtil.isValidUsername(dto.getUsername())) {
+            throw new IllegalArgumentException(
+                    "Tên đăng nhập phải từ 4–30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).");
+        }
+
         ValidationUtil.requireText(dto.getEmail(), "Email");
         if (!ValidationUtil.isEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email không đúng định dạng.");
         }
+
         ValidationUtil.requireText(dto.getPassword(), "Mật khẩu");
-        if (dto.getPassword().length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu phải chứa ít nhất 6 ký tự.");
+        if (!ValidationUtil.isStrongPassword(dto.getPassword())) {
+            throw new IllegalArgumentException(
+                    "Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
         }
+
+        // Xác nhận mật khẩu
         if (!dto.getPassword().equals(dto.getConfirmPassword())) {
             throw new IllegalArgumentException("Xác nhận mật khẩu không khớp.");
         }
-        ValidationUtil.requireText(dto.getFullName(), "Họ và tên");
+
+        if (!dto.isAgreeTerms()) {
+            throw new IllegalArgumentException("Bạn phải đồng ý với điều khoản dịch vụ để tiếp tục.");
+        }
     }
 
     private Setting resolveStudentRole() {
@@ -176,7 +195,9 @@ public class AuthService {
     }
 
     private UserDto mapUser(User user) {
-        if (user == null) return null;
+        if (user == null) {
+            return null;
+        }
         UserDto dto = new UserDto();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());

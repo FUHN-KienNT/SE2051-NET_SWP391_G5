@@ -16,6 +16,7 @@ import util.SessionUtil;
 
 @WebServlet(name = "AuthServlet", urlPatterns = {"/auth/*"})
 public class AuthServlet extends HttpServlet {
+
     private AuthService authService;
 
     @Override
@@ -99,12 +100,12 @@ public class AuthServlet extends HttpServlet {
         String password = req.getParameter("password");
         String confirmPassword = req.getParameter("confirmPassword");
         String fullName = req.getParameter("fullName");
+        boolean agreeTerms = "on".equalsIgnoreCase(req.getParameter("agreeTerms"));
 
-        RegisterDto dto = new RegisterDto(username, email, password, confirmPassword, fullName);
+        RegisterDto dto = new RegisterDto(username, email, password, confirmPassword, fullName, agreeTerms);
         try {
-            UserDto user = authService.register(dto);
-            SessionUtil.setCurrentUser(req, user);
-            redirectByRole(user, resp);
+            authService.register(dto);
+            resp.sendRedirect(req.getContextPath() + "/auth/login?registered=true");
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("registerDto", dto);
