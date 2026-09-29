@@ -4,7 +4,15 @@ import java.math.BigDecimal;
 import java.util.regex.Pattern;
 
 public final class ValidationUtil {
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+
+    private static final Pattern EMAIL_PATTERN
+            = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+
+    private static final Pattern PASSWORD_PATTERN
+            = Pattern.compile("^(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()\\-_=+\\[\\]{};':\"\\\\|,.<>/?]).{8,32}$");
+
+    private static final Pattern USERNAME_PATTERN
+            = Pattern.compile("^[a-zA-Z0-9_]{4,30}$");
 
     private ValidationUtil() {
     }
@@ -22,7 +30,9 @@ public final class ValidationUtil {
     }
 
     public static void requireRange(BigDecimal value, BigDecimal min, BigDecimal max, String field) {
-        if (value == null || (min != null && value.compareTo(min) < 0) || (max != null && value.compareTo(max) > 0)) {
+        if (value == null
+                || (min != null && value.compareTo(min) < 0)
+                || (max != null && value.compareTo(max) > 0)) {
             throw new IllegalArgumentException(field + " must be between " + min + " and " + max + ".");
         }
     }
@@ -32,6 +42,28 @@ public final class ValidationUtil {
             return false;
         }
         return EMAIL_PATTERN.matcher(value.trim()).matches();
+    }
+
+    public static boolean isStrongPassword(String password) {
+        if (password == null) {
+            return false;
+        }
+        return PASSWORD_PATTERN.matcher(password).matches();
+    }
+
+    public static boolean isValidUsername(String username) {
+        if (username == null) {
+            return false;
+        }
+        return USERNAME_PATTERN.matcher(username.trim()).matches();
+    }
+
+    public static boolean isValidFullName(String fullName) {
+        if (fullName == null) {
+            return false;
+        }
+        String s = fullName.trim();
+        return s.length() >= 3 && s.length() <= 50;
     }
 
     public static long parseLong(String value, String field) {

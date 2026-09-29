@@ -1,21 +1,25 @@
 package dto;
 
 public class RegisterDto {
+
     private String username;
     private String email;
     private String password;
     private String confirmPassword;
     private String fullName;
+    private boolean agreeTerms;
 
     public RegisterDto() {
     }
 
-    public RegisterDto(String username, String email, String password, String confirmPassword, String fullName) {
+    public RegisterDto(String username, String email, String password,
+            String confirmPassword, String fullName, boolean agreeTerms) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.confirmPassword = confirmPassword;
         this.fullName = fullName;
+        this.agreeTerms = agreeTerms;
     }
 
     public String getUsername() {
@@ -56,5 +60,13 @@ public class RegisterDto {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public boolean isAgreeTerms() {
+        return agreeTerms;
+    }
+
+    public void setAgreeTerms(boolean agreeTerms) {
+        this.agreeTerms = agreeTerms;
     }
 }
