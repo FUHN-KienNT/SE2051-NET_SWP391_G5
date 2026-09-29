@@ -17,6 +17,7 @@ target/
 .classpath
 nbproject/private/
 nb-configuration.xml
+.agent
 
 # Logs
 *.log
