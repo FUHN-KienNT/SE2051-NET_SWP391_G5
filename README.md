@@ -206,7 +206,7 @@ Tất cả tài khoản mẫu dưới đây đều dùng mật khẩu mặc đ�
 * **Môn học:** SWP391 - Software Development Project
 * **Lớp:** SE2051-NET
 * **Nhóm:** Group 5
-* **Giảng viên hướng dẫn:** FPT University
+* **Giảng viên hướng dẫn:** Thầy KienNT - FPT University
 
 ---
 <div align="center">
