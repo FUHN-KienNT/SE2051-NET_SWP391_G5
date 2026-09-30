@@ -1,10 +1,16 @@
 package controller;
 
+import dao.CourseDao;
+import dao.LessonDao;
+import dao.LessonProgressDao;
+import dao.ModuleDao;
 import dao.QuestionDao;
 import dao.QuizAttemptDao;
 import dao.QuizDao;
 import dao.RegistrationDao;
 import dto.AnswerOptionDto;
+import dto.CourseDto;
+import dto.ModuleDto;
 import dto.QuestionDto;
 import dto.QuizAnswerDto;
 import dto.QuizAttemptDto;
@@ -21,17 +27,38 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import service.CourseService;
 import service.QuizService;
 
+/**
+ * ==============================================================================
+ * CỤM CHỨC NĂNG: 4_Quiz-Based Studying
+ * PHỤ TRÁCH: NhatNH (Nguyễn Hồng Nhật)
+ * USE CASES:
+ *   - Quiz List (SRS II.5.1.1)
+ *   - Quiz Detail & Editor (SRS II.5.1.2)
+ *   - Question List & Question Bank (SRS II.5.2.1)
+ *   - Create Quiz Questions (Expert)
+ *   - Quiz Taking & Quiz Result (Student)
+ * URL PATTERN: /quizzes/*
+ * ==============================================================================
+ */
 @WebServlet(name = "QuizServlet", urlPatterns = {"/quizzes/*"})
 public class QuizServlet extends HttpServlet {
     private QuizService quizService;
+    private CourseService courseService;
+    private ModuleDao moduleDao;
 
     @Override
     public void init() throws ServletException {
         this.quizService = new QuizService(
                 new QuizDao(), new QuestionDao(), new QuizAttemptDao(), new RegistrationDao()
         );
+        this.courseService = new CourseService(
+                new CourseDao(), new ModuleDao(), new LessonDao(),
+                new LessonProgressDao(), new RegistrationDao()
+        );
+        this.moduleDao = new ModuleDao();
     }
 
     @Override
@@ -99,43 +126,95 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void showQuizList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
-        if (moduleIdStr != null) {
-            long moduleId = Long.parseLong(moduleIdStr);
+
+        Long courseId = null;
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            courseId = Long.parseLong(courseIdStr.trim());
+        } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
+            try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                long modId = Long.parseLong(moduleIdStr.trim());
+                req.setAttribute("selectedModuleId", modId);
+                java.util.Optional<entity.Module> modOpt = moduleDao.findById(con, modId);
+                if (modOpt.isPresent()) {
+                    courseId = modOpt.get().getCourseId();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (courseId != null) {
+            CourseDto course = courseService.getCourseDetail(courseId);
+            // Đảm bảo mỗi quiz trong các modules đều có danh sách câu hỏi chính xác
+            for (ModuleDto m : course.getModules()) {
+                m.setQuizzes(quizService.getQuizzes(m.getId()));
+            }
+            req.setAttribute("course", course);
+            req.setAttribute("courseId", courseId);
+        } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
+            long moduleId = Long.parseLong(moduleIdStr.trim());
             List<QuizDto> quizzes = quizService.getQuizzes(moduleId);
             req.setAttribute("quizzes", quizzes);
             req.setAttribute("moduleId", moduleId);
         }
+
         req.getRequestDispatcher("/WEB-INF/views/quiz/list.jsp").forward(req, resp);
     }
 
     private void showQuizDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String quizIdStr = req.getParameter("id");
+        String courseIdStr = req.getParameter("courseId");
         if (quizIdStr != null) {
             long quizId = Long.parseLong(quizIdStr);
             QuizDto quiz = quizService.getQuizDetail(quizId);
             req.setAttribute("quiz", quiz);
+
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                req.setAttribute("courseId", Long.parseLong(courseIdStr.trim()));
+            } else {
+                try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                    moduleDao.findById(con, quiz.getModuleId()).ifPresent(m -> req.setAttribute("courseId", m.getCourseId()));
+                } catch (Exception ignored) {
+                }
+            }
         }
         req.getRequestDispatcher("/WEB-INF/views/quiz/detail.jsp").forward(req, resp);
     }
 
     private void saveQuiz(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String courseIdStr = req.getParameter("courseId");
         QuizDto dto = bindQuiz(req);
         try {
             long id = quizService.saveQuiz(dto);
-            resp.sendRedirect(req.getContextPath() + "/quizzes/detail?id=" + id);
+            String target = req.getContextPath() + "/quizzes/detail?id=" + id;
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "&courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target);
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId() + "&error=" + e.getMessage());
+            String redirectUrl = req.getContextPath() + "/quizzes/list?";
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                redirectUrl += "courseId=" + courseIdStr.trim();
+            } else {
+                redirectUrl += "moduleId=" + dto.getModuleId();
+            }
+            resp.sendRedirect(redirectUrl + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
     private void deleteQuiz(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String quizIdStr = req.getParameter("id");
+        String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         if (quizIdStr != null) {
             quizService.deleteQuiz(Long.parseLong(quizIdStr));
         }
-        resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr);
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&success=deleted");
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&success=deleted");
+        }
     }
 
     private void showQuestionBank(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

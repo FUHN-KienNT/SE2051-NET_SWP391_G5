@@ -77,7 +77,7 @@
                                             <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="btn btn-primary btn-sm me-1">
                                                 <i class="bi bi-journal-text me-1"></i>Soạn Bài học (Lesson)
                                             </a>
-                                            <a href="${pageContext.request.contextPath}/quizzes/list?moduleId=${not empty c.modules ? c.modules[0].id : ''}" class="btn btn-outline-warning btn-sm">
+                                            <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}" class="btn btn-outline-warning btn-sm">
                                                 <i class="bi bi-patch-question me-1"></i>Soạn Đề thi (Quiz)
                                             </a>
                                         </td>

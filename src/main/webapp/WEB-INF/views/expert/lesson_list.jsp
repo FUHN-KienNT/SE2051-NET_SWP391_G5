@@ -56,7 +56,7 @@
                                         <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-plus-lg me-1"></i>Thêm Bài học
                                         </a>
-                                        <a href="${pageContext.request.contextPath}/quizzes/list?moduleId=${m.id}" class="btn btn-sm btn-outline-warning">
+                                        <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}#module-${m.id}" class="btn btn-sm btn-outline-warning">
                                             <i class="bi bi-patch-question me-1"></i>Quản lý Quiz
                                         </a>
                                         <a href="${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa chương này sẽ xóa tất cả bài học bên trong. Bạn có chắc không?');">
