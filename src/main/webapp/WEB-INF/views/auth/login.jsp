@@ -1,62 +1,394 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="pageTitle" value="Đăng nhập - Courson LMS" />
-<jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Courson LMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<main class="main-content d-flex align-items-center py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-5 col-lg-4">
-                <div class="card p-4">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-person-circle fs-1 text-primary"></i>
-                        <h4 class="mt-2 fw-bold">Đăng nhập</h4>
-                        <p class="text-muted small">Chào mừng bạn quay trở lại với Courson LMS</p>
-                    </div>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            width: 100%;
+            overflow-x: hidden;
+        }
 
-                    <c:if test="${not empty error}">
-                        <div class="alert alert-danger py-2 small" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-1"></i>${error}
-                        </div>
-                    </c:if>
+        .login-left {
+            display: none;
+            flex: 1 1 50%;
+            width: 50%;
+            max-width: 50%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0d0d0d 100%);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 48px;
+            position: relative;
+            overflow: hidden;
+        }
+        @media (min-width: 960px) { 
+            .login-left { display: flex; } 
+        }
 
-                    <c:if test="${param.logout == 'true'}">
-                        <div class="alert alert-success py-2 small" role="alert">
-                            <i class="bi bi-check-circle-fill me-1"></i>Bạn đã đăng xuất thành công.
-                        </div>
-                    </c:if>
+        .login-right {
+            flex: 1 1 100%;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px 32px;
+            background-color: #000;
+        }
+        @media (min-width: 960px) {
+            .login-right {
+                flex: 1 1 50%;
+                width: 50%;
+                max-width: 50%;
+                border-left: 1px solid #1a1a1a;
+            }
+        }
 
-                    <form action="${pageContext.request.contextPath}/auth/login" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Tên đăng nhập hoặc Email</label>
-                            <input type="text" name="loginId" value="${loginId}" class="form-control" required autofocus placeholder="admin hoặc email">
-                        </div>
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <label class="form-label small fw-semibold">Mật khẩu</label>
-                            </div>
-                            <input type="password" name="password" class="form-control" required placeholder="Nhập mật khẩu">
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="rememberMe" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label small text-muted" for="rememberMe">Ghi nhớ đăng nhập</label>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
-                        </button>
-                    </form>
+        .auth-container { 
+            width: 100%; 
+            max-width: 380px; 
+            margin: 0 auto;
+        }
 
-                    <div class="text-center mt-4">
-                        <p class="small text-muted mb-0">
-                            Chưa có tài khoản? 
-                            <a href="${pageContext.request.contextPath}/auth/register" class="fw-semibold text-primary text-decoration-none">Đăng ký ngay</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
+        .brand-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-title {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+            letter-spacing: -0.4px;
+        }
+        .auth-subtitle { font-size: 0.9rem; color: #a8a8a8; margin-bottom: 24px; }
+
+        .alert-server {
+            background: rgba(237,73,86,.12);
+            border: 1px solid rgba(237,73,86,.45);
+            border-radius: 10px;
+            color: #ed4956;
+            font-size: 0.84rem;
+            padding: 11px 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .alert-success {
+            background: rgba(0,186,124,.12);
+            border: 1px solid rgba(0,186,124,.4);
+            border-radius: 10px;
+            color: #00ba7c;
+            font-size: 0.84rem;
+            padding: 11px 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .field-group { margin-bottom: 16px; }
+        .field-label {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #f5f5f5;
+            margin-bottom: 8px;
+        }
+        .field-wrap { position: relative; }
+        .field-input {
+            width: 100%;
+            background-color: #121212;
+            border: 1px solid #363636;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.92rem;
+            padding: 13px 16px;
+            outline: none;
+            transition: border-color .2s, background-color .2s;
+            appearance: none;
+        }
+        .field-input::placeholder { color: #555; }
+        .field-input:focus { border-color: #666; background-color: #181818; }
+        .field-input.field-err { border-color: #ed4956; }
+        .field-input.pw-input { padding-right: 48px; }
+
+        .eye-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            font-size: 1rem;
+        }
+        .eye-btn:hover { color: #ccc; }
+
+        .field-error { font-size: 0.78rem; color: #ed4956; margin-top: 5px; min-height: 18px; }
+
+        .form-action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            margin-bottom: 6px;
+        }
+        .remember-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.83rem;
+            color: #a8a8a8;
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember-label:hover { color: #f0f0f0; }
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #141414;
+            cursor: pointer;
+            display: inline-grid;
+            place-content: center;
+            margin: 0;
+            transition: all 0.15s ease;
+        }
+        .custom-checkbox:checked {
+            background: #F38020;
+            border-color: #F38020;
+        }
+        .custom-checkbox:checked::before {
+            content: "";
+            width: 8px;
+            height: 5px;
+            border-left: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(-45deg) translate(1px, -1px);
+        }
+        .link-muted {
+            font-size: 0.83rem;
+            color: #a8a8a8;
+            text-decoration: none;
+        }
+        .link-muted:hover { color: #fff; text-decoration: underline; }
+
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .18s;
+            margin-top: 6px;
+        }
+        .btn-submit:hover { background: #e8e8e8; }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: #555;
+            font-size: 0.8rem;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #2a2a2a;
+        }
+
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid #363636;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: border-color .2s, background .2s;
+            text-decoration: none;
+        }
+        .btn-google:hover { border-color: #666; background: #111; color: #fff; }
+
+        .btn-no-account {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid #363636;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            transition: border-color .2s, background .2s;
+        }
+        .btn-no-account:hover { border-color: #666; background: #111; color: #fff; }
+
+        .auth-footer {
+            margin-top: 32px;
+            font-size: 0.78rem;
+            color: #737373;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .left-brand {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            align-self: flex-start;
+        }
+        .left-headline {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.25;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .left-sub {
+            font-size: 1rem;
+            color: #a8a8a8;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .course-cards { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 14px; 
+            width: 100%; 
+            max-width: 420px; 
+        }
+        .course-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+        .course-thumb {
+            width: 60px;
+            height: 44px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #222;
+        }
+        .course-info { flex: 1; min-width: 0; }
+        .course-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #f0f0f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .course-meta { font-size: 0.75rem; color: #666; }
+        .course-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #F38020;
+            background: rgba(243,128,32,.12);
+            border-radius: 20px;
+            padding: 3px 10px;
+            flex-shrink: 0;
+        }
+        .left-stat {
+            display: flex;
+            gap: 28px;
+            margin-top: 36px;
+            width: 100%;
+            max-width: 420px;
+            justify-content: flex-start;
+        }
+        .stat-item { text-align: left; }
+        .stat-num { font-size: 1.5rem; font-weight: 800; color: #fff; }
+        .stat-label { font-size: 0.75rem; color: #666; margin-top: 2px; }
+
+        .left-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(243,128,32,.08) 0%, transparent 70%);
+            top: -80px;
+            right: -80px;
+            pointer-events: none;
+        }
+        .left-glow-2 {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(243,128,32,.05) 0%, transparent 70%);
+            bottom: 40px;
+            left: 20px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0" style="position:absolute">
+        <defs>
+            <linearGradient id="cfLoginGrad" x1="0" y1="0" x2="38" y2="24" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FAAD3F"/>
+                <stop offset="0.45" stop-color="#F38020"/>
+                <stop offset="1" stop-color="#E56B00"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <div class="login-left">
+    </div>
+
+    <div class="login-right">
+        <div class="auth-container">
         </div>
     </div>
-</main>
 
-<jsp:include page="../common/footer.jsp" />
+</body>
+</html>
