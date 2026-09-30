@@ -29,11 +29,11 @@
                 flex: 1 1 50%;
                 width: 50%;
                 max-width: 50%;
-                background: linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0d0d0d 100%);
+                background: linear-gradient(135deg, #050505 0%, #0d0d0d 50%, #080808 100%);
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                padding: 60px 48px;
+                padding: 80px 48px 48px;
                 position: relative;
                 overflow: hidden;
             }
@@ -52,14 +52,14 @@
                 align-items: center;
                 justify-content: center;
                 padding: 48px 24px 32px;
-                background-color: #000;
+                background-color: #1F1F20;
             }
             @media (min-width: 960px) {
                 .login-right {
                     flex: 1 1 50%;
                     width: 50%;
                     max-width: 50%;
-                    border-left: 1px solid #1a1a1a;
+                    border-left: 1px solid #2d2d2e;
                 }
             }
 
@@ -69,14 +69,8 @@
                 margin: 0 auto;
             }
 
-            .brand-row {
-                display: flex;
-                align-items: center;
-                margin-bottom: 24px;
-            }
-
             .auth-title {
-                font-size: 1.45rem;
+                font-size: 1.55rem;
                 font-weight: 700;
                 color: #fff;
                 margin-bottom: 6px;
@@ -251,14 +245,14 @@
                 align-items: center;
                 gap: 12px;
                 margin: 20px 0;
-                color: #555;
+                color: #666;
                 font-size: 0.8rem;
             }
             .divider::before, .divider::after {
                 content: '';
                 flex: 1;
                 height: 1px;
-                background: #2a2a2a;
+                background: #333335;
             }
 
             .btn-google {
@@ -279,8 +273,8 @@
                 text-decoration: none;
             }
             .btn-google:hover {
-                border-color: #666;
-                background: #111;
+                border-color: #555;
+                background: rgba(255, 255, 255, 0.05);
                 color: #fff;
             }
 
@@ -300,106 +294,98 @@
                 transition: border-color .2s, background .2s;
             }
             .btn-no-account:hover {
-                border-color: #666;
-                background: #111;
+                border-color: #555;
+                background: rgba(255, 255, 255, 0.05);
                 color: #fff;
             }
 
             .auth-footer {
                 margin-top: 32px;
                 font-size: 0.78rem;
-                color: #737373;
+                color: #8e8e8e;
                 text-align: center;
                 line-height: 1.5;
             }
 
             .left-brand {
+                position: absolute;
+                top: 28px;
+                left: 48px;
                 display: flex;
                 align-items: center;
-                margin-bottom: 40px;
-                align-self: flex-start;
+                z-index: 10;
+            }
+            .left-content-block {
+                width: 100%;
+                max-width: 440px;
+                display: flex;
+                flex-direction: column;
             }
             .left-headline {
-                font-size: 2rem;
+                font-size: 2.1rem;
                 font-weight: 800;
                 color: #fff;
                 line-height: 1.25;
                 margin-bottom: 16px;
                 letter-spacing: -0.5px;
-                width: 100%;
-                max-width: 420px;
             }
             .left-sub {
-                font-size: 1rem;
+                font-size: 0.96rem;
                 color: #a8a8a8;
                 line-height: 1.6;
-                margin-bottom: 40px;
-                width: 100%;
-                max-width: 420px;
+                margin-bottom: 36px;
             }
-            .course-cards {
+
+            .feature-list {
                 display: flex;
                 flex-direction: column;
-                gap: 14px;
-                width: 100%;
-                max-width: 420px;
+                gap: 20px;
+                margin-bottom: 36px;
             }
-            .course-card {
-                background: #111;
-                border: 1px solid #222;
-                border-radius: 14px;
-                padding: 14px 16px;
+            .feature-item {
                 display: flex;
-                gap: 14px;
                 align-items: center;
+                gap: 16px;
             }
-            .course-thumb {
-                width: 60px;
-                height: 44px;
-                border-radius: 8px;
-                object-fit: cover;
+            .feature-icon-box {
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
+                background: rgba(243, 128, 32, 0.1);
+                border: 1px solid rgba(243, 128, 32, 0.2);
+                color: #F38020;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
                 flex-shrink: 0;
-                background: #222;
             }
-            .course-info {
-                flex: 1;
-                min-width: 0;
-            }
-            .course-title {
-                font-size: 0.85rem;
+            .feature-content h4 {
+                font-size: 0.95rem;
                 font-weight: 600;
                 color: #f0f0f0;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                margin-bottom: 4px;
+                margin-bottom: 2px;
             }
-            .course-meta {
-                font-size: 0.75rem;
-                color: #666;
+            .feature-content p {
+                font-size: 0.82rem;
+                color: #888;
+                line-height: 1.4;
             }
-            .course-badge {
-                font-size: 0.72rem;
-                font-weight: 600;
-                color: #F38020;
-                background: rgba(243,128,32,.12);
-                border-radius: 20px;
-                padding: 3px 10px;
-                flex-shrink: 0;
-            }
+
             .left-stat {
                 display: flex;
-                gap: 28px;
-                margin-top: 36px;
+                gap: 36px;
                 width: 100%;
-                max-width: 420px;
+                max-width: 440px;
                 justify-content: flex-start;
+                padding-top: 20px;
+                border-top: 1px solid #1c1c1c;
             }
             .stat-item {
                 text-align: left;
             }
             .stat-num {
-                font-size: 1.5rem;
+                font-size: 1.45rem;
                 font-weight: 800;
                 color: #fff;
             }
@@ -411,8 +397,8 @@
 
             .left-glow {
                 position: absolute;
-                width: 300px;
-                height: 300px;
+                width: 320px;
+                height: 320px;
                 border-radius: 50%;
                 background: radial-gradient(circle, rgba(243,128,32,.08) 0%, transparent 70%);
                 top: -80px;
@@ -421,8 +407,8 @@
             }
             .left-glow-2 {
                 position: absolute;
-                width: 200px;
-                height: 200px;
+                width: 220px;
+                height: 220px;
                 border-radius: 50%;
                 background: radial-gradient(circle, rgba(243,128,32,.05) 0%, transparent 70%);
                 bottom: 40px;
@@ -447,71 +433,66 @@
             <div class="left-glow"></div>
             <div class="left-glow-2"></div>
 
-            <div class="left-brand">
-                <svg width="48" height="33" viewBox="0 0 38 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="left-brand" style="position: absolute !important; top: 28px !important; left: 48px !important; z-index: 10;">
+                <svg width="58" height="40" viewBox="0 0 38 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M31.2 10.9C30.4 5.5 25.8 1.4 20.2 1.4C15.6 1.4 11.5 4.3 9.9 8.5C9.2 8.2 8.4 8.0 7.6 8.0C3.4 8.0 0 11.4 0 15.6C0 19.8 3.4 23.2 7.6 23.2H30.9C34.8 23.2 38 20.0 38 16.1C38 12.5 35.1 9.5 31.2 10.9Z" fill="url(#cfLoginGrad)"/>
                 <path d="M22.5 1.5C21.7 1.4 21.0 1.4 20.2 1.4C15.6 1.4 11.5 4.3 9.9 8.5C10.7 8.5 11.5 8.7 12.3 9.0C13.5 5.8 16.6 3.5 20.2 3.5C23.2 3.5 25.8 4.9 27.5 7.1C26.1 4.5 24.5 2.6 22.5 1.5Z" fill="#FAAD3F"/>
                 </svg>
             </div>
 
-            <h2 class="left-headline">Học tập không giới hạn.<br>Kiến tạo tương lai.</h2>
-            <p class="left-sub">Hệ thống quản lý học tập thông minh, đồng hành cùng bạn trên mọi nấc thang tri thức và phát triển sự nghiệp.</p>
+            <div class="left-content-block">
+                <h2 class="left-headline">Học tập không giới hạn.<br>Kiến tạo tương lai.</h2>
+                <p class="left-sub">Hệ thống quản lý học tập thông minh, đồng hành cùng bạn trên mọi nấc thang tri thức và phát triển sự nghiệp.</p>
 
-            <div class="feature-list">
-                <div class="feature-item">
-                    <div class="feature-icon-box">
-                        <i class="bi bi-mortarboard-fill"></i>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Chương trình chuẩn đại học & quốc tế</h4>
+                            <p>Giáo trình chất lượng cao được biên soạn bởi các chuyên gia.</p>
+                        </div>
                     </div>
-                    <div class="feature-content">
-                        <h4>Chương trình chuẩn đại học & quốc tế</h4>
-                        <p>Giáo trình chất lượng cao được biên soạn bởi các chuyên gia.</p>
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Lộ trình học tập cá nhân hóa</h4>
+                            <p>Theo dõi tiến độ, làm bài kiểm tra và cấp chứng chỉ trực tiếp.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Cộng đồng học thuật gắn kết</h4>
+                            <p>Trao đổi, thảo luận và kết nối trực tiếp cùng giảng viên.</p>
+                        </div>
                     </div>
                 </div>
-                <div class="feature-item">
-                    <div class="feature-icon-box">
-                        <i class="bi bi-lightning-charge-fill"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h4>Lộ trình học tập cá nhân hóa</h4>
-                        <p>Theo dõi tiến độ, làm bài kiểm tra và cấp chứng chỉ trực tiếp.</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon-box">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h4>Cộng đồng học thuật gắn kết</h4>
-                        <p>Trao đổi, thảo luận và kết nối trực tiếp cùng giảng viên.</p>
-                    </div>
-                </div>
-            </div>
 
-            <div class="left-stat">
-                <div class="stat-item">
-                    <div class="stat-num">50+</div>
-                    <div class="stat-label">Khóa học chuyên sâu</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-num">1.2K+</div>
-                    <div class="stat-label">Học viên tin tưởng</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-num">4.9★</div>
-                    <div class="stat-label">Đánh giá xuất sắc</div>
+                <div class="left-stat">
+                    <div class="stat-item">
+                        <div class="stat-num">50+</div>
+                        <div class="stat-label">Khóa học chuyên sâu</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">1.2K+</div>
+                        <div class="stat-label">Học viên tin tưởng</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">4.9★</div>
+                        <div class="stat-label">Đánh giá xuất sắc</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="login-right">
             <div class="auth-container">
-                <div class="brand-row">
-                    <svg width="42" height="29" viewBox="0 0 38 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M31.2 10.9C30.4 5.5 25.8 1.4 20.2 1.4C15.6 1.4 11.5 4.3 9.9 8.5C9.2 8.2 8.4 8.0 7.6 8.0C3.4 8.0 0 11.4 0 15.6C0 19.8 3.4 23.2 7.6 23.2H30.9C34.8 23.2 38 20.0 38 16.1C38 12.5 35.1 9.5 31.2 10.9Z" fill="url(#cfLoginGrad)"/>
-                    <path d="M22.5 1.5C21.7 1.4 21.0 1.4 20.2 1.4C15.6 1.4 11.5 4.3 9.9 8.5C10.7 8.5 11.5 8.7 12.3 9.0C13.5 5.8 16.6 3.5 20.2 3.5C23.2 3.5 25.8 4.9 27.5 7.1C26.1 4.5 24.5 2.6 22.5 1.5Z" fill="#FAAD3F"/>
-                    </svg>
-                </div>
-
                 <h1 class="auth-title">Đăng nhập vào Courson</h1>
                 <p class="auth-subtitle">Chào mừng bạn quay trở lại.</p>
 
