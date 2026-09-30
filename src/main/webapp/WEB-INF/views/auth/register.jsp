@@ -15,7 +15,7 @@
             }
 
             body {
-                background-color: #000;
+                background-color: #1F1F20;
                 color: #fff;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
                 min-height: 100vh;
@@ -217,7 +217,7 @@
                 width: 100%;
                 background-color: #262626;
                 color: #f5f5f5;
-                border: 1px solid transparent;
+                border: 1px solid #363636;
                 border-radius: 9999px;
                 font-size: 0.92rem;
                 font-weight: 600;
