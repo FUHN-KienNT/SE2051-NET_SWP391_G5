@@ -132,4 +132,32 @@ public class CourseDto {
     public void setModules(List<ModuleDto> modules) {
         this.modules = modules != null ? modules : new ArrayList<>();
     }
+
+    public int getTotalLessons() {
+        if (modules == null) return 0;
+        int count = 0;
+        for (ModuleDto m : modules) {
+            if (m.getLessons() != null) {
+                count += m.getLessons().size();
+            }
+        }
+        return count;
+    }
+
+    public String getThumbnailUrl() {
+        if (modules != null) {
+            for (ModuleDto m : modules) {
+                if (m.getLessons() != null) {
+                    for (LessonDto l : m.getLessons()) {
+                        String thumb = l.getThumbnailUrl();
+                        if (thumb != null && !thumb.contains("unsplash")) {
+                            // Replace mqdefault with hqdefault for crisp course cards
+                            return thumb.replace("mqdefault.jpg", "hqdefault.jpg");
+                        }
+                    }
+                }
+            }
+        }
+        return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60";
+    }
 }

@@ -86,7 +86,7 @@ public class AuthServlet extends HttpServlet {
         try {
             UserDto user = authService.authenticate(dto);
             SessionUtil.setCurrentUser(req, user);
-            redirectByRole(user, resp);
+            redirectByRole(req, user, resp);
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("loginId", loginId);
@@ -124,19 +124,20 @@ public class AuthServlet extends HttpServlet {
         try {
             UserDto user = authService.authenticateGoogle(email, name);
             SessionUtil.setCurrentUser(req, user);
-            redirectByRole(user, resp);
+            redirectByRole(req, user, resp);
         } catch (Exception e) {
             resp.sendRedirect(req.getContextPath() + "/auth/login?error=" + e.getMessage());
         }
     }
 
-    private void redirectByRole(UserDto user, HttpServletResponse resp) throws IOException {
+    private void redirectByRole(HttpServletRequest req, UserDto user, HttpServletResponse resp) throws IOException {
+        String ctx = req.getContextPath();
         if (user != null && "ADMIN".equalsIgnoreCase(user.getRoleName())) {
-            resp.sendRedirect("settings/list");
+            resp.sendRedirect(ctx + "/settings/list");
         } else if (user != null && ("INSTRUCTOR".equalsIgnoreCase(user.getRoleName()) || "MANAGER".equalsIgnoreCase(user.getRoleName()) || "EXPERT".equalsIgnoreCase(user.getRoleName()))) {
-            resp.sendRedirect("courses/manage");
+            resp.sendRedirect(ctx + "/courses/manage");
         } else {
-            resp.sendRedirect("home");
+            resp.sendRedirect(ctx + "/home");
         }
     }
 }
