@@ -17,10 +17,11 @@
                             <div class="list-group list-group-flush small">
                                 <c:forEach var="l" items="${m.lessons}">
                                     <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${registrationId}&lessonId=${l.id}"
-                                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 ${currentLessonId == l.id ? 'active' : ''}">
-                                        <span class="text-truncate">${l.title}</span>
+                                       class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 ${currentLessonId == l.id ? 'active' : ''}">
+                                        <img src="${l.thumbnailUrl}" class="rounded flex-shrink-0" style="width: 48px; height: 28px; object-fit: cover;" alt="${l.title}">
+                                        <span class="text-truncate flex-grow-1">${l.title}</span>
                                         <c:if test="${l.progressStatus == 'COMPLETED'}">
-                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
                                         </c:if>
                                     </a>
                                 </c:forEach>
