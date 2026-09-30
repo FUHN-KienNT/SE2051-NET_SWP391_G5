@@ -30,19 +30,6 @@ import java.util.stream.Collectors;
 import service.CourseService;
 import service.QuizService;
 
-/**
- * ==============================================================================
- * CỤM CHỨC NĂNG: 4_Quiz-Based Studying
- * PHỤ TRÁCH: NhatNH (Nguyễn Hồng Nhật)
- * USE CASES:
- *   - Quiz List (SRS II.5.1.1)
- *   - Quiz Detail & Editor (SRS II.5.1.2)
- *   - Question List & Question Bank (SRS II.5.2.1)
- *   - Create Quiz Questions (Expert)
- *   - Quiz Taking & Quiz Result (Student)
- * URL PATTERN: /quizzes/*
- * ==============================================================================
- */
 @WebServlet(name = "QuizServlet", urlPatterns = {"/quizzes/*"})
 public class QuizServlet extends HttpServlet {
     private QuizService quizService;
@@ -146,10 +133,6 @@ public class QuizServlet extends HttpServlet {
 
         if (courseId != null) {
             CourseDto course = courseService.getCourseDetail(courseId);
-            // Đảm bảo mỗi quiz trong các modules đều có danh sách câu hỏi chính xác
-            for (ModuleDto m : course.getModules()) {
-                m.setQuizzes(quizService.getQuizzes(m.getId()));
-            }
             req.setAttribute("course", course);
             req.setAttribute("courseId", courseId);
         } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {

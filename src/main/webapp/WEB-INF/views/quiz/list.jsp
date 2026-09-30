@@ -137,7 +137,6 @@
                                                                     <th>Tiêu đề bài thi</th>
                                                                     <th>Điểm đạt</th>
                                                                     <th>Thời lượng</th>
-                                                                    <th>Số câu hỏi</th>
                                                                     <th class="text-end pe-3">Hành động</th>
                                                                 </tr>
                                                             </thead>
@@ -164,11 +163,6 @@
                                                                                     </c:when>
                                                                                     <c:otherwise>Không giới hạn</c:otherwise>
                                                                                 </c:choose>
-                                                                            </span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <span class="badge bg-info-subtle text-info border px-2 py-1">
-                                                                                <i class="bi bi-list-check me-1"></i>${q.questions != null ? q.questions.size() : 0} câu
                                                                             </span>
                                                                         </td>
                                                                         <td class="text-end pe-3">
@@ -219,7 +213,6 @@
                                             <th>Tiêu đề bài thi</th>
                                             <th>Điểm đạt</th>
                                             <th>Thời gian làm bài</th>
-                                            <th>Số lượng câu hỏi</th>
                                             <th class="text-end">Hành động</th>
                                         </tr>
                                     </thead>
@@ -230,7 +223,6 @@
                                                 <td class="fw-bold">${q.title}</td>
                                                 <td><span class="badge bg-success-subtle text-success border">${q.passScore}%</span></td>
                                                 <td>${q.timeLimitMinutes != null ? q.timeLimitMinutes : 'Không giới hạn'}</td>
-                                                <td>${q.questions != null ? q.questions.size() : 0} câu</td>
                                                 <td class="text-end">
                                                     <a href="${pageContext.request.contextPath}/quizzes/detail?id=${q.id}" class="btn btn-sm btn-outline-primary me-1">
                                                         <i class="bi bi-pencil-square me-1"></i>Chi tiết &amp; Gán câu hỏi
