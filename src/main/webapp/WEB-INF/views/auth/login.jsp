@@ -505,6 +505,153 @@
 
         <div class="login-right">
             <div class="auth-container">
+                <div class="brand-row">
+                    <svg width="42" height="29" viewBox="0 0 38 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M31.2 10.9C30.4 5.5 25.8 1.4 20.2 1.4C15.6 1.4 11.5 4.3 9.9 8.5C9.2 8.2 8.4 8.0 7.6 8.0C3.4 8.0 0 11.4 0 15.6C0 19.8 3.4 23.2 7.6 23.2H30.9C34.8 23.2 38 20.0 38 16.1C38 12.5 35.1 9.5 31.2 10.9Z" fill="url(#cfLoginGrad)"/>
+                    <path d="M22.5 1.5C21.7 1.4 21.0 1.4 20.2 1.4C15.6 1.4 11.5 4.3 9.9 8.5C10.7 8.5 11.5 8.7 12.3 9.0C13.5 5.8 16.6 3.5 20.2 3.5C23.2 3.5 25.8 4.9 27.5 7.1C26.1 4.5 24.5 2.6 22.5 1.5Z" fill="#FAAD3F"/>
+                    </svg>
+                </div>
+
+                <h1 class="auth-title">Đăng nhập vào Courson</h1>
+                <p class="auth-subtitle">Chào mừng bạn quay trở lại.</p>
+
+                <c:if test="${not empty error}">
+                    <div class="alert-server">
+                        <i class="bi bi-exclamation-circle me-1"></i><c:out value="${error}"/>
+                    </div>
+                </c:if>
+
+                <c:if test="${param.logout == 'true'}">
+                    <div class="alert-success">
+                        <i class="bi bi-check-circle me-1"></i>Bạn đã đăng xuất thành công.
+                    </div>
+                </c:if>
+
+                <c:if test="${param.registered == 'true'}">
+                    <div class="alert-success">
+                        <i class="bi bi-check-circle me-1"></i>Đăng ký thành công! Hãy đăng nhập để bắt đầu.
+                    </div>
+                </c:if>
+
+                <form id="loginForm" action="${pageContext.request.contextPath}/auth/login" method="POST" novalidate>
+
+                    <div class="field-group">
+                        <label class="field-label" for="loginId">Tên đăng nhập hoặc Email</label>
+                        <input type="text" id="loginId" name="loginId"
+                               class="field-input"
+                               value="<c:out value='${loginId}'/>"
+                               placeholder="Nhập tên đăng nhập hoặc email"
+                               autofocus autocomplete="username">
+                        <div class="field-error" id="loginIdError"></div>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="password">Mật khẩu</label>
+                        <div class="field-wrap">
+                            <input type="password" id="password" name="password"
+                                   class="field-input pw-input"
+                                   placeholder="Nhập mật khẩu"
+                                   autocomplete="current-password">
+                            <button type="button" class="eye-btn" id="togglePw"
+                                    onclick="togglePass('password', 'eyeIconPw')" tabindex="-1" aria-label="Hiện/ẩn mật khẩu">
+                                <i class="bi bi-eye-slash" id="eyeIconPw"></i>
+                            </button>
+                        </div>
+
+                        <div class="form-action-row">
+                            <label class="remember-label" for="rememberMe">
+                                <input type="checkbox" id="rememberMe" name="rememberMe" class="custom-checkbox">
+                                <span>Ghi nhớ tài khoản</span>
+                            </label>
+                            <a href="#" class="link-muted">Quên mật khẩu?</a>
+                        </div>
+
+                        <div class="field-error" id="passwordError"></div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Đăng nhập</button>
+                </form>
+
+                <div class="divider">hoặc</div>
+
+                <a href="${pageContext.request.contextPath}/auth/google-callback" class="btn-google">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                    <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                    </svg>
+                    Đăng nhập bằng Google
+                </a>
+
+                <a href="${pageContext.request.contextPath}/auth/register" class="btn-no-account">
+                    Chưa có tài khoản? Đăng ký
+                </a>
+
+                <footer class="auth-footer">
+                    &copy; 2026 Courson LMS. Hệ thống quản lý học tập đại học và tổ chức đào tạo chuyên nghiệp.
+                </footer>
+
+                <script>
+                    const pwInput = document.getElementById('password');
+                    const togglePw = document.getElementById('togglePw');
+                    const loginIdInput = document.getElementById('loginId');
+                    const rememberMeCheck = document.getElementById('rememberMe');
+
+                    const savedLogin = localStorage.getItem('courson_saved_login');
+                    if (savedLogin) {
+                        if (!loginIdInput.value) {
+                            loginIdInput.value = savedLogin;
+                        }
+                        rememberMeCheck.checked = true;
+                    }
+
+                    pwInput.addEventListener('input', function () {
+                        togglePw.style.display = this.value.length > 0 ? 'inline-flex' : 'none';
+                        document.getElementById('passwordError').textContent = '';
+                        this.classList.remove('field-err');
+                    });
+
+                    function togglePass(fieldId, iconId) {
+                        const field = document.getElementById(fieldId);
+                        const icon = document.getElementById(iconId);
+                        field.type = field.type === 'password' ? 'text' : 'password';
+                        icon.classList.toggle('bi-eye-slash');
+                        icon.classList.toggle('bi-eye');
+                    }
+
+                    document.getElementById('loginForm').addEventListener('submit', function (e) {
+                        let ok = true;
+                        const loginIdVal = loginIdInput.value.trim();
+                        if (!loginIdVal) {
+                            document.getElementById('loginIdError').textContent = 'Vui lòng nhập tên đăng nhập hoặc email.';
+                            loginIdInput.classList.add('field-err');
+                            ok = false;
+                        }
+
+                        const pwVal = pwInput.value;
+                        if (!pwVal) {
+                            document.getElementById('passwordError').textContent = 'Vui lòng nhập mật khẩu.';
+                            pwInput.classList.add('field-err');
+                            ok = false;
+                        }
+
+                        if (ok) {
+                            if (rememberMeCheck.checked) {
+                                localStorage.setItem('courson_saved_login', loginIdVal);
+                            } else {
+                                localStorage.removeItem('courson_saved_login');
+                            }
+                        } else {
+                            e.preventDefault();
+                        }
+                    });
+
+                    loginIdInput.addEventListener('input', function () {
+                        document.getElementById('loginIdError').textContent = '';
+                        this.classList.remove('field-err');
+                    });
+                </script>
             </div>
         </div>
 
