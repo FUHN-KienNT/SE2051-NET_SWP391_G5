@@ -176,6 +176,156 @@
     .terminal-bar.filled {
         background-color: var(--brand-orange);
     }
+
+    .topics-section {
+        padding: 44px 0 54px;
+        background-color: #FAFAFA;
+        border-top: 1px solid #F3F4F6;
+        border-bottom: 1px solid #F3F4F6;
+    }
+    .section-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 24px;
+    }
+    .section-title {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--text-heading);
+        letter-spacing: -0.4px;
+        margin: 0;
+    }
+    .section-link {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--brand-orange) !important;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: gap 0.2s;
+    }
+    .section-link:hover {
+        color: var(--brand-orange-hover) !important;
+        gap: 9px;
+    }
+    .topic-pills-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .topic-pill {
+        background-color: #FFFFFF;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-heading);
+        text-decoration: none;
+        transition: all 0.18s ease;
+    }
+    .topic-pill:hover {
+        border-color: var(--brand-orange);
+        background-color: #FFFBF7;
+        color: var(--brand-orange);
+        transform: translateY(-1px);
+    }
+
+    .featured-section {
+        padding: 64px 0 74px;
+        background-color: #FFFFFF;
+    }
+    .course-card-custom {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        text-decoration: none;
+        transition: all 0.22s ease-in-out;
+    }
+    .course-card-custom:hover {
+        transform: translateY(-4px);
+        border-color: #FCD5B5;
+        box-shadow: 0 14px 28px -8px rgba(0, 0, 0, 0.08);
+    }
+    .course-thumb-box {
+        width: 100%;
+        height: 185px;
+        overflow: hidden;
+        background-color: #F3F4F6;
+        position: relative;
+    }
+    .course-thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .course-card-custom:hover .course-thumb-img {
+        transform: scale(1.03);
+    }
+    .course-body-custom {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+    .course-category-tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--brand-orange);
+        margin-bottom: 8px;
+    }
+    .course-title-custom {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-heading);
+        line-height: 1.35;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 44px;
+    }
+    .course-expert-name {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+    }
+    .course-meta-text {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+    }
+    .course-footer-custom {
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid #F3F4F6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .course-price-custom {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-heading);
+    }
+    .course-view-link {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--brand-orange);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
 </style>
 
 <main class="main-content">
@@ -269,6 +419,109 @@
                 </div>
 
             </div>
+        </div>
+    </section>
+
+    <section class="topics-section">
+        <div class="container">
+            <div class="section-header-row">
+                <div>
+                    <span class="eyebrow-tag">KHÁM PHÁ THEO CHỦ ĐỀ</span>
+                    <h2 class="section-title">Bạn muốn học gì tiếp theo?</h2>
+                </div>
+                <a href="${pageContext.request.contextPath}/courses/catalog" class="section-link">
+                    Tất cả khóa học <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="topic-pills-row">
+                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Web" class="topic-pill">
+                    Phát triển Web Fullstack
+                </a>
+                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=SQL" class="topic-pill">
+                    Cơ sở dữ liệu & Tối ưu hóa
+                </a>
+                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Java" class="topic-pill">
+                    Lập trình Cốt lõi
+                </a>
+                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Data" class="topic-pill">
+                    Trí tuệ nhân tạo & Data
+                </a>
+                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Cloud" class="topic-pill">
+                    DevOps & Điện toán Đám mây
+                </a>
+                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Mobile" class="topic-pill">
+                    Lập trình Mobile
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="featured-section">
+        <div class="container">
+            <div class="section-header-row">
+                <div>
+                    <span class="eyebrow-tag">BẮT ĐẦU KHÁM PHÁ</span>
+                    <h2 class="section-title">Khóa học nổi bật</h2>
+                    <p class="text-muted small mb-0 mt-1">Tìm khóa học phù hợp với mục tiêu và thời gian biểu của bạn.</p>
+                </div>
+                <a href="${pageContext.request.contextPath}/courses/catalog" class="section-link">
+                    Xem tất cả khóa học <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <c:choose>
+                <c:when test="${empty courses}">
+                    <div class="text-center py-5 bg-light rounded-3 border">
+                        <i class="bi bi-journal-x fs-1 text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">Chưa có khóa học nào được xuất bản.</p>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        <c:forEach var="c" items="${courses}">
+                            <div class="col">
+                                <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="course-card-custom">
+                                    <div class="course-thumb-box">
+                                        <img src="${c.thumbnailUrl}" class="course-thumb-img" alt="${c.title}"
+                                             onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
+                                    </div>
+                                    <div class="course-body-custom">
+                                        <div class="course-category-tag">
+                                            <c:out value="${c.categoryName != null ? c.categoryName : 'LẬP TRÌNH CỐT LÕI'}" />
+                                        </div>
+                                        <h3 class="course-title-custom" title="${c.title}">
+                                            <c:out value="${c.title}" />
+                                        </h3>
+                                        <div class="course-expert-name">
+                                            <i class="bi bi-person me-1"></i><c:out value="${c.expertName != null ? c.expertName : 'Expert'}" />
+                                        </div>
+                                        <div class="course-meta-text">
+                                            ${fn:length(c.modules)} modules &bull; ${c.totalLessons} bài học
+                                        </div>
+
+                                        <div class="course-footer-custom">
+                                            <div class="course-price-custom">
+                                                <c:choose>
+                                                    <c:when test="${c.price <= 0}">
+                                                        <span class="text-success">Miễn phí</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        &#8363;<fmt:formatNumber value="${c.price}" pattern="#,###"/>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                            <span class="course-view-link">
+                                                Xem khóa học <i class="bi bi-arrow-right"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:otherwise>
+            </c:choose>
         </div>
     </section>
 
