@@ -552,8 +552,22 @@
                 <c:otherwise>
                     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                         <c:forEach var="c" items="${courses}">
+                            <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/courses/detail?id=${c.id}" />
+                            <c:set var="targetCourseCta" value="Xem khóa học" />
+                            <c:set var="targetCourseIcon" value="bi-arrow-right" />
+                            <c:if test="${sessionScope.CURRENT_USER.roleName == 'EXPERT'}">
+                                <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" />
+                                <c:set var="targetCourseCta" value="Quản lý bài học" />
+                                <c:set var="targetCourseIcon" value="bi-pencil-square" />
+                            </c:if>
+                            <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN' || sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                                <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}" />
+                                <c:set var="targetCourseCta" value="Quản trị khóa học" />
+                                <c:set var="targetCourseIcon" value="bi-gear-fill" />
+                            </c:if>
+
                             <div class="col">
-                                <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="course-card-custom">
+                                <a href="${targetCourseUrl}" class="course-card-custom">
                                     <div class="course-thumb-box">
                                         <img src="${c.thumbnailUrl}" class="course-thumb-img" alt="${c.title}"
                                              onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
@@ -584,7 +598,7 @@
                                                 </c:choose>
                                             </div>
                                             <span class="course-view-link">
-                                                Xem khóa học <i class="bi bi-arrow-right"></i>
+                                                ${targetCourseCta} <i class="bi ${targetCourseIcon}"></i>
                                             </span>
                                         </div>
                                     </div>

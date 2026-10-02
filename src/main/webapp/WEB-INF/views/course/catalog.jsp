@@ -31,9 +31,23 @@
             <c:otherwise>
                 <div class="row row-cols-1 row-cols-md-3 g-4">
                     <c:forEach var="c" items="${courses}">
+                        <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/courses/detail?id=${c.id}" />
+                        <c:set var="targetCourseCta" value="Xem khóa học" />
+                        <c:set var="targetBtnClass" value="btn-primary" />
+                        <c:if test="${sessionScope.CURRENT_USER.roleName == 'EXPERT'}">
+                            <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" />
+                            <c:set var="targetCourseCta" value="Quản lý bài học" />
+                            <c:set var="targetBtnClass" value="btn-warning text-dark fw-semibold" />
+                        </c:if>
+                        <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN' || sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                            <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}" />
+                            <c:set var="targetCourseCta" value="Quản trị khóa" />
+                            <c:set var="targetBtnClass" value="btn-danger fw-semibold" />
+                        </c:if>
+
                         <div class="col">
                             <div class="card h-100 shadow-sm border-0 overflow-hidden">
-                                <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="d-block position-relative">
+                                <a href="${targetCourseUrl}" class="d-block position-relative">
                                     <img src="${c.thumbnailUrl}" class="card-img-top" alt="${c.title}" style="height: 190px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
                                     <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75 text-white">
                                         <i class="bi bi-play-circle me-1"></i>${c.totalLessons} bài học
@@ -52,15 +66,15 @@
                                         </span>
                                     </div>
                                     <h5 class="card-title fw-bold text-truncate" title="${c.title}">
-                                        <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="text-dark text-decoration-none">${c.title}</a>
+                                        <a href="${targetCourseUrl}" class="text-dark text-decoration-none">${c.title}</a>
                                     </h5>
                                     <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                         ${c.description != null ? c.description : "Chưa có mô tả chi tiết."}
                                     </p>
                                     <div class="pt-3 border-top d-flex justify-content-between align-items-center">
-                                        <small class="text-muted"><i class="bi bi-journal-code me-1"></i>${c.modules.size()} Chương</small>
-                                        <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="btn btn-primary btn-sm px-3">
-                                            Xem khóa học
+                                        <small class="text-muted"><i class="bi bi-person me-1"></i>${c.expertName != null ? c.expertName : "Courson"}</small>
+                                        <a href="${targetCourseUrl}" class="btn ${targetBtnClass} btn-sm px-3">
+                                            ${targetCourseCta}
                                         </a>
                                     </div>
                                 </div>
