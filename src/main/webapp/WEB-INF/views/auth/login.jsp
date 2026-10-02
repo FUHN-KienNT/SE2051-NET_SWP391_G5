@@ -415,10 +415,37 @@
                 left: 20px;
                 pointer-events: none;
             }
+            .theme-toggle-btn {
+                position: fixed;
+                top: 20px;
+                right: 24px;
+                z-index: 1000;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                color: #F38020;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.3rem;
+                cursor: pointer;
+                transition: all 0.25s ease;
+                backdrop-filter: blur(10px);
+                outline: none;
+            }
+            .theme-toggle-btn:hover {
+                transform: scale(1.1) rotate(15deg);
+                background-color: rgba(255, 255, 255, 0.2);
+                border-color: #F38020;
+            }
         </style>
     </head>
     <body>
-
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="Chuyển chế độ sáng/tối" title="Chuyển chế độ Sáng/Tối">
+            <i class="bi bi-sun-fill" id="themeIcon"></i>
+        </button>
         <svg width="0" height="0" style="position:absolute">
         <defs>
         <linearGradient id="cfLoginGrad" x1="0" y1="0" x2="38" y2="24" gradientUnits="userSpaceOnUse">
@@ -633,6 +660,30 @@
                     loginIdInput.addEventListener('input', function () {
                         document.getElementById('loginIdError').textContent = '';
                         this.classList.remove('field-err');
+                    });
+                    const themeToggleBtn = document.getElementById('themeToggleBtn');
+                    const themeIcon = document.getElementById('themeIcon');
+
+                    function updateThemeDisplay(theme) {
+                        if (theme === 'light') {
+                            document.documentElement.setAttribute('data-theme', 'light');
+                            themeIcon.className = 'bi bi-moon-stars-fill';
+                            themeToggleBtn.setAttribute('title', 'Chuyển sang chế độ Tối (Night Mode)');
+                        } else {
+                            document.documentElement.removeAttribute('data-theme');
+                            themeIcon.className = 'bi bi-sun-fill';
+                            themeToggleBtn.setAttribute('title', 'Chuyển sang chế độ Sáng (Light Mode)');
+                        }
+                    }
+
+                    const savedTheme = localStorage.getItem('courson_auth_theme') || 'dark';
+                    updateThemeDisplay(savedTheme);
+
+                    themeToggleBtn.addEventListener('click', function () {
+                        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                        const newTheme = isLight ? 'dark' : 'light';
+                        localStorage.setItem('courson_auth_theme', newTheme);
+                        updateThemeDisplay(newTheme);
                     });
                 </script>
             </div>
