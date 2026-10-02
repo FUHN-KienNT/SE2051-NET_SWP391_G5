@@ -165,6 +165,39 @@ public class CourseService {
         }
     }
 
+    public List<dto.SettingDto> getCategories() {
+        try (Connection con = DbConnection.getConnection()) {
+            SettingDao sDao = new SettingDao();
+            List<entity.Setting> list = sDao.findByType(con, SettingType.COURSE_CATEGORY);
+            List<dto.SettingDto> dtos = new ArrayList<>();
+            for (entity.Setting s : list) {
+                dto.SettingDto dto = new dto.SettingDto();
+                dto.setId(s.getId());
+                dto.setType(s.getType());
+                dto.setName(s.getName());
+                dto.setValue(s.getValue());
+                dto.setPriority(s.getPriority());
+                dto.setStatus(s.getStatus());
+                dto.setDescription(s.getDescription());
+                dtos.add(dto);
+            }
+            return dtos;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy danh mục khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public void updateCourseStatus(long courseId, CourseStatus status) {
+        try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
+            course.setStatus(status);
+            courseDao.update(con, course);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật trạng thái khóa học: " + e.getMessage(), e);
+        }
+    }
+
     public void deleteCourse(long courseId) {
         try (Connection con = DbConnection.getConnection()) {
             boolean deleted = courseDao.delete(con, courseId);

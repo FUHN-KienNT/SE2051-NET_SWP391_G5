@@ -65,6 +65,9 @@ public class AdminCourseServlet extends HttpServlet {
             case "save-course":
                 saveCourse(req, resp);
                 break;
+            case "toggle-status":
+                toggleCourseStatus(req, resp);
+                break;
             case "delete-course":
                 deleteCourse(req, resp);
                 break;
@@ -72,6 +75,19 @@ public class AdminCourseServlet extends HttpServlet {
                 showDashboard(req, resp);
                 break;
         }
+    }
+
+    private void toggleCourseStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String idStr = req.getParameter("id");
+        if (idStr != null) {
+            try {
+                long courseId = Long.parseLong(idStr);
+                CourseDto course = courseService.getCourseDetail(courseId);
+                CourseStatus newStatus = course.getStatus() == CourseStatus.PUBLISHED ? CourseStatus.DRAFT : CourseStatus.PUBLISHED;
+                courseService.updateCourseStatus(courseId, newStatus);
+            } catch (Exception ignored) {}
+        }
+        resp.sendRedirect(req.getContextPath() + "/admin/courses?success=status_updated");
     }
 
     private void showDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

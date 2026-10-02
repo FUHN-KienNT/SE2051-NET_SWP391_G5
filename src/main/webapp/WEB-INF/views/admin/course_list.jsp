@@ -64,11 +64,32 @@
                                             </c:choose>
                                         </td>
                                         <td>
-                                            <span class="badge ${c.status == 'PUBLISHED' ? 'bg-success' : 'bg-secondary'}">
-                                                ${c.status}
-                                            </span>
+                                            <c:choose>
+                                                <c:when test="${c.status == 'PUBLISHED'}">
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                        <i class="bi bi-check-circle-fill me-1"></i>PUBLISHED
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                                        <i class="bi bi-hourglass-split me-1"></i>DRAFT (Chờ duyệt)
+                                                    </span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </td>
                                         <td class="text-end">
+                                            <c:choose>
+                                                <c:when test="${c.status == 'DRAFT'}">
+                                                    <a href="${pageContext.request.contextPath}/admin/toggle-status?id=${c.id}" class="btn btn-success btn-sm me-1 shadow-sm" title="Duyệt và công khai khóa học này">
+                                                        <i class="bi bi-check-lg me-1"></i>Duyệt Public
+                                                    </a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a href="${pageContext.request.contextPath}/admin/toggle-status?id=${c.id}" class="btn btn-outline-secondary btn-sm me-1" title="Chuyển về trạng thái bản nháp">
+                                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Hạ về Draft
+                                                    </a>
+                                                </c:otherwise>
+                                            </c:choose>
                                             <a href="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}" class="btn btn-outline-primary btn-sm me-1">
                                                 <i class="bi bi-pencil-square me-1"></i>Quản lý &amp; Phân công
                                             </a>
