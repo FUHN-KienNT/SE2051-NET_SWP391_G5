@@ -115,7 +115,7 @@ public class AuthServlet extends HttpServlet {
 
     private void logout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         authService.logout(req.getSession(false));
-        resp.sendRedirect(req.getContextPath() + "/auth/login?logout=true");
+        resp.sendRedirect(req.getContextPath() + "/home");
     }
 
     private void googleCallback(HttpServletRequest req, HttpServletResponse resp) throws IOException {
