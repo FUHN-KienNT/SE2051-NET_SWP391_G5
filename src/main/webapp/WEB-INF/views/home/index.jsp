@@ -326,6 +326,78 @@
         align-items: center;
         gap: 5px;
     }
+
+    .values-section {
+        padding: 64px 0 64px;
+        background-color: #FAFAFA;
+        border-top: 1px solid #F3F4F6;
+    }
+    .value-card-custom {
+        background-color: #FFFFFF;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 28px;
+        height: 100%;
+        transition: all 0.2s ease;
+    }
+    .value-card-custom:hover {
+        border-color: #FCD5B5;
+        box-shadow: 0 8px 20px -6px rgba(243, 128, 32, 0.12);
+        transform: translateY(-2px);
+    }
+    .value-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background-color: var(--brand-orange-soft);
+        border: 1px solid var(--brand-orange-border);
+        color: var(--brand-orange);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 18px;
+    }
+    .value-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-heading);
+        margin-bottom: 8px;
+    }
+    .value-desc {
+        font-size: 0.88rem;
+        color: var(--text-body);
+        line-height: 1.55;
+        margin: 0;
+    }
+
+    .cta-banner-wrapper {
+        padding: 0 0 74px;
+        background-color: #FAFAFA;
+    }
+    .cta-banner-dark {
+        background-color: #111827;
+        border-radius: 20px;
+        padding: 38px 48px;
+        color: #FFFFFF;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 24px;
+        box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.2);
+    }
+    .cta-banner-title {
+        font-size: 1.65rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+        color: #fff;
+    }
+    .cta-banner-sub {
+        font-size: 0.95rem;
+        color: #9CA3AF;
+        margin: 0;
+    }
 </style>
 
 <main class="main-content">
@@ -525,6 +597,69 @@
         </div>
     </section>
 
+    <section class="values-section">
+        <div class="container">
+            <div class="mb-4">
+                <span class="eyebrow-tag">HỌC THEO CÁCH CỦA BẠN</span>
+                <h2 class="section-title">Tối ưu từng bước học tập</h2>
+                <p class="text-muted small mt-1 mb-0">Từ bài học đầu tiên đến thực hành tự tin với hệ thống học tập toàn diện.</p>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col">
+                    <div class="value-card-custom">
+                        <div class="value-icon-box">
+                            <i class="bi bi-play-circle-fill"></i>
+                        </div>
+                        <h4 class="value-title">Học theo tiến độ riêng</h4>
+                        <p class="value-desc">
+                            Chủ động học mọi bài giảng video chất lượng cao bất kỳ khi nào phù hợp với lịch trình bận rộn của bạn.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="value-card-custom">
+                        <div class="value-icon-box">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <h4 class="value-title">Luyện tập thực chiến</h4>
+                        <p class="value-desc">
+                            Hệ thống kiểm tra trắc nghiệm Quiz trực tiếp sau mỗi module giúp đánh giá và củng cố kiến thức vững chắc.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="value-card-custom">
+                        <div class="value-icon-box">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h4 class="value-title">Theo dõi tiến trình</h4>
+                        <p class="value-desc">
+                            Dễ dàng kiểm soát tỉ lệ hoàn thành từng chương học và sẵn sàng tự tin bước vào môi trường doanh nghiệp.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-banner-wrapper">
+        <div class="container">
+            <div class="cta-banner-dark">
+                <div>
+                    <h3 class="cta-banner-title">Sẵn sàng bắt đầu chưa?</h3>
+                    <p class="cta-banner-sub">Tìm khóa học ưng ý và nâng tầm kỹ năng lập trình của bạn ngay hôm nay.</p>
+                </div>
+                <div>
+                    <a href="${pageContext.request.contextPath}/courses/catalog" class="btn-pill-primary">
+                        Khám phá khóa học <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
 </main>
 
 <jsp:include page="../common/footer.jsp" />
