@@ -113,14 +113,28 @@ public class AdminCourseServlet extends HttpServlet {
         List<UserDto> allUsers = userService.getUsers();
         List<SettingDto> categories = settingService.getByType(SettingType.COURSE_CATEGORY);
 
-        req.setAttribute("totalCourses", allCourses.size());
+        List<CourseDto> draftCourses = new java.util.ArrayList<>();
+        int publishedCount = 0;
+        int draftCount = 0;
+        if (allCourses != null) {
+            for (CourseDto c : allCourses) {
+                if (c.getStatus() == CourseStatus.DRAFT) {
+                    draftCount++;
+                    draftCourses.add(c);
+                } else if (c.getStatus() == CourseStatus.PUBLISHED) {
+                    publishedCount++;
+                }
+            }
+        }
+
+        req.setAttribute("totalCourses", allCourses != null ? allCourses.size() : 0);
         req.setAttribute("publishedCount", publishedCount);
         req.setAttribute("draftCount", draftCount);
         req.setAttribute("draftCourses", draftCourses);
-        req.setAttribute("totalExperts", experts.size());
-        req.setAttribute("totalUsers", allUsers.size());
-        req.setAttribute("totalCategories", categories.size());
-        req.setAttribute("recentCourses", allCourses.size() > 5 ? allCourses.subList(0, 5) : allCourses);
+        req.setAttribute("totalExperts", experts != null ? experts.size() : 0);
+        req.setAttribute("totalUsers", allUsers != null ? allUsers.size() : 0);
+        req.setAttribute("totalCategories", categories != null ? categories.size() : 0);
+        req.setAttribute("recentCourses", allCourses != null && allCourses.size() > 5 ? allCourses.subList(0, 5) : allCourses);
         req.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(req, resp);
     }
 
@@ -142,7 +156,7 @@ public class AdminCourseServlet extends HttpServlet {
         List<UserDto> managers = new java.util.ArrayList<>();
         for (UserDto u : allUsers) {
             // Role 3 = Manager, Role 5 = Admin. Both can manage courses.
-            if (u.getRoleId() == 3 || u.getRoleId() == 5) { 
+            if (u.getRoleId() != null && (u.getRoleId() == 3L || u.getRoleId() == 5L)) { 
                 managers.add(u);
             }
         }
@@ -167,7 +181,7 @@ public class AdminCourseServlet extends HttpServlet {
         List<UserDto> allUsers = userService.getUsers();
         List<UserDto> managers = new java.util.ArrayList<>();
         for (UserDto u : allUsers) {
-            if (u.getRoleId() == 3 || u.getRoleId() == 5) { 
+            if (u.getRoleId() != null && (u.getRoleId() == 3L || u.getRoleId() == 5L)) { 
                 managers.add(u);
             }
         }
