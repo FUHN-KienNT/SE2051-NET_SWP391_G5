@@ -7,6 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Đăng nhập - Courson LMS</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/toast.css">
         <style>
             *, *::before, *::after {
                 box-sizing: border-box;
@@ -680,6 +681,18 @@
                     </div>
                 </c:if>
 
+                <c:if test="${not empty inactiveEmail}">
+                    <div class="alert-inactive-box" style="margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; background: rgba(243, 128, 32, 0.12); border: 1px solid rgba(243, 128, 32, 0.35); color: #F38020; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="bi bi-envelope-exclamation" style="font-size: 18px;"></i>
+                            <span>Tài khoản chưa được kích hoạt email.</span>
+                        </div>
+                        <a href="${pageContext.request.contextPath}/auth/check-email?email=<c:out value='${inactiveEmail}'/>" style="color: #ffffff; background: #F38020; text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                            Gửi lại email xác nhận <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </c:if>
+
                 <c:if test="${param.logout == 'true'}">
                     <div class="alert-success">
                         <i class="bi bi-check-circle me-1"></i>Bạn đã đăng xuất thành công.
@@ -838,5 +851,14 @@
             </div>
         </div>
 
+        <script src="${pageContext.request.contextPath}/js/toast.js"></script>
+        <c:if test="${not empty toastMessage}">
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    CoursonToast.show('<c:out value="${toastType}"/>', '<c:out value="${toastMessage}"/>');
+                    CoursonToast.cleanUrlParams(['status']);
+                });
+            </script>
+        </c:if>
     </body>
 </html>
