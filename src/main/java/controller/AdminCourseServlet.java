@@ -79,6 +79,7 @@ public class AdminCourseServlet extends HttpServlet {
 
     private void toggleCourseStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
+        String fromDashboard = req.getParameter("fromDashboard");
         if (idStr != null) {
             try {
                 long courseId = Long.parseLong(idStr);
@@ -87,14 +88,34 @@ public class AdminCourseServlet extends HttpServlet {
                 courseService.updateCourseStatus(courseId, newStatus);
             } catch (Exception ignored) {}
         }
-        resp.sendRedirect(req.getContextPath() + "/admin/courses?success=status_updated");
+        if ("true".equalsIgnoreCase(fromDashboard)) {
+            resp.sendRedirect(req.getContextPath() + "/admin/dashboard?success=status_updated");
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/admin/courses?success=status_updated");
+        }
     }
 
     private void showDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<CourseDto> allCourses = courseService.getAllCourses();
         List<UserDto> experts = courseService.getExperts();
-        
+
+        List<CourseDto> draftCourses = new java.util.ArrayList<>();
+        int publishedCount = 0;
+        int draftCount = 0;
+
+        for (CourseDto c : allCourses) {
+            if (c.getStatus() == CourseStatus.DRAFT) {
+                draftCourses.add(c);
+                draftCount++;
+            } else if (c.getStatus() == CourseStatus.PUBLISHED) {
+                publishedCount++;
+            }
+        }
+
         req.setAttribute("totalCourses", allCourses.size());
+        req.setAttribute("publishedCount", publishedCount);
+        req.setAttribute("draftCount", draftCount);
+        req.setAttribute("draftCourses", draftCourses);
         req.setAttribute("totalExperts", experts.size());
         req.setAttribute("recentCourses", allCourses.size() > 5 ? allCourses.subList(0, 5) : allCourses);
         req.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(req, resp);
