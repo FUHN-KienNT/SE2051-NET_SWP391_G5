@@ -13,8 +13,8 @@
                 <p class="text-muted small mb-0">Theo dõi chỉ số hệ thống, giám sát vận hành và lối tắt quản lý tổng quan</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-primary">
-                    <i class="bi bi-journal-bookmark me-1"></i>Quản lý Khóa học
+                <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-journal-bookmark me-1"></i>Tất cả Khóa học
                 </a>
             </div>
         </div>
@@ -71,6 +71,77 @@
                         <i class="bi bi-server fs-1 text-white-50"></i>
                     </div>
                 </div>
+                <span class="badge bg-warning text-dark px-3 py-2 fw-bold">${draftCourses.size()} khóa chờ duyệt</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Khóa học</th>
+                            <th>Chuyên gia biên soạn</th>
+                            <th>Số bài học</th>
+                            <th>Học phí</th>
+                            <th class="text-end" style="min-width: 240px;">Quyết định duyệt (1-Click)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:choose>
+                            <c:when test="${empty draftCourses}">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-success fw-semibold">
+                                            <i class="bi bi-check2-circle fs-3 d-block mb-1"></i>
+                                            Tuyệt vời! Hiện không có khóa học nào ở trạng thái chờ duyệt.
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="c" items="${draftCourses}">
+                                    <tr class="table-warning bg-opacity-25">
+                                        <td><span class="badge bg-warning text-dark">#${c.id}</span></td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img src="${c.thumbnailUrl}" class="rounded shadow-sm flex-shrink-0" style="width: 58px; height: 36px; object-fit: cover;" alt="${c.title}"
+                                                     onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
+                                                <div>
+                                                    <span class="fw-bold text-dark d-block">${c.title}</span>
+                                                    <span class="badge bg-light text-secondary border">${c.categoryName != null ? c.categoryName : 'Khóa học'}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                                <i class="bi bi-person-badge me-1"></i>${c.expertName != null ? c.expertName : 'Expert'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">${c.totalLessons} bài</span>
+                                            <small class="text-muted">(${c.modules.size()} chương)</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-success">
+                                                <c:choose>
+                                                    <c:when test="${c.price <= 0}">Miễn phí</c:when>
+                                                    <c:otherwise>${c.price} VNĐ</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="${pageContext.request.contextPath}/admin/toggle-status?id=${c.id}&fromDashboard=true" class="btn btn-success btn-sm shadow-sm fw-semibold me-1" title="Duyệt xuất bản ngay">
+                                                <i class="bi bi-check-lg me-1"></i>Đồng ý xuất bản
+                                            </a>
+                                            <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="btn btn-outline-secondary btn-sm" target="_blank" title="Xem trước trang khóa học">
+                                                <i class="bi bi-eye"></i> Xem trước
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+                    </tbody>
+                </table>
             </div>
         </div>
 

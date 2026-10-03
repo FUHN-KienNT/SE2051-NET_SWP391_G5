@@ -96,6 +96,14 @@ public class CourseServlet extends HttpServlet {
             req.setAttribute("registrationId", regId);
 
             String currentLessonIdStr = req.getParameter("lessonId");
+            if ((currentLessonIdStr == null || currentLessonIdStr.trim().isEmpty()) && course != null && course.getModules() != null) {
+                for (ModuleDto m : course.getModules()) {
+                    if (m.getLessons() != null && !m.getLessons().isEmpty()) {
+                        currentLessonIdStr = String.valueOf(m.getLessons().get(0).getId());
+                        break;
+                    }
+                }
+            }
             req.setAttribute("currentLessonId", currentLessonIdStr);
         }
         req.getRequestDispatcher("/WEB-INF/views/course/learn.jsp").forward(req, resp);

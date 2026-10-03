@@ -107,9 +107,9 @@
                         <c:choose>
                             <c:when test="${empty courses}">
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
+                                    <td colspan="6" class="text-center py-5 text-muted">
                                         <i class="bi bi-folder-x fs-1 d-block mb-2 text-muted"></i>
-                                        Chưa có khóa học nào được tạo.
+                                        Chưa có khóa học nào được gửi lên.
                                     </td>
                                 </tr>
                             </c:when>
@@ -134,8 +134,8 @@
                                         <td>
                                             <c:choose>
                                                 <c:when test="${c.expertName != null}">
-                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                                        <i class="bi bi-person-check-fill me-1"></i>${c.expertName}
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                                        <i class="bi bi-person-badge me-1"></i>${c.expertName}
                                                     </span>
                                                 </c:when>
                                                 <c:otherwise>

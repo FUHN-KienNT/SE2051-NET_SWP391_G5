@@ -10,7 +10,7 @@
         <nav class="mb-3">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/expert/dashboard">Expert Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/quizzes/list?moduleId=${quiz.moduleId}">Danh sách Quiz</a></li>
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/quizzes/list?${not empty courseId ? 'courseId='.concat(courseId) : 'moduleId='.concat(quiz.moduleId)}">Danh sách Quiz</a></li>
                 <li class="breadcrumb-item active">${quiz.title}</li>
             </ol>
         </nav>
@@ -23,6 +23,9 @@
                     <form action="${pageContext.request.contextPath}/quizzes/save" method="POST">
                         <input type="hidden" name="id" value="${quiz.id}">
                         <input type="hidden" name="moduleId" value="${quiz.moduleId}">
+                        <c:if test="${not empty courseId}">
+                            <input type="hidden" name="courseId" value="${courseId}">
+                        </c:if>
 
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Tên bài thi <span class="text-danger">*</span></label>

@@ -77,12 +77,33 @@ public class AdminCourseServlet extends HttpServlet {
             case "save-course":
                 saveCourse(req, resp);
                 break;
+            case "toggle-status":
+                toggleCourseStatus(req, resp);
+                break;
             case "delete-course":
                 deleteCourse(req, resp);
                 break;
             default:
                 showDashboard(req, resp);
                 break;
+        }
+    }
+
+    private void toggleCourseStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String idStr = req.getParameter("id");
+        String fromDashboard = req.getParameter("fromDashboard");
+        if (idStr != null) {
+            try {
+                long courseId = Long.parseLong(idStr);
+                CourseDto course = courseService.getCourseDetail(courseId);
+                CourseStatus newStatus = course.getStatus() == CourseStatus.PUBLISHED ? CourseStatus.DRAFT : CourseStatus.PUBLISHED;
+                courseService.updateCourseStatus(courseId, newStatus);
+            } catch (Exception ignored) {}
+        }
+        if ("true".equalsIgnoreCase(fromDashboard)) {
+            resp.sendRedirect(req.getContextPath() + "/admin/dashboard?success=status_updated");
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/admin/courses?success=status_updated");
         }
     }
 
@@ -93,6 +114,9 @@ public class AdminCourseServlet extends HttpServlet {
         List<SettingDto> categories = settingService.getByType(SettingType.COURSE_CATEGORY);
 
         req.setAttribute("totalCourses", allCourses.size());
+        req.setAttribute("publishedCount", publishedCount);
+        req.setAttribute("draftCount", draftCount);
+        req.setAttribute("draftCourses", draftCourses);
         req.setAttribute("totalExperts", experts.size());
         req.setAttribute("totalUsers", allUsers.size());
         req.setAttribute("totalCategories", categories.size());
@@ -156,6 +180,10 @@ public class AdminCourseServlet extends HttpServlet {
 
     private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         CourseDto dto = bindCourse(req);
+        if (dto.getId() == null || dto.getId() <= 0) {
+            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + java.net.URLEncoder.encode("Admin và Manager không trực tiếp tạo khóa học. Khóa học phải do Expert khởi tạo và gửi duyệt.", "UTF-8"));
+            return;
+        }
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (dto.getManagerId() == null && currentUser != null) {
             dto.setManagerId(currentUser.getId());

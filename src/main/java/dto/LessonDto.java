@@ -90,4 +90,31 @@ public class LessonDto {
     public void setProgressStatus(LessonProgressStatus progressStatus) {
         this.progressStatus = progressStatus;
     }
+
+    public String getThumbnailUrl() {
+        if (videoUrl != null && !videoUrl.trim().isEmpty()) {
+            String url = videoUrl.trim();
+            if (url.contains("embed/")) {
+                String vid = url.substring(url.indexOf("embed/") + 6);
+                if (vid.contains("?")) vid = vid.substring(0, vid.indexOf("?"));
+                if (vid.contains("&")) vid = vid.substring(0, vid.indexOf("&"));
+                if (!vid.isEmpty()) {
+                    return "https://img.youtube.com/vi/" + vid + "/mqdefault.jpg";
+                }
+            } else if (url.contains("v=")) {
+                String vid = url.substring(url.indexOf("v=") + 2);
+                if (vid.contains("&")) vid = vid.substring(0, vid.indexOf("&"));
+                if (!vid.isEmpty()) {
+                    return "https://img.youtube.com/vi/" + vid + "/mqdefault.jpg";
+                }
+            } else if (url.contains("youtu.be/")) {
+                String vid = url.substring(url.indexOf("youtu.be/") + 9);
+                if (vid.contains("?")) vid = vid.substring(0, vid.indexOf("?"));
+                if (!vid.isEmpty()) {
+                    return "https://img.youtube.com/vi/" + vid + "/mqdefault.jpg";
+                }
+            }
+        }
+        return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&auto=format&fit=crop&q=60";
+    }
 }

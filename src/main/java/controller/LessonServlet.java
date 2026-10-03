@@ -74,6 +74,15 @@ public class LessonServlet extends HttpServlet {
             case "delete-module":
                 deleteModule(req, resp);
                 break;
+            case "save-course":
+                saveCourse(req, resp);
+                break;
+            case "batch-save-lessons":
+                batchSaveLessons(req, resp);
+                break;
+            case "delete-course":
+                deleteCourse(req, resp);
+                break;
             default:
                 showExpertDashboard(req, resp);
                 break;
@@ -87,8 +96,102 @@ public class LessonServlet extends HttpServlet {
             return;
         }
         List<CourseDto> courses = courseService.getManagedCourses(currentUser.getId());
+        List<dto.SettingDto> categories = courseService.getCategories();
         req.setAttribute("courses", courses);
+        req.setAttribute("categories", categories);
         req.getRequestDispatcher("/WEB-INF/views/expert/dashboard.jsp").forward(req, resp);
+    }
+
+    private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        CourseDto dto = new CourseDto();
+        String idStr = req.getParameter("id");
+        if (idStr != null && !idStr.trim().isEmpty()) {
+            dto.setId(Long.parseLong(idStr.trim()));
+            try {
+                CourseDto existing = courseService.getCourseDetail(dto.getId());
+                dto.setStatus(existing.getStatus());
+                dto.setManagerId(existing.getManagerId());
+            } catch (Exception ignored) {
+                dto.setStatus(entity.enums.CourseStatus.DRAFT);
+            }
+        } else {
+            // New course created by Expert is always DRAFT awaiting Manager/Admin approval
+            dto.setStatus(entity.enums.CourseStatus.DRAFT);
+            dto.setManagerId(2L); // default manager
+        }
+
+        dto.setTitle(req.getParameter("title"));
+        dto.setDescription(req.getParameter("description"));
+        String catIdStr = req.getParameter("categoryId");
+        if (catIdStr != null && !catIdStr.trim().isEmpty()) {
+            dto.setCategoryId(Long.parseLong(catIdStr.trim()));
+        } else {
+            dto.setCategoryId(6L);
+        }
+        String priceStr = req.getParameter("price");
+        dto.setPrice(priceStr != null && !priceStr.trim().isEmpty() ? new java.math.BigDecimal(priceStr.trim()) : java.math.BigDecimal.ZERO);
+        dto.setExpertId(currentUser.getId());
+
+        try {
+            long savedId = courseService.saveCourse(dto);
+
+            // Check if batch video URLs or playlist text was provided
+            String batchText = req.getParameter("batchVideoText");
+            if (batchText != null && !batchText.trim().isEmpty()) {
+                List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
+                if (!lessons.isEmpty()) {
+                    courseService.saveBatchLessons(savedId, null, lessons);
+                }
+            }
+
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId + "&success=created");
+        } catch (Exception e) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard?error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+        }
+    }
+
+    private void batchSaveLessons(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String courseIdStr = req.getParameter("courseId");
+        String moduleIdStr = req.getParameter("moduleId");
+        String batchText = req.getParameter("batchText");
+
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            return;
+        }
+
+        long courseId = Long.parseLong(courseIdStr.trim());
+        Long moduleId = (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) ? Long.parseLong(moduleIdStr.trim()) : null;
+
+        try {
+            List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
+            int count = courseService.saveBatchLessons(courseId, moduleId, lessons);
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&success=batch_saved&count=" + count);
+        } catch (Exception e) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+        }
+    }
+
+    private void deleteCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String idStr = req.getParameter("id");
+        if (idStr != null) {
+            try {
+                long courseId = Long.parseLong(idStr);
+                courseService.deleteCourse(courseId);
+            } catch (Exception ignored) {}
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/dashboard?success=deleted");
     }
 
     private void showLessonList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

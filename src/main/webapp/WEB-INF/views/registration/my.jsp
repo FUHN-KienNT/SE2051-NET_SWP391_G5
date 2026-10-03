@@ -28,7 +28,8 @@
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     <c:forEach var="r" items="${registrations}">
                         <div class="col">
-                            <div class="card h-100">
+                            <div class="card h-100 shadow-sm border-0 overflow-hidden">
+                                <img src="${r.thumbnailUrl}" class="card-img-top" alt="${r.courseTitle}" style="height: 170px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
                                 <div class="card-body d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <span class="badge ${r.status == 'ACTIVE' ? 'bg-success' : (r.status == 'COMPLETED' ? 'bg-primary' : 'bg-warning text-dark')}">
@@ -36,7 +37,7 @@
                                         </span>
                                         <small class="text-muted">${r.paymentStatus}</small>
                                     </div>
-                                    <h5 class="card-title fw-bold">${r.courseTitle}</h5>
+                                    <h5 class="card-title fw-bold text-truncate" title="${r.courseTitle}">${r.courseTitle}</h5>
                                     
                                     <div class="my-3">
                                         <div class="d-flex justify-content-between small text-muted mb-1">
@@ -52,7 +53,7 @@
                                         <c:choose>
                                             <c:when test="${r.status == 'ACTIVE' || r.status == 'COMPLETED'}">
                                                 <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${r.id}" class="btn btn-primary w-100">
-                                                    <i class="bi bi-play-circle me-1"></i>Tiếp tục học
+                                                    <i class="bi bi-play-circle me-1"></i>Vào học ngay
                                                 </a>
                                             </c:when>
                                             <c:otherwise>
