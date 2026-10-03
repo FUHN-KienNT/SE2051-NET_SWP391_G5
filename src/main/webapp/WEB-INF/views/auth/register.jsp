@@ -266,6 +266,72 @@
                 background-color: rgba(255, 255, 255, 0.2);
                 border-color: #F38020;
             }
+
+            [data-theme="light"] body {
+                background-color: #F8F9FA;
+                color: #111827;
+            }
+            [data-theme="light"] .theme-toggle-btn {
+                background-color: #FFFFFF;
+                border-color: #E5E7EB;
+                color: #F38020;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+            [data-theme="light"] .theme-toggle-btn:hover {
+                background-color: #FFF7ED;
+                border-color: #F38020;
+            }
+            [data-theme="light"] .auth-title {
+                color: #111827;
+            }
+            [data-theme="light"] .auth-subtitle {
+                color: #6B7280;
+            }
+            [data-theme="light"] .field-label {
+                color: #374151;
+            }
+            [data-theme="light"] .field-input {
+                background-color: #FFFFFF;
+                border-color: #E5E7EB;
+                color: #111827;
+            }
+            [data-theme="light"] .field-input:focus {
+                background-color: #FFFFFF;
+                border-color: #F38020;
+                box-shadow: 0 0 0 3px rgba(243, 128, 32, 0.15);
+            }
+            [data-theme="light"] .s-bar {
+                background-color: #E5E7EB;
+            }
+            [data-theme="light"] .terms-label {
+                color: #6B7280;
+            }
+            [data-theme="light"] .terms-label a {
+                color: #F38020;
+            }
+            [data-theme="light"] .terms-check {
+                accent-color: #F38020;
+            }
+            [data-theme="light"] .btn-submit {
+                background-color: #F38020;
+                color: #FFFFFF;
+            }
+            [data-theme="light"] .btn-submit:hover {
+                background-color: #E56B00;
+            }
+            [data-theme="light"] .btn-have-account {
+                background-color: #FFFFFF;
+                border-color: #E5E7EB;
+                color: #374151;
+            }
+            [data-theme="light"] .btn-have-account:hover {
+                background-color: #FFF7ED;
+                border-color: #F38020;
+                color: #F38020;
+            }
+            [data-theme="light"] .auth-footer {
+                color: #9CA3AF;
+            }
         </style>
     </head>
     <body>
