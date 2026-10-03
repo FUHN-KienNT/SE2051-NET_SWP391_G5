@@ -251,7 +251,16 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Mô tả tóm tắt khóa học</label>
-                        <textarea name="description" rows="3" class="form-control" placeholder="Mục tiêu đầu ra, kiến thức đạt được..."></textarea>
+                        <textarea name="description" rows="2" class="form-control" placeholder="Mục tiêu đầu ra, kiến thức đạt được..."></textarea>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <label class="form-label small fw-bold text-dark d-flex justify-content-between align-items-center mb-1">
+                            <span><i class="bi bi-youtube text-danger me-1"></i>Nhập Playlist / Danh sách nhiều Video YouTube (Tùy chọn)</span>
+                            <span class="badge bg-danger">Tạo tự động</span>
+                        </label>
+                        <textarea name="batchVideoText" rows="4" class="form-control font-monospace small bg-white" placeholder="Dán danh sách các link video YouTube hoặc playlist (mỗi dòng 1 link). Ví dụ:&#10;https://www.youtube.com/watch?v=WVPVpNDKUwM - Buổi 1: Khái quát cơ bản&#10;https://www.youtube.com/watch?v=gJS-1C78Jy0 - Buổi 2: Hướng dẫn thực hành&#10;https://youtu.be/SMaG-tqSzFM - Buổi 3: Ứng dụng thực tế"></textarea>
+                        <div class="form-text small mt-1"><i class="bi bi-magic text-primary me-1"></i>Nếu dán link ở đây, hệ thống sẽ tự động tạo ngay toàn bộ bài giảng tương ứng vào khóa học chỉ với 1 click!</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0 py-3">

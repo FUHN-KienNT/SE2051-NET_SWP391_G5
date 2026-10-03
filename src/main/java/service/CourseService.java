@@ -309,6 +309,105 @@ public class CourseService {
         }
     }
 
+    public int saveBatchLessons(long courseId, Long moduleId, List<LessonDto> lessons) {
+        if (lessons == null || lessons.isEmpty()) {
+            return 0;
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                long targetModuleId;
+                if (moduleId != null && moduleId > 0) {
+                    targetModuleId = moduleId;
+                } else {
+                    List<Module> existingModules = moduleDao.findByCourseId(con, courseId);
+                    if (!existingModules.isEmpty()) {
+                        targetModuleId = existingModules.get(0).getId();
+                    } else {
+                        Module newModule = new Module();
+                        newModule.setCourseId(courseId);
+                        newModule.setTitle("Chương 1: Danh sách bài giảng");
+                        newModule.setOrderIndex(1);
+                        targetModuleId = moduleDao.insert(con, newModule);
+                    }
+                }
+
+                List<Lesson> currentLessons = lessonDao.findByModuleId(con, targetModuleId);
+                int startOrder = currentLessons.size() + 1;
+
+                int count = 0;
+                for (LessonDto dto : lessons) {
+                    Lesson l = new Lesson();
+                    l.setModuleId(targetModuleId);
+                    l.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle().trim() : ("Bài " + (startOrder + count) + ": Bài giảng"));
+                    l.setContent(dto.getContent() != null ? dto.getContent() : "");
+                    l.setVideoUrl(dto.getVideoUrl());
+                    l.setDocumentUrl(dto.getDocumentUrl());
+                    l.setOrderIndex(dto.getOrderIndex() > 0 ? dto.getOrderIndex() : (startOrder + count));
+                    lessonDao.insert(con, l);
+                    count++;
+                }
+
+                con.commit();
+                return count;
+            } catch (Exception ex) {
+                DbConnection.rollbackQuietly(con);
+                throw ex;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lưu danh sách bài học hàng loạt: " + e.getMessage(), e);
+        }
+    }
+
+    public static List<LessonDto> parseBatchVideoText(String text) {
+        List<LessonDto> list = new ArrayList<>();
+        if (text == null || text.trim().isEmpty()) {
+            return list;
+        }
+        String[] lines = text.split("\\r?\\n");
+        int seq = 1;
+        java.util.regex.Pattern ytIdPattern = java.util.regex.Pattern.compile("(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
+        for (String line : lines) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+
+            String videoId = null;
+            String title = null;
+
+            String[] tokens = line.split("\\s+");
+            for (String token : tokens) {
+                java.util.regex.Matcher m = ytIdPattern.matcher(token);
+                if (m.find()) {
+                    videoId = m.group(1) != null ? m.group(1) : m.group(2);
+                    break;
+                }
+            }
+
+            if (videoId != null) {
+                String cleanLine = line.replaceAll("https?://[^\\s]+", "")
+                                       .replaceAll("^[0-9]+[\\.\\:\\-]\\s*", "")
+                                       .replaceAll("^[\\-\\–\\—\\|\\:\\.]+\\s*", "")
+                                       .replaceAll("\\s*[\\-\\–\\—\\|\\:]+$", "")
+                                       .trim();
+                if (!cleanLine.isEmpty() && cleanLine.length() > 2) {
+                    title = cleanLine;
+                } else {
+                    title = "Bài " + seq + ": Video bài giảng";
+                }
+
+                LessonDto dto = new LessonDto();
+                dto.setTitle(title);
+                dto.setVideoUrl("https://www.youtube.com/embed/" + videoId);
+                dto.setOrderIndex(seq);
+                list.add(dto);
+                seq++;
+            }
+        }
+        return list;
+    }
+
     public CourseDto getLearningContent(long registrationId) {
         try (Connection con = DbConnection.getConnection()) {
             Registration reg = registrationDao.findById(con, registrationId)

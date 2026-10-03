@@ -77,6 +77,9 @@ public class LessonServlet extends HttpServlet {
             case "save-course":
                 saveCourse(req, resp);
                 break;
+            case "batch-save-lessons":
+                batchSaveLessons(req, resp);
+                break;
             case "delete-course":
                 deleteCourse(req, resp);
                 break;
@@ -110,7 +113,6 @@ public class LessonServlet extends HttpServlet {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
             dto.setId(Long.parseLong(idStr.trim()));
-            // If editing, preserve original status or keep DRAFT
             try {
                 CourseDto existing = courseService.getCourseDetail(dto.getId());
                 dto.setStatus(existing.getStatus());
@@ -138,9 +140,41 @@ public class LessonServlet extends HttpServlet {
 
         try {
             long savedId = courseService.saveCourse(dto);
+
+            // Check if batch video URLs or playlist text was provided
+            String batchText = req.getParameter("batchVideoText");
+            if (batchText != null && !batchText.trim().isEmpty()) {
+                List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
+                if (!lessons.isEmpty()) {
+                    courseService.saveBatchLessons(savedId, null, lessons);
+                }
+            }
+
             resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId + "&success=created");
         } catch (Exception e) {
             resp.sendRedirect(req.getContextPath() + "/expert/dashboard?error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+        }
+    }
+
+    private void batchSaveLessons(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String courseIdStr = req.getParameter("courseId");
+        String moduleIdStr = req.getParameter("moduleId");
+        String batchText = req.getParameter("batchText");
+
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            return;
+        }
+
+        long courseId = Long.parseLong(courseIdStr.trim());
+        Long moduleId = (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) ? Long.parseLong(moduleIdStr.trim()) : null;
+
+        try {
+            List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
+            int count = courseService.saveBatchLessons(courseId, moduleId, lessons);
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&success=batch_saved&count=" + count);
+        } catch (Exception e) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
         }
     }
 
