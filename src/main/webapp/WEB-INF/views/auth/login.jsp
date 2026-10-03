@@ -6,9 +6,105 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Đăng nhập - Courson LMS</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/toast.css">
         <style>
+            /* Toast Notification Styles */
+            .courson-toast-container {
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                z-index: 99999;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                pointer-events: none;
+                max-width: 420px;
+                width: calc(100vw - 48px);
+            }
+            @media (max-width: 600px) {
+                .courson-toast-container {
+                    top: 16px;
+                    right: 16px;
+                    left: 16px;
+                    width: auto;
+                }
+            }
+            .courson-toast {
+                pointer-events: auto;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 14px 18px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.1);
+                font-size: 14px;
+                line-height: 1.5;
+                font-family: inherit;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+                transform: translateX(110%);
+                opacity: 0;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+            }
+            .courson-toast.show {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            .courson-toast.hide {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            .courson-toast-success {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+                color: #ffffff;
+                border-color: rgba(110, 231, 183, 0.4);
+            }
+            .courson-toast-error {
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+                color: #ffffff;
+                border-color: rgba(252, 165, 165, 0.4);
+            }
+            .courson-toast-info {
+                background: linear-gradient(135deg, rgba(243, 128, 32, 0.95), rgba(229, 107, 0, 0.95));
+                color: #ffffff;
+                border-color: rgba(255, 180, 110, 0.4);
+            }
+            .courson-toast-warning {
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
+                color: #ffffff;
+                border-color: rgba(252, 211, 77, 0.4);
+            }
+            .courson-toast-icon {
+                flex-shrink: 0;
+                font-size: 18px;
+                margin-top: 1px;
+            }
+            .courson-toast-content {
+                flex: 1 1 auto;
+                font-weight: 500;
+            }
+            .courson-toast-close {
+                flex-shrink: 0;
+                background: transparent;
+                border: none;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                font-size: 16px;
+                padding: 0;
+                margin-left: 6px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                transition: background 0.2s ease, color 0.2s ease;
+            }
+            .courson-toast-close:hover {
+                background: rgba(255, 255, 255, 0.2);
+                color: #ffffff;
+            }
+
             *, *::before, *::after {
                 box-sizing: border-box;
                 margin: 0;
@@ -851,7 +947,90 @@
             </div>
         </div>
 
-        <script src="${pageContext.request.contextPath}/js/toast.js"></script>
+        <script>
+            (function (global) {
+                'use strict';
+                let container = null;
+                function getOrCreateContainer() {
+                    if (!container || !document.body.contains(container)) {
+                        container = document.createElement('div');
+                        container.className = 'courson-toast-container';
+                        container.setAttribute('aria-live', 'polite');
+                        container.setAttribute('aria-atomic', 'true');
+                        document.body.appendChild(container);
+                    }
+                    return container;
+                }
+                const ICONS = {
+                    success: 'bi-check-circle-fill',
+                    error: 'bi-exclamation-triangle-fill',
+                    warning: 'bi-exclamation-circle-fill',
+                    info: 'bi-info-circle-fill'
+                };
+                const CoursonToast = {
+                    show: function (type, message, duration = 5000) {
+                        if (!message) return;
+                        const c = getOrCreateContainer();
+                        const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
+                        const iconClass = ICONS[normalizedType];
+                        const toast = document.createElement('div');
+                        toast.className = `courson-toast courson-toast-${normalizedType}`;
+                        toast.setAttribute('role', 'status');
+                        const iconSpan = document.createElement('span');
+                        iconSpan.className = `courson-toast-icon bi ${iconClass}`;
+                        toast.appendChild(iconSpan);
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'courson-toast-content';
+                        contentDiv.textContent = message;
+                        toast.appendChild(contentDiv);
+                        const closeBtn = document.createElement('button');
+                        closeBtn.className = 'courson-toast-close';
+                        closeBtn.setAttribute('type', 'button');
+                        closeBtn.setAttribute('aria-label', 'Đóng thông báo');
+                        closeBtn.innerHTML = '&times;';
+                        closeBtn.onclick = function () { dismissToast(toast); };
+                        toast.appendChild(closeBtn);
+                        c.appendChild(toast);
+                        requestAnimationFrame(() => { toast.classList.add('show'); });
+                        let timer = null;
+                        if (duration > 0) {
+                            timer = setTimeout(() => { dismissToast(toast); }, duration);
+                        }
+                        toast.onmouseenter = () => { if (timer) clearTimeout(timer); };
+                        toast.onmouseleave = () => {
+                            if (duration > 0) { timer = setTimeout(() => { dismissToast(toast); }, 2000); }
+                        };
+                        return toast;
+                    },
+                    cleanUrlParams: function (paramNames = ['status']) {
+                        if (!window.history || !window.history.replaceState) return;
+                        try {
+                            const url = new URL(window.location.href);
+                            let changed = false;
+                            paramNames.forEach(name => {
+                                if (url.searchParams.has(name)) {
+                                    url.searchParams.delete(name);
+                                    changed = true;
+                                }
+                            });
+                            if (changed) {
+                                const cleanPath = url.pathname + (url.search ? url.search : '') + url.hash;
+                                window.history.replaceState(null, '', cleanPath);
+                            }
+                        } catch (e) {}
+                    }
+                };
+                function dismissToast(toast) {
+                    if (!toast || toast.classList.contains('hide')) return;
+                    toast.classList.remove('show');
+                    toast.classList.add('hide');
+                    setTimeout(() => {
+                        if (toast.parentNode) { toast.parentNode.removeChild(toast); }
+                    }, 400);
+                }
+                global.CoursonToast = CoursonToast;
+            })(window);
+        </script>
         <c:if test="${not empty toastMessage}">
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
