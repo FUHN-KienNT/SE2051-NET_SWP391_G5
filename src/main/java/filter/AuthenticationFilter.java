@@ -22,6 +22,7 @@ public class AuthenticationFilter implements Filter {
     @Override
     public void init(FilterConfig config) throws ServletException {
         publicPaths.add("/auth");
+        publicPaths.add("/verify");
         publicPaths.add("/home");
         publicPaths.add("/courses/catalog");
         publicPaths.add("/courses/detail");
