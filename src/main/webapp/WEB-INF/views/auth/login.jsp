@@ -975,10 +975,10 @@
                         const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
                         const iconClass = ICONS[normalizedType];
                         const toast = document.createElement('div');
-                        toast.className = `courson-toast courson-toast-${normalizedType}`;
+                        toast.className = 'courson-toast courson-toast-' + normalizedType;
                         toast.setAttribute('role', 'status');
                         const iconSpan = document.createElement('span');
-                        iconSpan.className = `courson-toast-icon bi ${iconClass}`;
+                        iconSpan.className = 'courson-toast-icon bi ' + iconClass;
                         toast.appendChild(iconSpan);
                         const contentDiv = document.createElement('div');
                         contentDiv.className = 'courson-toast-content';
