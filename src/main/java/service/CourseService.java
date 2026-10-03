@@ -63,6 +63,19 @@ public class CourseService {
         }
     }
 
+    public List<CourseDto> searchAdminCourses(String keyword, Long categoryId, Long managerId, String status) {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Course> list = courseDao.searchAdmin(con, keyword, categoryId, managerId, status);
+            List<CourseDto> dtos = new ArrayList<>();
+            for (Course c : list) {
+                dtos.add(buildCourseTree(c));
+            }
+            return dtos;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm kiếm khóa học (Admin): " + e.getMessage(), e);
+        }
+    }
+
     public CourseDto getCourseDetail(long courseId) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)

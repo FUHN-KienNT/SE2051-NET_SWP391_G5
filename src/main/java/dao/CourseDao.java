@@ -62,6 +62,44 @@ public class CourseDao {
         return list;
     }
 
+    public List<Course> searchAdmin(Connection con, String keyword, Long categoryId, Long managerId, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (LOWER(title) LIKE ? OR CAST(id AS TEXT) = ?)");
+            String kw = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(kw);
+            params.add(keyword.trim());
+        }
+        if (categoryId != null) {
+            sql.append(" AND category_id = ?");
+            params.add(categoryId);
+        }
+        if (managerId != null) {
+            sql.append(" AND manager_id = ?");
+            params.add(managerId);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND status = ?");
+            params.add(status.trim());
+        }
+        sql.append(" ORDER BY id DESC");
+
+        List<Course> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public Optional<Course> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);

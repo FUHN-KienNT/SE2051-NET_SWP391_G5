@@ -51,14 +51,17 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    <a href="${pageContext.request.contextPath}/users/detail?id=${u.id}" class="btn btn-outline-primary btn-sm me-1" title="Chi tiết & Phân quyền">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
                                     <c:choose>
                                         <c:when test="${u.status == 'ACTIVE'}">
-                                            <a href="${pageContext.request.contextPath}/users/change-status?id=${u.id}&status=BANNED" class="btn btn-outline-danger btn-sm" onclick="return confirm('Khóa tài khoản người dùng này?');">
+                                            <a href="${pageContext.request.contextPath}/users/change-status?id=${u.id}&status=BANNED" class="btn btn-outline-danger btn-sm" onclick="return confirm('Khóa tài khoản người dùng này?');" title="Khóa tài khoản">
                                                 <i class="bi bi-lock me-1"></i>Khóa
                                             </a>
                                         </c:when>
                                         <c:otherwise>
-                                            <a href="${pageContext.request.contextPath}/users/change-status?id=${u.id}&status=ACTIVE" class="btn btn-outline-success btn-sm">
+                                            <a href="${pageContext.request.contextPath}/users/change-status?id=${u.id}&status=ACTIVE" class="btn btn-outline-success btn-sm" title="Mở khóa tài khoản">
                                                 <i class="bi bi-unlock me-1"></i>Mở khóa
                                             </a>
                                         </c:otherwise>

@@ -5,9 +5,13 @@ import dao.LessonDao;
 import dao.LessonProgressDao;
 import dao.ModuleDao;
 import dao.RegistrationDao;
+import dao.SettingDao;
+import dao.UserDao;
 import dto.CourseDto;
+import dto.SettingDto;
 import dto.UserDto;
 import entity.enums.CourseStatus;
+import entity.enums.SettingType;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,12 +19,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import service.CourseService;
+import service.SettingService;
+import service.UserService;
 import util.SessionUtil;
 
 /**
- * Controller phụ trách các màn hình System Administration (BF-02) của Dũng:
+ * Controller phụ trách các màn hình System Administration (BF-02):
  * - Admin Dashboard (II.2.1)
  * - Course List (II.2.4.1)
  * - Course Detail (II.2.4.2) & Phân công Expert
@@ -28,6 +36,8 @@ import util.SessionUtil;
 @WebServlet(name = "AdminCourseServlet", urlPatterns = {"/admin/*"})
 public class AdminCourseServlet extends HttpServlet {
     private CourseService courseService;
+    private SettingService settingService;
+    private UserService userService;
 
     @Override
     public void init() throws ServletException {
@@ -35,6 +45,8 @@ public class AdminCourseServlet extends HttpServlet {
                 new CourseDao(), new ModuleDao(), new LessonDao(),
                 new LessonProgressDao(), new RegistrationDao()
         );
+        this.settingService = new SettingService(new SettingDao());
+        this.userService = new UserService(new UserDao(), new SettingDao());
     }
 
     @Override
@@ -77,31 +89,68 @@ public class AdminCourseServlet extends HttpServlet {
     private void showDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<CourseDto> allCourses = courseService.getAllCourses();
         List<UserDto> experts = courseService.getExperts();
-        
+        List<UserDto> allUsers = userService.getUsers();
+        List<SettingDto> categories = settingService.getByType(SettingType.COURSE_CATEGORY);
+
         req.setAttribute("totalCourses", allCourses.size());
         req.setAttribute("totalExperts", experts.size());
+        req.setAttribute("totalUsers", allUsers.size());
+        req.setAttribute("totalCategories", categories.size());
         req.setAttribute("recentCourses", allCourses.size() > 5 ? allCourses.subList(0, 5) : allCourses);
         req.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(req, resp);
     }
 
     private void showCourseList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        List<CourseDto> courses = courseService.getAllCourses();
+        String search = req.getParameter("search");
+        String categoryIdStr = req.getParameter("categoryId");
+        String managerIdStr = req.getParameter("managerId");
+        String status = req.getParameter("status");
+
+        Long categoryId = (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) ? Long.parseLong(categoryIdStr.trim()) : null;
+        Long managerId = (managerIdStr != null && !managerIdStr.trim().isEmpty()) ? Long.parseLong(managerIdStr.trim()) : null;
+        if (status != null && status.trim().isEmpty()) status = null;
+
+        List<CourseDto> courses = courseService.searchAdminCourses(search, categoryId, managerId, status);
         List<UserDto> experts = courseService.getExperts();
-        
+        List<SettingDto> categories = settingService.getByType(SettingType.COURSE_CATEGORY);
+
+        List<UserDto> allUsers = userService.getUsers();
+        List<UserDto> managers = new java.util.ArrayList<>();
+        for (UserDto u : allUsers) {
+            // Role 3 = Manager, Role 5 = Admin. Both can manage courses.
+            if (u.getRoleId() == 3 || u.getRoleId() == 5) { 
+                managers.add(u);
+            }
+        }
+
         req.setAttribute("courses", courses);
         req.setAttribute("experts", experts);
+        req.setAttribute("managers", managers);
+        req.setAttribute("categories", categories);
         req.getRequestDispatcher("/WEB-INF/views/admin/course_list.jsp").forward(req, resp);
     }
 
     private void showCourseDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
-        if (idStr != null) {
-            long courseId = Long.parseLong(idStr);
+        if (idStr != null && !idStr.trim().isEmpty()) {
+            long courseId = Long.parseLong(idStr.trim());
             CourseDto course = courseService.getCourseDetail(courseId);
             req.setAttribute("course", course);
         }
         List<UserDto> experts = courseService.getExperts();
+        List<SettingDto> categories = settingService.getByType(SettingType.COURSE_CATEGORY);
+
+        List<UserDto> allUsers = userService.getUsers();
+        List<UserDto> managers = new java.util.ArrayList<>();
+        for (UserDto u : allUsers) {
+            if (u.getRoleId() == 3 || u.getRoleId() == 5) { 
+                managers.add(u);
+            }
+        }
+
         req.setAttribute("experts", experts);
+        req.setAttribute("managers", managers);
+        req.setAttribute("categories", categories);
         req.getRequestDispatcher("/WEB-INF/views/admin/course_detail.jsp").forward(req, resp);
     }
 
@@ -115,14 +164,23 @@ public class AdminCourseServlet extends HttpServlet {
             long id = courseService.saveCourse(dto);
             resp.sendRedirect(req.getContextPath() + "/admin/course-detail?id=" + id + "&success=true");
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + e.getMessage());
+            String encodedErr = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + encodedErr);
         }
     }
 
     private void deleteCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
-        if (idStr != null) {
-            courseService.deleteCourse(Long.parseLong(idStr));
+        if (idStr != null && !idStr.trim().isEmpty()) {
+            try {
+                courseService.deleteCourse(Long.parseLong(idStr.trim()));
+                resp.sendRedirect(req.getContextPath() + "/admin/courses?deleted=true");
+                return;
+            } catch (Exception e) {
+                String encodedErr = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+                resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + encodedErr);
+                return;
+            }
         }
         resp.sendRedirect(req.getContextPath() + "/admin/courses");
     }

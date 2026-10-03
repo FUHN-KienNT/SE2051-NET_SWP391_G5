@@ -17,7 +17,13 @@
 
         <c:if test="${param.success != null}">
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle me-2"></i>Đã cập nhật thông tin và phân công chuyên gia thành công!
+                <i class="bi bi-check-circle-fill me-2"></i>Đã cập nhật thông tin và phân công chuyên gia thành công!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+        <c:if test="${not empty param.error}">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>${param.error}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
@@ -26,81 +32,139 @@
             <!-- Left col: Course edit & Expert assignment form -->
             <div class="col-lg-7">
                 <div class="card border-0 shadow-sm rounded-3 p-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-gear-wide-connected me-2"></i>Thông tin &amp; Phân công Chuyên gia</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-info-square me-2 text-primary"></i>Thông số khóa học (Course Specifications)</h5>
+                        <span class="badge ${course.status == 'PUBLISHED' ? 'bg-success' : (course.status == 'ARCHIVED' ? 'bg-warning text-dark' : 'bg-secondary')}">
+                            ${course.status}
+                        </span>
+                    </div>
+
                     <form action="${pageContext.request.contextPath}/admin/save-course" method="POST">
                         <input type="hidden" name="id" value="${course.id}">
-
+                        
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Tên khóa học</label>
-                            <input type="text" name="title" class="form-control" value="${course.title}" required>
+                            <label class="form-label small fw-semibold">Tên khóa học (Course Title) <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control fw-bold" value="${course.title}" required>
                         </div>
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Học phí (VNĐ)</label>
-                                <input type="number" step="1000" name="price" value="${course.price}" class="form-control" required>
+                                <label class="form-label small fw-semibold">Học phí (Price, 0 là Miễn phí)</label>
+                                <input type="number" name="price" step="1000" min="0" value="${course.price}" class="form-control text-success fw-semibold" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Danh mục</label>
-                                <select name="categoryId" class="form-select">
-                                    <option value="6" ${course.categoryId == 6 ? 'selected' : ''}>Lập trình Web</option>
-                                    <option value="7" ${course.categoryId == 7 ? 'selected' : ''}>Khoa học Dữ liệu &amp; AI</option>
-                                    <option value="8" ${course.categoryId == 8 ? 'selected' : ''}>Kỹ năng mềm</option>
+                                <label class="form-label small fw-semibold">Danh mục (Category) <span class="text-danger">*</span></label>
+                                <select name="categoryId" class="form-select" required>
+                                    <c:forEach var="cat" items="${categories}">
+                                        <option value="${cat.id}" ${course.categoryId == cat.id ? 'selected' : ''}>${cat.name}</option>
+                                    </c:forEach>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Phân công Expert -->
-                        <div class="mb-3 p-3 bg-light rounded-3 border">
-                            <label class="form-label small fw-bold text-primary">
-                                <i class="bi bi-person-fill-gear me-1"></i>Chuyên gia phụ trách nội dung (Assigned Expert)
-                            </label>
-                            <select name="expertId" class="form-select border-primary" required>
-                                <option value="">-- Chưa phân công --</option>
-                                <c:forEach var="exp" items="${experts}">
-                                    <option value="${exp.id}" ${course.expertId == exp.id ? 'selected' : ''}>
-                                        ${exp.fullName} (@${exp.username})
-                                    </option>
-                                </c:forEach>
-                            </select>
-                            <div class="form-text small">Expert này sẽ toàn quyền tạo/sửa Bài học (Lesson) và Bài thi (Quiz) cho khóa học này.</div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Người quản lý (Assigned Manager)</label>
+                                <select name="managerId" class="form-select">
+                                    <option value="">-- Chọn Manager --</option>
+                                    <c:forEach var="mgr" items="${managers}">
+                                        <option value="${mgr.id}" ${course.managerId == mgr.id ? 'selected' : ''}>${mgr.fullName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Chuyên gia (Assigned Expert) <span class="text-danger">*</span></label>
+                                <select name="expertId" class="form-select border-primary" required>
+                                    <option value="">-- Chọn Chuyên gia --</option>
+                                    <c:forEach var="exp" items="${experts}">
+                                        <option value="${exp.id}" ${course.expertId == exp.id ? 'selected' : ''}>${exp.fullName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Trạng thái phát hành (Status Override)</label>
-                            <select name="status" class="form-select">
-                                <option value="DRAFT" ${course.status == 'DRAFT' ? 'selected' : ''}>DRAFT (Bản nháp)</option>
-                                <option value="PUBLISHED" ${course.status == 'PUBLISHED' ? 'selected' : ''}>PUBLISHED (Công khai)</option>
-                                <option value="ARCHIVED" ${course.status == 'ARCHIVED' ? 'selected' : ''}>ARCHIVED (Lưu trữ / Tạm khóa)</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Mô tả khóa học</label>
+                            <label class="form-label small fw-semibold">Mô tả chi tiết (Description)</label>
                             <textarea name="description" rows="4" class="form-control">${course.description}</textarea>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
-                            </a>
-                            <button type="submit" class="btn btn-primary fw-semibold px-4">
-                                <i class="bi bi-save me-1"></i>Lưu thay đổi &amp; Cập nhật
-                            </button>
+                        <!-- Administrative Override -->
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-shield-exclamation text-danger me-2"></i>Quyền kiểm duyệt (Status Override)</h6>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Trạng thái khóa học (Course Status) <span class="text-danger">*</span></label>
+                                <select name="status" class="form-select border-danger">
+                                    <option value="DRAFT" ${course.status == 'DRAFT' ? 'selected' : ''}>Draft (Bản nháp)</option>
+                                    <option value="PENDING_REVIEW" ${course.status == 'PENDING_REVIEW' ? 'selected' : ''}>Pending Review (Chờ duyệt)</option>
+                                    <option value="PUBLISHED" ${course.status == 'PUBLISHED' ? 'selected' : ''}>Published (Phát hành)</option>
+                                    <option value="ARCHIVED" ${course.status == 'ARCHIVED' ? 'selected' : ''}>Archived (Đình chỉ / Lưu trữ)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Lý do kiểm duyệt (Moderation Note)</label>
+                                <textarea name="moderationNote" rows="2" class="form-control" maxlength="255" placeholder="Ghi chú lý do thay đổi trạng thái (tối đa 255 ký tự)..."></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-outline-secondary px-4">
+                                    <i class="bi bi-arrow-left me-1"></i>Back
+                                </a>
+                                <button type="submit" class="btn btn-danger fw-semibold px-4">
+                                    <i class="bi bi-shield-check me-1"></i>Save All Changes
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Right col: Curriculum preview -->
+            <!-- Right col: Curriculum preview & Meta info -->
             <div class="col-lg-5">
+                <!-- Meta Info Card -->
+                <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle me-1 text-primary"></i>Thông tin tổng quan</h6>
+                    <ul class="list-unstyled small mb-0">
+                        <li class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Mã khóa học:</span>
+                            <span class="fw-bold">#${course.id}</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Người quản lý (Manager):</span>
+                            <span>${course.managerName != null ? course.managerName : 'Hệ thống'}</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Chuyên gia phụ trách:</span>
+                            <span class="fw-semibold text-primary">${course.expertName != null ? course.expertName : 'Chưa phân công'}</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Tổng số chương:</span>
+                            <span class="badge bg-secondary-subtle text-secondary">${course.modules != null ? course.modules.size() : 0} Chương</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Học phí niêm yết:</span>
+                            <span class="fw-bold text-success">
+                                <c:choose>
+                                    <c:when test="${course.price > 0}">${course.price} VNĐ</c:when>
+                                    <c:otherwise>Miễn phí</c:otherwise>
+                                </c:choose>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Curriculum Preview -->
                 <div class="card border-0 shadow-sm rounded-3 p-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-list-task me-2"></i>Khung chương trình học</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-list-task me-1 text-primary"></i>Khung chương trình học</h6>
+                        <span class="small text-muted">Do Expert biên soạn</span>
+                    </div>
+
                     <c:choose>
                         <c:when test="${empty course.modules}">
                             <div class="text-center py-4 text-muted">
-                                <i class="bi bi-hourglass-split fs-2 d-block mb-2"></i>
-                                <p class="small mb-0">Chuyên gia phụ trách chưa tạo chương trình học.</p>
+                                <i class="bi bi-hourglass-split fs-2 d-block mb-2 text-muted"></i>
+                                <p class="small mb-0">Chuyên gia phụ trách chưa tạo chương trình học cho khóa này.</p>
                             </div>
                         </c:when>
                         <c:otherwise>
@@ -127,6 +191,11 @@
                                                             <span class="badge bg-warning-subtle text-dark border">Bài thi</span>
                                                         </li>
                                                     </c:forEach>
+                                                    <c:if test="${empty m.lessons && empty m.quizzes}">
+                                                        <li class="list-group-item text-muted text-center py-2 fst-italic">
+                                                            Chưa có bài học hoặc bài thi trong chương này
+                                                        </li>
+                                                    </c:if>
                                                 </ul>
                                             </div>
                                         </div>

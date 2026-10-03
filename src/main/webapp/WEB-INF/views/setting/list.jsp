@@ -73,7 +73,10 @@
                                 </td>
                                 <td class="small text-muted">${s.description}</td>
                                 <td class="text-end">
-                                    <a href="${pageContext.request.contextPath}/settings/delete?id=${s.id}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa cấu hình này?');">
+                                    <a href="${pageContext.request.contextPath}/settings/detail?id=${s.id}" class="btn btn-outline-primary btn-sm me-1" title="Chỉnh sửa cấu hình">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/settings/delete?id=${s.id}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa cấu hình này?');" title="Xóa cấu hình">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </td>
