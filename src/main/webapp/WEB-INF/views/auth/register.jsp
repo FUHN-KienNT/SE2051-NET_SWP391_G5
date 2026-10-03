@@ -332,7 +332,19 @@
             [data-theme="light"] .auth-footer {
                 color: #9CA3AF;
             }
+
+            body, .field-input, .btn-submit, .btn-have-account {
+                transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+            }
         </style>
+
+        <script>
+            (function () {
+                if (localStorage.getItem('courson_auth_theme') === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            })();
+        </script>
     </head>
     <body>
         <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="Chuyển chế độ sáng/tối" title="Chuyển chế độ Sáng/Tối">

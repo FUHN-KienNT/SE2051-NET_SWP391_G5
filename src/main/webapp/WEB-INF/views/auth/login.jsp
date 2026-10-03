@@ -440,7 +440,7 @@
                 background-color: rgba(255, 255, 255, 0.2);
                 border-color: #F38020;
             }
-            
+
             [data-theme="light"] body {
                 background-color: #FFFFFF;
                 color: #111827;
@@ -560,7 +560,19 @@
             [data-theme="light"] .left-glow-2 {
                 background: radial-gradient(circle, rgba(243,128,32,.09) 0%, transparent 70%);
             }
+
+            body, .login-left, .login-right, .field-input, .btn-submit, .btn-google, .btn-no-account {
+                transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+            }
         </style>
+
+        <script>
+            (function () {
+                if (localStorage.getItem('courson_auth_theme') === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            })();
+        </script>
     </head>
     <body>
         <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="Chuyển chế độ sáng/tối" title="Chuyển chế độ Sáng/Tối">
