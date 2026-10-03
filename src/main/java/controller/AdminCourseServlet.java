@@ -123,6 +123,10 @@ public class AdminCourseServlet extends HttpServlet {
 
     private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         CourseDto dto = bindCourse(req);
+        if (dto.getId() == null || dto.getId() <= 0) {
+            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + java.net.URLEncoder.encode("Admin và Manager không trực tiếp tạo khóa học. Khóa học phải do Expert khởi tạo và gửi duyệt.", "UTF-8"));
+            return;
+        }
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (dto.getManagerId() == null && currentUser != null) {
             dto.setManagerId(currentUser.getId());
@@ -131,7 +135,7 @@ public class AdminCourseServlet extends HttpServlet {
             long id = courseService.saveCourse(dto);
             resp.sendRedirect(req.getContextPath() + "/admin/course-detail?id=" + id + "&success=true");
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
         }
     }
 

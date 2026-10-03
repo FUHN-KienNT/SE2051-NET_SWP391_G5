@@ -12,9 +12,6 @@
                 <h3 class="fw-bold mb-1"><i class="bi bi-shield-check text-primary me-2"></i>Trung tâm Kiểm duyệt &amp; Phê duyệt Khóa học</h3>
                 <p class="text-muted small mb-0">Nhiệm vụ của Admin/Manager: Kiểm duyệt nội dung từ Expert và quyết định <strong>Đồng ý xuất bản (Publish)</strong> hoặc <strong>Từ chối (Draft)</strong></p>
             </div>
-            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newCourseModal">
-                <i class="bi bi-plus-lg me-1"></i>Tạo thủ công &amp; Phân công
-            </button>
         </div>
 
         <c:if test="${param.success != null}">
@@ -132,63 +129,5 @@
         </div>
     </div>
 </main>
-
-<!-- Modal Create Course with Expert Assignment -->
-<div class="modal fade" id="newCourseModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="${pageContext.request.contextPath}/admin/save-course" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Tạo khóa học mới &amp; Phân công</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Tên khóa học <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" required placeholder="Nhập tên khóa học">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Học phí (VNĐ, 0 là Miễn phí)</label>
-                        <input type="number" step="1000" name="price" value="0" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Danh mục khóa học</label>
-                        <select name="categoryId" class="form-select">
-                            <option value="6">Lập trình Web</option>
-                            <option value="7">Khoa học Dữ liệu &amp; AI</option>
-                            <option value="8">Kỹ năng mềm</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-primary">Phân công Chuyên gia phụ trách (Assign Expert) <span class="text-danger">*</span></label>
-                        <select name="expertId" class="form-select border-primary" required>
-                            <option value="">-- Chọn Chuyên gia (Expert) phụ trách nội dung --</option>
-                            <c:forEach var="exp" items="${experts}">
-                                <option value="${exp.id}">${exp.fullName} (@${exp.username})</option>
-                            </c:forEach>
-                        </select>
-                        <div class="form-text small">Chuyên gia được chọn sẽ có quyền tạo bài giảng và bài kiểm tra cho khóa học này.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Trạng thái phát hành</label>
-                        <select name="status" class="form-select">
-                            <option value="DRAFT">DRAFT (Bản nháp - Đang biên tập)</option>
-                            <option value="PUBLISHED">PUBLISHED (Công khai)</option>
-                            <option value="ARCHIVED">ARCHIVED (Lưu trữ)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Mô tả khóa học</label>
-                        <textarea name="description" rows="3" class="form-control" placeholder="Mục tiêu và tóm tắt nội dung"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary fw-semibold">Lưu &amp; Phân công</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <jsp:include page="../common/footer.jsp" />
