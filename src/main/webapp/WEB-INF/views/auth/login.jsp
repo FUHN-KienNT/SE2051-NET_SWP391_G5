@@ -440,6 +440,126 @@
                 background-color: rgba(255, 255, 255, 0.2);
                 border-color: #F38020;
             }
+            
+            [data-theme="light"] body {
+                background-color: #FFFFFF;
+                color: #111827;
+            }
+            [data-theme="light"] .theme-toggle-btn {
+                background-color: #FFFFFF;
+                border-color: #E5E7EB;
+                color: #F38020;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+            [data-theme="light"] .theme-toggle-btn:hover {
+                background-color: #FFF7ED;
+                border-color: #F38020;
+            }
+            [data-theme="light"] .login-left {
+                background: linear-gradient(145deg, #FFF9F5 0%, #FFF3E6 100%);
+                border-right: 1px solid #FFE4CC;
+            }
+            [data-theme="light"] .login-right {
+                background-color: #FFFFFF;
+            }
+            [data-theme="light"] .auth-title {
+                color: #111827;
+            }
+            [data-theme="light"] .auth-subtitle {
+                color: #6B7280;
+            }
+            [data-theme="light"] .field-label {
+                color: #374151;
+            }
+            [data-theme="light"] .field-input {
+                background-color: #F9FAFB;
+                border-color: #E5E7EB;
+                color: #111827;
+            }
+            [data-theme="light"] .field-input:focus {
+                background-color: #FFFFFF;
+                border-color: #F38020;
+                box-shadow: 0 0 0 3px rgba(243, 128, 32, 0.15);
+            }
+            [data-theme="light"] .custom-checkbox {
+                background: #F3F4F6;
+                border-color: #D1D5DB;
+            }
+            [data-theme="light"] .remember-label {
+                color: #4B5563;
+            }
+            [data-theme="light"] .remember-label:hover {
+                color: #111827;
+            }
+            [data-theme="light"] .link-muted {
+                color: #6B7280;
+            }
+            [data-theme="light"] .link-muted:hover {
+                color: #F38020;
+            }
+            [data-theme="light"] .btn-submit {
+                background: #F38020;
+                color: #FFFFFF;
+            }
+            [data-theme="light"] .btn-submit:hover {
+                background: #E56B00;
+            }
+            [data-theme="light"] .divider {
+                color: #9CA3AF;
+            }
+            [data-theme="light"] .divider::before,
+            [data-theme="light"] .divider::after {
+                background: #E5E7EB;
+            }
+            [data-theme="light"] .btn-google {
+                background: #FFFFFF;
+                border-color: #E5E7EB;
+                color: #374151;
+            }
+            [data-theme="light"] .btn-google:hover {
+                background: #F9FAFB;
+                border-color: #D1D5DB;
+                color: #111827;
+            }
+            [data-theme="light"] .btn-no-account {
+                border-color: #E5E7EB;
+                color: #374151;
+            }
+            [data-theme="light"] .btn-no-account:hover {
+                background: #FFF7ED;
+                border-color: #F38020;
+                color: #F38020;
+            }
+            [data-theme="light"] .auth-footer {
+                color: #9CA3AF;
+            }
+            [data-theme="light"] .left-headline {
+                color: #111827;
+            }
+            [data-theme="light"] .left-sub {
+                color: #4B5563;
+            }
+            [data-theme="light"] .feature-content h4 {
+                color: #111827;
+            }
+            [data-theme="light"] .feature-content p {
+                color: #6B7280;
+            }
+            [data-theme="light"] .stat-num {
+                color: #111827;
+            }
+            [data-theme="light"] .stat-label {
+                color: #6B7280;
+            }
+            [data-theme="light"] .left-stat {
+                border-top: 1px solid #FFE4CC;
+            }
+            [data-theme="light"] .left-glow {
+                background: radial-gradient(circle, rgba(243,128,32,.14) 0%, transparent 70%);
+            }
+            [data-theme="light"] .left-glow-2 {
+                background: radial-gradient(circle, rgba(243,128,32,.09) 0%, transparent 70%);
+            }
         </style>
     </head>
     <body>
