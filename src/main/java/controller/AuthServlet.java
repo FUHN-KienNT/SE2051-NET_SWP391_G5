@@ -10,8 +10,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import service.AuthService;
+import service.InactiveAccountException;
 import util.SessionUtil;
 
 @WebServlet(name = "AuthServlet", urlPatterns = {"/auth/*"})
@@ -57,6 +61,9 @@ public class AuthServlet extends HttpServlet {
                     showRegister(req, resp);
                 }
                 break;
+            case "check-email":
+                showCheckEmail(req, resp);
+                break;
             case "logout":
                 logout(req, resp);
                 break;
@@ -70,11 +77,42 @@ public class AuthServlet extends HttpServlet {
     }
 
     private void showLogin(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            String flashToastType = (String) session.getAttribute("flashToastType");
+            String flashToastMessage = (String) session.getAttribute("flashToastMessage");
+            if (flashToastMessage != null) {
+                req.setAttribute("toastType", flashToastType != null ? flashToastType : "info");
+                req.setAttribute("toastMessage", flashToastMessage);
+                session.removeAttribute("flashToastType");
+                session.removeAttribute("flashToastMessage");
+            }
+        }
+
+        // Whitelist check for status query param fallback
+        String status = req.getParameter("status");
+        if (req.getAttribute("toastMessage") == null && status != null) {
+            if ("verified".equals(status)) {
+                req.setAttribute("toastType", "success");
+                req.setAttribute("toastMessage", "Xác thực tài khoản thành công! Hãy đăng nhập để bắt đầu học tập.");
+            } else if ("already".equals(status)) {
+                req.setAttribute("toastType", "info");
+                req.setAttribute("toastMessage", "Tài khoản đã được xác thực trước đó, hãy đăng nhập.");
+            } else if ("invalid".equals(status)) {
+                req.setAttribute("toastType", "error");
+                req.setAttribute("toastMessage", "Liên kết xác thực không hợp lệ hoặc đã hết hạn. Bạn có thể yêu cầu gửi lại email xác nhận.");
+            }
+        }
+
         req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
     }
 
     private void showRegister(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(req, resp);
+    }
+
+    private void showCheckEmail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/views/auth/check-email.jsp").forward(req, resp);
     }
 
     private void login(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -87,6 +125,11 @@ public class AuthServlet extends HttpServlet {
             UserDto user = authService.authenticate(dto);
             SessionUtil.setCurrentUser(req, user);
             redirectByRole(user, req, resp);
+        } catch (InactiveAccountException e) {
+            req.setAttribute("error", e.getMessage());
+            req.setAttribute("inactiveEmail", e.getEmail());
+            req.setAttribute("loginId", loginId);
+            showLogin(req, resp);
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("loginId", loginId);
@@ -104,8 +147,15 @@ public class AuthServlet extends HttpServlet {
 
         RegisterDto dto = new RegisterDto(username, email, password, confirmPassword, fullName, agreeTerms);
         try {
-            authService.register(dto);
-            resp.sendRedirect(req.getContextPath() + "/auth/login?registered=true");
+            String scheme = req.getScheme();
+            String serverName = req.getServerName();
+            int serverPort = req.getServerPort();
+            String contextPath = req.getContextPath();
+            String dynamicBaseUrl = scheme + "://" + serverName + ((serverPort == 80 || serverPort == 443) ? "" : (":" + serverPort)) + contextPath;
+
+            authService.register(dto, dynamicBaseUrl);
+            String encodedEmail = URLEncoder.encode(dto.getEmail().trim(), StandardCharsets.UTF_8);
+            resp.sendRedirect(req.getContextPath() + "/auth/check-email?email=" + encodedEmail);
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("registerDto", dto);

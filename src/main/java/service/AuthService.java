@@ -23,10 +23,16 @@ public class AuthService {
 
     private final UserDao userDao;
     private final SettingDao settingDao;
+    private final EmailVerificationService emailVerificationService;
 
     public AuthService(UserDao userDao, SettingDao settingDao) {
+        this(userDao, settingDao, new EmailVerificationService(new dao.VerificationTokenDao(), userDao));
+    }
+
+    public AuthService(UserDao userDao, SettingDao settingDao, EmailVerificationService emailVerificationService) {
         this.userDao = userDao;
         this.settingDao = settingDao;
+        this.emailVerificationService = emailVerificationService;
     }
 
     public UserDto authenticate(LoginDto dto) {
@@ -41,7 +47,7 @@ public class AuthService {
                 throw new IllegalStateException("Tài khoản của bạn đã bị khóa.");
             }
             if (user.getStatus() == UserStatus.INACTIVE) {
-                throw new IllegalStateException("Tài khoản chưa được kích hoạt.");
+                throw new InactiveAccountException("Tài khoản chưa được kích hoạt. Vui lòng xác thực email của bạn để tiếp tục.", user.getEmail());
             }
             if (!PasswordUtil.verify(dto.getPassword(), user.getPasswordHash())) {
                 throw new IllegalArgumentException("Tài khoản hoặc mật khẩu không chính xác.");
@@ -53,6 +59,10 @@ public class AuthService {
     }
 
     public UserDto register(RegisterDto dto) {
+        return register(dto, null);
+    }
+
+    public UserDto register(RegisterDto dto, String dynamicBaseUrl) {
         validateRegistration(dto);
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
@@ -74,10 +84,15 @@ public class AuthService {
                 user.setRoleId(studentRole != null ? studentRole.getId() : null);
                 user.setRoleType(SettingType.USER_ROLE);
                 user.setAuthProvider(AuthProvider.LOCAL);
-                user.setStatus(UserStatus.ACTIVE);
+                user.setStatus(UserStatus.INACTIVE);
 
                 long id = userDao.insert(con, user);
                 user.setId(id);
+
+                if (emailVerificationService != null) {
+                    emailVerificationService.createAndSendToken(con, user, dynamicBaseUrl);
+                }
+
                 con.commit();
                 return mapUser(user);
             } catch (Exception ex) {
