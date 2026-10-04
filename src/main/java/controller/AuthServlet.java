@@ -18,7 +18,7 @@ import service.AuthService;
 import service.InactiveAccountException;
 import util.SessionUtil;
 
-@WebServlet(name = "AuthServlet", urlPatterns = {"/auth/*"})
+@WebServlet(name = "AuthServlet", urlPatterns = { "/auth/*" })
 public class AuthServlet extends HttpServlet {
 
     private AuthService authService;
@@ -44,7 +44,8 @@ public class AuthServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
-    private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         String method = req.getMethod();
         switch (action) {
             case "login":
@@ -100,7 +101,8 @@ public class AuthServlet extends HttpServlet {
                 req.setAttribute("toastMessage", "Tài khoản đã được xác thực trước đó, hãy đăng nhập.");
             } else if ("invalid".equals(status)) {
                 req.setAttribute("toastType", "error");
-                req.setAttribute("toastMessage", "Liên kết xác thực không hợp lệ hoặc đã hết hạn. Bạn có thể yêu cầu gửi lại email xác nhận.");
+                req.setAttribute("toastMessage",
+                        "Liên kết xác thực không hợp lệ hoặc đã hết hạn. Bạn có thể yêu cầu gửi lại email xác nhận.");
             }
         }
 
@@ -151,7 +153,8 @@ public class AuthServlet extends HttpServlet {
             String serverName = req.getServerName();
             int serverPort = req.getServerPort();
             String contextPath = req.getContextPath();
-            String dynamicBaseUrl = scheme + "://" + serverName + ((serverPort == 80 || serverPort == 443) ? "" : (":" + serverPort)) + contextPath;
+            String dynamicBaseUrl = scheme + "://" + serverName
+                    + ((serverPort == 80 || serverPort == 443) ? "" : (":" + serverPort)) + contextPath;
 
             authService.register(dto, dynamicBaseUrl);
             String encodedEmail = URLEncoder.encode(dto.getEmail().trim(), StandardCharsets.UTF_8);
@@ -182,9 +185,18 @@ public class AuthServlet extends HttpServlet {
 
     private void redirectByRole(UserDto user, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String ctx = req.getContextPath();
-        if (user != null && "ADMIN".equalsIgnoreCase(user.getRoleName())) {
+        if (user == null || user.getRoleName() == null) {
+            resp.sendRedirect(ctx + "/home");
+            return;
+        }
+
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
             resp.sendRedirect(ctx + "/admin/dashboard");
-        } else if (user != null && ("INSTRUCTOR".equalsIgnoreCase(user.getRoleName()) || "MANAGER".equalsIgnoreCase(user.getRoleName()) || "EXPERT".equalsIgnoreCase(user.getRoleName()))) {
+        } else if ("EXPERT".equalsIgnoreCase(role) || "ROLE_EXPERT".equalsIgnoreCase(role)) {
+            resp.sendRedirect(ctx + "/expert/dashboard");
+        } else if ("MANAGER".equalsIgnoreCase(role) || "ROLE_MANAGER".equalsIgnoreCase(role)
+                || "INSTRUCTOR".equalsIgnoreCase(role)) {
             resp.sendRedirect(ctx + "/admin/courses");
         } else {
             resp.sendRedirect(ctx + "/home");
