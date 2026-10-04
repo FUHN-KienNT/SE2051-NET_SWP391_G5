@@ -117,6 +117,10 @@
             .input-wrapper .field-input {
                 padding-right: 48px;
             }
+            input::-ms-reveal,
+            input::-ms-clear {
+                display: none;
+            }
             .toggle-icon {
                 position: absolute;
                 right: 14px;

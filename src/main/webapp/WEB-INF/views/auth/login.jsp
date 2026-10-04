@@ -255,6 +255,10 @@
             .field-input.pw-input {
                 padding-right: 48px;
             }
+            input::-ms-reveal,
+            input::-ms-clear {
+                display: none;
+            }
 
             .eye-btn {
                 position: absolute;
@@ -970,7 +974,8 @@
                 };
                 const CoursonToast = {
                     show: function (type, message, duration = 5000) {
-                        if (!message) return;
+                        if (!message)
+                            return;
                         const c = getOrCreateContainer();
                         const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
                         const iconClass = ICONS[normalizedType];
@@ -989,22 +994,36 @@
                         closeBtn.setAttribute('type', 'button');
                         closeBtn.setAttribute('aria-label', 'Đóng thông báo');
                         closeBtn.innerHTML = '&times;';
-                        closeBtn.onclick = function () { dismissToast(toast); };
+                        closeBtn.onclick = function () {
+                            dismissToast(toast);
+                        };
                         toast.appendChild(closeBtn);
                         c.appendChild(toast);
-                        requestAnimationFrame(() => { toast.classList.add('show'); });
+                        requestAnimationFrame(() => {
+                            toast.classList.add('show');
+                        });
                         let timer = null;
                         if (duration > 0) {
-                            timer = setTimeout(() => { dismissToast(toast); }, duration);
+                            timer = setTimeout(() => {
+                                dismissToast(toast);
+                            }, duration);
                         }
-                        toast.onmouseenter = () => { if (timer) clearTimeout(timer); };
+                        toast.onmouseenter = () => {
+                            if (timer)
+                                clearTimeout(timer);
+                        };
                         toast.onmouseleave = () => {
-                            if (duration > 0) { timer = setTimeout(() => { dismissToast(toast); }, 2000); }
+                            if (duration > 0) {
+                                timer = setTimeout(() => {
+                                    dismissToast(toast);
+                                }, 2000);
+                            }
                         };
                         return toast;
                     },
                     cleanUrlParams: function (paramNames = ['status']) {
-                        if (!window.history || !window.history.replaceState) return;
+                        if (!window.history || !window.history.replaceState)
+                            return;
                         try {
                             const url = new URL(window.location.href);
                             let changed = false;
@@ -1018,15 +1037,19 @@
                                 const cleanPath = url.pathname + (url.search ? url.search : '') + url.hash;
                                 window.history.replaceState(null, '', cleanPath);
                             }
-                        } catch (e) {}
+                        } catch (e) {
+                    }
                     }
                 };
                 function dismissToast(toast) {
-                    if (!toast || toast.classList.contains('hide')) return;
+                    if (!toast || toast.classList.contains('hide'))
+                        return;
                     toast.classList.remove('show');
                     toast.classList.add('hide');
                     setTimeout(() => {
-                        if (toast.parentNode) { toast.parentNode.removeChild(toast); }
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
                     }, 400);
                 }
                 global.CoursonToast = CoursonToast;
