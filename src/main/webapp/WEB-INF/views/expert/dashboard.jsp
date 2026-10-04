@@ -97,7 +97,7 @@
                             <th>Danh mục</th>
                             <th>Bài giảng</th>
                             <th>Trạng thái xuất bản</th>
-                            <th class="text-end">Hành động</th>
+                            <th class="text-end text-nowrap" style="min-width: 300px;">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -153,16 +153,18 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td class="text-end">
-                                            <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="btn btn-primary btn-sm me-1 shadow-sm">
-                                                <i class="bi bi-journal-text me-1"></i>Soạn Bài học (${c.totalLessons})
-                                            </a>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editCourseModal_${c.id}">
-                                                <i class="bi bi-gear me-1"></i>Sửa thông tin
-                                            </button>
-                                            <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="btn btn-light btn-sm border" target="_blank" title="Xem trước trang khóa học">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                        <td class="text-end text-nowrap">
+                                            <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                                                <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="btn btn-primary btn-sm shadow-sm text-nowrap">
+                                                    <i class="bi bi-journal-text me-1"></i>Soạn Bài học (${c.totalLessons})
+                                                </a>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#editCourseModal_${c.id}">
+                                                    <i class="bi bi-gear me-1"></i>Sửa thông tin
+                                                </button>
+                                                <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="btn btn-light btn-sm border text-nowrap" target="_blank" title="Xem trước trang khóa học">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
 
