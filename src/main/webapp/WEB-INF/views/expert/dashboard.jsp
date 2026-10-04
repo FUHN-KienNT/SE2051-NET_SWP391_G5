@@ -202,14 +202,22 @@
                                                     <div
                                                         class="d-inline-flex align-items-center justify-content-end gap-1">
                                                         <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
-                                                            class="btn btn-primary btn-sm shadow-sm text-nowrap">
+                                                            class="btn btn-primary btn-sm shadow-sm text-nowrap"
+                                                            title="Quản lý chương và bài học">
                                                             <i class="bi bi-journal-text me-1"></i>Soạn Bài học
                                                             (${c.totalLessons})
+                                                        </a>
+                                                        <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}"
+                                                            class="btn btn-warning btn-sm shadow-sm text-dark fw-semibold text-nowrap"
+                                                            title="Soạn và quản lý Quiz cho khóa học">
+                                                            <i class="bi bi-patch-question-fill me-1"></i>Soạn Quiz
+                                                            (${c.totalQuizzes})
                                                         </a>
                                                         <button type="button"
                                                             class="btn btn-outline-secondary btn-sm text-nowrap"
                                                             data-bs-toggle="modal"
-                                                            data-bs-target="#editCourseModal_${c.id}">
+                                                            data-bs-target="#editCourseModal_${c.id}"
+                                                            title="Chỉnh sửa thông tin khóa học">
                                                             <i class="bi bi-gear me-1"></i>Sửa thông tin
                                                         </button>
                                                         <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}"
