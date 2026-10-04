@@ -235,7 +235,10 @@ public class AdminCourseServlet extends HttpServlet {
         }
         dto.setTitle(req.getParameter("title"));
         String catId = req.getParameter("categoryId");
-        if (catId != null && !catId.trim().isEmpty()) {
+        String customCategory = req.getParameter("customCategory");
+        if (customCategory != null && !customCategory.trim().isEmpty()) {
+            dto.setCategoryId(courseService.getOrCreateCategory(customCategory));
+        } else if (catId != null && !catId.trim().isEmpty() && !"__NEW__".equalsIgnoreCase(catId.trim())) {
             dto.setCategoryId(Long.parseLong(catId.trim()));
         } else {
             dto.setCategoryId(6L);

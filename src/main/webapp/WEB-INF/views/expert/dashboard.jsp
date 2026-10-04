@@ -186,11 +186,15 @@
                                                         <div class="row g-2 mb-3">
                                                             <div class="col-md-7">
                                                                 <label class="form-label small fw-semibold">Danh mục</label>
-                                                                <select name="categoryId" class="form-select">
+                                                                <select name="categoryId" class="form-select" onchange="toggleCustomCategory(this, 'editCourseCustomCatDiv_${c.id}')">
                                                                     <c:forEach var="cat" items="${categories}">
                                                                         <option value="${cat.id}" ${cat.id == c.categoryId ? 'selected' : ''}>${cat.name}</option>
                                                                     </c:forEach>
+                                                                    <option value="__NEW__" class="fw-bold text-primary">➕ + Nhập danh mục mới...</option>
                                                                 </select>
+                                                                <div id="editCourseCustomCatDiv_${c.id}" class="mt-2" style="display: none;">
+                                                                    <input type="text" name="customCategory" class="form-control form-control-sm border-primary" placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                                                                </div>
                                                             </div>
                                                             <div class="col-md-5">
                                                                 <label class="form-label small fw-semibold">Học phí (VNĐ)</label>
@@ -240,11 +244,15 @@
                     <div class="row g-2 mb-3">
                         <div class="col-md-7">
                             <label class="form-label small fw-semibold">Danh mục đào tạo</label>
-                            <select name="categoryId" class="form-select">
+                            <select name="categoryId" class="form-select" onchange="toggleCustomCategory(this, 'newCourseCustomCatDiv')">
                                 <c:forEach var="cat" items="${categories}">
                                     <option value="${cat.id}">${cat.name}</option>
                                 </c:forEach>
+                                <option value="__NEW__" class="fw-bold text-primary">➕ + Nhập danh mục mới...</option>
                             </select>
+                            <div id="newCourseCustomCatDiv" class="mt-2" style="display: none;">
+                                <input type="text" name="customCategory" class="form-control form-control-sm border-primary" placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                            </div>
                         </div>
                         <div class="col-md-5">
                             <label class="form-label small fw-semibold">Học phí (VNĐ)</label>
@@ -273,5 +281,27 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleCustomCategory(selectEl, targetDivId) {
+    var div = document.getElementById(targetDivId);
+    if (!div) return;
+    if (selectEl.value === '__NEW__') {
+        div.style.display = 'block';
+        var inp = div.querySelector('input');
+        if (inp) {
+            inp.focus();
+            inp.required = true;
+        }
+    } else {
+        div.style.display = 'none';
+        var inp = div.querySelector('input');
+        if (inp) {
+            inp.required = false;
+            inp.value = '';
+        }
+    }
+}
+</script>
 
 <jsp:include page="../common/footer.jsp" />

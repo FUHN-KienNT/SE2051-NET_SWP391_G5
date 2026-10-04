@@ -200,6 +200,40 @@ public class CourseService {
         }
     }
 
+    public Long getOrCreateCategory(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return 6L;
+        }
+        String trimmedName = name.trim();
+        try (Connection con = DbConnection.getConnection()) {
+            SettingDao sDao = new SettingDao();
+            List<entity.Setting> list = sDao.findByType(con, SettingType.COURSE_CATEGORY);
+            for (entity.Setting s : list) {
+                if (s.getName().equalsIgnoreCase(trimmedName)) {
+                    return s.getId();
+                }
+            }
+            entity.Setting s = new entity.Setting();
+            s.setType(SettingType.COURSE_CATEGORY);
+            s.setName(trimmedName);
+            String val = java.text.Normalizer.normalize(trimmedName, java.text.Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}", "")
+                    .toUpperCase()
+                    .replaceAll("[^A-Z0-9]+", "_")
+                    .replaceAll("^_+|_+$", "");
+            if (val.isEmpty()) {
+                val = "CAT_" + System.currentTimeMillis();
+            }
+            s.setValue(val);
+            s.setPriority(list.size() + 1);
+            s.setStatus(entity.enums.SettingStatus.ACTIVE);
+            s.setDescription("Danh mục tạo tự động khi tạo khóa học");
+            return sDao.insert(con, s);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tạo danh mục mới: " + e.getMessage(), e);
+        }
+    }
+
     public void updateCourseStatus(long courseId, CourseStatus status) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)

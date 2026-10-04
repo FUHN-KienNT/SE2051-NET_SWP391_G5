@@ -129,7 +129,10 @@ public class LessonServlet extends HttpServlet {
         dto.setTitle(req.getParameter("title"));
         dto.setDescription(req.getParameter("description"));
         String catIdStr = req.getParameter("categoryId");
-        if (catIdStr != null && !catIdStr.trim().isEmpty()) {
+        String customCategory = req.getParameter("customCategory");
+        if (customCategory != null && !customCategory.trim().isEmpty()) {
+            dto.setCategoryId(courseService.getOrCreateCategory(customCategory));
+        } else if (catIdStr != null && !catIdStr.trim().isEmpty() && !"__NEW__".equalsIgnoreCase(catIdStr.trim())) {
             dto.setCategoryId(Long.parseLong(catIdStr.trim()));
         } else {
             dto.setCategoryId(6L);

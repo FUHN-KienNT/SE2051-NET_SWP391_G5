@@ -54,11 +54,15 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Danh mục (Category) <span class="text-danger">*</span></label>
-                                <select name="categoryId" class="form-select" required>
+                                <select name="categoryId" class="form-select" onchange="toggleAdminCustomCat(this)">
                                     <c:forEach var="cat" items="${categories}">
                                         <option value="${cat.id}" ${course.categoryId == cat.id ? 'selected' : ''}>${cat.name}</option>
                                     </c:forEach>
+                                    <option value="__NEW__" class="fw-bold text-primary">➕ + Nhập danh mục mới...</option>
                                 </select>
+                                <div id="adminCustomCatDiv" class="mt-2" style="display: none;">
+                                    <input type="text" name="customCategory" class="form-control form-control-sm border-primary" placeholder="✨ Nhập tên danh mục mới...">
+                                </div>
                             </div>
                         </div>
 
@@ -209,5 +213,27 @@
         </div>
     </div>
 </main>
+
+<script>
+function toggleAdminCustomCat(selectEl) {
+    var div = document.getElementById('adminCustomCatDiv');
+    if (!div) return;
+    if (selectEl.value === '__NEW__') {
+        div.style.display = 'block';
+        var inp = div.querySelector('input');
+        if (inp) {
+            inp.focus();
+            inp.required = true;
+        }
+    } else {
+        div.style.display = 'none';
+        var inp = div.querySelector('input');
+        if (inp) {
+            inp.required = false;
+            inp.value = '';
+        }
+    }
+}
+</script>
 
 <jsp:include page="../common/footer.jsp" />
