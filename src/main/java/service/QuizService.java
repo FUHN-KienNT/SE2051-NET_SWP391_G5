@@ -176,6 +176,33 @@ public class QuizService {
         }
     }
 
+    public List<QuestionDto> getQuestionsByCourse(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Question> list = questionDao.findByCourseId(con, courseId);
+            List<QuestionDto> dtos = new ArrayList<>();
+            for (Question q : list) {
+                QuestionDto qDto = new QuestionDto();
+                qDto.setId(q.getId());
+                qDto.setModuleId(q.getModuleId());
+                qDto.setQuestionText(q.getQuestionText());
+                qDto.setQuestionType(q.getQuestionType());
+                qDto.setDefaultPoints(q.getDefaultPoints());
+
+                List<AnswerOption> options = questionDao.findOptions(con, q.getId());
+                for (AnswerOption opt : options) {
+                    qDto.getOptions().add(new AnswerOptionDto(
+                            opt.getId(), opt.getQuestionId(), opt.getOptionText(),
+                            opt.isCorrect(), opt.getOrderIndex()
+                    ));
+                }
+                dtos.add(qDto);
+            }
+            return dtos;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy danh sách câu hỏi của khóa học: " + e.getMessage(), e);
+        }
+    }
+
     public QuestionDto getQuestion(long questionId) {
         try (Connection con = DbConnection.getConnection()) {
             Question q = questionDao.findById(con, questionId)

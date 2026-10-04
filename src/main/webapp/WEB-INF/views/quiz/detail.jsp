@@ -7,228 +7,105 @@
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
 
-<style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-        --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-        --surface-subtle: #f8fafc;
-        --border-color: #e2e8f0;
-    }
+<main class="main-content py-5">
+    <div class="container">
 
-    /* Hero Banner */
-    .quiz-hero-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 18px;
-        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-    }
-
-    /* KPI Cards */
-    .kpi-card {
-        background: #ffffff;
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px -4px rgba(0, 0, 0, 0.08);
-        border-color: #cbd5e1;
-    }
-    .kpi-icon-wrapper {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        font-size: 1.4rem;
-    }
-
-    /* Question Item Card */
-    .question-card {
-        background: #ffffff;
-        border: 1px solid var(--border-color);
-        border-radius: 14px;
-        transition: all 0.2s ease-in-out;
-    }
-    .question-card:hover {
-        border-color: #93c5fd;
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.08);
-    }
-
-    .option-pill {
-        border-radius: 10px;
-        padding: 0.6rem 0.85rem;
-        transition: all 0.15s ease;
-    }
-    .option-pill.correct {
-        background-color: #ecfdf5;
-        border: 1px solid #10b981;
-        color: #065f46;
-    }
-    .option-pill.regular {
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-        color: #334155;
-    }
-
-    .badge-soft-primary {
-        background-color: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-    }
-    .badge-soft-warning {
-        background-color: #fffbeb;
-        color: #b45309;
-        border: 1px solid #fde68a;
-    }
-    .badge-soft-success {
-        background-color: #ecfdf5;
-        color: #047857;
-        border: 1px solid #a7f3d0;
-    }
-    .badge-soft-info {
-        background-color: #f0fdfa;
-        color: #0f766e;
-        border: 1px solid #99f6e4;
-    }
-</style>
-
-<main class="main-content py-4 bg-light min-vh-100">
-    <div class="container-xl">
-        <!-- Toast / Alerts -->
-        <c:if test="${not empty param.success}">
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4 d-flex align-items-center" role="alert">
-                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
-                <div>
-                    <c:choose>
-                        <c:when test="${param.success == 'saved'}">
-                            <strong>Thành công!</strong> Đã lưu và cập nhật cấu hình bài thi.
-                        </c:when>
-                        <c:when test="${param.success == 'assigned'}">
-                            <strong>Thành công!</strong> Đã thêm câu hỏi vào bài thi.
-                        </c:when>
-                        <c:when test="${param.success == 'removed'}">
-                            <strong>Đã gỡ!</strong> Đã xóa câu hỏi khỏi bài thi này thành công.
-                        </c:when>
-                        <c:when test="${param.success == 'reordered'}">
-                            <strong>Đã lưu!</strong> Thứ tự các câu hỏi đã được cập nhật.
-                        </c:when>
-                        <c:when test="${param.success == 'question_created_and_assigned'}">
-                            <strong>Tuyệt vời!</strong> Đã tạo câu hỏi mới và tự động gán vào bài thi.
-                        </c:when>
-                        <c:otherwise>
-                            <strong>Thành công!</strong> Thao tác đã được hoàn tất.
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        </c:if>
-
-        <c:if test="${not empty param.error}">
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4 d-flex align-items-center" role="alert">
-                <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-danger"></i>
-                <div>
-                    <strong>Có lỗi xảy ra:</strong> <c:out value="${param.error}" />
-                </div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        </c:if>
-
-        <!-- Breadcrumb Navigation -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb mb-0 py-2 px-3 bg-white rounded-3 shadow-sm border border-light">
+        <!-- Breadcrumb Navigation Đồng bộ -->
+        <nav class="mb-3">
+            <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="${pageContext.request.contextPath}/expert/dashboard" class="text-decoration-none text-muted">
-                        <i class="bi bi-house-door me-1"></i>Expert Dashboard
+                    <a href="${pageContext.request.contextPath}/expert/dashboard" class="text-decoration-none">
+                        Expert Dashboard
                     </a>
                 </li>
-                <li class="breadcrumb-item">
-                    <c:url var="quizListUrl" value="/quizzes/list">
-                        <c:choose>
-                            <c:when test="${not empty courseId}">
-                                <c:param name="courseId" value="${courseId}"/>
-                            </c:when>
-                            <c:otherwise>
-                                <c:param name="moduleId" value="${quiz.moduleId}"/>
-                            </c:otherwise>
-                        </c:choose>
-                    </c:url>
-                    <a href="${quizListUrl}" class="text-decoration-none text-muted">Danh sách Quiz</a>
-                </li>
                 <c:if test="${not empty course}">
-                    <li class="breadcrumb-item text-muted">
-                        <c:out value="${course.title}" />
+                    <li class="breadcrumb-item">
+                        <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}" class="text-decoration-none">
+                            ${course.title}
+                        </a>
                     </li>
                 </c:if>
-                <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">
-                    <c:out value="${quiz.title}" />
+                <li class="breadcrumb-item active" aria-current="page">
+                    ${quiz.title}
                 </li>
             </ol>
         </nav>
 
-        <!-- Hero Header Card -->
-        <div class="card quiz-hero-card p-4 mb-4">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                        <span class="badge badge-soft-primary px-2.5 py-1.5 rounded-pill fw-semibold">
-                            <i class="bi bi-patch-question me-1"></i>Bài kiểm tra #${quiz.orderIndex}
-                        </span>
-                        <c:if test="${not empty currentModule}">
-                            <span class="badge badge-soft-info px-2.5 py-1.5 rounded-pill fw-semibold">
-                                <i class="bi bi-folder2-open me-1"></i>Chương: ${currentModule.title}
-                            </span>
-                        </c:if>
-                        <c:choose>
-                            <c:when test="${empty quiz.questions}">
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-semibold">
-                                    <i class="bi bi-exclamation-circle me-1"></i>Chưa có câu hỏi
-                                </span>
-                            </c:when>
-                            <c:otherwise>
-                                <span class="badge badge-soft-success px-2.5 py-1.5 rounded-pill fw-semibold">
-                                    <i class="bi bi-check-circle me-1"></i>Sẵn sàng hoạt động
-                                </span>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                    <h2 class="fw-bold mb-1 text-dark">${quiz.title}</h2>
-                    <p class="text-muted small mb-0">
-                        Quản lý nội dung câu hỏi, điều chỉnh cấu hình và phân bổ điểm số cho bài kiểm tra
-                    </p>
-                </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="${quizListUrl}" class="btn btn-outline-secondary rounded-pill px-3 fw-medium">
-                        <i class="bi bi-arrow-left me-1"></i>Danh sách bài thi
-                    </a>
-                    <c:if test="${not empty quiz.questions}">
-                        <a href="${pageContext.request.contextPath}/course/detail?id=${not empty courseId ? courseId : 1}" 
-                           target="_blank" class="btn btn-outline-primary rounded-pill px-3 fw-medium" title="Xem khóa học">
-                            <i class="bi bi-box-arrow-up-right me-1"></i>Khóa học
-                        </a>
+        <!-- System Alerts Đồng bộ -->
+        <c:if test="${not empty param.success}">
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <c:choose>
+                    <c:when test="${param.success == 'saved'}">
+                        Đã lưu và cập nhật cấu hình bài kiểm tra thành công!
+                    </c:when>
+                    <c:when test="${param.success == 'assigned'}">
+                        Đã thêm câu hỏi vào bài kiểm tra!
+                    </c:when>
+                    <c:when test="${param.success == 'removed'}">
+                        Đã gỡ câu hỏi khỏi bài kiểm tra (câu hỏi vẫn nằm trong Ngân hàng câu hỏi).
+                    </c:when>
+                    <c:when test="${param.success == 'question_created_and_assigned'}">
+                        Đã tạo câu hỏi mới và tự động gán vào bài kiểm tra!
+                    </c:when>
+                    <c:otherwise>Thao tác đã được hoàn tất thành công.</c:otherwise>
+                </c:choose>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+
+        <c:if test="${not empty param.error}">
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><c:out value="${param.error}" />
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+
+        <!-- Header Top Bar Đồng bộ Dashboard, Lesson List, Quiz List -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <c:if test="${not empty currentModule}">
+                        <span class="badge bg-light text-dark border fw-semibold">Chương ${currentModule.orderIndex}: ${currentModule.title}</span>
                     </c:if>
+                    <h3 class="fw-bold mb-0">
+                        <i class="bi bi-patch-question-fill text-primary me-2"></i>${quiz.title}
+                    </h3>
                 </div>
+                <p class="text-muted small mb-0">
+                    Quản lý cấu hình bài thi, thiết lập câu hỏi và phân bổ điểm số (Màn hình II.5.2)
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <c:url var="backQuizListUrl" value="/quizzes/list">
+                    <c:if test="${not empty courseId}"><c:param name="courseId" value="${courseId}"/></c:if>
+                </c:url>
+                <a href="${backQuizListUrl}" class="btn btn-outline-secondary fw-semibold">
+                    <i class="bi bi-arrow-left me-1"></i>Danh sách Quiz
+                </a>
+                <button type="button" class="btn btn-primary fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
+                    <i class="bi bi-plus-circle me-1"></i>Thêm từ Ngân hàng
+                </button>
+                <button type="button" class="btn btn-success fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
+                    <i class="bi bi-patch-plus-fill me-1"></i>Tạo câu hỏi mới
+                </button>
             </div>
         </div>
 
-        <!-- 4 KPI Summary Cards -->
+        <!-- 4 KPI Stat Cards Đồng bộ Dashboard -->
         <div class="row g-3 mb-4">
             <!-- Total Questions -->
             <div class="col-sm-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="kpi-icon-wrapper bg-primary-subtle text-primary me-3">
-                            <i class="bi bi-question-diamond"></i>
-                        </div>
+                <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="text-muted small fw-semibold">Tổng số câu hỏi</div>
-                            <div class="fs-4 fw-bold text-dark">
+                            <h3 class="fw-bold mb-0 mt-1">
                                 ${not empty quiz.questions ? fn:length(quiz.questions) : 0} <span class="fs-6 fw-normal text-muted">câu</span>
-                            </div>
+                            </h3>
+                        </div>
+                        <div class="bg-primary-subtle text-primary p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="bi bi-question-diamond fs-4"></i>
                         </div>
                     </div>
                 </div>
@@ -236,16 +113,16 @@
 
             <!-- Total Points -->
             <div class="col-sm-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="kpi-icon-wrapper bg-success-subtle text-success me-3">
-                            <i class="bi bi-award"></i>
-                        </div>
+                <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="text-muted small fw-semibold">Tổng điểm bài thi</div>
-                            <div class="fs-4 fw-bold text-dark">
+                            <h3 class="fw-bold mb-0 mt-1">
                                 ${quiz.totalPoints} <span class="fs-6 fw-normal text-muted">điểm</span>
-                            </div>
+                            </h3>
+                        </div>
+                        <div class="bg-success-subtle text-success p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="bi bi-award fs-4"></i>
                         </div>
                     </div>
                 </div>
@@ -253,17 +130,16 @@
 
             <!-- Passing Score -->
             <div class="col-sm-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="kpi-icon-wrapper bg-warning-subtle text-warning me-3">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
+                <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="text-muted small fw-semibold">Điểm đạt tối thiểu</div>
-                            <div class="fs-4 fw-bold text-dark">
-                                ${quiz.passScore}% 
-                                <span class="fs-6 fw-normal text-muted">(${quiz.passingPoints} đ)</span>
-                            </div>
+                            <h3 class="fw-bold mb-0 mt-1">
+                                ${quiz.passScore}% <span class="fs-6 fw-normal text-muted">(${quiz.passingPoints} đ)</span>
+                            </h3>
+                        </div>
+                        <div class="bg-warning-subtle text-warning p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="bi bi-shield-check fs-4"></i>
                         </div>
                     </div>
                 </div>
@@ -271,14 +147,11 @@
 
             <!-- Time Limit -->
             <div class="col-sm-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="kpi-icon-wrapper bg-info-subtle text-info me-3">
-                            <i class="bi bi-stopwatch"></i>
-                        </div>
+                <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="text-muted small fw-semibold">Thời lượng làm bài</div>
-                            <div class="fs-4 fw-bold text-dark">
+                            <div class="text-muted small fw-semibold">Thời lượng thi</div>
+                            <h3 class="fw-bold mb-0 mt-1">
                                 <c:choose>
                                     <c:when test="${not empty quiz.timeLimitMinutes && quiz.timeLimitMinutes > 0}">
                                         ${quiz.timeLimitMinutes} <span class="fs-6 fw-normal text-muted">phút</span>
@@ -287,7 +160,10 @@
                                         <span class="fs-6 fw-semibold text-secondary">Tự do</span>
                                     </c:otherwise>
                                 </c:choose>
-                            </div>
+                            </h3>
+                        </div>
+                        <div class="bg-info-subtle text-info p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="bi bi-stopwatch fs-4"></i>
                         </div>
                     </div>
                 </div>
@@ -299,14 +175,13 @@
             <!-- Left Column: Quiz Setting Form & Actions (col-lg-4) -->
             <div class="col-lg-4">
                 <!-- Config Card -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="kpi-icon-wrapper bg-primary-subtle text-primary me-2.5" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                        <div class="bg-primary-subtle text-primary p-2 rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                             <i class="bi bi-gear-fill"></i>
                         </div>
                         <h5 class="fw-bold mb-0 text-dark">Cấu hình bài thi</h5>
                     </div>
-                    <hr class="mt-2 mb-3 text-muted opacity-25">
 
                     <form action="${pageContext.request.contextPath}/quizzes/save" method="POST">
                         <input type="hidden" name="id" value="${quiz.id}">
@@ -316,43 +191,43 @@
                         </c:if>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold text-secondary">Tên bài thi <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="form-control rounded-3" value="${quiz.title}" required placeholder="Nhập tên bài thi...">
+                            <label class="form-label small fw-semibold">Tên bài thi <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" value="${quiz.title}" required placeholder="Nhập tên bài thi...">
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold text-secondary">Tỉ lệ đạt tối thiểu (%) <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-semibold">Tỉ lệ đạt tối thiểu (%) <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="number" name="passScore" class="form-control rounded-start-3" value="${quiz.passScore}" min="0" max="100" required>
-                                <span class="input-group-text rounded-end-3 bg-light text-muted">%</span>
+                                <input type="number" name="passScore" class="form-control" value="${quiz.passScore}" min="0" max="100" required>
+                                <span class="input-group-text bg-light text-muted">%</span>
                             </div>
-                            <small class="text-muted">Học viên cần đạt từ ${quiz.passScore}% số điểm để qua bài thi.</small>
+                            <div class="form-text small">Học viên cần đạt từ ${quiz.passScore}% số điểm để qua bài thi.</div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold text-secondary">Thời lượng thi (Phút)</label>
+                            <label class="form-label small fw-semibold">Thời lượng thi (Phút)</label>
                             <div class="input-group">
-                                <input type="number" name="timeLimitMinutes" class="form-control rounded-start-3" value="${quiz.timeLimitMinutes}" placeholder="Để trống nếu không giới hạn">
-                                <span class="input-group-text rounded-end-3 bg-light text-muted">phút</span>
+                                <input type="number" name="timeLimitMinutes" class="form-control" value="${quiz.timeLimitMinutes}" placeholder="Để trống nếu không giới hạn">
+                                <span class="input-group-text bg-light text-muted">phút</span>
                             </div>
-                            <small class="text-muted">Để trống hoặc nhập 0 nếu không giới hạn thời gian.</small>
+                            <div class="form-text small">Để trống hoặc nhập 0 nếu không giới hạn thời gian.</div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label small fw-semibold text-secondary">Thứ tự hiển thị <span class="text-danger">*</span></label>
-                            <input type="number" name="orderIndex" class="form-control rounded-3" value="${quiz.orderIndex}" min="1" required>
+                            <label class="form-label small fw-semibold">Thứ tự hiển thị <span class="text-danger">*</span></label>
+                            <input type="number" name="orderIndex" class="form-control" value="${quiz.orderIndex}" min="1" required>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-pill fw-semibold shadow-sm">
-                            <i class="bi bi-save me-1.5"></i>Lưu cấu hình bài thi
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold shadow-sm">
+                            <i class="bi bi-save me-1"></i>Lưu cấu hình bài thi
                         </button>
                     </form>
                 </div>
 
                 <!-- Info Card -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
                     <h6 class="fw-bold mb-3 text-secondary text-uppercase small">
-                        <i class="bi bi-info-circle me-1.5"></i>Thông tin liên kết
+                        <i class="bi bi-info-circle me-1"></i>Thông tin liên kết
                     </h6>
                     <ul class="list-unstyled mb-0 small">
                         <li class="d-flex justify-content-between py-2 border-bottom">
@@ -380,20 +255,19 @@
                     </ul>
 
                     <div class="d-grid gap-2 mt-4 pt-2 border-top">
-                        <c:url var="questionBankUrl" value="/quizzes/question-bank">
-                            <c:param name="moduleId" value="${quiz.moduleId}"/>
-                            <c:param name="quizId" value="${quiz.id}"/>
+                        <c:url var="courseQuestionsUrl" value="/quizzes/list">
                             <c:if test="${not empty courseId}">
                                 <c:param name="courseId" value="${courseId}"/>
                             </c:if>
+                            <c:param name="tab" value="questions"/>
                         </c:url>
-                        <a href="${questionBankUrl}" class="btn btn-outline-info rounded-pill py-2 small fw-semibold">
-                            <i class="bi bi-bank me-1.5"></i>Mở Ngân hàng câu hỏi riêng
+                        <a href="${courseQuestionsUrl}" class="btn btn-outline-primary btn-sm fw-semibold">
+                            <i class="bi bi-database me-1"></i>Xem Ngân hàng câu hỏi khóa học
                         </a>
 
-                        <button type="button" class="btn btn-outline-danger rounded-pill py-2 small fw-semibold" 
+                        <button type="button" class="btn btn-outline-danger btn-sm fw-semibold" 
                                 data-bs-toggle="modal" data-bs-target="#deleteQuizModal">
-                            <i class="bi bi-trash me-1.5"></i>Xóa bài thi này
+                            <i class="bi bi-trash me-1"></i>Xóa bài thi này
                         </button>
                     </div>
                 </div>
@@ -401,9 +275,9 @@
 
             <!-- Right Column: Quiz Questions Management (col-lg-8) -->
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                     <!-- Card Header -->
-                    <div class="card-header bg-white py-3.5 px-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-bottom">
+                    <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
                         <div>
                             <h5 class="fw-bold mb-0 text-dark">
                                 <i class="bi bi-list-check text-primary me-2"></i>Danh sách câu hỏi trong bài thi
@@ -412,12 +286,12 @@
                                 Tổng cộng: <strong>${not empty quiz.questions ? fn:length(quiz.questions) : 0}</strong> câu hỏi | Điểm tối đa: <strong>${quiz.totalPoints}</strong> đ
                             </small>
                         </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button type="button" class="btn btn-primary rounded-pill btn-sm px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
                                 <i class="bi bi-plus-circle me-1"></i>Thêm từ Ngân hàng
                             </button>
-                            <button type="button" class="btn btn-outline-primary rounded-pill btn-sm px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
-                                <i class="bi bi-pencil-square me-1"></i>Tạo câu hỏi mới
+                            <button type="button" class="btn btn-success btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
+                                <i class="bi bi-patch-plus-fill me-1"></i>Tạo câu hỏi mới
                             </button>
                         </div>
                     </div>
@@ -428,18 +302,16 @@
                             <c:when test="${empty quiz.questions}">
                                 <!-- Empty state -->
                                 <div class="text-center py-5">
-                                    <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px; font-size: 2rem;">
-                                        <i class="bi bi-patch-question"></i>
-                                    </div>
+                                    <i class="bi bi-patch-question display-4 text-muted mb-3 d-block"></i>
                                     <h5 class="fw-bold text-dark mb-1">Bài thi này chưa có câu hỏi nào</h5>
-                                    <p class="text-muted small mb-4 mx-auto" style="max-width: 420px;">
-                                        Học viên sẽ không thể làm bài nếu bài thi trống. Hãy thêm câu hỏi từ Ngân hàng câu hỏi có sẵn hoặc tạo câu hỏi mới ngay bây giờ.
+                                    <p class="text-muted small mb-4 mx-auto" style="max-width: 450px;">
+                                        Học viên sẽ không thể làm bài nếu bài thi trống. Hãy thêm câu hỏi từ Ngân hàng câu hỏi có sẵn hoặc tạo câu hỏi mới ngay.
                                     </p>
                                     <div class="d-flex justify-content-center gap-2">
-                                        <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
+                                        <button type="button" class="btn btn-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
                                             <i class="bi bi-plus-circle me-1"></i>Chọn từ Ngân hàng
                                         </button>
-                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
+                                        <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
                                             <i class="bi bi-pencil-square me-1"></i>Tạo câu hỏi mới
                                         </button>
                                     </div>
@@ -449,13 +321,13 @@
                             <c:otherwise>
                                 <div class="d-flex flex-column gap-3">
                                     <c:forEach var="qq" items="${quiz.questions}" varStatus="status">
-                                        <div class="question-card p-3.5">
-                                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2.5">
+                                        <div class="card border rounded-3 p-3 shadow-none bg-white">
+                                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                                                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                    <span class="badge bg-dark text-white rounded-pill px-2.5 py-1">
+                                                    <span class="badge bg-light text-dark border fw-semibold">
                                                         Câu #${status.index + 1}
                                                     </span>
-                                                    <span class="badge badge-soft-primary rounded-pill px-2.5 py-1">
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                                                         <c:choose>
                                                             <c:when test="${qq.questionType == 'SINGLE_CHOICE'}">1 Đáp án</c:when>
                                                             <c:when test="${qq.questionType == 'MULTI_CHOICE'}">Nhiều đáp án</c:when>
@@ -463,21 +335,22 @@
                                                             <c:otherwise>${qq.questionType}</c:otherwise>
                                                         </c:choose>
                                                     </span>
-                                                    <span class="badge badge-soft-success rounded-pill px-2.5 py-1 fw-bold">
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold">
                                                         <i class="bi bi-star-fill text-warning me-1"></i>
                                                         ${not empty qq.assignedPoints ? qq.assignedPoints : (not empty qq.points ? qq.points : qq.defaultPoints)} điểm
                                                     </span>
                                                 </div>
 
                                                 <!-- Action Buttons -->
-                                                <div class="d-flex align-items-center gap-1.5">
+                                                <div class="d-flex align-items-center gap-2">
                                                     <!-- Edit Points Modal Trigger -->
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" 
-                                                            data-bs-toggle="modal" data-bs-target="#editPointsModal_${qq.id}" title="Đổi điểm câu hỏi">
-                                                        <i class="bi bi-pencil-fill me-1"></i>Điểm
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                            onclick="openEditPointsModal('${qq.id}', '${qq.quizOrderIndex}', '${not empty qq.assignedPoints ? qq.assignedPoints : (not empty qq.points ? qq.points : qq.defaultPoints)}', '${fn:escapeXml(qq.questionText)}')"
+                                                            title="Đổi điểm câu hỏi">
+                                                        <i class="bi bi-pencil-fill me-1"></i>Sửa điểm
                                                     </button>
 
-                                                    <!-- Remove Question Form -->
+                                                    <!-- Remove Question Link -->
                                                     <c:url var="removeUrl" value="/quizzes/remove-question">
                                                         <c:param name="quizId" value="${quiz.id}"/>
                                                         <c:param name="questionId" value="${qq.id}"/>
@@ -485,8 +358,8 @@
                                                             <c:param name="courseId" value="${courseId}"/>
                                                         </c:if>
                                                     </c:url>
-                                                    <a href="${removeUrl}" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1" 
-                                                       onclick="return confirm('Bạn có chắc muốn gỡ câu hỏi này khỏi bài thi? (Câu hỏi vẫn được giữ nguyên trong Ngân hàng câu hỏi)');"
+                                                    <a href="${removeUrl}" class="btn btn-sm btn-outline-danger" 
+                                                       onclick="return confirm('Bạn có chắc muốn gỡ câu hỏi này khỏi bài thi? (Câu hỏi vẫn được giữ nguyên trong Ngân hàng)');"
                                                        title="Gỡ câu hỏi khỏi bài thi">
                                                         <i class="bi bi-trash"></i> Gỡ
                                                     </a>
@@ -494,24 +367,24 @@
                                             </div>
 
                                             <!-- Question Text -->
-                                            <h6 class="fw-bold text-dark mb-3">
+                                            <h6 class="fw-bold text-dark mb-2">
                                                 <c:out value="${qq.questionText}" />
                                             </h6>
 
                                             <!-- Question Options (Answers) -->
                                             <c:if test="${not empty qq.options}">
                                                 <div class="row g-2 pt-2 border-top">
-                                                    <c:forEach var="opt" items="${qq.options}" varStatus="optStatus">
+                                                    <c:forEach var="opt" items="${qq.options}">
                                                         <div class="col-md-6">
-                                                            <div class="option-pill ${opt.correct ? 'correct' : 'regular'} d-flex align-items-center justify-content-between small">
+                                                            <div class="p-2 rounded-3 border ${opt.correct ? 'bg-success-subtle border-success-subtle text-success fw-semibold' : 'bg-light border text-dark'} d-flex align-items-center justify-content-between small">
                                                                 <div class="d-flex align-items-center overflow-hidden">
-                                                                    <i class="bi ${opt.correct ? 'bi-check-circle-fill text-success fs-6' : 'bi-circle text-muted'} me-2 flex-shrink-0"></i>
-                                                                    <span class="text-truncate fw-medium">
+                                                                    <i class="bi ${opt.correct ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'} me-2 flex-shrink-0"></i>
+                                                                    <span class="text-truncate">
                                                                         <c:out value="${opt.optionText}" />
                                                                     </span>
                                                                 </div>
                                                                 <c:if test="${opt.correct}">
-                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle ms-2 flex-shrink-0">
+                                                                    <span class="badge bg-success text-white ms-2 flex-shrink-0">
                                                                         Đúng
                                                                     </span>
                                                                 </c:if>
@@ -520,43 +393,6 @@
                                                     </c:forEach>
                                                 </div>
                                             </c:if>
-                                        </div>
-
-                                        <!-- Modal Edit Points for Question -->
-                                        <div class="modal fade" id="editPointsModal_${qq.id}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered modal-sm">
-                                                <div class="modal-content rounded-4 border-0 shadow">
-                                                    <form action="${pageContext.request.contextPath}/quizzes/assign-question" method="POST">
-                                                        <input type="hidden" name="quizId" value="${quiz.id}">
-                                                        <input type="hidden" name="questionId" value="${qq.id}">
-                                                        <c:if test="${not empty courseId}">
-                                                            <input type="hidden" name="courseId" value="${courseId}">
-                                                        </c:if>
-                                                        <input type="hidden" name="order" value="${qq.quizOrderIndex}">
-
-                                                        <div class="modal-header border-0 pb-0">
-                                                            <h6 class="modal-title fw-bold">Cập nhật điểm câu hỏi</h6>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body py-3">
-                                                            <p class="small text-muted mb-2 text-truncate" title="${qq.questionText}">
-                                                                ${qq.questionText}
-                                                            </p>
-                                                            <label class="form-label small fw-semibold text-secondary">Điểm số trong bài thi</label>
-                                                            <div class="input-group">
-                                                                <input type="number" step="0.5" min="0.5" name="points" 
-                                                                       class="form-control rounded-start-3" 
-                                                                       value="${not empty qq.assignedPoints ? qq.assignedPoints : (not empty qq.points ? qq.points : qq.defaultPoints)}" required>
-                                                                <span class="input-group-text rounded-end-3 bg-light text-muted">điểm</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer border-0 pt-0">
-                                                            <button type="button" class="btn btn-light rounded-pill btn-sm" data-bs-dismiss="modal">Hủy</button>
-                                                            <button type="submit" class="btn btn-primary rounded-pill btn-sm fw-semibold">Lưu điểm</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
                                         </div>
                                     </c:forEach>
                                 </div>
@@ -572,8 +408,8 @@
 <!-- Modal 1: Pick Questions from Module Question Bank -->
 <div class="modal fade" id="pickFromBankModal" tabindex="-1" aria-labelledby="pickFromBankModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-bottom py-3">
+        <div class="modal-content border-0 shadow rounded-3">
+            <div class="modal-header py-3">
                 <div>
                     <h5 class="modal-title fw-bold text-dark" id="pickFromBankModalLabel">
                         <i class="bi bi-bank text-primary me-2"></i>Ngân hàng câu hỏi của chương
@@ -592,7 +428,7 @@
                             <p class="text-muted small mb-3">
                                 Chưa có câu hỏi nào được lưu trữ trong ngân hàng của chương học này.
                             </p>
-                            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
+                            <button type="button" class="btn btn-primary btn-sm fw-semibold" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
                                 <i class="bi bi-plus-lg me-1"></i>Tạo câu hỏi mới ngay
                             </button>
                         </div>
@@ -606,13 +442,13 @@
                         <div class="d-flex flex-column gap-3">
                             <c:forEach var="bq" items="${bankQuestions}" varStatus="bStatus">
                                 <c:set var="isAlreadyAssigned" value="${assignedQuestionIds.contains(bq.id)}" />
-                                <div class="card border rounded-3 p-3 ${isAlreadyAssigned ? 'bg-light opacity-75' : 'bg-white shadow-sm'}">
+                                <div class="card border rounded-3 p-3 ${isAlreadyAssigned ? 'bg-light opacity-75' : 'bg-white shadow-none'}">
                                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1">
+                                            <span class="badge bg-light text-dark border">
                                                 #${bStatus.index + 1}
                                             </span>
-                                            <span class="badge badge-soft-primary rounded-pill px-2 py-1">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                                                 <c:choose>
                                                     <c:when test="${bq.questionType == 'SINGLE_CHOICE'}">1 Đáp án</c:when>
                                                     <c:when test="${bq.questionType == 'MULTI_CHOICE'}">Nhiều đáp án</c:when>
@@ -620,7 +456,7 @@
                                                     <c:otherwise>${bq.questionType}</c:otherwise>
                                                 </c:choose>
                                             </span>
-                                            <span class="badge badge-soft-success rounded-pill px-2 py-1">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
                                                 Mặc định: ${bq.defaultPoints} đ
                                             </span>
                                         </div>
@@ -629,7 +465,7 @@
                                         <div>
                                             <c:choose>
                                                 <c:when test="${isAlreadyAssigned}">
-                                                    <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1.5 rounded-pill">
+                                                    <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1.5">
                                                         <i class="bi bi-check2 me-1"></i>Đã trong bài thi
                                                     </span>
                                                 </c:when>
@@ -641,7 +477,7 @@
                                                         <c:if test="${not empty courseId}">
                                                             <input type="hidden" name="courseId" value="${courseId}">
                                                         </c:if>
-                                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold shadow-sm">
+                                                        <button type="submit" class="btn btn-sm btn-primary fw-semibold shadow-sm">
                                                             <i class="bi bi-plus-lg me-1"></i>Thêm vào Quiz
                                                         </button>
                                                     </form>
@@ -655,11 +491,11 @@
                                     </h6>
 
                                     <!-- Options preview -->
-                                    <div class="row g-1.5 pt-1">
+                                    <div class="row g-2 pt-1">
                                         <c:forEach var="bOpt" items="${bq.options}">
                                             <div class="col-md-6">
                                                 <div class="small p-1.5 rounded border ${bOpt.correct ? 'bg-success-subtle border-success-subtle text-success fw-semibold' : 'bg-light text-muted'}">
-                                                    <i class="bi ${bOpt.correct ? 'bi-check-circle-fill' : 'bi-circle'} me-1.5"></i>
+                                                    <i class="bi ${bOpt.correct ? 'bi-check-circle-fill' : 'bi-circle'} me-1"></i>
                                                     <c:out value="${bOpt.optionText}" />
                                                 </div>
                                             </div>
@@ -672,8 +508,8 @@
                 </c:choose>
             </div>
 
-            <div class="modal-footer border-top py-2.5 px-4 bg-light">
-                <button type="button" class="btn btn-secondary rounded-pill btn-sm px-3" data-bs-dismiss="modal">Đóng</button>
+            <div class="modal-footer py-2 bg-light">
+                <button type="button" class="btn btn-secondary btn-sm fw-semibold" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
@@ -682,7 +518,7 @@
 <!-- Modal 2: Create New Question directly and auto assign to Quiz -->
 <div class="modal fade" id="newQuestionModal" tabindex="-1" aria-labelledby="newQuestionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-content border-0 shadow rounded-3">
             <form action="${pageContext.request.contextPath}/quizzes/save-question" method="POST">
                 <input type="hidden" name="moduleId" value="${quiz.moduleId}">
                 <input type="hidden" name="quizId" value="${quiz.id}">
@@ -690,7 +526,7 @@
                     <input type="hidden" name="courseId" value="${courseId}">
                 </c:if>
 
-                <div class="modal-header border-bottom py-3">
+                <div class="modal-header py-3">
                     <div>
                         <h5 class="modal-title fw-bold text-dark" id="newQuestionModalLabel">
                             <i class="bi bi-pencil-square text-primary me-2"></i>Tạo câu hỏi mới và thêm vào bài thi
@@ -702,23 +538,23 @@
 
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">Nội dung câu hỏi <span class="text-danger">*</span></label>
-                        <textarea name="questionText" rows="3" class="form-control rounded-3" required placeholder="Nhập nội dung câu hỏi trắc nghiệm ở đây..."></textarea>
+                        <label class="form-label small fw-semibold">Nội dung câu hỏi <span class="text-danger">*</span></label>
+                        <textarea name="questionText" rows="3" class="form-control" required placeholder="Nhập nội dung câu hỏi trắc nghiệm ở đây..."></textarea>
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Loại câu hỏi</label>
-                            <select name="questionType" class="form-select rounded-3">
+                            <label class="form-label small fw-semibold">Loại câu hỏi</label>
+                            <select name="questionType" class="form-select">
                                 <option value="SINGLE_CHOICE" selected>Trắc nghiệm 1 đáp án (Single Choice)</option>
                                 <option value="TRUE_FALSE">Đúng / Sai (True / False)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Điểm số của câu hỏi</label>
+                            <label class="form-label small fw-semibold">Điểm số của câu hỏi</label>
                             <div class="input-group">
-                                <input type="number" step="0.5" min="0.5" name="defaultPoints" value="1.0" class="form-control rounded-start-3" required>
-                                <span class="input-group-text rounded-end-3 bg-light text-muted">điểm</span>
+                                <input type="number" step="0.5" min="0.5" name="defaultPoints" value="1.0" class="form-control" required>
+                                <span class="input-group-text bg-light text-muted">điểm</span>
                             </div>
                         </div>
                     </div>
@@ -760,9 +596,9 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-top py-2.5 px-4 bg-light">
-                    <button type="button" class="btn btn-secondary rounded-pill btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary rounded-pill btn-sm px-4 fw-semibold shadow-sm">
+                <div class="modal-footer py-2 bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm fw-semibold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold shadow-sm">
                         <i class="bi bi-save me-1"></i>Tạo và gán vào Quiz
                     </button>
                 </div>
@@ -771,10 +607,45 @@
     </div>
 </div>
 
-<!-- Modal 3: Delete Quiz Confirmation -->
+<!-- Modal 3: Reusable Edit Points Modal (Duy nhất 1 modal, không lặp HTML) -->
+<div class="modal fade" id="editPointsModal" tabindex="-1" aria-labelledby="editPointsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow rounded-3">
+            <form action="${pageContext.request.contextPath}/quizzes/assign-question" method="POST">
+                <input type="hidden" name="quizId" value="${quiz.id}">
+                <input type="hidden" name="questionId" id="editModalQuestionId" value="">
+                <c:if test="${not empty courseId}">
+                    <input type="hidden" name="courseId" value="${courseId}">
+                </c:if>
+                <input type="hidden" name="order" id="editModalOrder" value="0">
+
+                <div class="modal-header py-3">
+                    <h6 class="modal-title fw-bold text-dark" id="editPointsModalLabel">
+                        <i class="bi bi-pencil-square text-primary me-1"></i>Cập nhật điểm câu hỏi
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p class="small text-muted mb-2 text-truncate" id="editModalQuestionText"></p>
+                    <label class="form-label small fw-semibold">Điểm số trong bài thi</label>
+                    <div class="input-group">
+                        <input type="number" step="0.5" min="0.5" name="points" id="editModalPoints" class="form-control" required>
+                        <span class="input-group-text bg-light text-muted">điểm</span>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm fw-semibold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">Lưu điểm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 4: Delete Quiz Confirmation -->
 <div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-content border-0 shadow rounded-3">
             <div class="modal-body text-center p-4">
                 <div class="bg-danger-subtle text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px; font-size: 1.6rem;">
                     <i class="bi bi-trash"></i>
@@ -784,7 +655,7 @@
                     Thao tác này sẽ xóa vĩnh viễn bài thi <strong>"${quiz.title}"</strong>. Các câu hỏi trong ngân hàng vẫn được giữ nguyên.
                 </p>
                 <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-secondary btn-sm fw-semibold" data-bs-dismiss="modal">Hủy</button>
                     <c:url var="deleteQuizUrl" value="/quizzes/delete">
                         <c:param name="id" value="${quiz.id}"/>
                         <c:if test="${not empty courseId}">
@@ -794,7 +665,7 @@
                             <c:param name="moduleId" value="${quiz.moduleId}"/>
                         </c:if>
                     </c:url>
-                    <a href="${deleteQuizUrl}" class="btn btn-danger rounded-pill px-3 fw-semibold">
+                    <a href="${deleteQuizUrl}" class="btn btn-danger btn-sm fw-semibold">
                         Xóa bài thi
                     </a>
                 </div>
@@ -802,5 +673,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    function openEditPointsModal(questionId, order, points, questionText) {
+        document.getElementById('editModalQuestionId').value = questionId;
+        document.getElementById('editModalOrder').value = order || 0;
+        document.getElementById('editModalPoints').value = points;
+        document.getElementById('editModalQuestionText').textContent = questionText;
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editPointsModal'));
+        modal.show();
+    }
+</script>
 
 <jsp:include page="../common/footer.jsp" />

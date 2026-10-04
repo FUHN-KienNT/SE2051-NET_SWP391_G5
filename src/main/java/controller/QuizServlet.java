@@ -79,9 +79,6 @@ public class QuizServlet extends HttpServlet {
             case "question-bank":
                 showQuestionBank(req, resp);
                 break;
-            case "question-detail":
-                showQuestionDetail(req, resp);
-                break;
             case "save-question":
                 saveQuestion(req, resp);
                 break;
@@ -93,9 +90,6 @@ public class QuizServlet extends HttpServlet {
                 break;
             case "remove-question":
                 removeQuestion(req, resp);
-                break;
-            case "reorder-questions":
-                reorderQuestions(req, resp);
                 break;
             case "attempt":
                 showAttempt(req, resp);
@@ -140,11 +134,23 @@ public class QuizServlet extends HttpServlet {
             CourseDto course = courseService.getCourseDetail(courseId);
             req.setAttribute("course", course);
             req.setAttribute("courseId", courseId);
+
+            List<QuestionDto> courseQuestions = quizService.getQuestionsByCourse(courseId);
+            if (course != null && course.getModules() != null) {
+                java.util.Map<Long, String> moduleTitleMap = course.getModules().stream()
+                        .collect(Collectors.toMap(ModuleDto::getId, ModuleDto::getTitle, (a, b) -> a));
+                for (QuestionDto q : courseQuestions) {
+                    q.setModuleTitle(moduleTitleMap.getOrDefault(q.getModuleId(), "Chương #" + q.getModuleId()));
+                }
+            }
+            req.setAttribute("courseQuestions", courseQuestions);
         } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
             long moduleId = Long.parseLong(moduleIdStr.trim());
             List<QuizDto> quizzes = quizService.getQuizzes(moduleId);
             req.setAttribute("quizzes", quizzes);
             req.setAttribute("moduleId", moduleId);
+            List<QuestionDto> questions = quizService.getQuestionBank(moduleId);
+            req.setAttribute("courseQuestions", questions);
         }
 
         req.getRequestDispatcher("/WEB-INF/views/quiz/list.jsp").forward(req, resp);
@@ -253,24 +259,17 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void showQuestionBank(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
-        if (moduleIdStr != null) {
-            long moduleId = Long.parseLong(moduleIdStr);
-            List<QuestionDto> questions = quizService.getQuestionBank(moduleId);
-            req.setAttribute("questions", questions);
-            req.setAttribute("moduleId", moduleId);
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions");
+            return;
         }
-        req.getRequestDispatcher("/WEB-INF/views/quiz/question_bank.jsp").forward(req, resp);
-    }
-
-    private void showQuestionDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String qIdStr = req.getParameter("id");
-        if (qIdStr != null) {
-            long qId = Long.parseLong(qIdStr);
-            QuestionDto question = quizService.getQuestion(qId);
-            req.setAttribute("question", question);
+        if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr.trim() + "&tab=questions");
+            return;
         }
-        req.getRequestDispatcher("/WEB-INF/views/quiz/question_detail.jsp").forward(req, resp);
+        resp.sendRedirect(req.getContextPath() + "/quizzes/list?tab=questions");
     }
 
     private void saveQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -291,7 +290,11 @@ public class QuizServlet extends HttpServlet {
                 resp.sendRedirect(target + "&success=question_created_and_assigned");
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/quizzes/question-bank?moduleId=" + dto.getModuleId());
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&success=question_saved");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId() + "&tab=questions&success=question_saved");
         } catch (Exception e) {
             if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
                 String target = req.getContextPath() + "/quizzes/detail?id=" + quizIdStr.trim();
@@ -301,17 +304,26 @@ public class QuizServlet extends HttpServlet {
                 resp.sendRedirect(target + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/quizzes/question-bank?moduleId=" + dto.getModuleId() + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId() + "&tab=questions&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
     private void deleteQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String qIdStr = req.getParameter("id");
+        String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         if (qIdStr != null) {
             quizService.deleteQuestion(Long.parseLong(qIdStr));
         }
-        resp.sendRedirect(req.getContextPath() + "/quizzes/question-bank?moduleId=" + moduleIdStr);
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&success=question_deleted");
+            return;
+        }
+        resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&tab=questions&success=question_deleted");
     }
 
     private void assignQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -371,25 +383,6 @@ public class QuizServlet extends HttpServlet {
         }
     }
 
-    private void reorderQuestions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String quizIdStr = req.getParameter("quizId");
-        String courseIdStr = req.getParameter("courseId");
-        if (quizIdStr != null) {
-            long quizId = Long.parseLong(quizIdStr.trim());
-            String[] ids = req.getParameterValues("questionIds");
-            if (ids != null) {
-                List<Long> orderedIds = Arrays.stream(ids).map(Long::parseLong).collect(Collectors.toList());
-                quizService.reorderQuestions(quizId, orderedIds);
-            }
-            String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
-            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                target += "&courseId=" + courseIdStr.trim();
-            }
-            resp.sendRedirect(target + "&success=reordered");
-            return;
-        }
-        resp.sendRedirect(req.getContextPath() + "/quizzes/list");
-    }
 
     private void showAttempt(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         long regId = Long.parseLong(req.getParameter("registrationId"));

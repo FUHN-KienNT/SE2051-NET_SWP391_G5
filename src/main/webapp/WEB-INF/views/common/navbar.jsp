@@ -507,34 +507,12 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
 
                     <!-- B. CHUYÊN GIA (EXPERT) -->
                     <c:if test="${sessionScope.CURRENT_USER.roleName == 'EXPERT'}">
-                        <li class="nav-item cf-nav-item cf-hover-dropdown dropdown">
-                            <a class="cf-nav-link dropdown-toggle ${isExpert ? 'active' : ''}"
-                               href="${pageContext.request.contextPath}/expert/dashboard" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="nav-item cf-nav-item">
+                            <a class="cf-nav-link ${isExpert ? 'active' : ''}"
+                               href="${pageContext.request.contextPath}/expert/dashboard">
                                 <i class="bi bi-mortarboard" style="color: #7C3AED;"></i>
                                 <span>Expert Studio</span>
-                                <i class="bi bi-chevron-down cf-chevron"></i>
                             </a>
-                            <ul class="dropdown-menu cf-dropdown-menu" style="min-width: 220px;">
-                                <li>
-                                    <a class="cf-dropdown-item"
-                                       href="${pageContext.request.contextPath}/expert/dashboard">
-                                        <i class="bi bi-speedometer2 text-primary"></i> Dashboard Chuyên gia
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="cf-dropdown-item"
-                                       href="${pageContext.request.contextPath}/quizzes/question-bank">
-                                        <i class="bi bi-database text-warning"></i> Ngân hàng câu hỏi
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="cf-dropdown-item"
-                                       href="${pageContext.request.contextPath}/quizzes/list">
-                                        <i class="bi bi-patch-check text-success"></i> Quản lý đề thi Quiz
-                                    </a>
-                                </li>
-                            </ul>
                         </li>
                     </c:if>
 
@@ -772,11 +750,7 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                     <c:if test="${sessionScope.CURRENT_USER.roleName == 'EXPERT'}">
                         <a href="${pageContext.request.contextPath}/expert/dashboard"
                            class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 border-0 rounded-2 ${isExpert ? 'fw-bold text-warning' : ''}">
-                            <i class="bi bi-speedometer2 text-primary"></i> Dashboard Chuyên gia
-                        </a>
-                        <a href="${pageContext.request.contextPath}/quizzes/question-bank"
-                           class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 border-0 rounded-2">
-                            <i class="bi bi-database text-warning"></i> Ngân hàng câu hỏi
+                            <i class="bi bi-mortarboard text-primary"></i> Expert Studio
                         </a>
                     </c:if>
 

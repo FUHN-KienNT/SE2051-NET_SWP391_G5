@@ -8,6 +8,7 @@ import java.util.List;
 public class QuestionDto {
     private Long id;
     private Long moduleId;
+    private String moduleTitle;
     private String questionText;
     private QuestionType questionType;
     private BigDecimal defaultPoints;
@@ -45,6 +46,14 @@ public class QuestionDto {
 
     public void setModuleId(Long moduleId) {
         this.moduleId = moduleId;
+    }
+
+    public String getModuleTitle() {
+        return moduleTitle;
+    }
+
+    public void setModuleTitle(String moduleTitle) {
+        this.moduleTitle = moduleTitle;
     }
 
     public String getQuestionText() {

@@ -15,6 +15,7 @@ import java.util.Optional;
 
 public class QuestionDao {
     private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, question_text, question_type, default_points, created_at FROM questions WHERE module_id = ? ORDER BY id ASC";
+    private static final String SQL_FIND_BY_COURSE = "SELECT q.id, q.module_id, q.question_text, q.question_type, q.default_points, q.created_at FROM questions q JOIN modules m ON q.module_id = m.id WHERE m.course_id = ? ORDER BY m.order_index ASC, q.id ASC";
     private static final String SQL_FIND_BY_ID = "SELECT id, module_id, question_text, question_type, default_points, created_at FROM questions WHERE id = ?";
     private static final String SQL_INSERT = "INSERT INTO questions (module_id, question_text, question_type, default_points, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE = "UPDATE questions SET question_text = ?, question_type = ?, default_points = ? WHERE id = ?";
@@ -28,6 +29,19 @@ public class QuestionDao {
         List<Question> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_MODULE)) {
             ps.setLong(1, moduleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapQuestion(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<Question> findByCourseId(Connection con, long courseId) throws SQLException {
+        List<Question> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_COURSE)) {
+            ps.setLong(1, courseId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapQuestion(rs));
