@@ -129,6 +129,11 @@ public class QuizServlet extends HttpServlet {
                 }
             } catch (Exception ignored) {
             }
+        } else {
+            List<CourseDto> published = courseService.searchPublished(null, null);
+            if (published != null && !published.isEmpty()) {
+                courseId = published.get(0).getId();
+            }
         }
 
         if (courseId != null) {
@@ -148,20 +153,59 @@ public class QuizServlet extends HttpServlet {
     private void showQuizDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String quizIdStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
-        if (quizIdStr != null) {
-            long quizId = Long.parseLong(quizIdStr);
+        if (quizIdStr == null || quizIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list" + (courseIdStr != null && !courseIdStr.trim().isEmpty() ? "?courseId=" + courseIdStr.trim() : ""));
+            return;
+        }
+
+        try {
+            long quizId = Long.parseLong(quizIdStr.trim());
             QuizDto quiz = quizService.getQuizDetail(quizId);
             req.setAttribute("quiz", quiz);
 
+            Long courseId = null;
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                req.setAttribute("courseId", Long.parseLong(courseIdStr.trim()));
-            } else {
-                try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                    moduleDao.findById(con, quiz.getModuleId()).ifPresent(m -> req.setAttribute("courseId", m.getCourseId()));
+                try {
+                    courseId = Long.parseLong(courseIdStr.trim());
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                java.util.Optional<entity.Module> modOpt = moduleDao.findById(con, quiz.getModuleId());
+                if (modOpt.isPresent()) {
+                    entity.Module module = modOpt.get();
+                    req.setAttribute("currentModule", module);
+                    if (courseId == null) {
+                        courseId = module.getCourseId();
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+
+            if (courseId != null) {
+                req.setAttribute("courseId", courseId);
+                try {
+                    CourseDto course = courseService.getCourseDetail(courseId);
+                    req.setAttribute("course", course);
                 } catch (Exception ignored) {
                 }
             }
+
+            // Danh sách câu hỏi trong ngân hàng của cùng Module
+            List<QuestionDto> bankQuestions = quizService.getQuestionBank(quiz.getModuleId());
+            req.setAttribute("bankQuestions", bankQuestions);
+
+            java.util.Set<Long> assignedQuestionIds = quiz.getQuestions().stream()
+                    .map(QuestionDto::getId)
+                    .collect(Collectors.toSet());
+            req.setAttribute("assignedQuestionIds", assignedQuestionIds);
+
+        } catch (Exception e) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error=" + java.net.URLEncoder.encode("Không tìm thấy bài thi hoặc lỗi: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            return;
         }
+
         req.getRequestDispatcher("/WEB-INF/views/quiz/detail.jsp").forward(req, resp);
     }
 
@@ -174,13 +218,21 @@ public class QuizServlet extends HttpServlet {
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 target += "&courseId=" + courseIdStr.trim();
             }
-            resp.sendRedirect(target);
+            resp.sendRedirect(target + "&success=saved");
         } catch (Exception e) {
-            String redirectUrl = req.getContextPath() + "/quizzes/list?";
-            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                redirectUrl += "courseId=" + courseIdStr.trim();
+            String redirectUrl = req.getContextPath() + "/quizzes/detail?";
+            if (dto.getId() != null && dto.getId() > 0) {
+                redirectUrl += "id=" + dto.getId();
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    redirectUrl += "&courseId=" + courseIdStr.trim();
+                }
             } else {
-                redirectUrl += "moduleId=" + dto.getModuleId();
+                redirectUrl = req.getContextPath() + "/quizzes/list?";
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    redirectUrl += "courseId=" + courseIdStr.trim();
+                } else {
+                    redirectUrl += "moduleId=" + dto.getModuleId();
+                }
             }
             resp.sendRedirect(redirectUrl + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
@@ -223,11 +275,33 @@ public class QuizServlet extends HttpServlet {
 
     private void saveQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         QuestionDto dto = bindQuestion(req);
+        String quizIdStr = req.getParameter("quizId");
+        String courseIdStr = req.getParameter("courseId");
         try {
-            quizService.saveQuestion(dto);
+            long questionId = quizService.saveQuestion(dto);
+            // Nếu có quizId, tự động gán câu hỏi này vào Quiz luôn!
+            if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
+                long quizId = Long.parseLong(quizIdStr.trim());
+                BigDecimal points = dto.getDefaultPoints() != null ? dto.getDefaultPoints() : BigDecimal.ONE;
+                quizService.assignQuestion(quizId, questionId, points, 0);
+                String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    target += "&courseId=" + courseIdStr.trim();
+                }
+                resp.sendRedirect(target + "&success=question_created_and_assigned");
+                return;
+            }
             resp.sendRedirect(req.getContextPath() + "/quizzes/question-bank?moduleId=" + dto.getModuleId());
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/question-bank?moduleId=" + dto.getModuleId() + "&error=" + e.getMessage());
+            if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
+                String target = req.getContextPath() + "/quizzes/detail?id=" + quizIdStr.trim();
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    target += "&courseId=" + courseIdStr.trim();
+                }
+                resp.sendRedirect(target + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/quizzes/question-bank?moduleId=" + dto.getModuleId() + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
@@ -241,31 +315,80 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void assignQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        long quizId = Long.parseLong(req.getParameter("quizId"));
-        long questionId = Long.parseLong(req.getParameter("questionId"));
+        String quizIdStr = req.getParameter("quizId");
+        String questionIdStr = req.getParameter("questionId");
+        String courseIdStr = req.getParameter("courseId");
+        if (quizIdStr == null || questionIdStr == null) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error=invalid_params");
+            return;
+        }
+        long quizId = Long.parseLong(quizIdStr.trim());
+        long questionId = Long.parseLong(questionIdStr.trim());
         String pointsStr = req.getParameter("points");
         BigDecimal points = pointsStr != null && !pointsStr.trim().isEmpty() ? new BigDecimal(pointsStr.trim()) : BigDecimal.ONE;
-        int order = Integer.parseInt(req.getParameter("order"));
+        String orderStr = req.getParameter("order");
+        int order = (orderStr != null && !orderStr.trim().isEmpty()) ? Integer.parseInt(orderStr.trim()) : 0;
 
-        quizService.assignQuestion(quizId, questionId, points, order);
-        resp.sendRedirect(req.getContextPath() + "/quizzes/detail?id=" + quizId);
+        try {
+            quizService.assignQuestion(quizId, questionId, points, order);
+            String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "&courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target + "&success=assigned");
+        } catch (Exception e) {
+            String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "&courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+        }
     }
 
     private void removeQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        long quizId = Long.parseLong(req.getParameter("quizId"));
-        long questionId = Long.parseLong(req.getParameter("questionId"));
-        quizService.removeQuestion(quizId, questionId);
-        resp.sendRedirect(req.getContextPath() + "/quizzes/detail?id=" + quizId);
+        String quizIdStr = req.getParameter("quizId");
+        String questionIdStr = req.getParameter("questionId");
+        String courseIdStr = req.getParameter("courseId");
+        if (quizIdStr == null || questionIdStr == null) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error=invalid_params");
+            return;
+        }
+        long quizId = Long.parseLong(quizIdStr.trim());
+        long questionId = Long.parseLong(questionIdStr.trim());
+        try {
+            quizService.removeQuestion(quizId, questionId);
+            String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "&courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target + "&success=removed");
+        } catch (Exception e) {
+            String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "&courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+        }
     }
 
     private void reorderQuestions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        long quizId = Long.parseLong(req.getParameter("quizId"));
-        String[] ids = req.getParameterValues("questionIds");
-        if (ids != null) {
-            List<Long> orderedIds = Arrays.stream(ids).map(Long::parseLong).collect(Collectors.toList());
-            quizService.reorderQuestions(quizId, orderedIds);
+        String quizIdStr = req.getParameter("quizId");
+        String courseIdStr = req.getParameter("courseId");
+        if (quizIdStr != null) {
+            long quizId = Long.parseLong(quizIdStr.trim());
+            String[] ids = req.getParameterValues("questionIds");
+            if (ids != null) {
+                List<Long> orderedIds = Arrays.stream(ids).map(Long::parseLong).collect(Collectors.toList());
+                quizService.reorderQuestions(quizId, orderedIds);
+            }
+            String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "&courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target + "&success=reordered");
+            return;
         }
-        resp.sendRedirect(req.getContextPath() + "/quizzes/detail?id=" + quizId);
+        resp.sendRedirect(req.getContextPath() + "/quizzes/list");
     }
 
     private void showAttempt(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

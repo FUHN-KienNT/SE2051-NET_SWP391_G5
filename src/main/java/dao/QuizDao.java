@@ -153,6 +153,19 @@ public class QuizDao {
         }
     }
 
+    public int getNextOrderIndex(Connection con, long quizId) throws SQLException {
+        String sql = "SELECT COALESCE(MAX(order_index), 0) + 1 FROM quiz_questions WHERE quiz_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, quizId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 1;
+    }
+
     public void reorderAssignments(Connection con, long quizId, List<QuizQuestion> items) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_ASSIGNMENT_ORDER)) {
             for (QuizQuestion item : items) {

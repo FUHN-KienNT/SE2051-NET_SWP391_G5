@@ -87,23 +87,24 @@ Dự án áp dụng mô hình phân lớp rõ ràng (Layered Architecture):
 
 ## 🗄️ 4. Cơ sở dữ liệu (PostgreSQL)
 
-Hệ thống bao gồm **13 bảng chuẩn hóa** ràng buộc toàn vẹn dữ liệu:
+Hệ thống bao gồm **14 bảng chuẩn hóa** ràng buộc toàn vẹn dữ liệu:
 
 | STT | Tên bảng | Chức năng chính |
 | :---: | :--- | :--- |
 | **1** | `settings` | Quản lý danh mục khóa học (`COURSE_CATEGORY`) và vai trò người dùng (`USER_ROLE`). |
 | **2** | `users` | Lưu trữ tài khoản, mật khẩu băm BCrypt, vai trò và thông tin cá nhân. |
-| **3** | `courses` | Thông tin khóa học, giá, danh mục, trạng thái (DRAFT/PUBLISHED/ARCHIVED). |
-| **4** | `modules` | Các chương mục trong một khóa học, sắp xếp theo thứ tự `order_index`. |
-| **5** | `lessons` | Bài học chi tiết (nội dung HTML, URL video embed, tài liệu đính kèm). |
-| **6** | `quizzes` | Đề thi trắc nghiệm theo chương, thời lượng và điểm chuẩn (`pass_score`). |
-| **7** | `questions` | Ngân hàng câu hỏi trắc nghiệm thuộc từng module. |
-| **8** | `answer_options` | Các phương án trả lời và cờ đáp án đúng (`is_correct`). |
-| **9** | `quiz_questions` | Liên kết câu hỏi vào đề thi kèm điểm số tương ứng. |
-| **10** | `registrations` | Đơn đăng ký học, mã thanh toán, tiến độ học tập và trạng thái truy cập. |
-| **11** | `lesson_progress` | Ghi nhận trạng thái hoàn thành của từng bài học theo từng lượt đăng ký. |
-| **12** | `quiz_attempts` | Lịch sử các lần làm bài thi của học viên (điểm số, thời gian, kết quả). |
-| **13** | `quiz_answers` | Chi tiết lựa chọn của học viên cho từng câu hỏi trong lần thi. |
+| **3** | `email_verification_tokens` | Mã token xác thực tài khoản qua email khi người dùng đăng ký mới. |
+| **4** | `courses` | Thông tin khóa học, giá, danh mục, trạng thái (DRAFT/PUBLISHED/ARCHIVED). |
+| **5** | `modules` | Các chương mục trong một khóa học, sắp xếp theo thứ tự `order_index`. |
+| **6** | `lessons` | Bài học chi tiết (nội dung HTML, URL video embed, tài liệu đính kèm). |
+| **7** | `quizzes` | Đề thi trắc nghiệm theo chương, thời lượng và điểm chuẩn (`pass_score`). |
+| **8** | `questions` | Ngân hàng câu hỏi trắc nghiệm thuộc từng module. |
+| **9** | `answer_options` | Các phương án trả lời và cờ đáp án đúng (`is_correct`). |
+| **10** | `quiz_questions` | Liên kết câu hỏi vào đề thi kèm điểm số tương ứng. |
+| **11** | `registrations` | Đơn đăng ký học, mã thanh toán, tiến độ học tập và trạng thái truy cập. |
+| **12** | `lesson_progress` | Ghi nhận trạng thái hoàn thành của từng bài học theo từng lượt đăng ký. |
+| **13** | `quiz_attempts` | Lịch sử các lần làm bài thi của học viên (điểm số, thời gian, kết quả). |
+| **14** | `quiz_answers` | Chi tiết lựa chọn của học viên cho từng câu hỏi trong lần thi. |
 
 ---
 
@@ -112,8 +113,9 @@ Hệ thống bao gồm **13 bảng chuẩn hóa** ràng buộc toàn vẹn dữ 
 ```
 SE2051-NET_SWP391_G5/
 ├── database/
-│   ├── schema.sql                 # Cấu trúc CSDL PostgreSQL chuẩn
-│   ├── seed_full_courses.sql      # Dữ liệu mẫu 118 bài giảng & Quiz
+│   ├── schema.sql                 # Cấu trúc CSDL PostgreSQL chuẩn (14 bảng hoàn chỉnh)
+│   ├── seed.sql                   # Dữ liệu mẫu hợp nhất (3 khóa học, 118 bài giảng, 12 Quiz chuẩn hóa)
+│   ├── seed_full_courses.sql      # Alias dữ liệu mẫu (tương thích backward)
 │   ├── fetch_playlists.py         # Script tự động trích xuất YouTube Playlist
 │   └── generate_full_courses_sql.py # Script sinh dữ liệu SQL tự động
 ├── src/
@@ -157,7 +159,7 @@ SE2051-NET_SWP391_G5/
 2. Thực thi file schema và nạp dữ liệu:
    ```bash
    psql -U postgres -d courson_db -f database/schema.sql
-   psql -U postgres -d courson_db -f database/seed_full_courses.sql
+   psql -U postgres -d courson_db -f database/seed.sql
    ```
 
 #### Bước 2: Cấu hình kết nối CSDL

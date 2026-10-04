@@ -94,4 +94,12 @@ public class QuestionDto {
     public void setOptions(List<AnswerOptionDto> options) {
         this.options = options != null ? options : new ArrayList<>();
     }
+
+    public BigDecimal getPoints() {
+        return assignedPoints != null ? assignedPoints : (defaultPoints != null ? defaultPoints : BigDecimal.ONE);
+    }
+
+    public void setPoints(BigDecimal points) {
+        this.assignedPoints = points;
+    }
 }

@@ -41,14 +41,16 @@
         <!-- Metric summary -->
         <c:set var="publishedCount" value="0" />
         <c:set var="draftCount" value="0" />
+        <c:set var="totalAllQuizzes" value="0" />
         <c:forEach var="c" items="${courses}">
             <c:if test="${c.status == 'PUBLISHED'}"><c:set var="publishedCount" value="${publishedCount + 1}" /></c:if>
             <c:if test="${c.status == 'DRAFT'}"><c:set var="draftCount" value="${draftCount + 1}" /></c:if>
+            <c:set var="totalAllQuizzes" value="${totalAllQuizzes + c.totalQuizzes}" />
         </c:forEach>
 
         <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="card p-4 border-0 shadow-sm rounded-3 bg-primary text-white">
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-3 bg-primary text-white h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="small text-white-50 text-uppercase fw-bold">Tổng số khóa học</div>
@@ -58,25 +60,36 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card p-4 border-0 shadow-sm rounded-3 bg-success text-white">
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-3 bg-success text-white h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="small text-white-50 text-uppercase fw-bold">Đã công khai (Published)</div>
+                            <div class="small text-white-50 text-uppercase fw-bold">Đã công khai</div>
                             <div class="fs-2 fw-bold mt-1">${publishedCount}</div>
                         </div>
                         <i class="bi bi-check-circle-fill fs-1 text-white-50"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card p-4 border-0 shadow-sm rounded-3 bg-warning text-dark">
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-3 bg-warning text-dark h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="small text-dark text-opacity-75 text-uppercase fw-bold">Bản nháp / Chờ duyệt (Draft)</div>
+                            <div class="small text-dark text-opacity-75 text-uppercase fw-bold">Bản nháp / Chờ duyệt</div>
                             <div class="fs-2 fw-bold mt-1">${draftCount}</div>
                         </div>
                         <i class="bi bi-hourglass-split fs-1 text-dark text-opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4 border-0 shadow-sm rounded-3 text-white h-100" style="background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small text-white-50 text-uppercase fw-bold">Tổng số bài Quiz</div>
+                            <div class="fs-2 fw-bold mt-1">${totalAllQuizzes}</div>
+                        </div>
+                        <i class="bi bi-patch-question-fill fs-1 text-white-50"></i>
                     </div>
                 </div>
             </div>
@@ -95,7 +108,7 @@
                             <th>ID</th>
                             <th>Ảnh / Tên khóa học</th>
                             <th>Danh mục</th>
-                            <th>Bài giảng</th>
+                            <th>Bài giảng &amp; Quiz</th>
                             <th>Trạng thái xuất bản</th>
                             <th class="text-end">Hành động</th>
                         </tr>
@@ -136,8 +149,11 @@
                                         </td>
                                         <td><span class="badge bg-light text-dark border">${c.categoryName != null ? c.categoryName : 'Khóa học'}</span></td>
                                         <td>
-                                            <span class="fw-semibold text-primary">${c.totalLessons} bài</span>
+                                            <div class="fw-semibold text-primary"><i class="bi bi-play-circle me-1"></i>${c.totalLessons} bài học</div>
                                             <small class="text-muted d-block">(${c.modules.size()} chương)</small>
+                                            <span class="badge ${c.totalQuizzes > 0 ? 'bg-warning-subtle text-dark border border-warning-subtle' : 'bg-light text-muted border'} mt-1">
+                                                <i class="bi bi-patch-question-fill ${c.totalQuizzes > 0 ? 'text-warning' : 'text-muted'} me-1"></i>${c.totalQuizzes} quiz
+                                            </span>
                                         </td>
                                         <td>
                                             <c:choose>
@@ -153,11 +169,14 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td class="text-end">
-                                            <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="btn btn-primary btn-sm me-1 shadow-sm">
+                                        <td class="text-end text-nowrap">
+                                            <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="btn btn-primary btn-sm me-1 shadow-sm" title="Quản lý chương và bài học">
                                                 <i class="bi bi-journal-text me-1"></i>Soạn Bài học (${c.totalLessons})
                                             </a>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editCourseModal_${c.id}">
+                                            <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}" class="btn btn-warning btn-sm me-1 shadow-sm text-dark fw-semibold" title="Soạn và quản lý Quiz cho khóa học">
+                                                <i class="bi bi-patch-question-fill me-1"></i>Soạn Quiz (${c.totalQuizzes})
+                                            </a>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editCourseModal_${c.id}" title="Chỉnh sửa thông tin khóa học">
                                                 <i class="bi bi-gear me-1"></i>Sửa thông tin
                                             </button>
                                             <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="btn btn-light btn-sm border" target="_blank" title="Xem trước trang khóa học">

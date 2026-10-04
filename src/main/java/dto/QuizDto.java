@@ -82,4 +82,30 @@ public class QuizDto {
     public void setQuestions(List<QuestionDto> questions) {
         this.questions = questions != null ? questions : new ArrayList<>();
     }
+
+    public int getTotalQuestions() {
+        return questions != null ? questions.size() : 0;
+    }
+
+    public BigDecimal getTotalPoints() {
+        if (questions == null || questions.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal total = BigDecimal.ZERO;
+        for (QuestionDto q : questions) {
+            BigDecimal p = q.getPoints();
+            if (p != null) {
+                total = total.add(p);
+            }
+        }
+        return total;
+    }
+
+    public BigDecimal getPassingPoints() {
+        BigDecimal total = getTotalPoints();
+        if (passScore == null || total.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return total.multiply(passScore).divide(BigDecimal.valueOf(100), 1, java.math.RoundingMode.HALF_UP);
+    }
 }

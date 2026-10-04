@@ -1,9 +1,9 @@
 -- =====================================================================
--- Courson LMS - PostgreSQL Schema (Official v5) - 13 bảng
+-- Courson LMS - PostgreSQL Schema (Official v6) - 14 bảng
 --
--- 13 bảng: settings, users, courses, modules, lessons, quizzes,
---          questions, answer_options, quiz_questions, registrations,
---          lesson_progress, quiz_attempts, quiz_answers
+-- 14 bảng: settings, users, email_verification_tokens, courses, modules,
+--          lessons, quizzes, questions, answer_options, quiz_questions,
+--          registrations, lesson_progress, quiz_attempts, quiz_answers
 -- =====================================================================
 
 -- Xóa các bảng cũ theo thứ tự phụ thuộc (nếu đã tồn tại) để dễ dàng reset CSDL
@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS quizzes CASCADE;
 DROP TABLE IF EXISTS lessons CASCADE;
 DROP TABLE IF EXISTS modules CASCADE;
 DROP TABLE IF EXISTS courses CASCADE;
+DROP TABLE IF EXISTS email_verification_tokens CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS settings CASCADE;
 
@@ -69,6 +70,21 @@ CREATE TABLE users (
     )
 );
 CREATE INDEX idx_users_role_id ON users (role_id);
+
+-- ---------------------------------------------------------------------
+-- 2b. email_verification_tokens (Phục vụ xác thực tài khoản qua email)
+-- ---------------------------------------------------------------------
+CREATE TABLE email_verification_tokens (
+    id           bigserial    PRIMARY KEY,
+    user_id      bigint       NOT NULL,
+    token_hash   varchar(64)  NOT NULL,
+    expires_at   timestamptz  NOT NULL,
+    used         boolean      NOT NULL DEFAULT false,
+    created_at   timestamptz  NOT NULL DEFAULT now(),
+    CONSTRAINT fk_evt_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX uq_evt_token_hash ON email_verification_tokens (token_hash);
+CREATE INDEX idx_evt_user_id ON email_verification_tokens (user_id);
 
 -- ---------------------------------------------------------------------
 -- 3. courses
@@ -302,7 +318,10 @@ ON CONFLICT (type, name) DO NOTHING;
 INSERT INTO settings (id, type, name, value, priority, status, description) VALUES
     (6, 'COURSE_CATEGORY', 'Lập trình Web', 'WEB_DEV', 1, 'ACTIVE', 'Khóa học phát triển Web Frontend và Backend'),
     (7, 'COURSE_CATEGORY', 'Khoa học Dữ liệu & AI', 'DATA_AI', 2, 'ACTIVE', 'Khóa học về Trí tuệ nhân tạo và Phân tích dữ liệu'),
-    (8, 'COURSE_CATEGORY', 'Kỹ năng mềm', 'SOFT_SKILLS', 3, 'ACTIVE', 'Kỹ năng giao tiếp, làm việc nhóm và quản lý thời gian')
+    (8, 'COURSE_CATEGORY', 'Kỹ năng mềm', 'SOFT_SKILLS', 3, 'ACTIVE', 'Kỹ năng giao tiếp, làm việc nhóm và quản lý thời gian'),
+    (9, 'COURSE_CATEGORY', 'Nhân tướng học & Nhân trắc học', 'PHYSIOGNOMY', 4, 'ACTIVE', 'Kiến thức nhân tướng học, diện mạo và nhân trắc học ứng dụng'),
+    (10, 'COURSE_CATEGORY', 'Tử Vi & Phong Thủy', 'TU_VI', 5, 'ACTIVE', 'Nghiên cứu lá số Tử Vi, âm dương ngũ hành và giải đoán vận hạn'),
+    (11, 'COURSE_CATEGORY', 'Chiêm Tinh & Cung Hoàng Đạo', 'ASTROLOGY', 6, 'ACTIVE', 'Khám phá bí mật 12 cung hoàng đạo và chiêm tinh học ứng dụng')
 ON CONFLICT (type, name) DO NOTHING;
 
 -- Cập nhật sequence của bảng settings lên giá trị tiếp theo

@@ -261,7 +261,33 @@ public class QuizService {
         try (Connection con = DbConnection.getConnection()) {
             Quiz quiz = quizDao.findById(con, quizId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi."));
-            QuizQuestion qq = new QuizQuestion(null, quizId, questionId, quiz.getModuleId(), order, points);
+
+            List<QuizQuestion> currentList = quizDao.findAssignments(con, quizId);
+            int effectiveOrder = order;
+            boolean alreadyAssigned = false;
+            for (QuizQuestion qq : currentList) {
+                if (qq.getQuestionId().equals(questionId)) {
+                    alreadyAssigned = true;
+                    if (effectiveOrder <= 0) {
+                        effectiveOrder = qq.getOrderIndex();
+                    }
+                    break;
+                }
+            }
+
+            if (!alreadyAssigned) {
+                if (effectiveOrder <= 0) {
+                    effectiveOrder = quizDao.getNextOrderIndex(con, quizId);
+                } else {
+                    final int checkOrder = effectiveOrder;
+                    boolean orderExists = currentList.stream().anyMatch(q -> q.getOrderIndex() == checkOrder);
+                    if (orderExists) {
+                        effectiveOrder = quizDao.getNextOrderIndex(con, quizId);
+                    }
+                }
+            }
+
+            QuizQuestion qq = new QuizQuestion(null, quizId, questionId, quiz.getModuleId(), effectiveOrder, points);
             quizDao.saveAssignment(con, qq);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi gán câu hỏi vào bài thi: " + e.getMessage(), e);
@@ -354,7 +380,12 @@ public class QuizService {
                 }
             }
 
-            boolean pass = totalScore.compareTo(quiz.getPassScore()) >= 0;
+            BigDecimal percentage = BigDecimal.ZERO;
+            if (maxScore.compareTo(BigDecimal.ZERO) > 0) {
+                percentage = totalScore.multiply(BigDecimal.valueOf(100.0)).divide(maxScore, 2, RoundingMode.HALF_UP);
+            }
+            BigDecimal passScore = quiz.getPassScore() != null ? quiz.getPassScore() : BigDecimal.valueOf(50.0);
+            boolean pass = totalScore.compareTo(passScore) >= 0 || percentage.compareTo(passScore) >= 0;
 
             QuizAttempt attempt = new QuizAttempt();
             attempt.setId(dto.getId());

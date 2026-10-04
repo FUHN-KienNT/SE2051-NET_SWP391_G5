@@ -144,6 +144,17 @@ public class CourseDto {
         return count;
     }
 
+    public int getTotalQuizzes() {
+        if (modules == null) return 0;
+        int count = 0;
+        for (ModuleDto m : modules) {
+            if (m.getQuizzes() != null) {
+                count += m.getQuizzes().size();
+            }
+        }
+        return count;
+    }
+
     public String getThumbnailUrl() {
         if (modules != null) {
             for (ModuleDto m : modules) {
