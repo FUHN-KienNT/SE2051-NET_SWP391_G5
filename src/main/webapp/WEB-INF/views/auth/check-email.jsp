@@ -163,30 +163,42 @@
                 transition: background-color 0.3s ease, color 0.3s ease;
             }
 
-            /* Theme toggle */
+            /* Theme toggle (đồng bộ chuẩn Login / Register) */
             .theme-toggle-btn {
                 position: fixed;
-                top: 24px;
+                top: 20px;
                 right: 24px;
+                z-index: 1000;
                 width: 44px;
                 height: 44px;
-                border-radius: 12px;
-                border: 1px solid var(--border-card);
-                background: var(--bg-card);
-                color: var(--text-main);
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                color: #F38020;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
+                font-size: 1.3rem;
                 cursor: pointer;
-                font-size: 19px;
-                transition: all 0.2s ease;
-                z-index: 100;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                transition: all 0.25s ease;
+                backdrop-filter: blur(10px);
+                outline: none;
             }
             .theme-toggle-btn:hover {
-                transform: translateY(-2px);
-                border-color: var(--primary);
-                color: var(--primary);
+                transform: scale(1.1) rotate(15deg);
+                background-color: rgba(255, 255, 255, 0.2);
+                border-color: #F38020;
+            }
+
+            [data-theme="light"] .theme-toggle-btn {
+                background-color: #FFFFFF;
+                border-color: #E5E7EB;
+                color: #F38020;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+            [data-theme="light"] .theme-toggle-btn:hover {
+                background-color: #FFF7ED;
+                border-color: #F38020;
             }
 
             .email-card {
@@ -203,8 +215,14 @@
             }
 
             @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(16px); }
-                to { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translateY(16px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
             .brand-badge {
@@ -459,7 +477,8 @@
                 };
                 const CoursonToast = {
                     show: function (type, message, duration = 5000) {
-                        if (!message) return;
+                        if (!message)
+                            return;
                         const c = getOrCreateContainer();
                         const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
                         const iconClass = ICONS[normalizedType];
@@ -478,22 +497,36 @@
                         closeBtn.setAttribute('type', 'button');
                         closeBtn.setAttribute('aria-label', 'Đóng thông báo');
                         closeBtn.innerHTML = '&times;';
-                        closeBtn.onclick = function () { dismissToast(toast); };
+                        closeBtn.onclick = function () {
+                            dismissToast(toast);
+                        };
                         toast.appendChild(closeBtn);
                         c.appendChild(toast);
-                        requestAnimationFrame(() => { toast.classList.add('show'); });
+                        requestAnimationFrame(() => {
+                            toast.classList.add('show');
+                        });
                         let timer = null;
                         if (duration > 0) {
-                            timer = setTimeout(() => { dismissToast(toast); }, duration);
+                            timer = setTimeout(() => {
+                                dismissToast(toast);
+                            }, duration);
                         }
-                        toast.onmouseenter = () => { if (timer) clearTimeout(timer); };
+                        toast.onmouseenter = () => {
+                            if (timer)
+                                clearTimeout(timer);
+                        };
                         toast.onmouseleave = () => {
-                            if (duration > 0) { timer = setTimeout(() => { dismissToast(toast); }, 2000); }
+                            if (duration > 0) {
+                                timer = setTimeout(() => {
+                                    dismissToast(toast);
+                                }, 2000);
+                            }
                         };
                         return toast;
                     },
                     cleanUrlParams: function (paramNames = ['status']) {
-                        if (!window.history || !window.history.replaceState) return;
+                        if (!window.history || !window.history.replaceState)
+                            return;
                         try {
                             const url = new URL(window.location.href);
                             let changed = false;
@@ -507,15 +540,19 @@
                                 const cleanPath = url.pathname + (url.search ? url.search : '') + url.hash;
                                 window.history.replaceState(null, '', cleanPath);
                             }
-                        } catch (e) {}
+                        } catch (e) {
+                    }
                     }
                 };
                 function dismissToast(toast) {
-                    if (!toast || toast.classList.contains('hide')) return;
+                    if (!toast || toast.classList.contains('hide'))
+                        return;
                     toast.classList.remove('show');
                     toast.classList.add('hide');
                     setTimeout(() => {
-                        if (toast.parentNode) { toast.parentNode.removeChild(toast); }
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
                     }, 400);
                 }
                 global.CoursonToast = CoursonToast;
@@ -559,7 +596,8 @@
                 resendIcon.classList.add('bi-hourglass-split');
                 resendIcon.classList.remove('bi-arrow-repeat');
 
-                if (timerId) clearInterval(timerId);
+                if (timerId)
+                    clearInterval(timerId);
 
                 updateButtonLabel();
                 timerId = setInterval(function () {
@@ -587,7 +625,8 @@
             // Handle Resend with Fetch (AJAX)
             resendForm.addEventListener('submit', function (e) {
                 e.preventDefault();
-                if (resendBtn.disabled) return;
+                if (resendBtn.disabled)
+                    return;
 
                 resendBtn.disabled = true;
                 resendText.textContent = 'Đang gửi...';
@@ -601,26 +640,26 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => {
-                    if (response.status === 429) {
-                        return response.json().then(data => {
-                            CoursonToast.show('warning', data.message || 'Vui lòng đợi 60 giây trước khi gửi lại.');
-                            startCountdown(countdown > 0 ? countdown : 30);
+                        .then(response => {
+                            if (response.status === 429) {
+                                return response.json().then(data => {
+                                    CoursonToast.show('warning', data.message || 'Vui lòng đợi 60 giây trước khi gửi lại.');
+                                    startCountdown(countdown > 0 ? countdown : 30);
+                                });
+                            }
+                            if (!response.ok) {
+                                throw new Error('Gửi lại email thất bại');
+                            }
+                            return response.json().then(data => {
+                                CoursonToast.show('success', data.message || 'Đã gửi lại link xác thực! Vui lòng kiểm tra hộp thư.');
+                                startCountdown(60);
+                            });
+                        })
+                        .catch(err => {
+                            CoursonToast.show('error', 'Có lỗi xảy ra khi gửi lại email. Vui lòng thử lại sau.');
+                            resendBtn.disabled = false;
+                            resendText.textContent = 'Gửi lại email xác nhận';
                         });
-                    }
-                    if (!response.ok) {
-                        throw new Error('Gửi lại email thất bại');
-                    }
-                    return response.json().then(data => {
-                        CoursonToast.show('success', data.message || 'Đã gửi lại link xác thực! Vui lòng kiểm tra hộp thư.');
-                        startCountdown(60);
-                    });
-                })
-                .catch(err => {
-                    CoursonToast.show('error', 'Có lỗi xảy ra khi gửi lại email. Vui lòng thử lại sau.');
-                    resendBtn.disabled = false;
-                    resendText.textContent = 'Gửi lại email xác nhận';
-                });
             });
         </script>
     </body>
