@@ -88,10 +88,21 @@ public class CourseServlet extends HttpServlet {
     }
 
     private void showLearningContent(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         String regIdStr = req.getParameter("registrationId");
         if (regIdStr != null) {
             long regId = Long.parseLong(regIdStr);
-            CourseDto course = courseService.getLearningContent(regId);
+            CourseDto course;
+            try {
+                course = courseService.getLearningContent(regId, currentUser.getId());
+            } catch (SecurityException e) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+                return;
+            }
             req.setAttribute("course", course);
             req.setAttribute("registrationId", regId);
 
@@ -110,12 +121,22 @@ public class CourseServlet extends HttpServlet {
     }
 
     private void updateLessonProgress(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         long regId = Long.parseLong(req.getParameter("registrationId"));
         long lessonId = Long.parseLong(req.getParameter("lessonId"));
         String statusStr = req.getParameter("status");
         LessonProgressStatus status = (statusStr != null) ? LessonProgressStatus.fromDb(statusStr) : LessonProgressStatus.COMPLETED;
 
-        courseService.updateLessonProgress(regId, lessonId, status);
+        try {
+            courseService.updateLessonProgress(regId, currentUser.getId(), lessonId, status);
+        } catch (SecurityException e) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+            return;
+        }
         resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId + "&lessonId=" + lessonId);
     }
 }

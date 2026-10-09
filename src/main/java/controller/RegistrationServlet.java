@@ -173,9 +173,19 @@ public class RegistrationServlet extends HttpServlet {
     }
 
     private void cancel(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         String idStr = req.getParameter("id");
         if (idStr != null) {
-            registrationService.cancel(Long.parseLong(idStr));
+            try {
+                registrationService.cancel(Long.parseLong(idStr), currentUser.getId());
+            } catch (SecurityException e) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+                return;
+            }
         }
         resp.sendRedirect(req.getContextPath() + "/registrations/my");
     }

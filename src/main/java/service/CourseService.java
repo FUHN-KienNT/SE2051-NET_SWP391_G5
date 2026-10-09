@@ -455,10 +455,13 @@ public class CourseService {
         return list;
     }
 
-    public CourseDto getLearningContent(long registrationId) {
+    public CourseDto getLearningContent(long registrationId, long userId) {
         try (Connection con = DbConnection.getConnection()) {
             Registration reg = registrationDao.findById(con, registrationId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + registrationId));
+            if (!Long.valueOf(userId).equals(reg.getUserId())) {
+                throw new SecurityException("Bạn không có quyền truy cập khóa học này.");
+            }
             if (reg.getStatus() != RegistrationStatus.ACTIVE && reg.getStatus() != RegistrationStatus.COMPLETED) {
                 throw new IllegalStateException("Đơn đăng ký chưa được kích hoạt hoặc đã bị hủy.");
             }
@@ -486,10 +489,25 @@ public class CourseService {
         }
     }
 
-    public void updateLessonProgress(long registrationId, long lessonId, LessonProgressStatus status) {
+    public void updateLessonProgress(long registrationId, long userId, long lessonId, LessonProgressStatus status) {
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
+                Registration registration = registrationDao.findById(con, registrationId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + registrationId));
+                if (!Long.valueOf(userId).equals(registration.getUserId())) {
+                    throw new SecurityException("Bạn không có quyền cập nhật tiến độ của đơn đăng ký này.");
+                }
+                if (registration.getStatus() != RegistrationStatus.ACTIVE && registration.getStatus() != RegistrationStatus.COMPLETED) {
+                    throw new IllegalStateException("Đơn đăng ký chưa được kích hoạt hoặc đã bị hủy.");
+                }
+                Lesson lesson = lessonDao.findById(con, lessonId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học ID: " + lessonId));
+                Module module = moduleDao.findById(con, lesson.getModuleId())
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương học của bài học."));
+                if (!registration.getCourseId().equals(module.getCourseId())) {
+                    throw new SecurityException("Bài học không thuộc khóa học đã đăng ký.");
+                }
                 LessonProgress lp = new LessonProgress();
                 lp.setRegistrationId(registrationId);
                 lp.setLessonId(lessonId);

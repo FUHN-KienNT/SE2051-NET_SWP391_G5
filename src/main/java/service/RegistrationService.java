@@ -129,8 +129,13 @@ public class RegistrationService {
         }
     }
 
-    public void cancel(long id) {
+    public void cancel(long id, long userId) {
         try (Connection con = DbConnection.getConnection()) {
+            Registration registration = registrationDao.findById(con, id)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + id));
+            if (!Long.valueOf(userId).equals(registration.getUserId())) {
+                throw new SecurityException("Bạn không có quyền hủy đơn đăng ký này.");
+            }
             registrationDao.updateStatus(con, id, RegistrationStatus.CANCELLED);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi hủy đăng ký: " + e.getMessage(), e);
