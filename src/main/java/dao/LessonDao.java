@@ -14,7 +14,7 @@ public class LessonDao {
     private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, title, content, video_url, document_url, order_index, created_at, updated_at FROM lessons WHERE module_id = ? ORDER BY order_index ASC";
     private static final String SQL_FIND_BY_ID = "SELECT id, module_id, title, content, video_url, document_url, order_index, created_at, updated_at FROM lessons WHERE id = ?";
     private static final String SQL_EXISTS_ORDER = "SELECT COUNT(1) FROM lessons WHERE module_id = ? AND order_index = ? AND (? IS NULL OR id != ?)";
-    private static final String SQL_INSERT = "INSERT INTO lessons (module_id, title, content, video_url, document_url, order_index, created_at, updated_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SQL_INSERT = "INSERT INTO lessons (module_id, title, content, video_url, document_url, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE = "UPDATE lessons SET title = ?, content = ?, video_url = ?, document_url = ?, order_index = ?, updated_at = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM lessons WHERE id = ?";
 

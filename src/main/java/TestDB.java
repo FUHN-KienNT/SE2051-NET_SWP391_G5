@@ -5,9 +5,9 @@ import java.sql.PreparedStatement;
 
 public class TestDB {
     public static void main(String[] args) {
-        String url = "jdbc:sqlserver://localhost:1433;databaseName=courson_db;encrypt=true;trustServerCertificate=true";
-        String user = "sa";
-        String pass = "CHANGE_ME";
+        String url = "jdbc:postgresql://localhost:5432/courson_db";
+        String user = "postgres";
+        String pass = "sa";
 
         try (Connection conn = DriverManager.getConnection(url, user, pass);
              Statement stmt = conn.createStatement()) {

@@ -16,12 +16,8 @@ import java.util.Optional;
 public class LessonProgressDao {
     private static final String SQL_FIND_BY_REG = "SELECT id, registration_id, lesson_id, status, completed_at FROM lesson_progress WHERE registration_id = ?";
     private static final String SQL_FIND_BY_REG_AND_LESSON = "SELECT id, registration_id, lesson_id, status, completed_at FROM lesson_progress WHERE registration_id = ? AND lesson_id = ?";
-    private static final String SQL_UPSERT = "MERGE lesson_progress AS target "
-            + "USING (VALUES (?, ?, ?, ?)) AS source (registration_id, lesson_id, status, completed_at) "
-            + "ON target.registration_id = source.registration_id AND target.lesson_id = source.lesson_id "
-            + "WHEN MATCHED THEN UPDATE SET status = source.status, completed_at = source.completed_at "
-            + "WHEN NOT MATCHED THEN INSERT (registration_id, lesson_id, status, completed_at) VALUES (source.registration_id, source.lesson_id, source.status, source.completed_at) "
-            + "OUTPUT INSERTED.id;";
+    private static final String SQL_UPSERT = "INSERT INTO lesson_progress (registration_id, lesson_id, status, completed_at) VALUES (?, ?, ?, ?) "
+            + "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET status = EXCLUDED.status, completed_at = EXCLUDED.completed_at RETURNING id";
     private static final String SQL_CALCULATE_PROGRESS = "SELECT "
             + "  (SELECT COUNT(1) FROM lesson_progress lp WHERE lp.registration_id = r.id AND lp.status = 'COMPLETED') AS completed_count, "
             + "  (SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = r.course_id) AS total_count "

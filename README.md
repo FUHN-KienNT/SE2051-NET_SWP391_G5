@@ -4,7 +4,7 @@
 
 [![Java Version](https://img.shields.io/badge/Java-17-orange.svg?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Jakarta EE](https://img.shields.io/badge/Jakarta%20EE-10%20(Servlet%206.0)-red.svg)](https://jakarta.ee/)
-[![SQL Server](https://img.shields.io/badge/SQL%20Server-2022%2B-red.svg?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-blue.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Tomcat](https://img.shields.io/badge/Apache%20Tomcat-10.1%2B-yellow.svg?logo=apachetomcat&logoColor=white)](https://tomcat.apache.org/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg?logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![License](https://img.shields.io/badge/License-Academic%20Project-green.svg)](#)
@@ -19,7 +19,7 @@
 
 ## 📖 1. Giới thiệu dự án
 
-**Courson LMS** là giải pháp nền tảng học tập trực tuyến (Learning Management System) toàn diện, được thiết kế theo mô hình **MVC chuẩn** kết hợp **Service - DAO Pattern** trên nền tảng **Jakarta Servlet 6.0 / JSP 3.1** và **Microsoft SQL Server**. Hệ thống đáp ứng đầy đủ chu trình học tập từ khám phá khóa học, ghi danh, xem bài giảng video, theo dõi tiến độ đến làm bài kiểm tra trắc nghiệm và cấp chứng chỉ.
+**Courson LMS** là giải pháp nền tảng học tập trực tuyến (Learning Management System) toàn diện, được thiết kế theo mô hình **MVC chuẩn** kết hợp **Service - DAO Pattern** trên nền tảng **Jakarta Servlet 6.0 / JSP 3.1** và **PostgreSQL**. Hệ thống đáp ứng đầy đủ chu trình học tập từ khám phá khóa học, ghi danh, xem bài giảng video, theo dõi tiến độ đến làm bài kiểm tra trắc nghiệm và cấp chứng chỉ.
 
 ---
 
@@ -79,13 +79,13 @@ Dự án áp dụng mô hình phân lớp rõ ràng (Layered Architecture):
                        └───────────────┬───────────────┘
                                        ▼
                        ┌───────────────────────────────┐
-                       │   Microsoft SQL Server        │
+                       │   PostgreSQL Database         │
                        └───────────────────────────────┘
 ```
 
 ---
 
-## 🗄️ 4. Cơ sở dữ liệu (Microsoft SQL Server)
+## 🗄️ 4. Cơ sở dữ liệu (PostgreSQL)
 
 Hệ thống bao gồm **14 bảng chuẩn hóa** ràng buộc toàn vẹn dữ liệu:
 
@@ -113,7 +113,7 @@ Hệ thống bao gồm **14 bảng chuẩn hóa** ràng buộc toàn vẹn dữ 
 ```
 SE2051-NET_SWP391_G5/
 ├── database/
-│   ├── schema_sqlserver.sql       # Cấu trúc CSDL SQL Server chuẩn (14 bảng hoàn chỉnh)
+│   ├── schema.sql                 # Cấu trúc CSDL PostgreSQL chuẩn (14 bảng hoàn chỉnh)
 │   ├── seed.sql                   # Dữ liệu mẫu hợp nhất (3 khóa học, 118 bài giảng, 12 Quiz chuẩn hóa)
 │   ├── seed_full_courses.sql      # Alias dữ liệu mẫu (tương thích backward)
 │   ├── fetch_playlists.py         # Script tự động trích xuất YouTube Playlist
@@ -129,7 +129,7 @@ SE2051-NET_SWP391_G5/
 │   │   │   ├── service/           # Nghiệp vụ nghiệp vụ (Business Logic)
 │   │   │   └── util/              # Tiện ích DbConnection, PasswordUtil, v.v.
 │   │   ├── resources/
-│   │   │   └── db.properties      # Cấu hình kết nối CSDL SQL Server
+│   │   │   └── db.properties      # Cấu hình kết nối CSDL PostgreSQL
 │   │   └── webapp/
 │   │       ├── WEB-INF/
 │   │       │   ├── web.xml        # Cấu hình Web Application
@@ -147,23 +147,27 @@ SE2051-NET_SWP391_G5/
 * **Java Development Kit (JDK):** Phiên bản **17** trở lên.
 * **Apache Maven:** Phiên bản **3.8+**.
 * **Apache Tomcat:** Phiên bản **10.1+** (hỗ trợ Jakarta Servlet 6.0).
-* **Microsoft SQL Server:** Phiên bản **2022+** (cổng mặc định `1433`).
+* **PostgreSQL:** Phiên bản **14+** (cổng mặc định `5432`).
 
 ### Các bước thực hiện:
 
 #### Bước 1: Khởi tạo Cơ sở dữ liệu
-1. Mở SQL Server Management Studio, kết nối tới SQL Server local bằng tài khoản có quyền tạo database.
-2. Chạy `database/schema_sqlserver.sql`. Script sẽ tạo `courson_db`, 14 bảng, index và bốn tài khoản thử nghiệm.
-   ```powershell
-   sqlcmd -S localhost -U sa -P "<SQL_SERVER_PASSWORD>" -i database\schema_sqlserver.sql
+1. Mở công cụ quản trị PostgreSQL (pgAdmin hoặc terminal `psql`):
+   ```sql
+   CREATE DATABASE courson_db;
+   ```
+2. Thực thi file schema và nạp dữ liệu:
+   ```bash
+   psql -U postgres -d courson_db -f database/schema.sql
+   psql -U postgres -d courson_db -f database/seed.sql
    ```
 
 #### Bước 2: Cấu hình kết nối CSDL
 Chỉnh sửa thông tin kết nối trong file `src/main/resources/db.properties`:
 ```properties
-db.url=jdbc:sqlserver://localhost:1433;databaseName=courson_db;encrypt=true;trustServerCertificate=true
-db.user=sa
-db.password=<SQL_SERVER_PASSWORD>
+db.url=jdbc:postgresql://localhost:5432/courson_db
+db.user=postgres
+db.password=sa
 ```
 
 #### Bước 3: Biên dịch & Đóng gói WAR

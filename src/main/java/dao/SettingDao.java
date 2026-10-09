@@ -15,7 +15,7 @@ import java.util.Optional;
 public class SettingDao {
     private static final String SQL_FIND_BY_TYPE = "SELECT id, type, name, value, priority, status, description, created_at, updated_at FROM settings WHERE type = ? ORDER BY priority ASC, name ASC";
     private static final String SQL_FIND_BY_ID = "SELECT id, type, name, value, priority, status, description, created_at, updated_at FROM settings WHERE id = ?";
-    private static final String SQL_INSERT = "INSERT INTO settings (type, name, value, priority, status, description, created_at, updated_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SQL_INSERT = "INSERT INTO settings (type, name, value, priority, status, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE = "UPDATE settings SET type = ?, name = ?, value = ?, priority = ?, status = ?, description = ?, updated_at = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM settings WHERE id = ?";
 

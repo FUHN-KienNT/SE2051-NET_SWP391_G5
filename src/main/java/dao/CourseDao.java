@@ -17,7 +17,7 @@ public class CourseDao {
     private static final String SQL_FIND_ALL = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses ORDER BY id DESC";
     private static final String SQL_FIND_BY_ID = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE id = ?";
     private static final String SQL_FIND_BY_MANAGER_OR_EXPERT = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE manager_id = ? OR expert_id = ? ORDER BY id DESC";
-    private static final String SQL_INSERT = "INSERT INTO courses (title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SQL_INSERT = "INSERT INTO courses (title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE = "UPDATE courses SET title = ?, category_id = ?, category_type = ?, description = ?, price = ?, status = ?, manager_id = ?, expert_id = ?, updated_at = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM courses WHERE id = ?";
 

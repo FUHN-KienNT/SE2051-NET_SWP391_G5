@@ -19,7 +19,7 @@ public class UserDao {
     private static final String SQL_FIND_BY_USERNAME_OR_EMAIL = "SELECT id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at FROM users WHERE username = ? OR LOWER(email) = LOWER(?)";
     private static final String SQL_EXISTS_USERNAME = "SELECT COUNT(1) FROM users WHERE username = ? AND (? IS NULL OR id != ?)";
     private static final String SQL_EXISTS_EMAIL = "SELECT COUNT(1) FROM users WHERE LOWER(email) = LOWER(?) AND (? IS NULL OR id != ?)";
-    private static final String SQL_INSERT = "INSERT INTO users (username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SQL_INSERT = "INSERT INTO users (username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE = "UPDATE users SET full_name = ?, role_id = ?, role_type = ?, status = ?, password_hash = COALESCE(?, password_hash), updated_at = ? WHERE id = ?";
     private static final String SQL_UPDATE_STATUS = "UPDATE users SET status = ?, updated_at = ? WHERE id = ?";
 

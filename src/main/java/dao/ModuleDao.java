@@ -14,7 +14,7 @@ public class ModuleDao {
     private static final String SQL_FIND_BY_COURSE = "SELECT id, course_id, title, order_index, created_at FROM modules WHERE course_id = ? ORDER BY order_index ASC";
     private static final String SQL_FIND_BY_ID = "SELECT id, course_id, title, order_index, created_at FROM modules WHERE id = ?";
     private static final String SQL_EXISTS_ORDER = "SELECT COUNT(1) FROM modules WHERE course_id = ? AND order_index = ? AND (? IS NULL OR id != ?)";
-    private static final String SQL_INSERT = "INSERT INTO modules (course_id, title, order_index, created_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?)";
+    private static final String SQL_INSERT = "INSERT INTO modules (course_id, title, order_index, created_at) VALUES (?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE = "UPDATE modules SET title = ?, order_index = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM modules WHERE id = ?";
 
