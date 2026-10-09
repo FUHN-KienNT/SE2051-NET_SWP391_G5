@@ -35,6 +35,30 @@ public class SettingService {
         }
     }
 
+    public List<SettingDto> search(String type, String status, String keyword, String sortBy, String sortOrder) {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Setting> list = settingDao.search(con, type, status, keyword, sortBy, sortOrder);
+            List<SettingDto> dtoList = new ArrayList<>();
+            for (Setting s : list) {
+                dtoList.add(mapSetting(s));
+            }
+            return dtoList;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm kiếm cấu hình: " + e.getMessage(), e);
+        }
+    }
+
+    public void updateStatus(long id, SettingStatus status) {
+        try (Connection con = DbConnection.getConnection()) {
+            boolean updated = settingDao.updateStatus(con, id, status);
+            if (!updated) {
+                throw new IllegalArgumentException("Không tìm thấy cấu hình cần cập nhật.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật trạng thái: " + e.getMessage(), e);
+        }
+    }
+
     public SettingDto getSetting(long id) {
         try (Connection con = DbConnection.getConnection()) {
             return settingDao.findById(con, id)
@@ -84,6 +108,9 @@ public class SettingService {
                 con.setAutoCommit(true);
             }
         } catch (SQLException e) {
+            if ("23503".equals(e.getSQLState())) {
+                throw new RuntimeException("Không thể lưu cấu hình vì nó đang được sử dụng ở bảng khác (Khóa học/Người dùng). Vui lòng kiểm tra lại.");
+            }
             throw new RuntimeException("Lỗi lưu cấu hình: " + e.getMessage(), e);
         }
     }
@@ -96,6 +123,9 @@ public class SettingService {
                 throw new IllegalArgumentException("Không tìm thấy cấu hình cần xóa.");
             }
         } catch (SQLException e) {
+            if ("23503".equals(e.getSQLState())) {
+                throw new RuntimeException("Không thể xóa cấu hình vì nó đang được sử dụng ở bảng khác.");
+            }
             throw new RuntimeException("Lỗi xóa cấu hình: " + e.getMessage(), e);
         }
     }

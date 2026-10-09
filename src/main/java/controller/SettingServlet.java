@@ -50,20 +50,67 @@ public class SettingServlet extends HttpServlet {
             case "delete":
                 deleteSetting(req, resp);
                 break;
+            case "toggle-status":
+                toggleStatus(req, resp);
+                break;
             default:
                 showList(req, resp);
                 break;
         }
     }
 
+    private void toggleStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String idStr = req.getParameter("id");
+        if (idStr != null && !idStr.trim().isEmpty()) {
+            try {
+                long id = Long.parseLong(idStr.trim());
+                SettingDto setting = settingService.getSetting(id);
+                SettingStatus newStatus = setting.getStatus() == SettingStatus.ACTIVE ? SettingStatus.INACTIVE : SettingStatus.ACTIVE;
+                settingService.updateStatus(id, newStatus);
+                resp.sendRedirect(req.getContextPath() + "/settings/list?success=status_updated");
+                return;
+            } catch (Exception e) {
+                resp.sendRedirect(req.getContextPath() + "/settings/list?error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+                return;
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/settings/list");
+    }
+
     private void showList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String typeStr = req.getParameter("type");
-        SettingType type = (typeStr != null && !typeStr.trim().isEmpty())
-                ? SettingType.fromDb(typeStr)
-                : SettingType.USER_ROLE;
-        List<SettingDto> list = settingService.getByType(type);
-        req.setAttribute("settings", list);
+        String type = req.getParameter("type");
+        if (type == null) type = "ALL";
+        
+        String status = req.getParameter("status");
+        if (status == null) status = "ALL";
+        
+        String keyword = req.getParameter("keyword");
+        if (keyword == null) keyword = "";
+        
+        String sortBy = req.getParameter("sortBy");
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            sortBy = "id";
+        }
+        
+        String sortOrder = req.getParameter("sortOrder");
+        if (sortOrder == null || sortOrder.trim().isEmpty()) {
+            sortOrder = "asc";
+        }
+
+        try {
+            List<SettingDto> list = settingService.search(type, status, keyword, sortBy, sortOrder);
+            req.setAttribute("settings", list);
+        } catch (Exception e) {
+            req.setAttribute("settings", new java.util.ArrayList<>());
+            req.setAttribute("error", "Đã xảy ra lỗi khi tải danh sách: " + e.getMessage());
+        }
+
         req.setAttribute("currentType", type);
+        req.setAttribute("currentStatus", status);
+        req.setAttribute("currentKeyword", keyword);
+        req.setAttribute("currentSortBy", sortBy);
+        req.setAttribute("currentSortOrder", sortOrder);
+
         req.getRequestDispatcher("/WEB-INF/views/setting/list.jsp").forward(req, resp);
     }
 
@@ -78,12 +125,14 @@ public class SettingServlet extends HttpServlet {
     }
 
     private void saveSetting(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        SettingDto dto = bindSetting(req);
         try {
+            SettingDto dto = bindSetting(req);
             settingService.saveSetting(dto);
             resp.sendRedirect(req.getContextPath() + "/settings/list?type=" + dto.getType().name() + "&success=true");
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/settings/detail?error=" + e.getMessage());
+            String idStr = req.getParameter("id");
+            String redirectUrl = req.getContextPath() + "/settings/detail" + (idStr != null && !idStr.isEmpty() ? "?id=" + idStr + "&" : "?") + "error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8");
+            resp.sendRedirect(redirectUrl);
         }
     }
 

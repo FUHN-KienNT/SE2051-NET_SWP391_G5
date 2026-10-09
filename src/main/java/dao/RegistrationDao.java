@@ -24,6 +24,9 @@ public class RegistrationDao {
     private static final String SQL_UPDATE_PAYMENT = "UPDATE registrations SET payment_status = ?, payment_code = ?, paid_at = ?, status = ? WHERE id = ?";
     private static final String SQL_UPDATE_PROGRESS = "UPDATE registrations SET progress_percentage = ? WHERE id = ?";
     private static final String SQL_UPDATE_STATUS = "UPDATE registrations SET status = ? WHERE id = ?";
+    private static final String SQL_FIND_BY_MANAGER = "SELECT r.* FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ? ORDER BY r.id DESC";
+    private static final String SQL_COUNT_BY_MANAGER = "SELECT COUNT(*) FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ?";
+    private static final String SQL_SUM_REVENUE_BY_MANAGER = "SELECT SUM(r.payment_amount) FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ? AND r.payment_status = 'COMPLETED'";
 
     public Optional<Registration> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
@@ -138,6 +141,44 @@ public class RegistrationDao {
             ps.setLong(2, id);
             return ps.executeUpdate() > 0;
         }
+    }
+
+    public List<Registration> findByManagerId(Connection con, long managerId) throws SQLException {
+        List<Registration> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_MANAGER)) {
+            ps.setLong(1, managerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    public int countByManagerId(Connection con, long managerId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_COUNT_BY_MANAGER)) {
+            ps.setLong(1, managerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public BigDecimal sumRevenueByManagerId(Connection con, long managerId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_SUM_REVENUE_BY_MANAGER)) {
+            ps.setLong(1, managerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal sum = rs.getBigDecimal(1);
+                    return sum != null ? sum : BigDecimal.ZERO;
+                }
+            }
+        }
+        return BigDecimal.ZERO;
     }
 
     private Registration mapRow(ResultSet rs) throws SQLException {

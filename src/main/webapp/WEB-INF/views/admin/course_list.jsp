@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="pageTitle" value="Quản lý khóa học - Courson LMS" />
+<c:set var="rolePath" value="${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager' : '/admin'}" />
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
 
@@ -14,9 +15,18 @@
                 <p class="text-muted small mb-0">Quản lý toàn bộ khóa học trên hệ thống, phân công Chuyên gia (Expert) phụ trách</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>Dashboard
-                </a>
+                <c:choose>
+                    <c:when test="${sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                        <a href="${pageContext.request.contextPath}/manager/dashboard" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Dashboard
+                        </a>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Dashboard
+                        </a>
+                    </c:otherwise>
+                </c:choose>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCourseModal">
                     <i class="bi bi-plus-lg me-1"></i>Tạo khóa học &amp; Phân công
                 </button>
@@ -172,7 +182,7 @@
                                             </c:choose>
                                         </td>
                                         <td class="text-end">
-                                            <a href="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}" class="btn btn-primary btn-sm rounded-pill px-3" title="View Details Link">
+                                            <a href="${pageContext.request.contextPath}${rolePath}/course-detail?id=${c.id}" class="btn btn-primary btn-sm rounded-pill px-3" title="View Details Link">
                                                 View Details
                                             </a>
                                         </td>
@@ -191,7 +201,7 @@
 <div class="modal fade" id="newCourseModal" tabindex="-1" aria-labelledby="newCourseModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="${pageContext.request.contextPath}/admin/save-course" method="POST">
+            <form action="${pageContext.request.contextPath}${rolePath}/save-course" method="POST">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold" id="newCourseModalLabel"><i class="bi bi-plus-circle me-2 text-primary"></i>Tạo khóa học mới &amp; Phân công</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

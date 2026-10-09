@@ -195,8 +195,9 @@ public class AuthServlet extends HttpServlet {
             resp.sendRedirect(ctx + "/admin/dashboard");
         } else if ("EXPERT".equalsIgnoreCase(role) || "ROLE_EXPERT".equalsIgnoreCase(role)) {
             resp.sendRedirect(ctx + "/expert/dashboard");
-        } else if ("MANAGER".equalsIgnoreCase(role) || "ROLE_MANAGER".equalsIgnoreCase(role)
-                || "INSTRUCTOR".equalsIgnoreCase(role)) {
+        } else if ("MANAGER".equalsIgnoreCase(role) || "ROLE_MANAGER".equalsIgnoreCase(role)) {
+            resp.sendRedirect(ctx + "/manager/dashboard");
+        } else if ("INSTRUCTOR".equalsIgnoreCase(role)) {
             resp.sendRedirect(ctx + "/admin/courses");
         } else {
             resp.sendRedirect(ctx + "/home");

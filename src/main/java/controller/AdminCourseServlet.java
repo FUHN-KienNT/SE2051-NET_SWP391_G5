@@ -33,7 +33,7 @@ import util.SessionUtil;
  * - Course List (II.2.4.1)
  * - Course Detail (II.2.4.2) & Phân công Expert
  */
-@WebServlet(name = "AdminCourseServlet", urlPatterns = {"/admin/*"})
+@WebServlet(name = "AdminCourseServlet", urlPatterns = {"/admin/*", "/manager/*"})
 public class AdminCourseServlet extends HttpServlet {
     private CourseService courseService;
     private SettingService settingService;
@@ -101,13 +101,19 @@ public class AdminCourseServlet extends HttpServlet {
             } catch (Exception ignored) {}
         }
         if ("true".equalsIgnoreCase(fromDashboard)) {
-            resp.sendRedirect(req.getContextPath() + "/admin/dashboard?success=status_updated");
+            resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/dashboard?success=status_updated");
         } else {
-            resp.sendRedirect(req.getContextPath() + "/admin/courses?success=status_updated");
+            resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?success=status_updated");
         }
     }
 
     private void showDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        dto.UserDto currentUser = util.SessionUtil.getCurrentUser(req);
+        if (currentUser != null && "MANAGER".equalsIgnoreCase(currentUser.getRoleName())) {
+            resp.sendRedirect(req.getContextPath() + "/manager/dashboard");
+            return;
+        }
+
         List<CourseDto> allCourses = courseService.getAllCourses();
         List<UserDto> experts = courseService.getExperts();
         List<UserDto> allUsers = userService.getUsers();
@@ -118,7 +124,7 @@ public class AdminCourseServlet extends HttpServlet {
         int draftCount = 0;
         if (allCourses != null) {
             for (CourseDto c : allCourses) {
-                if (c.getStatus() == CourseStatus.DRAFT) {
+                if (c.getStatus() == CourseStatus.DRAFT || c.getStatus() == CourseStatus.PENDING_REVIEW) {
                     draftCount++;
                     draftCourses.add(c);
                 } else if (c.getStatus() == CourseStatus.PUBLISHED) {
@@ -195,7 +201,7 @@ public class AdminCourseServlet extends HttpServlet {
     private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         CourseDto dto = bindCourse(req);
         if (dto.getId() == null || dto.getId() <= 0) {
-            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + java.net.URLEncoder.encode("Admin và Manager không trực tiếp tạo khóa học. Khóa học phải do Expert khởi tạo và gửi duyệt.", "UTF-8"));
+            resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=" + java.net.URLEncoder.encode("Admin và Manager không trực tiếp tạo khóa học. Khóa học phải do Expert khởi tạo và gửi duyệt.", "UTF-8"));
             return;
         }
         UserDto currentUser = SessionUtil.getCurrentUser(req);
@@ -204,10 +210,10 @@ public class AdminCourseServlet extends HttpServlet {
         }
         try {
             long id = courseService.saveCourse(dto);
-            resp.sendRedirect(req.getContextPath() + "/admin/course-detail?id=" + id + "&success=true");
+            resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/course-detail?id=" + id + "&success=true");
         } catch (Exception e) {
             String encodedErr = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
-            resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + encodedErr);
+            resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=" + encodedErr);
         }
     }
 
@@ -216,15 +222,15 @@ public class AdminCourseServlet extends HttpServlet {
         if (idStr != null && !idStr.trim().isEmpty()) {
             try {
                 courseService.deleteCourse(Long.parseLong(idStr.trim()));
-                resp.sendRedirect(req.getContextPath() + "/admin/courses?deleted=true");
+                resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?deleted=true");
                 return;
             } catch (Exception e) {
                 String encodedErr = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
-                resp.sendRedirect(req.getContextPath() + "/admin/courses?error=" + encodedErr);
+                resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=" + encodedErr);
                 return;
             }
         }
-        resp.sendRedirect(req.getContextPath() + "/admin/courses");
+        resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses");
     }
 
     private CourseDto bindCourse(HttpServletRequest req) {

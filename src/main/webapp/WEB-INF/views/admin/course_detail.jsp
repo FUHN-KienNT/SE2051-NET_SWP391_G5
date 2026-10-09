@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Quản trị khóa học - Courson LMS" />
+<c:set var="rolePath" value="${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager' : '/admin'}" />
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
 
@@ -9,8 +10,15 @@
         <!-- Breadcrumb & Title -->
         <nav class="mb-3">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Admin Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/courses">Khóa học</a></li>
+                <c:choose>
+                    <c:when test="${sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/manager/dashboard">Manager Dashboard</a></li>
+                    </c:when>
+                    <c:otherwise>
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Admin Dashboard</a></li>
+                    </c:otherwise>
+                </c:choose>
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}${rolePath}/courses">Khóa học</a></li>
                 <li class="breadcrumb-item active">Chi tiết khóa học #${course.id}</li>
             </ol>
         </nav>
@@ -39,7 +47,7 @@
                         </span>
                     </div>
 
-                    <form action="${pageContext.request.contextPath}/admin/save-course" method="POST">
+                    <form action="${pageContext.request.contextPath}${rolePath}/save-course" method="POST">
                         <input type="hidden" name="id" value="${course.id}">
                         
                         <div class="mb-3">
@@ -111,7 +119,7 @@
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mt-4">
-                                <a href="${pageContext.request.contextPath}/admin/courses" class="btn btn-outline-secondary px-4">
+                                <a href="${pageContext.request.contextPath}${rolePath}/courses" class="btn btn-outline-secondary px-4">
                                     <i class="bi bi-arrow-left me-1"></i>Back
                                 </a>
                                 <button type="submit" class="btn btn-danger fw-semibold px-4">

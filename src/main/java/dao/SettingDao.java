@@ -32,6 +32,61 @@ public class SettingDao {
         return list;
     }
 
+    public List<Setting> search(Connection con, String type, String status, String keyword, String sortBy, String sortOrder) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT id, type, name, value, priority, status, description, created_at, updated_at FROM settings WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (type != null && !type.trim().isEmpty() && !"ALL".equalsIgnoreCase(type)) {
+            sql.append(" AND type = ?");
+            params.add(type);
+        }
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            sql.append(" AND status = ?");
+            params.add(status);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (LOWER(name) LIKE ? OR LOWER(value) LIKE ?)");
+            String term = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+        }
+
+        String orderCol = "priority";
+        String dir = "ASC";
+        
+        if (sortBy != null && !sortBy.trim().isEmpty()) {
+            switch (sortBy.toLowerCase()) {
+                case "id": orderCol = "id"; break;
+                case "name": orderCol = "name"; break;
+                case "type": orderCol = "type"; break;
+                case "value": orderCol = "value"; break;
+                case "status": orderCol = "status"; break;
+            }
+        }
+        if ("desc".equalsIgnoreCase(sortOrder)) {
+            dir = "DESC";
+        }
+        
+        if (orderCol.equals("priority")) {
+            sql.append(" ORDER BY priority ").append(dir).append(", name ASC");
+        } else {
+            sql.append(" ORDER BY ").append(orderCol).append(" ").append(dir);
+        }
+
+        List<Setting> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public Optional<Setting> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);
@@ -76,6 +131,16 @@ public class SettingDao {
             ps.setString(6, entity.getDescription());
             ps.setObject(7, OffsetDateTime.now());
             ps.setLong(8, entity.getId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateStatus(Connection con, long id, SettingStatus status) throws SQLException {
+        String sql = "UPDATE settings SET status = ?, updated_at = ? WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, status.getDbValue());
+            ps.setObject(2, OffsetDateTime.now());
+            ps.setLong(3, id);
             return ps.executeUpdate() > 0;
         }
     }

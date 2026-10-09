@@ -95,6 +95,35 @@ public class RegistrationService {
         }
     }
 
+    public List<RegistrationDto> getByManager(long managerId) {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Registration> list = registrationDao.findByManagerId(con, managerId);
+            List<RegistrationDto> dtoList = new ArrayList<>();
+            for (Registration r : list) {
+                dtoList.add(mapRegistration(r));
+            }
+            return dtoList;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy danh sách đăng ký cho quản lý: " + e.getMessage(), e);
+        }
+    }
+
+    public int countByManagerId(long managerId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.countByManagerId(con, managerId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi đếm số lượng đăng ký cho quản lý: " + e.getMessage(), e);
+        }
+    }
+
+    public BigDecimal sumRevenueByManagerId(long managerId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.sumRevenueByManagerId(con, managerId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tính doanh thu cho quản lý: " + e.getMessage(), e);
+        }
+    }
+
     public void updatePayment(long id, PaymentStatus status, String code, OffsetDateTime paidAt) {
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);

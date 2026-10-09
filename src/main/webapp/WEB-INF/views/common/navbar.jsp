@@ -520,8 +520,10 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                     <c:if
                         test="${sessionScope.CURRENT_USER.roleName == 'ADMIN' || sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
                         <li class="nav-item cf-nav-item cf-hover-dropdown dropdown">
+                            <c:set var="dashboardPath" value="${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager/dashboard' : '/admin/dashboard'}" />
+                            <c:set var="coursesPath" value="${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager/courses' : '/admin/courses'}" />
                             <a class="cf-nav-link dropdown-toggle ${isAdmin ? 'active' : ''}"
-                               href="${pageContext.request.contextPath}/admin/dashboard" role="button"
+                               href="${pageContext.request.contextPath}${dashboardPath}" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-shield-lock" style="color: #DC2626;"></i>
                                 <span>Quản trị hệ thống</span>
@@ -530,13 +532,13 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                             <ul class="dropdown-menu cf-dropdown-menu" style="min-width: 220px;">
                                 <li>
                                     <a class="cf-dropdown-item"
-                                       href="${pageContext.request.contextPath}/admin/dashboard">
+                                       href="${pageContext.request.contextPath}${dashboardPath}">
                                         <i class="bi bi-speedometer2 text-danger"></i> Dashboard Quản trị
                                     </a>
                                 </li>
                                 <li>
                                     <a class="cf-dropdown-item"
-                                       href="${pageContext.request.contextPath}/admin/courses">
+                                       href="${pageContext.request.contextPath}${coursesPath}">
                                         <i class="bi bi-collection text-primary"></i> Quản lý Khóa học
                                     </a>
                                 </li>
@@ -652,11 +654,17 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                                     </a>
                                 </c:if>
 
-                                <c:if
-                                    test="${sessionScope.CURRENT_USER.roleName == 'ADMIN' || sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                                <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN'}">
                                     <a class="cf-dropdown-item"
                                        href="${pageContext.request.contextPath}/admin/dashboard">
                                         <i class="bi bi-speedometer2 text-danger"></i> Admin Dashboard
+                                    </a>
+                                </c:if>
+
+                                <c:if test="${sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                                    <a class="cf-dropdown-item"
+                                       href="${pageContext.request.contextPath}/manager/dashboard">
+                                        <i class="bi bi-speedometer2 text-primary"></i> Manager Dashboard
                                     </a>
                                 </c:if>
 
