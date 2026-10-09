@@ -7,13 +7,13 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public final class DbConnection {
-    private static String URL = "jdbc:postgresql://localhost:5432/courson_db";
-    private static String USER = "postgres";
-    private static String PASSWORD = "password";
+    private static String URL = "jdbc:sqlserver://localhost:1433;databaseName=courson_db;encrypt=true;trustServerCertificate=true";
+    private static String USER = "sa";
+    private static String PASSWORD = "CHANGE_ME";
 
     static {
         try {
-            Class.forName("org.postgresql.Driver");
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             try (InputStream is = DbConnection.class.getClassLoader().getResourceAsStream("db.properties")) {
                 if (is != null) {
                     Properties prop = new Properties();
@@ -28,7 +28,7 @@ public final class DbConnection {
             if (System.getenv("DB_USER") != null) USER = System.getenv("DB_USER");
             if (System.getenv("DB_PASSWORD") != null) PASSWORD = System.getenv("DB_PASSWORD");
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("PostgreSQL JDBC Driver not found", e);
+            throw new RuntimeException("SQL Server JDBC Driver not found", e);
         }
     }
 

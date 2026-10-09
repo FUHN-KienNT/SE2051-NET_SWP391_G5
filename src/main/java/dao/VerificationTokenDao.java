@@ -12,21 +12,20 @@ public class VerificationTokenDao {
 
     private static final String SQL_INSERT = 
         "INSERT INTO email_verification_tokens (user_id, token_hash, expires_at, used, created_at) " +
-        "VALUES (?, ?, ?, ?, ?) RETURNING id";
+        "OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?)";
 
     private static final String SQL_INVALIDATE_BY_USER_ID = 
-        "UPDATE email_verification_tokens SET used = TRUE WHERE user_id = ? AND used = FALSE";
+        "UPDATE email_verification_tokens SET used = 1 WHERE user_id = ? AND used = 0";
 
     private static final String SQL_GET_LATEST_TOKEN_TIME = 
-        "SELECT created_at FROM email_verification_tokens WHERE user_id = ? ORDER BY id DESC LIMIT 1";
+        "SELECT TOP (1) created_at FROM email_verification_tokens WHERE user_id = ? ORDER BY id DESC";
 
     private static final String SQL_CONSUME_TOKEN = 
-        "UPDATE email_verification_tokens SET used = TRUE " +
-        "WHERE token_hash = ? AND used = FALSE AND expires_at > NOW() " +
-        "RETURNING user_id";
+        "UPDATE email_verification_tokens SET used = 1 " +
+        "OUTPUT INSERTED.user_id WHERE token_hash = ? AND used = 0 AND expires_at > SYSUTCDATETIME()";
 
     private static final String SQL_ACTIVATE_USER = 
-        "UPDATE users SET status = 'ACTIVE', updated_at = NOW() WHERE id = ?";
+        "UPDATE users SET status = 'ACTIVE', updated_at = SYSUTCDATETIME() WHERE id = ?";
 
     private static final String SQL_CHECK_TOKEN_STATUS = 
         "SELECT t.used, t.expires_at, u.status " +

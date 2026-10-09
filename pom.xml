@@ -59,11 +59,11 @@
             <version>0.4</version>
         </dependency>
 
-        <!-- PostgreSQL JDBC Driver -->
+        <!-- Microsoft SQL Server JDBC Driver -->
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.7.3</version>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.8.1.jre11</version>
         </dependency>
 
         <!-- Jakarta Mail Implementation (Angus Mail) -->

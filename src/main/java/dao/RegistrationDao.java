@@ -20,7 +20,7 @@ public class RegistrationDao {
     private static final String SQL_FIND_BY_COURSE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE course_id = ? ORDER BY id DESC";
     private static final String SQL_FIND_BY_USER_AND_COURSE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE user_id = ? AND course_id = ?";
     private static final String SQL_FIND_BY_PAYMENT_CODE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE payment_code = ?";
-    private static final String SQL_INSERT = "INSERT INTO registrations (user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_INSERT = "INSERT INTO registrations (user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_UPDATE_PAYMENT = "UPDATE registrations SET payment_status = ?, payment_code = ?, paid_at = ?, status = ? WHERE id = ?";
     private static final String SQL_UPDATE_PROGRESS = "UPDATE registrations SET progress_percentage = ? WHERE id = ?";
     private static final String SQL_UPDATE_STATUS = "UPDATE registrations SET status = ? WHERE id = ?";

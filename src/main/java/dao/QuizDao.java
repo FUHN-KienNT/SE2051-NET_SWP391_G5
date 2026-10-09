@@ -16,13 +16,17 @@ public class QuizDao {
     private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, title, pass_score, time_limit_minutes, order_index, created_at, updated_at FROM quizzes WHERE module_id = ? ORDER BY order_index ASC";
     private static final String SQL_FIND_BY_ID = "SELECT id, module_id, title, pass_score, time_limit_minutes, order_index, created_at, updated_at FROM quizzes WHERE id = ?";
     private static final String SQL_EXISTS_ORDER = "SELECT COUNT(1) FROM quizzes WHERE module_id = ? AND order_index = ? AND (? IS NULL OR id != ?)";
-    private static final String SQL_INSERT = "INSERT INTO quizzes (module_id, title, pass_score, time_limit_minutes, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_INSERT = "INSERT INTO quizzes (module_id, title, pass_score, time_limit_minutes, order_index, created_at, updated_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_UPDATE = "UPDATE quizzes SET title = ?, pass_score = ?, time_limit_minutes = ?, order_index = ?, updated_at = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM quizzes WHERE id = ?";
 
     private static final String SQL_FIND_ASSIGNMENTS = "SELECT id, quiz_id, question_id, module_id, order_index, points FROM quiz_questions WHERE quiz_id = ? ORDER BY order_index ASC";
-    private static final String SQL_SAVE_ASSIGNMENT = "INSERT INTO quiz_questions (quiz_id, question_id, module_id, order_index, points) VALUES (?, ?, ?, ?, ?) "
-            + "ON CONFLICT (quiz_id, question_id) DO UPDATE SET order_index = EXCLUDED.order_index, points = EXCLUDED.points RETURNING id";
+    private static final String SQL_SAVE_ASSIGNMENT = "MERGE quiz_questions AS target "
+            + "USING (VALUES (?, ?, ?, ?, ?)) AS source (quiz_id, question_id, module_id, order_index, points) "
+            + "ON target.quiz_id = source.quiz_id AND target.question_id = source.question_id "
+            + "WHEN MATCHED THEN UPDATE SET order_index = source.order_index, points = source.points "
+            + "WHEN NOT MATCHED THEN INSERT (quiz_id, question_id, module_id, order_index, points) VALUES (source.quiz_id, source.question_id, source.module_id, source.order_index, source.points) "
+            + "OUTPUT INSERTED.id;";
     private static final String SQL_DELETE_ASSIGNMENT = "DELETE FROM quiz_questions WHERE quiz_id = ? AND question_id = ?";
     private static final String SQL_UPDATE_ASSIGNMENT_ORDER = "UPDATE quiz_questions SET order_index = ? WHERE quiz_id = ? AND question_id = ?";
 

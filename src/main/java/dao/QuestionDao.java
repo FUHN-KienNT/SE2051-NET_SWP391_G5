@@ -17,13 +17,13 @@ public class QuestionDao {
     private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, question_text, question_type, default_points, created_at FROM questions WHERE module_id = ? ORDER BY id ASC";
     private static final String SQL_FIND_BY_COURSE = "SELECT q.id, q.module_id, q.question_text, q.question_type, q.default_points, q.created_at FROM questions q JOIN modules m ON q.module_id = m.id WHERE m.course_id = ? ORDER BY m.order_index ASC, q.id ASC";
     private static final String SQL_FIND_BY_ID = "SELECT id, module_id, question_text, question_type, default_points, created_at FROM questions WHERE id = ?";
-    private static final String SQL_INSERT = "INSERT INTO questions (module_id, question_text, question_type, default_points, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_INSERT = "INSERT INTO questions (module_id, question_text, question_type, default_points, created_at) OUTPUT INSERTED.id VALUES (?, ?, ?, ?, ?)";
     private static final String SQL_UPDATE = "UPDATE questions SET question_text = ?, question_type = ?, default_points = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM questions WHERE id = ?";
 
     private static final String SQL_FIND_OPTIONS = "SELECT id, question_id, option_text, is_correct, order_index FROM answer_options WHERE question_id = ? ORDER BY order_index ASC";
     private static final String SQL_DELETE_OPTIONS = "DELETE FROM answer_options WHERE question_id = ?";
-    private static final String SQL_INSERT_OPTION = "INSERT INTO answer_options (question_id, option_text, is_correct, order_index) VALUES (?, ?, ?, ?) RETURNING id";
+    private static final String SQL_INSERT_OPTION = "INSERT INTO answer_options (question_id, option_text, is_correct, order_index) OUTPUT INSERTED.id VALUES (?, ?, ?, ?)";
 
     public List<Question> findByModuleId(Connection con, long moduleId) throws SQLException {
         List<Question> list = new ArrayList<>();
