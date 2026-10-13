@@ -22,22 +22,23 @@
                     </div>
                 </div>
 
-                <c:if test="${param.success != null}">
+                <c:set var="displaySuccess" value="${not empty successMessage ? successMessage : param.success}" />
+                <c:if test="${not empty displaySuccess}">
                     <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                         <i class="bi bi-check-circle-fill me-2"></i>
                         <c:choose>
-                            <c:when test="${param.success == 'created'}">Khởi tạo khóa học thành công! Hãy bắt đầu thêm
-                                các chương và bài học bên dưới.</c:when>
-                            <c:when test="${param.success == 'deleted'}">Đã xóa khóa học thành công!</c:when>
-                            <c:otherwise>Cập nhật thông tin thành công!</c:otherwise>
+                            <c:when test="${displaySuccess == 'created'}">Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.</c:when>
+                            <c:when test="${displaySuccess == 'deleted'}">Đã xóa khóa học thành công!</c:when>
+                            <c:otherwise><c:out value="${displaySuccess}" escapeXml="true" /></c:otherwise>
                         </c:choose>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 </c:if>
 
-                <c:if test="${param.error != null}">
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>${param.error}
+                <c:set var="displayError" value="${not empty errorMessage ? errorMessage : param.error}" />
+                <c:if test="${not empty displayError}">
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i><c:out value="${displayError}" escapeXml="true" />
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 </c:if>

@@ -83,4 +83,37 @@ public final class ValidationUtil {
             throw new IllegalArgumentException(field + " must be a valid integer.");
         }
     }
+
+    public static void requireMaxLength(String value, int maxLength, String field) {
+        if (value != null && value.trim().length() > maxLength) {
+            throw new IllegalArgumentException(field + " không được vượt quá " + maxLength + " ký tự.");
+        }
+    }
+
+    public static void requirePositiveInt(int value, String field) {
+        if (value < 1) {
+            throw new IllegalArgumentException(field + " phải là số nguyên dương lớn hơn hoặc bằng 1.");
+        }
+    }
+
+    public static boolean isValidHttpUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return true;
+        }
+        String s = url.trim().toLowerCase();
+        return s.startsWith("http://") || s.startsWith("https://");
+    }
+
+    public static boolean isValidVideoUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return true;
+        }
+        String s = url.trim().toLowerCase();
+        if (!s.startsWith("http://") && !s.startsWith("https://")) {
+            return false;
+        }
+        return s.contains("youtube.com") || s.contains("youtu.be")
+                || s.contains("drive.google.com") || s.contains("vimeo.com")
+                || s.endsWith(".mp4") || s.endsWith(".webm");
+    }
 }

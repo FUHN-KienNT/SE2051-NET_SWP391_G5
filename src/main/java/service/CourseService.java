@@ -86,6 +86,115 @@ public class CourseService {
         }
     }
 
+    /**
+     * [Tối ưu hiệu năng]: Lấy trực tiếp thông tin 1 bài học theo lessonId (O(1)),
+     * không cần tải toàn bộ cây khóa học.
+     */
+    public LessonDto getLessonById(long lessonId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Lesson l = lessonDao.findById(con, lessonId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học ID: " + lessonId));
+            return new LessonDto(
+                    l.getId(), l.getModuleId(), l.getTitle(), l.getContent(),
+                    l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(),
+                    LessonProgressStatus.NOT_STARTED
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy thông tin bài học: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * [Tối ưu hiệu năng]: Chỉ lấy thông tin khóa học và danh sách Modules nhẹ nhàng
+     * để đổ vào dropdown và breadcrumb, bỏ qua việc query nặng nề toàn bộ lessons & quizzes.
+     */
+    public CourseDto getCourseSummaryWithModules(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
+            CourseDto dto = new CourseDto();
+            dto.setId(course.getId());
+            dto.setTitle(course.getTitle());
+            dto.setCategoryId(course.getCategoryId());
+            dto.setDescription(course.getDescription());
+            dto.setPrice(course.getPrice());
+            dto.setStatus(course.getStatus());
+            dto.setManagerId(course.getManagerId());
+            dto.setExpertId(course.getExpertId());
+
+            List<Module> modules = moduleDao.findByCourseId(con, course.getId());
+            for (Module m : modules) {
+                ModuleDto mDto = new ModuleDto();
+                mDto.setId(m.getId());
+                mDto.setCourseId(m.getCourseId());
+                mDto.setTitle(m.getTitle());
+                mDto.setOrderIndex(m.getOrderIndex());
+                dto.getModules().add(mDto);
+            }
+            return dto;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy danh sách chương của khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    // =========================================================================
+    // KIỂM TRA PHÂN QUYỀN CẤP DỮ LIỆU (IDOR DEFENSE)
+    // =========================================================================
+
+    public boolean canManageCourse(long courseId, UserDto user) {
+        if (user == null) {
+            return false;
+        }
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return true;
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            return courseDao.findById(con, courseId)
+                    .map(c -> (c.getExpertId() != null && c.getExpertId().equals(user.getId()))
+                           || (c.getManagerId() != null && c.getManagerId().equals(user.getId())))
+                    .orElse(false);
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    public void checkCourseOwnership(long courseId, UserDto user) {
+        if (!canManageCourse(courseId, user)) {
+            throw new SecurityException("Từ chối truy cập: Bạn không có quyền quản lý khóa học #" + courseId);
+        }
+    }
+
+    public void checkModuleOwnership(long moduleId, UserDto user) {
+        if (user == null) throw new SecurityException("Vui lòng đăng nhập.");
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return;
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            Module m = moduleDao.findById(con, moduleId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương học ID: " + moduleId));
+            checkCourseOwnership(m.getCourseId(), user);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra quyền chương học: " + e.getMessage(), e);
+        }
+    }
+
+    public void checkLessonOwnership(long lessonId, UserDto user) {
+        if (user == null) throw new SecurityException("Vui lòng đăng nhập.");
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return;
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            Lesson l = lessonDao.findById(con, lessonId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học ID: " + lessonId));
+            checkModuleOwnership(l.getModuleId(), user);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra quyền bài học: " + e.getMessage(), e);
+        }
+    }
+
     public List<CourseDto> getManagedCourses(long userId) {
         try (Connection con = DbConnection.getConnection()) {
             List<Course> list = courseDao.findByManagerOrExpert(con, userId);
@@ -304,19 +413,58 @@ public class CourseService {
     }
 
     public long saveLesson(LessonDto dto) {
-        if (dto == null || dto.getModuleId() == null) {
+        if (dto == null) {
             throw new IllegalArgumentException("Dữ liệu bài học không hợp lệ.");
         }
+        if (dto.getModuleId() == null || dto.getModuleId() <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn chương học hợp lệ.");
+        }
         ValidationUtil.requireText(dto.getTitle(), "Tiêu đề bài học");
+        ValidationUtil.requireMaxLength(dto.getTitle(), 255, "Tiêu đề bài học");
+
+        int order = dto.getOrderIndex() > 0 ? dto.getOrderIndex() : 1;
+        dto.setOrderIndex(order);
+
+        if (dto.getVideoUrl() != null && !dto.getVideoUrl().trim().isEmpty()) {
+            String vUrl = dto.getVideoUrl().trim();
+            ValidationUtil.requireMaxLength(vUrl, 500, "URL Video");
+            if (!ValidationUtil.isValidVideoUrl(vUrl)) {
+                throw new IllegalArgumentException("Định dạng URL Video không hợp lệ (hỗ trợ liên kết YouTube, Google Drive, Vimeo hoặc file MP4).");
+            }
+            dto.setVideoUrl(vUrl);
+        } else {
+            dto.setVideoUrl(null);
+        }
+
+        if (dto.getDocumentUrl() != null && !dto.getDocumentUrl().trim().isEmpty()) {
+            String dUrl = dto.getDocumentUrl().trim();
+            ValidationUtil.requireMaxLength(dUrl, 500, "URL Tài liệu");
+            if (!ValidationUtil.isValidHttpUrl(dUrl)) {
+                throw new IllegalArgumentException("URL Tài liệu đính kèm phải bắt đầu bằng http:// hoặc https://");
+            }
+            dto.setDocumentUrl(dUrl);
+        } else {
+            dto.setDocumentUrl(null);
+        }
+
+        if (dto.getContent() != null) {
+            ValidationUtil.requireMaxLength(dto.getContent(), 65535, "Nội dung bài học");
+        }
+
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
+                // Kiểm tra chương học có tồn tại trong hệ thống hay không
+                moduleDao.findById(con, dto.getModuleId())
+                        .orElseThrow(() -> new IllegalArgumentException("Chương học ID " + dto.getModuleId() + " không tồn tại."));
+
                 long id;
                 if (dto.getId() != null && dto.getId() > 0) {
                     Lesson l = lessonDao.findById(con, dto.getId())
                             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học cần sửa."));
+                    l.setModuleId(dto.getModuleId());
                     l.setTitle(dto.getTitle().trim());
-                    l.setContent(dto.getContent());
+                    l.setContent(dto.getContent() != null ? dto.getContent() : "");
                     l.setVideoUrl(dto.getVideoUrl());
                     l.setDocumentUrl(dto.getDocumentUrl());
                     l.setOrderIndex(dto.getOrderIndex());
@@ -326,7 +474,7 @@ public class CourseService {
                     Lesson l = new Lesson();
                     l.setModuleId(dto.getModuleId());
                     l.setTitle(dto.getTitle().trim());
-                    l.setContent(dto.getContent());
+                    l.setContent(dto.getContent() != null ? dto.getContent() : "");
                     l.setVideoUrl(dto.getVideoUrl());
                     l.setDocumentUrl(dto.getDocumentUrl());
                     l.setOrderIndex(dto.getOrderIndex());

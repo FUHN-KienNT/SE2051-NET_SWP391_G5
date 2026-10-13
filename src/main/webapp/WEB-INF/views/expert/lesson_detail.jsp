@@ -31,6 +31,14 @@
                         </a>
                     </div>
 
+                    <c:set var="displayError" value="${not empty errorMessage ? errorMessage : param.error}" />
+                    <c:if test="${not empty displayError}">
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i><c:out value="${displayError}" escapeXml="true" />
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </c:if>
+
                     <form action="${pageContext.request.contextPath}/expert/save-lesson" method="POST">
                         <input type="hidden" name="courseId" value="${course.id}">
                         <c:if test="${lesson != null}">

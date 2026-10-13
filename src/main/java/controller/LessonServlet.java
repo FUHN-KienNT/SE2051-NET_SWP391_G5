@@ -29,6 +29,14 @@ import util.SessionUtil;
 public class LessonServlet extends HttpServlet {
     private CourseService courseService;
 
+    // =========================================================================
+    // 1. VÒNG ĐỜI & ĐIỀU HƯỚNG REQUEST (LIFECYCLE & ROUTING)
+    // =========================================================================
+
+    /**
+     * Khởi tạo Servlet: Tạo đối tượng CourseService và nạp các DAO truy vấn CSDL.
+     * Hàm này chỉ chạy 1 lần duy nhất khi Tomcat nạp Servlet vào bộ nhớ.
+     */
     @Override
     public void init() throws ServletException {
         this.courseService = new CourseService(
@@ -37,6 +45,10 @@ public class LessonServlet extends HttpServlet {
         );
     }
 
+    /**
+     * Tiếp nhận tất cả các HTTP GET request (truy cập xem trang từ trình duyệt).
+     * Bóc tách action từ URL (ví dụ: /expert/lessons -> action = "lessons").
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
@@ -44,6 +56,9 @@ public class LessonServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
+    /**
+     * Tiếp nhận tất cả các HTTP POST request (khi người dùng nộp form lưu/xóa dữ liệu).
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
@@ -51,7 +66,21 @@ public class LessonServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
+    /**
+     * Bộ phân loại hành động (Router Switchboard):
+     * Điều hướng request đến hàm xử lý tương ứng dựa vào tên action.
+     */
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // [Xử lý Flash Messages]: Lấy thông báo lỗi/thành công từ Session (nếu có) và nạp vào Request, tự động xóa khỏi Session
+        String flashError = SessionUtil.popFlashError(req);
+        if (flashError != null) {
+            req.setAttribute("errorMessage", flashError);
+        }
+        String flashSuccess = SessionUtil.popFlashSuccess(req);
+        if (flashSuccess != null) {
+            req.setAttribute("successMessage", flashSuccess);
+        }
+
         switch (action) {
             case "dashboard":
                 showExpertDashboard(req, resp);
@@ -89,6 +118,17 @@ public class LessonServlet extends HttpServlet {
         }
     }
 
+    // =========================================================================
+    // 2. NHÓM QUẢN LÝ EXPERT DASHBOARD & KHÓA HỌC (COURSE MANAGEMENT)
+    // =========================================================================
+
+    /**
+     * [Màn hình II.4.3] Hiển thị trang Expert Dashboard:
+     * - Kiểm tra phiên đăng nhập (Session).
+     * - Lấy danh sách khóa học thuộc quyền phụ trách của Expert hiện tại.
+     * - Lấy danh mục thể loại khóa học để phục vụ form tạo khóa học mới.
+     * - Chuyển tiếp (forward) dữ liệu sang views/expert/dashboard.jsp.
+     */
     private void showExpertDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
@@ -102,6 +142,14 @@ public class LessonServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/expert/dashboard.jsp").forward(req, resp);
     }
 
+    /**
+     * Tạo mới hoặc Cập nhật thông tin Khóa học:
+     * - [IDOR Defense]: Nếu chỉnh sửa khóa học cũ (id != null), kiểm tra quyền sở hữu của user.
+     * - Đọc các tham số: tiêu đề, mô tả, danh mục, giá học phí.
+     * - Khóa học do Expert tạo mới luôn có trạng thái DRAFT chờ Manager duyệt.
+     * - Nếu có kèm danh sách link video (batchVideoText) thì tự động bóc tách tạo bài học ngay.
+     * - [Flash Message]: Dùng session flash attributes thay vì truyền error qua URL.
+     */
     private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
@@ -112,18 +160,25 @@ public class LessonServlet extends HttpServlet {
         CourseDto dto = new CourseDto();
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
-            dto.setId(Long.parseLong(idStr.trim()));
+            long courseId = Long.parseLong(idStr.trim());
             try {
+                // [IDOR Defense]: Kiểm tra quyền sở hữu khóa học trước khi sửa
+                courseService.checkCourseOwnership(courseId, currentUser);
+                dto.setId(courseId);
                 CourseDto existing = courseService.getCourseDetail(dto.getId());
                 dto.setStatus(existing.getStatus());
                 dto.setManagerId(existing.getManagerId());
+            } catch (SecurityException se) {
+                SessionUtil.setFlashError(req, se.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                return;
             } catch (Exception ignored) {
                 dto.setStatus(entity.enums.CourseStatus.DRAFT);
             }
         } else {
-            // New course created by Expert is always DRAFT awaiting Manager/Admin approval
+            // Khóa học mới tạo bởi Expert luôn ở trạng thái DRAFT để chờ Quản lý duyệt
             dto.setStatus(entity.enums.CourseStatus.DRAFT);
-            dto.setManagerId(2L); // default manager
+            dto.setManagerId(2L); // ID Manager mặc định
         }
 
         dto.setTitle(req.getParameter("title"));
@@ -144,7 +199,7 @@ public class LessonServlet extends HttpServlet {
         try {
             long savedId = courseService.saveCourse(dto);
 
-            // Check if batch video URLs or playlist text was provided
+            // Kiểm tra nếu có nhập danh sách link video hàng loạt kèm theo
             String batchText = req.getParameter("batchVideoText");
             if (batchText != null && !batchText.trim().isEmpty()) {
                 List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
@@ -153,13 +208,27 @@ public class LessonServlet extends HttpServlet {
                 }
             }
 
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId + "&success=created");
+            SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/expert/dashboard?error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+            SessionUtil.setFlashError(req, e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
         }
     }
 
+    /**
+     * Nhập hàng loạt bài giảng (Batch Import) từ Playlist / nhiều link YouTube:
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu khóa học và chương học.
+     * - Bóc tách danh sách URL YouTube từ chuỗi text.
+     * - Tự động tạo bài giảng và gán vào Module chỉ định (hoặc tự tạo Module mới).
+     */
     private void batchSaveLessons(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         String batchText = req.getParameter("batchText");
@@ -173,14 +242,30 @@ public class LessonServlet extends HttpServlet {
         Long moduleId = (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) ? Long.parseLong(moduleIdStr.trim()) : null;
 
         try {
+            // [IDOR Defense]: Kiểm tra quyền sở hữu
+            courseService.checkCourseOwnership(courseId, currentUser);
+            if (moduleId != null) {
+                courseService.checkModuleOwnership(moduleId, currentUser);
+            }
+
             List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
             int count = courseService.saveBatchLessons(courseId, moduleId, lessons);
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&success=batch_saved&count=" + count);
+            SessionUtil.setFlashSuccess(req, "Đã nhập và khởi tạo thành công " + count + " bài học từ danh sách video YouTube!");
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId);
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+            SessionUtil.setFlashError(req, e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId);
         }
     }
 
+    /**
+     * Xóa Khóa học:
+     * - [IDOR Defense]: Chỉ cho phép xóa nếu user sở hữu khóa học hoặc là Admin.
+     * - Quay trở lại trang Expert Dashboard kèm thông báo xóa thành công.
+     */
     private void deleteCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
@@ -190,114 +275,256 @@ public class LessonServlet extends HttpServlet {
         String idStr = req.getParameter("id");
         if (idStr != null) {
             try {
-                long courseId = Long.parseLong(idStr);
+                long courseId = Long.parseLong(idStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu
+                courseService.checkCourseOwnership(courseId, currentUser);
                 courseService.deleteCourse(courseId);
-            } catch (Exception ignored) {}
-        }
-        resp.sendRedirect(req.getContextPath() + "/expert/dashboard?success=deleted");
-    }
-
-    private void showLessonList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String courseIdStr = req.getParameter("courseId");
-        if (courseIdStr != null) {
-            long courseId = Long.parseLong(courseIdStr);
-            CourseDto course = courseService.getCourseDetail(courseId);
-            req.setAttribute("course", course);
-        }
-        req.getRequestDispatcher("/WEB-INF/views/expert/lesson_list.jsp").forward(req, resp);
-    }
-
-    private void showLessonDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String courseIdStr = req.getParameter("courseId");
-        String moduleIdStr = req.getParameter("moduleId");
-        String lessonIdStr = req.getParameter("lessonId");
-
-        if (courseIdStr != null) {
-            long courseId = Long.parseLong(courseIdStr);
-            CourseDto course = courseService.getCourseDetail(courseId);
-            req.setAttribute("course", course);
-
-            if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
-                long lessonId = Long.parseLong(lessonIdStr);
-                for (ModuleDto m : course.getModules()) {
-                    for (LessonDto l : m.getLessons()) {
-                        if (l.getId().equals(lessonId)) {
-                            req.setAttribute("lesson", l);
-                            req.setAttribute("selectedModuleId", m.getId());
-                            break;
-                        }
-                    }
-                }
-            } else if (moduleIdStr != null) {
-                req.setAttribute("selectedModuleId", Long.parseLong(moduleIdStr));
+                SessionUtil.setFlashSuccess(req, "Đã xóa khóa học thành công!");
+            } catch (Exception e) {
+                SessionUtil.setFlashError(req, e.getMessage());
             }
         }
-        req.getRequestDispatcher("/WEB-INF/views/expert/lesson_detail.jsp").forward(req, resp);
+        resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
     }
 
+    // =========================================================================
+    // 3. NHÓM QUẢN LÝ BÀI HỌC & CHƯƠNG MỤC (LESSON & MODULE MANAGEMENT)
+    // =========================================================================
+
+    /**
+     * [Màn hình II.4.1] Hiển thị Danh sách Bài học (Lesson List):
+     * - [IDOR Defense]: Xác thực user có quyền quản lý khóa học này không.
+     * - Lấy toàn bộ chi tiết khóa học (bao gồm cấu trúc cây Modules -> Lessons).
+     * - Chuyển tiếp sang views/expert/lesson_list.jsp.
+     */
+    private void showLessonList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            try {
+                long courseId = Long.parseLong(courseIdStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu
+                courseService.checkCourseOwnership(courseId, currentUser);
+
+                CourseDto course = courseService.getCourseDetail(courseId);
+                req.setAttribute("course", course);
+                req.getRequestDispatcher("/WEB-INF/views/expert/lesson_list.jsp").forward(req, resp);
+                return;
+            } catch (SecurityException se) {
+                SessionUtil.setFlashError(req, se.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                return;
+            } catch (Exception e) {
+                SessionUtil.setFlashError(req, "Không tìm thấy khóa học: " + e.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                return;
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+    }
+
+    /**
+     * [Màn hình II.4.1] Hiển thị Trình soạn thảo Bài học (Lesson Detail / Editor):
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu đối với Course, Module và Lesson.
+     * - [Tối ưu hiệu năng]: Thay vì tải toàn bộ cây dữ liệu khóa học rồi duyệt vòng lặp,
+     *   chỉ lấy danh sách Modules tóm tắt và gọi trực tiếp getLessonById (O(1)).
+     * - Chuyển tiếp sang views/expert/lesson_detail.jsp.
+     */
+    private void showLessonDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        String courseIdStr = req.getParameter("courseId");
+        String moduleIdStr = req.getParameter("moduleId");
+        String lessonIdStr = req.getParameter("lessonId");
+
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            return;
+        }
+
+        try {
+            long courseId = Long.parseLong(courseIdStr.trim());
+            // [IDOR Defense]: Kiểm tra quyền sở hữu khóa học
+            courseService.checkCourseOwnership(courseId, currentUser);
+
+            // [Tối ưu hiệu năng]: Chỉ lấy thông tin khóa học và danh sách modules gọn nhẹ
+            CourseDto course = courseService.getCourseSummaryWithModules(courseId);
+            req.setAttribute("course", course);
+
+            // Kiểm tra xem là chế độ Chỉnh sửa hay Tạo mới
+            if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
+                long lessonId = Long.parseLong(lessonIdStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu bài học
+                courseService.checkLessonOwnership(lessonId, currentUser);
+
+                // [Tối ưu hiệu năng]: Lấy trực tiếp Lesson theo ID trong O(1) từ DAO
+                LessonDto lesson = courseService.getLessonById(lessonId);
+                req.setAttribute("lesson", lesson);
+                req.setAttribute("selectedModuleId", lesson.getModuleId());
+            } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
+                long moduleId = Long.parseLong(moduleIdStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu chương học
+                courseService.checkModuleOwnership(moduleId, currentUser);
+                req.setAttribute("selectedModuleId", moduleId);
+            }
+
+            req.getRequestDispatcher("/WEB-INF/views/expert/lesson_detail.jsp").forward(req, resp);
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, "Lỗi nạp bài học: " + e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        }
+    }
+
+    /**
+     * Lưu thông tin Bài học (Thêm mới hoặc Cập nhật):
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu chương và bài học.
+     * - [Validation]: Kiểm tra đầy đủ qua tầng Service.
+     * - [Flash Message]: Lưu thông báo an toàn qua Session, không đính kèm lỗi thô lên URL.
+     */
     private void saveLesson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        LessonDto dto = new LessonDto();
-        String idStr = req.getParameter("id");
-        if (idStr != null && !idStr.trim().isEmpty()) {
-            dto.setId(Long.parseLong(idStr.trim()));
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
         }
-        String moduleId = req.getParameter("moduleId");
-        if (moduleId != null && !moduleId.trim().isEmpty()) {
-            dto.setModuleId(Long.parseLong(moduleId.trim()));
-        }
-        dto.setTitle(req.getParameter("title"));
-        dto.setContent(req.getParameter("content"));
-        dto.setVideoUrl(req.getParameter("videoUrl"));
-        dto.setDocumentUrl(req.getParameter("documentUrl"));
-        String orderStr = req.getParameter("orderIndex");
-        dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
 
         String courseIdStr = req.getParameter("courseId");
         try {
+            LessonDto dto = new LessonDto();
+            String idStr = req.getParameter("id");
+            if (idStr != null && !idStr.trim().isEmpty()) {
+                long lessonId = Long.parseLong(idStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi sửa
+                courseService.checkLessonOwnership(lessonId, currentUser);
+                dto.setId(lessonId);
+            }
+
+            String moduleId = req.getParameter("moduleId");
+            if (moduleId != null && !moduleId.trim().isEmpty()) {
+                long modId = Long.parseLong(moduleId.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu chương học trước khi lưu
+                courseService.checkModuleOwnership(modId, currentUser);
+                dto.setModuleId(modId);
+            }
+
+            dto.setTitle(req.getParameter("title"));
+            dto.setContent(req.getParameter("content"));
+            dto.setVideoUrl(req.getParameter("videoUrl"));
+            dto.setDocumentUrl(req.getParameter("documentUrl"));
+            String orderStr = req.getParameter("orderIndex");
+            dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
+
             courseService.saveLesson(dto);
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr + "&success=true");
+
+            // [Flash Attribute chống XSS]: Lưu thông báo an toàn qua session
+            SessionUtil.setFlashSuccess(req, "Đã lưu thông tin bài học thành công!");
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr + "&error=" + e.getMessage());
+            // [Flash Attribute chống XSS]: Không truyền error string thô qua URL
+            SessionUtil.setFlashError(req, e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + (courseIdStr != null ? courseIdStr : ""));
         }
     }
 
+    /**
+     * Xóa Bài học:
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi xóa.
+     */
     private void deleteLesson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         String lessonIdStr = req.getParameter("lessonId");
         String courseIdStr = req.getParameter("courseId");
-        if (lessonIdStr != null) {
-            courseService.deleteLesson(Long.parseLong(lessonIdStr));
+        try {
+            if (lessonIdStr != null) {
+                long lessonId = Long.parseLong(lessonIdStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi xóa
+                courseService.checkLessonOwnership(lessonId, currentUser);
+                courseService.deleteLesson(lessonId);
+                SessionUtil.setFlashSuccess(req, "Đã xóa bài học thành công!");
+            }
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, e.getMessage());
         }
-        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + (courseIdStr != null ? courseIdStr : ""));
     }
 
+    /**
+     * Tạo mới hoặc Cập nhật Chương học (Module):
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu khóa học và chương học.
+     */
     private void saveModule(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        ModuleDto dto = new ModuleDto();
-        String idStr = req.getParameter("id");
-        if (idStr != null && !idStr.trim().isEmpty()) {
-            dto.setId(Long.parseLong(idStr.trim()));
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
         }
         String courseId = req.getParameter("courseId");
-        if (courseId != null && !courseId.trim().isEmpty()) {
-            dto.setCourseId(Long.parseLong(courseId.trim()));
-        }
-        dto.setTitle(req.getParameter("title"));
-        String orderStr = req.getParameter("orderIndex");
-        dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
-
         try {
+            ModuleDto dto = new ModuleDto();
+            String idStr = req.getParameter("id");
+            if (idStr != null && !idStr.trim().isEmpty()) {
+                long modId = Long.parseLong(idStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu chương học
+                courseService.checkModuleOwnership(modId, currentUser);
+                dto.setId(modId);
+            }
+            if (courseId != null && !courseId.trim().isEmpty()) {
+                long cId = Long.parseLong(courseId.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu khóa học
+                courseService.checkCourseOwnership(cId, currentUser);
+                dto.setCourseId(cId);
+            }
+            dto.setTitle(req.getParameter("title"));
+            String orderStr = req.getParameter("orderIndex");
+            dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
+
             courseService.saveModule(dto);
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId);
+            SessionUtil.setFlashSuccess(req, "Đã lưu chương học thành công!");
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&error=" + e.getMessage());
+            SessionUtil.setFlashError(req, e.getMessage());
         }
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + (courseId != null ? courseId : ""));
     }
 
+    /**
+     * Xóa Chương học (Module):
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu chương học trước khi xóa.
+     */
     private void deleteModule(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         String moduleIdStr = req.getParameter("moduleId");
         String courseIdStr = req.getParameter("courseId");
-        if (moduleIdStr != null) {
-            courseService.deleteModule(Long.parseLong(moduleIdStr));
+        try {
+            if (moduleIdStr != null) {
+                long modId = Long.parseLong(moduleIdStr.trim());
+                // [IDOR Defense]: Kiểm tra quyền sở hữu chương học
+                courseService.checkModuleOwnership(modId, currentUser);
+                courseService.deleteModule(modId);
+                SessionUtil.setFlashSuccess(req, "Đã xóa chương học thành công!");
+            }
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, e.getMessage());
         }
-        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + (courseIdStr != null ? courseIdStr : ""));
     }
 }

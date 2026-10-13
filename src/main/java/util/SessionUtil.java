@@ -43,4 +43,40 @@ public final class SessionUtil {
             }
         }
     }
+
+    public static void setFlashError(HttpServletRequest req, String message) {
+        if (req != null && message != null) {
+            req.getSession(true).setAttribute("FLASH_ERROR", message);
+        }
+    }
+
+    public static void setFlashSuccess(HttpServletRequest req, String message) {
+        if (req != null && message != null) {
+            req.getSession(true).setAttribute("FLASH_SUCCESS", message);
+        }
+    }
+
+    public static String popFlashError(HttpServletRequest req) {
+        if (req == null) return null;
+        HttpSession session = req.getSession(false);
+        if (session == null) return null;
+        Object msg = session.getAttribute("FLASH_ERROR");
+        if (msg != null) {
+            session.removeAttribute("FLASH_ERROR");
+            return msg.toString();
+        }
+        return null;
+    }
+
+    public static String popFlashSuccess(HttpServletRequest req) {
+        if (req == null) return null;
+        HttpSession session = req.getSession(false);
+        if (session == null) return null;
+        Object msg = session.getAttribute("FLASH_SUCCESS");
+        if (msg != null) {
+            session.removeAttribute("FLASH_SUCCESS");
+            return msg.toString();
+        }
+        return null;
+    }
 }
