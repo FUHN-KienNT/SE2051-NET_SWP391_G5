@@ -24,13 +24,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import service.CourseService;
 import service.QuizService;
 
-@WebServlet(name = "QuizServlet", urlPatterns = {"/quizzes/*"})
+@WebServlet(name = "QuizServlet", urlPatterns = { "/quizzes/*" })
 public class QuizServlet extends HttpServlet {
     private QuizService quizService;
     private CourseService courseService;
@@ -39,12 +38,10 @@ public class QuizServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         this.quizService = new QuizService(
-                new QuizDao(), new QuestionDao(), new QuizAttemptDao(), new RegistrationDao()
-        );
+                new QuizDao(), new QuestionDao(), new QuizAttemptDao(), new RegistrationDao());
         this.courseService = new CourseService(
                 new CourseDao(), new ModuleDao(), new LessonDao(),
-                new LessonProgressDao(), new RegistrationDao()
-        );
+                new LessonProgressDao(), new RegistrationDao());
         this.moduleDao = new ModuleDao();
     }
 
@@ -62,7 +59,8 @@ public class QuizServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
-    private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         switch (action) {
             case "list":
                 showQuizList(req, resp);
@@ -112,18 +110,22 @@ public class QuizServlet extends HttpServlet {
 
         Long courseId = null;
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-            courseId = Long.parseLong(courseIdStr.trim());
+            try {
+                courseId = Long.parseLong(courseIdStr.trim());
+            } catch (NumberFormatException ignored) {
+            }
         } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
             try (java.sql.Connection con = util.DbConnection.getConnection()) {
                 long modId = Long.parseLong(moduleIdStr.trim());
-                req.setAttribute("selectedModuleId", modId);
                 java.util.Optional<entity.Module> modOpt = moduleDao.findById(con, modId);
                 if (modOpt.isPresent()) {
                     courseId = modOpt.get().getCourseId();
                 }
             } catch (Exception ignored) {
             }
-        } else {
+        }
+
+        if (courseId == null) {
             List<CourseDto> published = courseService.searchPublished(null, null);
             if (published != null && !published.isEmpty()) {
                 courseId = published.get(0).getId();
@@ -160,7 +162,8 @@ public class QuizServlet extends HttpServlet {
         String quizIdStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         if (quizIdStr == null || quizIdStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list" + (courseIdStr != null && !courseIdStr.trim().isEmpty() ? "?courseId=" + courseIdStr.trim() : ""));
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list"
+                    + (courseIdStr != null && !courseIdStr.trim().isEmpty() ? "?courseId=" + courseIdStr.trim() : ""));
             return;
         }
 
@@ -208,7 +211,8 @@ public class QuizServlet extends HttpServlet {
             req.setAttribute("assignedQuestionIds", assignedQuestionIds);
 
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error=" + java.net.URLEncoder.encode("Không tìm thấy bài thi hoặc lỗi: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error=" + java.net.URLEncoder.encode(
+                    "Không tìm thấy bài thi hoặc lỗi: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         }
 
@@ -240,7 +244,8 @@ public class QuizServlet extends HttpServlet {
                     redirectUrl += "moduleId=" + dto.getModuleId();
                 }
             }
-            resp.sendRedirect(redirectUrl + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            resp.sendRedirect(redirectUrl + "&error="
+                    + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
@@ -252,13 +257,15 @@ public class QuizServlet extends HttpServlet {
             quizService.deleteQuiz(Long.parseLong(quizIdStr));
         }
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&success=deleted");
+            resp.sendRedirect(
+                    req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&success=deleted");
         } else {
             resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&success=deleted");
         }
     }
 
-    private void showQuestionBank(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void showQuestionBank(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
@@ -291,24 +298,31 @@ public class QuizServlet extends HttpServlet {
                 return;
             }
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&success=question_saved");
+                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim()
+                        + "&tab=questions&success=question_saved");
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId() + "&tab=questions&success=question_saved");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId()
+                    + "&tab=questions&success=question_saved");
         } catch (Exception e) {
             if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
                 String target = req.getContextPath() + "/quizzes/detail?id=" + quizIdStr.trim();
                 if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                     target += "&courseId=" + courseIdStr.trim();
                 }
-                resp.sendRedirect(target + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+                resp.sendRedirect(target + "&error="
+                        + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
                 return;
             }
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+                resp.sendRedirect(
+                        req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&error="
+                                + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId() + "&tab=questions&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            resp.sendRedirect(
+                    req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId() + "&tab=questions&error="
+                            + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
@@ -320,10 +334,12 @@ public class QuizServlet extends HttpServlet {
             quizService.deleteQuestion(Long.parseLong(qIdStr));
         }
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&success=question_deleted");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim()
+                    + "&tab=questions&success=question_deleted");
             return;
         }
-        resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&tab=questions&success=question_deleted");
+        resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr
+                + "&tab=questions&success=question_deleted");
     }
 
     private void assignQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -337,7 +353,8 @@ public class QuizServlet extends HttpServlet {
         long quizId = Long.parseLong(quizIdStr.trim());
         long questionId = Long.parseLong(questionIdStr.trim());
         String pointsStr = req.getParameter("points");
-        BigDecimal points = pointsStr != null && !pointsStr.trim().isEmpty() ? new BigDecimal(pointsStr.trim()) : BigDecimal.ONE;
+        BigDecimal points = pointsStr != null && !pointsStr.trim().isEmpty() ? new BigDecimal(pointsStr.trim())
+                : BigDecimal.ONE;
         String orderStr = req.getParameter("order");
         int order = (orderStr != null && !orderStr.trim().isEmpty()) ? Integer.parseInt(orderStr.trim()) : 0;
 
@@ -353,7 +370,8 @@ public class QuizServlet extends HttpServlet {
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 target += "&courseId=" + courseIdStr.trim();
             }
-            resp.sendRedirect(target + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            resp.sendRedirect(target + "&error="
+                    + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
@@ -379,10 +397,10 @@ public class QuizServlet extends HttpServlet {
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 target += "&courseId=" + courseIdStr.trim();
             }
-            resp.sendRedirect(target + "&error=" + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            resp.sendRedirect(target + "&error="
+                    + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
-
 
     private void showAttempt(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         long regId = Long.parseLong(req.getParameter("registrationId"));
@@ -399,7 +417,8 @@ public class QuizServlet extends HttpServlet {
         QuizAttemptDto dto = bindAttempt(req);
         QuizResultDto result = quizService.submitAttempt(dto);
         req.getSession().setAttribute("lastQuizResult", result);
-        resp.sendRedirect(req.getContextPath() + "/quizzes/result?registrationId=" + dto.getRegistrationId() + "&quizId=" + dto.getQuizId());
+        resp.sendRedirect(req.getContextPath() + "/quizzes/result?registrationId=" + dto.getRegistrationId()
+                + "&quizId=" + dto.getQuizId());
     }
 
     private void showResult(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -419,9 +438,11 @@ public class QuizServlet extends HttpServlet {
         dto.setModuleId(Long.parseLong(req.getParameter("moduleId")));
         dto.setTitle(req.getParameter("title"));
         String passScoreStr = req.getParameter("passScore");
-        dto.setPassScore(passScoreStr != null && !passScoreStr.trim().isEmpty() ? new BigDecimal(passScoreStr.trim()) : BigDecimal.valueOf(50.0));
+        dto.setPassScore(passScoreStr != null && !passScoreStr.trim().isEmpty() ? new BigDecimal(passScoreStr.trim())
+                : BigDecimal.valueOf(50.0));
         String timeLimitStr = req.getParameter("timeLimitMinutes");
-        dto.setTimeLimitMinutes(timeLimitStr != null && !timeLimitStr.trim().isEmpty() ? Integer.parseInt(timeLimitStr.trim()) : null);
+        dto.setTimeLimitMinutes(
+                timeLimitStr != null && !timeLimitStr.trim().isEmpty() ? Integer.parseInt(timeLimitStr.trim()) : null);
         String orderStr = req.getParameter("orderIndex");
         dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
         return dto;
@@ -437,11 +458,14 @@ public class QuizServlet extends HttpServlet {
         dto.setQuestionText(req.getParameter("questionText"));
         dto.setQuestionType(QuestionType.fromDb(req.getParameter("questionType")));
         String pointsStr = req.getParameter("defaultPoints");
-        dto.setDefaultPoints(pointsStr != null && !pointsStr.trim().isEmpty() ? new BigDecimal(pointsStr.trim()) : BigDecimal.ONE);
+        dto.setDefaultPoints(
+                pointsStr != null && !pointsStr.trim().isEmpty() ? new BigDecimal(pointsStr.trim()) : BigDecimal.ONE);
 
         String[] optionTexts = req.getParameterValues("optionText");
         String correctIndexStr = req.getParameter("correctOption");
-        int correctIndex = (correctIndexStr != null && !correctIndexStr.trim().isEmpty()) ? Integer.parseInt(correctIndexStr) : -1;
+        int correctIndex = (correctIndexStr != null && !correctIndexStr.trim().isEmpty())
+                ? Integer.parseInt(correctIndexStr)
+                : -1;
 
         if (optionTexts != null) {
             for (int i = 0; i < optionTexts.length; i++) {
@@ -466,7 +490,9 @@ public class QuizServlet extends HttpServlet {
             for (String qIdStr : questionIds) {
                 long qId = Long.parseLong(qIdStr);
                 String selectedOptStr = req.getParameter("question_" + qId);
-                Long selectedOpt = (selectedOptStr != null && !selectedOptStr.trim().isEmpty()) ? Long.parseLong(selectedOptStr) : null;
+                Long selectedOpt = (selectedOptStr != null && !selectedOptStr.trim().isEmpty())
+                        ? Long.parseLong(selectedOptStr)
+                        : null;
                 dto.getAnswers().add(new QuizAnswerDto(qId, selectedOpt, false, BigDecimal.ZERO));
             }
         }

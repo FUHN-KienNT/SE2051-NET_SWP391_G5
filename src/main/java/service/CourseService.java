@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import util.DbConnection;
 import util.ValidationUtil;
 
@@ -42,7 +41,7 @@ public class CourseService {
     private final RegistrationDao registrationDao;
 
     public CourseService(CourseDao courseDao, ModuleDao moduleDao, LessonDao lessonDao,
-                         LessonProgressDao lessonProgressDao, RegistrationDao registrationDao) {
+            LessonProgressDao lessonProgressDao, RegistrationDao registrationDao) {
         this.courseDao = courseDao;
         this.moduleDao = moduleDao;
         this.lessonDao = lessonDao;
@@ -97,8 +96,7 @@ public class CourseService {
             return new LessonDto(
                     l.getId(), l.getModuleId(), l.getTitle(), l.getContent(),
                     l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(),
-                    LessonProgressStatus.NOT_STARTED
-            );
+                    LessonProgressStatus.NOT_STARTED);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy thông tin bài học: " + e.getMessage(), e);
         }
@@ -106,7 +104,8 @@ public class CourseService {
 
     /**
      * [Tối ưu hiệu năng]: Chỉ lấy thông tin khóa học và danh sách Modules nhẹ nhàng
-     * để đổ vào dropdown và breadcrumb, bỏ qua việc query nặng nề toàn bộ lessons & quizzes.
+     * để đổ vào dropdown và breadcrumb, bỏ qua việc query nặng nề toàn bộ lessons &
+     * quizzes.
      */
     public CourseDto getCourseSummaryWithModules(long courseId) {
         try (Connection con = DbConnection.getConnection()) {
@@ -152,7 +151,7 @@ public class CourseService {
         try (Connection con = DbConnection.getConnection()) {
             return courseDao.findById(con, courseId)
                     .map(c -> (c.getExpertId() != null && c.getExpertId().equals(user.getId()))
-                           || (c.getManagerId() != null && c.getManagerId().equals(user.getId())))
+                            || (c.getManagerId() != null && c.getManagerId().equals(user.getId())))
                     .orElse(false);
         } catch (SQLException e) {
             return false;
@@ -166,7 +165,8 @@ public class CourseService {
     }
 
     public void checkModuleOwnership(long moduleId, UserDto user) {
-        if (user == null) throw new SecurityException("Vui lòng đăng nhập.");
+        if (user == null)
+            throw new SecurityException("Vui lòng đăng nhập.");
         String role = user.getRoleName();
         if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
             return;
@@ -181,7 +181,8 @@ public class CourseService {
     }
 
     public void checkLessonOwnership(long lessonId, UserDto user) {
-        if (user == null) throw new SecurityException("Vui lòng đăng nhập.");
+        if (user == null)
+            throw new SecurityException("Vui lòng đăng nhập.");
         String role = user.getRoleName();
         if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
             return;
@@ -254,12 +255,15 @@ public class CourseService {
                     Course course = courseDao.findById(con, dto.getId())
                             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học cần sửa."));
                     course.setTitle(dto.getTitle().trim());
-                    if (dto.getCategoryId() != null) course.setCategoryId(dto.getCategoryId());
+                    if (dto.getCategoryId() != null)
+                        course.setCategoryId(dto.getCategoryId());
                     course.setDescription(dto.getDescription());
                     course.setPrice(dto.getPrice());
                     course.setStatus(dto.getStatus() != null ? dto.getStatus() : CourseStatus.DRAFT);
-                    if (dto.getManagerId() != null) course.setManagerId(dto.getManagerId());
-                    if (dto.getExpertId() != null) course.setExpertId(dto.getExpertId());
+                    if (dto.getManagerId() != null)
+                        course.setManagerId(dto.getManagerId());
+                    if (dto.getExpertId() != null)
+                        course.setExpertId(dto.getExpertId());
                     courseDao.update(con, course);
                     id = course.getId();
                 } else {
@@ -429,7 +433,8 @@ public class CourseService {
             String vUrl = dto.getVideoUrl().trim();
             ValidationUtil.requireMaxLength(vUrl, 500, "URL Video");
             if (!ValidationUtil.isValidVideoUrl(vUrl)) {
-                throw new IllegalArgumentException("Định dạng URL Video không hợp lệ (hỗ trợ liên kết YouTube, Google Drive, Vimeo hoặc file MP4).");
+                throw new IllegalArgumentException(
+                        "Định dạng URL Video không hợp lệ (hỗ trợ liên kết YouTube, Google Drive, Vimeo hoặc file MP4).");
             }
             dto.setVideoUrl(vUrl);
         } else {
@@ -456,7 +461,8 @@ public class CourseService {
             try {
                 // Kiểm tra chương học có tồn tại trong hệ thống hay không
                 moduleDao.findById(con, dto.getModuleId())
-                        .orElseThrow(() -> new IllegalArgumentException("Chương học ID " + dto.getModuleId() + " không tồn tại."));
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "Chương học ID " + dto.getModuleId() + " không tồn tại."));
 
                 long id;
                 if (dto.getId() != null && dto.getId() > 0) {
@@ -534,7 +540,8 @@ public class CourseService {
                 for (LessonDto dto : lessons) {
                     Lesson l = new Lesson();
                     l.setModuleId(targetModuleId);
-                    l.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle().trim() : ("Bài " + (startOrder + count) + ": Bài giảng"));
+                    l.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle().trim()
+                            : ("Bài " + (startOrder + count) + ": Bài giảng"));
                     l.setContent(dto.getContent() != null ? dto.getContent() : "");
                     l.setVideoUrl(dto.getVideoUrl());
                     l.setDocumentUrl(dto.getDocumentUrl());
@@ -563,10 +570,12 @@ public class CourseService {
         }
         String[] lines = text.split("\\r?\\n");
         int seq = 1;
-        java.util.regex.Pattern ytIdPattern = java.util.regex.Pattern.compile("(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
+        java.util.regex.Pattern ytIdPattern = java.util.regex.Pattern.compile(
+                "(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
         for (String line : lines) {
             line = line.trim();
-            if (line.isEmpty()) continue;
+            if (line.isEmpty())
+                continue;
 
             String videoId = null;
             String title = null;
@@ -582,10 +591,10 @@ public class CourseService {
 
             if (videoId != null) {
                 String cleanLine = line.replaceAll("https?://[^\\s]+", "")
-                                       .replaceAll("^[0-9]+[\\.\\:\\-]\\s*", "")
-                                       .replaceAll("^[\\-\\–\\—\\|\\:\\.]+\\s*", "")
-                                       .replaceAll("\\s*[\\-\\–\\—\\|\\:]+$", "")
-                                       .trim();
+                        .replaceAll("^[0-9]+[\\.\\:\\-]\\s*", "")
+                        .replaceAll("^[\\-\\–\\—\\|\\:\\.]+\\s*", "")
+                        .replaceAll("\\s*[\\-\\–\\—\\|\\:]+$", "")
+                        .trim();
                 if (!cleanLine.isEmpty() && cleanLine.length() > 2) {
                     title = cleanLine;
                 } else {
@@ -606,7 +615,8 @@ public class CourseService {
     public CourseDto getLearningContent(long registrationId, long userId) {
         try (Connection con = DbConnection.getConnection()) {
             Registration reg = registrationDao.findById(con, registrationId)
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + registrationId));
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + registrationId));
             if (!Long.valueOf(userId).equals(reg.getUserId())) {
                 throw new SecurityException("Bạn không có quyền truy cập khóa học này.");
             }
@@ -642,11 +652,13 @@ public class CourseService {
             con.setAutoCommit(false);
             try {
                 Registration registration = registrationDao.findById(con, registrationId)
-                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + registrationId));
+                        .orElseThrow(
+                                () -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + registrationId));
                 if (!Long.valueOf(userId).equals(registration.getUserId())) {
                     throw new SecurityException("Bạn không có quyền cập nhật tiến độ của đơn đăng ký này.");
                 }
-                if (registration.getStatus() != RegistrationStatus.ACTIVE && registration.getStatus() != RegistrationStatus.COMPLETED) {
+                if (registration.getStatus() != RegistrationStatus.ACTIVE
+                        && registration.getStatus() != RegistrationStatus.COMPLETED) {
                     throw new IllegalStateException("Đơn đăng ký chưa được kích hoạt hoặc đã bị hủy.");
                 }
                 Lesson lesson = lessonDao.findById(con, lessonId)
@@ -687,7 +699,8 @@ public class CourseService {
     }
 
     private CourseDto buildCourseTree(Course course) {
-        if (course == null) return null;
+        if (course == null)
+            return null;
         CourseDto dto = new CourseDto();
         dto.setId(course.getId());
         dto.setTitle(course.getTitle());
@@ -725,8 +738,7 @@ public class CourseService {
                 for (Lesson l : lessons) {
                     LessonDto lDto = new LessonDto(
                             l.getId(), l.getModuleId(), l.getTitle(), l.getContent(),
-                            l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(), LessonProgressStatus.NOT_STARTED
-                    );
+                            l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(), LessonProgressStatus.NOT_STARTED);
                     mDto.getLessons().add(lDto);
                 }
 
@@ -734,8 +746,7 @@ public class CourseService {
                 for (Quiz q : quizzes) {
                     QuizDto qDto = new QuizDto(
                             q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
-                            q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>()
-                    );
+                            q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>());
                     mDto.getQuizzes().add(qDto);
                 }
 
