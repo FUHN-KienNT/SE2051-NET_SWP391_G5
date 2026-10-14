@@ -103,6 +103,9 @@ public class QuizService {
             throw new IllegalArgumentException("Thông tin bài thi không hợp lệ.");
         }
         ValidationUtil.requireText(dto.getTitle(), "Tiêu đề bài thi");
+        if (dto.getOrderIndex() < 1) {
+            throw new IllegalArgumentException("Thứ tự hiển thị phải là số nguyên dương (>= 1).");
+        }
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
@@ -110,6 +113,14 @@ public class QuizService {
                 if (dto.getId() != null && dto.getId() > 0) {
                     Quiz q = quizDao.findById(con, dto.getId())
                             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi cần cập nhật."));
+
+                    // Kiểm tra STT trùng lặp trong cùng chương (exclude bài thi đang sửa)
+                    if (quizDao.existsOrderIndex(con, q.getModuleId(), dto.getOrderIndex(), q.getId())) {
+                        throw new IllegalArgumentException(
+                                "Thứ tự hiển thị số " + dto.getOrderIndex()
+                                + " đã tồn tại trong chương này. Vui lòng chọn số thứ tự khác.");
+                    }
+
                     q.setTitle(dto.getTitle().trim());
                     q.setPassScore(dto.getPassScore() != null ? dto.getPassScore() : BigDecimal.valueOf(50.0));
                     q.setTimeLimitMinutes(dto.getTimeLimitMinutes());
@@ -117,6 +128,13 @@ public class QuizService {
                     quizDao.update(con, q);
                     id = q.getId();
                 } else {
+                    // Kiểm tra STT trùng lặp trước khi tạo mới
+                    if (quizDao.existsOrderIndex(con, dto.getModuleId(), dto.getOrderIndex(), null)) {
+                        throw new IllegalArgumentException(
+                                "Thứ tự hiển thị số " + dto.getOrderIndex()
+                                + " đã tồn tại trong chương này. Vui lòng chọn số thứ tự khác.");
+                    }
+
                     Quiz q = new Quiz();
                     q.setModuleId(dto.getModuleId());
                     q.setTitle(dto.getTitle().trim());
@@ -127,8 +145,18 @@ public class QuizService {
                 }
                 con.commit();
                 return id;
+            } catch (IllegalArgumentException ex) {
+                DbConnection.rollbackQuietly(con);
+                throw ex;
             } catch (Exception ex) {
                 DbConnection.rollbackQuietly(con);
+                // Bẫy thêm lỗi unique constraint từ DB (phòng race-condition)
+                String msg = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+                if (msg.contains("uq_quizzes_module_order") || msg.contains("duplicate key")) {
+                    throw new IllegalArgumentException(
+                            "Thứ tự hiển thị đã bị trùng với một bài Quiz khác trong cùng chương. "
+                            + "Vui lòng kiểm tra lại và chọn số thứ tự khác.");
+                }
                 throw ex;
             } finally {
                 con.setAutoCommit(true);
