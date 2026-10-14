@@ -567,6 +567,13 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
 
             <!-- Right Controls: Clean Search Box & Auth / Account -->
             <div class="d-flex align-items-center gap-2">
+                <!-- Live Demo Button -->
+                <a href="${pageContext.request.contextPath}/demo.html" 
+                   class="btn btn-outline-warning btn-sm d-none d-xl-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 text-dark fw-semibold" 
+                   style="font-size: 11px; background: #FFF5EB; border-color: #FCD5B5;" target="_blank">
+                    <i class="bi bi-broadcast text-warning"></i>Live Demo
+                </a>
+
                 <!-- Search Box -->
                 <form action="${pageContext.request.contextPath}/courses/catalog" method="GET"
                       class="cf-search-box me-1" role="search">

@@ -1,10 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <meta http-equiv="refresh" content="0;url=home">
-    <title>Courson LMS</title>
+    <meta charset="UTF-8">
+    <title>Courson LMS - Đang chuyển hướng...</title>
+    <script>
+        // Nếu mở trực tiếp từ file (file:///) thì chuyển sang trang demo tương tác
+        if (window.location.protocol === 'file:') {
+            window.location.replace('demo.html');
+        } else {
+            // Nếu chạy trên máy chủ Tomcat thì chuyển tới Servlet /home
+            window.location.replace('home');
+        }
+    </script>
 </head>
 <body>
-    <p>Đang chuyển hướng đến <a href="home">Trang chủ</a>...</p>
+    <div style="font-family: sans-serif; text-align: center; margin-top: 100px;">
+        <h2>🎓 Courson LMS</h2>
+        <p>Đang chuyển hướng đến hệ thống...</p>
+        <p><a href="demo.html">👉 Nhấn vào đây nếu muốn mở Bản Trải Nghiệm Trực Tiếp (Browser Demo)</a></p>
+        <p><a href="home">👉 Nhấn vào đây nếu đang chạy trên máy chủ Tomcat (Servlet /home)</a></p>
+    </div>
 </body>
 </html>
