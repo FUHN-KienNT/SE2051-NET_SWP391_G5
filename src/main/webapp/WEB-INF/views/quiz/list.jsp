@@ -50,24 +50,83 @@
                         font-size: 1.15rem;
                     }
 
-                    /* Module Card & Headers */
-                    .module-quiz-card {
+                    /* Udemy-Style Connected Curriculum Accordion */
+                    .udemy-curriculum-container {
                         border: 1px solid #e2e8f0;
                         border-radius: 0.75rem;
-                        background: #ffffff;
                         overflow: hidden;
-                        margin-bottom: 1rem;
-                        transition: border-color 0.15s ease;
+                        background: #ffffff;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
                     }
 
-                    .module-quiz-card:hover {
-                        border-color: #cbd5e1;
-                    }
-
-                    .module-quiz-header {
-                        background: #f8fafc;
+                    .udemy-section-item {
                         border-bottom: 1px solid #e2e8f0;
-                        padding: 0.75rem 1.15rem;
+                        transition: background-color 0.15s ease;
+                    }
+
+                    .udemy-section-item:last-child {
+                        border-bottom: none;
+                    }
+
+                    .udemy-section-header {
+                        background-color: #f8fafc;
+                        padding: 0.85rem 1.25rem;
+                        cursor: pointer;
+                        user-select: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 0.75rem;
+                        transition: background-color 0.15s ease;
+                    }
+
+                    .udemy-section-header:hover {
+                        background-color: #f1f5f9;
+                    }
+
+                    .udemy-chevron {
+                        font-size: 0.85rem;
+                        color: #64748b;
+                        transition: transform 0.2s ease;
+                        display: inline-block;
+                        flex-shrink: 0;
+                    }
+
+                    .udemy-section-header.collapsed .udemy-chevron {
+                        transform: rotate(-90deg);
+                    }
+
+                    .udemy-section-body {
+                        background-color: #ffffff;
+                    }
+
+                    /* Pure Text Toggle (Collapse All / Expand All - Không viền, không box) */
+                    .btn-text-toggle {
+                        background: none !important;
+                        border: none !important;
+                        padding: 0 !important;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        color: #475569;
+                        cursor: pointer;
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.35rem;
+                        transition: color 0.15s ease;
+                    }
+
+                    .btn-text-toggle:hover {
+                        color: var(--primary-color, #F38020) !important;
+                        text-decoration: underline;
+                    }
+
+                    .curriculum-meta-bar {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 0.75rem;
+                        padding: 0 0.25rem;
                     }
 
                     /* Clean, Breathable Tables */
@@ -234,13 +293,6 @@
 
                         <!-- 3 Thẻ thống kê tổng quan (Metrics Summary) Tinh gọn & Cân đối -->
                         <c:if test="${not empty course}">
-                            <c:set var="modulesWithQuizCount" value="0" />
-                            <c:forEach var="m" items="${course.modules}">
-                                <c:if test="${not empty m.quizzes and fn:length(m.quizzes) > 0}">
-                                    <c:set var="modulesWithQuizCount" value="${modulesWithQuizCount + 1}" />
-                                </c:if>
-                            </c:forEach>
-
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4 col-sm-6 col-12">
                                     <div class="metric-summary-card d-flex align-items-center justify-content-between">
@@ -262,7 +314,7 @@
                                         <div>
                                             <span class="text-muted small fw-medium">Ngân hàng câu hỏi</span>
                                             <h4 class="fw-bold mb-0 text-dark mt-0.5">
-                                                ${not empty courseQuestions ? fn:length(courseQuestions) : 0} <span
+                                                ${totalQuestions} <span
                                                     class="fs-6 fw-normal text-muted">câu hỏi</span>
                                             </h4>
                                         </div>
@@ -277,7 +329,7 @@
                                         <div>
                                             <span class="text-muted small fw-medium">Số chương học</span>
                                             <h4 class="fw-bold mb-0 text-dark mt-0.5">
-                                                ${not empty course.modules ? fn:length(course.modules) : 0} <span
+                                                ${course.totalModules} <span
                                                     class="fs-6 fw-normal text-muted">chương</span>
                                             </h4>
                                         </div>
@@ -309,7 +361,7 @@
                                     <i class="bi bi-database me-1.5"></i>Ngân hàng câu hỏi khóa học
                                     <span class="badge bg-secondary-subtle text-secondary border rounded-pill ms-1.5"
                                         id="totalQuestionsBadge">
-                                        ${not empty courseQuestions ? fn:length(courseQuestions) : 0}
+                                        ${totalQuestions}
                                     </span>
                                 </button>
                             </li>
@@ -340,19 +392,18 @@
                                             </div>
                                         </div>
                                     </c:when>
-
                                     <c:otherwise>
-                                        <!-- Thanh công cụ tìm kiếm & lọc nhanh Tab 1 (Chống rối mắt) -->
+                                                                    <!-- Thanh công cụ tìm kiếm & lọc Tab 1 (Thiết kế hiện đại, hợp lý) -->
                                         <div class="card border-0 shadow-sm rounded-3 p-2.5 mb-3 bg-white">
                                             <div class="row g-2 align-items-center justify-content-between">
-                                                <div class="col-md-6 col-12">
+                                                <div class="col-md-7 col-12">
                                                     <div class="input-group input-group-sm">
                                                         <span class="input-group-text bg-light border-end-0 text-muted">
                                                             <i class="bi bi-search"></i>
                                                         </span>
                                                         <input type="text" id="quizSearchInput"
                                                             class="form-control border-start-0 bg-light"
-                                                            placeholder="Tìm bài Quiz theo tên hoặc theo chương học...">
+                                                            placeholder="Tìm kiếm bài thi theo tên hoặc chương...">
                                                         <button
                                                             class="btn btn-outline-secondary border-start-0 bg-light text-muted d-none"
                                                             type="button" id="clearQuizSearchBtn">
@@ -360,24 +411,31 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="col-md-6 col-12 d-flex justify-content-md-end align-items-center gap-2">
-                                                    <span class="small text-muted d-none d-sm-inline">Hiển thị:</span>
-                                                    <div class="btn-group btn-group-sm" role="group"
-                                                        aria-label="Filter modules">
+                                                <div class="col-md-5 col-12 d-flex justify-content-md-end align-items-center gap-2">
+                                                    <div class="btn-group btn-group-sm w-100 w-md-auto" role="group" aria-label="Filter modules">
                                                         <button type="button"
                                                             class="btn btn-outline-secondary active module-filter-btn"
                                                             data-filter="all">
-                                                            Tất cả chương (${fn:length(course.modules)})
+                                                            Tất cả (${course.totalModules})
                                                         </button>
                                                         <button type="button"
                                                             class="btn btn-outline-secondary module-filter-btn"
                                                             data-filter="has-quiz">
-                                                            Có Quiz (${modulesWithQuizCount})
+                                                            Có Quiz (${course.modulesWithQuizCount})
                                                         </button>
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <!-- Meta bar: Thông tin số lượng & nút text Thu gọn / Mở rộng tất cả (Không box, không viền) -->
+                                        <div class="curriculum-meta-bar">
+                                            <span class="small text-muted fw-semibold">
+                                                <i class="bi bi-layers-half text-secondary me-1"></i>${course.totalModules} chương &bull; ${course.totalQuizzes} bài thi
+                                            </span>
+                                            <button type="button" class="btn-text-toggle" id="toggleAllQuizBtn" onclick="toggleAllQuizSections()">
+                                                <i class="bi bi-arrows-collapse me-1"></i><span>Thu gọn tất cả</span>
+                                            </button>
                                         </div>
 
                                         <!-- Thông báo khi filter không tìm thấy quiz nào -->
@@ -385,164 +443,141 @@
                                             class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white d-none mb-3">
                                             <div class="text-muted mb-2"><i class="bi bi-search fs-2"></i></div>
                                             <h6 class="fw-bold text-dark mb-1">Không tìm thấy bài Quiz nào phù hợp</h6>
-                                            <p class="small text-muted mb-0">Thử tìm kiếm với từ khóa khác hoặc chuyển
-                                                chế độ xem sang "Tất cả chương".</p>
+                                            <p class="small text-muted mb-0">Thử tìm kiếm với từ khóa khác hoặc chọn "Tất cả".</p>
                                         </div>
 
-                                        <!-- Danh sách Modules & Quizzes -->
-                                        <div class="d-flex flex-column gap-3" id="modulesListContainer">
+                                        <!-- Danh sách Modules & Quizzes liền mạch dạng Udemy Accordion -->
+                                        <div class="udemy-curriculum-container mb-4" id="quizCurriculumContainer">
                                             <c:forEach var="m" items="${course.modules}">
-                                                <c:set var="mHasQuizzes"
-                                                    value="${not empty m.quizzes and fn:length(m.quizzes) > 0}" />
-                                                <div class="module-quiz-card" id="module-${m.id}"
+                                                <c:set var="mHasQuizzes" value="${m.hasQuizzes}" />
+                                                <div class="udemy-section-item" id="module-${m.id}"
                                                     data-has-quizzes="${mHasQuizzes ? 'true' : 'false'}"
                                                     data-module-title="${fn:toLowerCase(m.title)}">
 
-                                                    <!-- Module Header Bar Tinh gọn -->
-                                                    <div
-                                                        class="module-quiz-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                                        <div class="d-flex align-items-center gap-2">
-                                                            <span class="badge bg-white text-dark border fw-semibold">
+                                                    <!-- Header: Click để toggle collapse -->
+                                                    <div class="udemy-section-header" data-bs-toggle="collapse"
+                                                        data-bs-target="#quiz-collapse-${m.id}" aria-expanded="true">
+                                                        <div class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                                                            <i class="bi bi-chevron-down udemy-chevron"></i>
+                                                            <span class="badge bg-white text-dark border fw-semibold flex-shrink-0">
                                                                 Chương ${m.orderIndex}
                                                             </span>
-                                                            <h6 class="fw-bold mb-0 text-dark">${m.title}</h6>
+                                                            <span class="fw-bold text-dark text-truncate">${m.title}</span>
                                                             <c:choose>
                                                                 <c:when test="${mHasQuizzes}">
-                                                                    <span
-                                                                        class="badge bg-orange-subtle text-orange border border-orange-subtle ms-1">
-                                                                        ${fn:length(m.quizzes)} bài quiz
+                                                                    <span class="badge bg-orange-subtle text-orange border border-orange-subtle ms-1 flex-shrink-0">
+                                                                        ${m.quizCount} bài quiz
                                                                     </span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span
-                                                                        class="badge bg-light text-muted border ms-1">0
-                                                                        bài quiz</span>
+                                                                    <span class="badge bg-light text-muted border ms-1 flex-shrink-0">
+                                                                        0 bài quiz
+                                                                    </span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </div>
 
-                                                        <!-- Nút tạo quiz tinh gọn -->
-                                                        <div>
-                                                            <c:set var="nextOrder"
-                                                                value="${fn:length(m.quizzes) + 1}" />
+                                                        <!-- Nút tạo quiz tinh gọn (stopPropagation để không trigger đóng/mở) -->
+                                                        <div class="flex-shrink-0" onclick="event.stopPropagation();">
                                                             <button type="button"
                                                                 class="btn btn-sm btn-outline-primary rounded-3 py-1 px-2.5 small fw-semibold"
-                                                                onclick="openCreateQuizModal('${m.id}', '${nextOrder}')"
+                                                                onclick="openCreateQuizModal('${m.id}', '${m.quizCount + 1}')"
                                                                 data-bs-toggle="modal" data-bs-target="#quizModal">
                                                                 <i class="bi bi-plus-lg me-1"></i>Tạo Quiz
                                                             </button>
                                                         </div>
                                                     </div>
 
-                                                    <!-- Quizzes Table hoặc thanh thông báo trống tinh gọn (không chiếm diện tích) -->
-                                                    <c:choose>
-                                                        <c:when test="${not mHasQuizzes}">
-                                                            <div
-                                                                class="py-2.5 px-3 bg-light-subtle d-flex align-items-center justify-content-between text-muted small">
-                                                                <span
-                                                                    class="d-flex align-items-center gap-1.5 text-secondary">
-                                                                    <i class="bi bi-info-circle text-muted"></i>
-                                                                    Chưa có bài kiểm tra nào trong chương này
-                                                                </span>
-                                                                <button type="button"
-                                                                    class="btn btn-sm btn-link text-primary text-decoration-none fw-semibold p-0"
-                                                                    onclick="openCreateQuizModal('${m.id}', 1)">
-                                                                    + Tạo bài Quiz ngay
-                                                                </button>
-                                                            </div>
-                                                        </c:when>
-
-                                                        <c:otherwise>
-                                                            <div class="table-responsive bg-white">
-                                                                <table class="table clean-table mb-0 align-middle">
-                                                                    <thead>
-                                                                        <tr>
-                                                                            <th style="width: 70px;"
-                                                                                class="text-center">Thứ tự</th>
-                                                                            <th>Tên bài thi (Quiz)</th>
-                                                                            <th style="width: 130px;"
-                                                                                class="text-center">Điểm đạt</th>
-                                                                            <th style="width: 140px;"
-                                                                                class="text-center">Thời lượng</th>
-                                                                            <th style="width: 190px;"
-                                                                                class="text-end pe-3">Hành động</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        <c:forEach var="q" items="${m.quizzes}">
-                                                                            <tr class="quiz-row"
-                                                                                data-quiz-title="${fn:toLowerCase(q.title)}">
-                                                                                <td class="text-center">
-                                                                                    <span
-                                                                                        class="badge bg-light text-muted border">#${q.orderIndex}</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div>
-                                                                                        <a href="${pageContext.request.contextPath}/quizzes/detail?id=${q.id}&courseId=${course.id}"
-                                                                                            class="fw-bold text-dark text-decoration-none hover-primary">
-                                                                                            ${q.title}
-                                                                                        </a>
-                                                                                        <span
-                                                                                            class="small text-muted d-block"
-                                                                                            style="font-size: 0.75rem;">
-                                                                                            Mã đề: #${q.id}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td class="text-center">
-                                                                                    <span
-                                                                                        class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-semibold">
-                                                                                        <i
-                                                                                            class="bi bi-shield-check me-1"></i>${q.passScore}%
-                                                                                    </span>
-                                                                                </td>
-                                                                                <td class="text-center">
-                                                                                    <c:choose>
-                                                                                        <c:when
-                                                                                            test="${q.timeLimitMinutes != null and q.timeLimitMinutes > 0}">
-                                                                                            <span
-                                                                                                class="badge bg-light text-dark border px-2 py-1">
-                                                                                                <i
-                                                                                                    class="bi bi-stopwatch text-orange me-1"></i>${q.timeLimitMinutes}
-                                                                                                phút
-                                                                                            </span>
-                                                                                        </c:when>
-                                                                                        <c:otherwise>
-                                                                                            <span
-                                                                                                class="badge bg-light text-muted border px-2 py-1">Tự
-                                                                                                do</span>
-                                                                                        </c:otherwise>
-                                                                                    </c:choose>
-                                                                                </td>
-                                                                                <td class="text-end pe-3">
-                                                                                    <div
-                                                                                        class="d-inline-flex align-items-center gap-1">
-
-                                                                                        <button type="button"
-                                                                                            class="btn btn-sm btn-outline-secondary py-1 px-2 rounded-3"
-                                                                                            onclick="openEditQuizModal('${q.id}', '${m.id}', '${fn:escapeXml(q.title)}', '${q.passScore}', '${q.timeLimitMinutes != null ? q.timeLimitMinutes : ','}', '${q.orderIndex}')"
-                                                                                            data-bs-toggle="modal"
-                                                                                            data-bs-target="#quizModal"
-                                                                                            title="Sửa thông tin">
-                                                                                            <i class="bi bi-gear"></i>
-                                                                                        </button>
-                                                                                        <button type="button"
-                                                                                            class="btn btn-sm btn-outline-danger py-1 px-2 rounded-3"
-                                                                                            onclick="openDeleteQuizModal('${q.id}', '${fn:escapeXml(q.title)}', '${course.id}', '${m.id}')"
-                                                                                            data-bs-toggle="modal"
-                                                                                            data-bs-target="#deleteQuizModal"
-                                                                                            title="Xóa bài Quiz">
-                                                                                            <i class="bi bi-trash3"></i>
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </td>
+                                                    <!-- Body: Collapsible -->
+                                                    <div class="collapse show udemy-section-body" id="quiz-collapse-${m.id}">
+                                                        <c:choose>
+                                                            <c:when test="${not mHasQuizzes}">
+                                                                <div class="py-2.5 px-4 bg-light-subtle d-flex align-items-center justify-content-between text-muted small">
+                                                                    <span class="d-flex align-items-center gap-1.5 text-secondary">
+                                                                        <i class="bi bi-info-circle text-muted"></i>
+                                                                        Chưa có bài kiểm tra nào trong chương này
+                                                                    </span>
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-link text-primary text-decoration-none fw-semibold p-0"
+                                                                        onclick="openCreateQuizModal('${m.id}', 1)">
+                                                                        + Tạo bài Quiz ngay
+                                                                    </button>
+                                                                </div>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <div class="table-responsive bg-white">
+                                                                    <table class="table clean-table mb-0 align-middle">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th style="width: 70px;" class="text-center">Thứ tự</th>
+                                                                                <th>Tên bài thi (Quiz)</th>
+                                                                                <th style="width: 130px;" class="text-center">Điểm đạt</th>
+                                                                                <th style="width: 140px;" class="text-center">Thời lượng</th>
+                                                                                <th style="width: 190px;" class="text-end pe-3">Hành động</th>
                                                                             </tr>
-                                                                        </c:forEach>
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </c:otherwise>
-                                                    </c:choose>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            <c:forEach var="q" items="${m.quizzes}">
+                                                                                <tr class="quiz-row" data-quiz-title="${fn:toLowerCase(q.title)}">
+                                                                                    <td class="text-center">
+                                                                                        <span class="badge bg-light text-muted border">#${q.orderIndex}</span>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div>
+                                                                                            <a href="${pageContext.request.contextPath}/quizzes/detail?id=${q.id}&courseId=${course.id}"
+                                                                                                class="fw-bold text-dark text-decoration-none hover-primary">
+                                                                                                ${q.title}
+                                                                                            </a>
+                                                                                            <span class="small text-muted d-block" style="font-size: 0.75rem;">
+                                                                                                Mã đề: #${q.id}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="text-center">
+                                                                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-semibold">
+                                                                                            <i class="bi bi-shield-check me-1"></i>${q.passScore}%
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td class="text-center">
+                                                                                        <c:choose>
+                                                                                            <c:when test="${q.timeLimitMinutes != null and q.timeLimitMinutes > 0}">
+                                                                                                <span class="badge bg-light text-dark border px-2 py-1">
+                                                                                                    <i class="bi bi-stopwatch text-orange me-1"></i>${q.timeLimitMinutes} phút
+                                                                                                </span>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span class="badge bg-light text-muted border px-2 py-1">Tự do</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                    <td class="text-end pe-3">
+                                                                                        <div class="d-inline-flex align-items-center gap-1">
+                                                                                            <button type="button"
+                                                                                                class="btn btn-sm btn-outline-secondary py-1 px-2 rounded-3"
+                                                                                                onclick="openEditQuizModal('${q.id}', '${m.id}', '${fn:escapeXml(q.title)}', '${q.passScore}', '${q.timeLimitMinutes != null ? q.timeLimitMinutes : ''}', '${q.orderIndex}')"
+                                                                                                data-bs-toggle="modal"
+                                                                                                data-bs-target="#quizModal"
+                                                                                                title="Sửa thông tin">
+                                                                                                <i class="bi bi-gear"></i>
+                                                                                            </button>
+                                                                                            <button type="button"
+                                                                                                class="btn btn-sm btn-outline-danger py-1 px-2 rounded-3"
+                                                                                                onclick="openDeleteQuizModal('${q.id}', '${fn:escapeXml(q.title)}', '${course.id}', '${m.id}')"
+                                                                                                data-bs-toggle="modal"
+                                                                                                data-bs-target="#deleteQuizModal"
+                                                                                                title="Xóa bài Quiz">
+                                                                                                <i class="bi bi-trash3"></i>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </c:forEach>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
                                                 </div>
                                             </c:forEach>
                                         </div>
@@ -551,234 +586,253 @@
                             </div>
 
                             <!-- ======================================================= -->
-                            <!-- TAB 2: NGÂN HÀNG CÂU HỎI (QUESTION LIST)                -->
+                            <!-- TAB 2: NGÂN HÀNG CÂU HỎI (HIỂN THỊ THEO CHƯƠNG)          -->
                             <!-- ======================================================= -->
                             <div class="tab-pane fade" id="pills-questions" role="tabpanel">
-                                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-                                    <!-- Filter Toolbar Tinh gọn -->
-                                    <div class="card-header bg-white py-3 px-4 border-bottom">
-                                        <div class="row g-2 align-items-center justify-content-between">
-                                            <div class="col-md-4 col-12">
-                                                <div class="input-group input-group-sm">
-                                                    <span class="input-group-text bg-light border-end-0 text-muted">
-                                                        <i class="bi bi-search"></i>
-                                                    </span>
-                                                    <input type="text" id="questionSearchInput"
-                                                        class="form-control border-start-0 bg-light"
-                                                        placeholder="Tìm câu hỏi theo nội dung...">
-                                                </div>
+                                <c:choose>
+                                    <c:when test="${empty course or empty course.modules}">
+                                        <div class="card p-5 text-center border-0 shadow-sm rounded-4 mb-4">
+                                            <div class="bg-light text-muted rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                                                style="width: 64px; height: 64px;">
+                                                <i class="bi bi-folder-x fs-2"></i>
                                             </div>
-
-                                            <div class="col-md-3 col-sm-6 col-12">
-                                                <select id="questionModuleFilter"
-                                                    class="form-select form-select-sm bg-light">
-                                                    <option value="all">Tất cả chương học</option>
-                                                    <c:forEach var="moduleItem" items="${course.modules}">
-                                                        <option value="${moduleItem.id}">Chương
-                                                            ${moduleItem.orderIndex}: ${moduleItem.title}</option>
-                                                    </c:forEach>
-                                                </select>
-                                            </div>
-
-                                            <div class="col-md-2 col-sm-6 col-12">
-                                                <select id="questionTypeFilter"
-                                                    class="form-select form-select-sm bg-light">
-                                                    <option value="all">Tất cả loại câu</option>
-                                                    <option value="SINGLE_CHOICE">Trắc nghiệm</option>
-                                                    <option value="TRUE_FALSE">Đúng / Sai</option>
-                                                </select>
-                                            </div>
-
-                                            <div
-                                                class="col-md-3 col-12 text-md-end d-flex align-items-center justify-content-between justify-content-md-end gap-2">
-                                                <span class="small text-muted" id="questionCounterWrapper">
-                                                    Hiển thị <strong id="questionVisibleCount" class="text-dark">${not
-                                                        empty courseQuestions ? fn:length(courseQuestions) : 0}</strong>
-                                                    / ${not empty courseQuestions ? fn:length(courseQuestions) : 0}
-                                                </span>
-                                                <button type="button"
-                                                    class="btn btn-success btn-sm fw-semibold shadow-sm rounded-3 px-3 py-1.5"
-                                                    onclick="openCreateQuestionModal('')" data-bs-toggle="modal"
-                                                    data-bs-target="#questionModal">
-                                                    <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
-                                                </button>
-                                            </div>
+                                            <h5 class="fw-bold text-dark mb-1">Khóa học này chưa có chương học nào!</h5>
+                                            <p class="text-muted small mb-0">Bạn cần tạo ít nhất một chương học để quản lý ngân hàng câu hỏi.</p>
                                         </div>
-                                    </div>
-
-                                    <!-- Questions Table Tinh gọn (Chống rối mắt, hỗ trợ xem trước options) -->
-                                    <div class="card-body p-0">
-                                        <c:choose>
-                                            <c:when test="${empty courseQuestions}">
-                                                <div class="p-5 text-center text-muted">
-                                                    <div class="bg-light text-muted rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
-                                                        style="width: 64px; height: 64px;">
-                                                        <i class="bi bi-patch-question fs-2"></i>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <!-- Toolbar lọc & tìm kiếm câu hỏi Tab 2 (Thiết kế hiện đại) -->
+                                        <div class="card border-0 shadow-sm rounded-3 p-3 mb-3 bg-white">
+                                            <div class="row g-2 align-items-center justify-content-between">
+                                                <div class="col-md-5 col-12">
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text bg-light border-end-0 text-muted">
+                                                            <i class="bi bi-search"></i>
+                                                        </span>
+                                                        <input type="text" id="questionSearchInput"
+                                                            class="form-control border-start-0 bg-light"
+                                                            placeholder="Tìm kiếm nội dung câu hỏi...">
+                                                        <button class="btn btn-outline-secondary border-start-0 bg-light text-muted d-none"
+                                                            type="button" id="clearQuestionSearchBtn">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </button>
                                                     </div>
-                                                    <h5 class="fw-bold text-dark mb-1">Chưa có câu hỏi nào trong ngân
-                                                        hàng!</h5>
-                                                    <p class="small text-muted mb-3">Tạo các câu hỏi trắc nghiệm để tái
-                                                        sử dụng và gán vào các bài thi của khóa học.</p>
+                                                </div>
+
+                                                <div class="col-md-3 col-sm-6 col-12">
+                                                    <select id="questionModuleFilter" class="form-select form-select-sm bg-light">
+                                                        <option value="all">Tất cả chương học</option>
+                                                        <c:forEach var="moduleItem" items="${course.modules}">
+                                                            <option value="${moduleItem.id}">Chương ${moduleItem.orderIndex}: ${moduleItem.title}</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-2 col-sm-6 col-12">
+                                                    <select id="questionTypeFilter" class="form-select form-select-sm bg-light">
+                                                        <option value="all">Tất cả loại câu</option>
+                                                        <option value="SINGLE_CHOICE">Trắc nghiệm</option>
+                                                        <option value="TRUE_FALSE">Đúng / Sai</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-2 col-12 text-md-end d-flex justify-content-md-end">
                                                     <button type="button"
-                                                        class="btn btn-primary fw-semibold btn-sm rounded-3 px-3 py-2 shadow-sm"
+                                                        class="btn btn-success btn-sm fw-semibold shadow-sm rounded-3 px-3 py-1.5 w-100 w-md-auto"
                                                         onclick="openCreateQuestionModal('')" data-bs-toggle="modal"
                                                         data-bs-target="#questionModal">
-                                                        <i class="bi bi-plus-lg me-1"></i>Tạo câu hỏi đầu tiên
+                                                        <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
                                                     </button>
                                                 </div>
-                                            </c:when>
+                                            </div>
+                                        </div>
 
-                                            <c:otherwise>
-                                                <!-- Thông báo không tìm thấy kết quả filter -->
-                                                <div id="questionEmptyFilter" class="p-5 text-center text-muted d-none">
-                                                    <div class="text-muted mb-2"><i class="bi bi-funnel fs-2"></i></div>
-                                                    <h6 class="fw-bold text-dark mb-1">Không tìm thấy câu hỏi nào phù
-                                                        hợp</h6>
-                                                    <p class="small text-muted mb-0">Thử thay đổi từ khóa tìm kiếm hoặc
-                                                        bỏ chọn các bộ lọc.</p>
-                                                </div>
+                                        <!-- Meta bar Tab 2: Thông tin số lượng & nút text Thu gọn / Mở rộng tất cả (Không box, không viền) -->
+                                        <div class="curriculum-meta-bar">
+                                            <span class="small text-muted fw-semibold">
+                                                <i class="bi bi-layers-half text-secondary me-1"></i>${course.totalModules} chương &bull; Hiển thị <strong id="questionVisibleCount" class="text-dark">${totalQuestions}</strong> / ${totalQuestions} câu hỏi
+                                            </span>
+                                            <button type="button" class="btn-text-toggle" id="toggleAllQuestionBtn" onclick="toggleAllQuestionSections()">
+                                                <i class="bi bi-arrows-collapse me-1"></i><span>Thu gọn tất cả</span>
+                                            </button>
+                                        </div>
 
-                                                <div class="table-responsive">
-                                                    <table class="table clean-table mb-0 align-middle"
-                                                        id="questionsTable">
-                                                        <thead>
-                                                            <tr>
-                                                                <th style="width: 65px;" class="text-center">ID</th>
-                                                                <th>Nội dung câu hỏi &amp; Đáp án đúng</th>
-                                                                <th style="width: 170px;">Chương học</th>
-                                                                <th style="width: 130px;" class="text-center">Dạng câu
-                                                                </th>
-                                                                <th style="width: 90px;" class="text-center">Điểm</th>
-                                                                <th style="width: 80px;" class="text-end pe-3">Xóa</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <c:forEach var="q" items="${courseQuestions}">
-                                                                <tr class="question-row" data-module-id="${q.moduleId}"
-                                                                    data-type="${q.questionType}"
-                                                                    data-text="${fn:toLowerCase(q.questionText)}">
-                                                                    <td
-                                                                        class="text-center text-muted small fw-semibold">
-                                                                        #${q.id}
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="fw-medium text-dark mb-1">
-                                                                            <c:out value="${q.questionText}" />
-                                                                        </div>
+                                        <!-- Thông báo khi filter không tìm thấy câu hỏi nào -->
+                                        <div id="questionEmptyFilter" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white d-none mb-3">
+                                            <div class="text-muted mb-2"><i class="bi bi-funnel fs-2"></i></div>
+                                            <h6 class="fw-bold text-dark mb-1">Không tìm thấy câu hỏi nào phù hợp</h6>
+                                            <p class="small text-muted mb-0">Thử thay đổi từ khóa tìm kiếm hoặc chọn lại các bộ lọc.</p>
+                                        </div>
 
-                                                                        <!-- Hiển thị đáp án đúng tinh gọn & toggle xem chi tiết options -->
-                                                                        <div
-                                                                            class="d-flex flex-wrap align-items-center gap-2 mt-1">
-                                                                            <c:set var="correctOptText" value="" />
-                                                                            <c:forEach var="opt" items="${q.options}">
-                                                                                <c:if test="${opt.correct}">
-                                                                                    <c:set var="correctOptText"
-                                                                                        value="${opt.optionText}" />
-                                                                                </c:if>
-                                                                            </c:forEach>
+                                        <!-- Danh sách câu hỏi theo từng chương dạng Udemy Accordion liền mạch -->
+                                        <div class="udemy-curriculum-container mb-4" id="questionCurriculumContainer">
+                                            <c:forEach var="m" items="${course.modules}">
+                                                <c:set var="mHasQuestions" value="${m.hasQuestions}" />
+                                                <div class="udemy-section-item question-module-section" id="q-module-${m.id}"
+                                                    data-module-id="${m.id}"
+                                                    data-has-questions="${mHasQuestions ? 'true' : 'false'}"
+                                                    data-module-title="${fn:toLowerCase(m.title)}">
 
-                                                                            <c:if test="${not empty correctOptText}">
-                                                                                <span class="correct-answer-snippet">
-                                                                                    <i
-                                                                                        class="bi bi-check-circle-fill"></i>
-                                                                                    <span>Đáp án đúng: <strong>
-                                                                                            <c:out
-                                                                                                value="${correctOptText}" />
-                                                                                        </strong></span>
-                                                                                </span>
-                                                                            </c:if>
+                                                    <!-- Header Chương: Click để đóng/mở -->
+                                                    <div class="udemy-section-header" data-bs-toggle="collapse"
+                                                        data-bs-target="#q-collapse-${m.id}" aria-expanded="true">
+                                                        <div class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                                                            <i class="bi bi-chevron-down udemy-chevron"></i>
+                                                            <span class="badge bg-white text-dark border fw-semibold flex-shrink-0">
+                                                                Chương ${m.orderIndex}
+                                                            </span>
+                                                            <span class="fw-bold text-dark text-truncate">${m.title}</span>
+                                                            <c:choose>
+                                                                <c:when test="${mHasQuestions}">
+                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle ms-1 flex-shrink-0">
+                                                                        ${m.questionCount} câu hỏi
+                                                                    </span>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <span class="badge bg-light text-muted border ms-1 flex-shrink-0">
+                                                                        0 câu hỏi
+                                                                    </span>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </div>
 
-                                                                            <c:if test="${not empty q.options}">
-                                                                                <button type="button"
-                                                                                    class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill"
-                                                                                    data-bs-toggle="collapse"
-                                                                                    data-bs-target="#options-collapse-${q.id}"
-                                                                                    title="Xem danh sách tất cả các phương án">
-                                                                                    <i
-                                                                                        class="bi bi-list-ul me-1"></i>Xem
-                                                                                    ${fn:length(q.options)} lựa chọn
-                                                                                </button>
-                                                                            </c:if>
-                                                                        </div>
+                                                        <!-- Nút thêm câu hỏi cho chương này (stopPropagation để không trigger đóng/mở accordion) -->
+                                                        <div class="flex-shrink-0" onclick="event.stopPropagation();">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-success rounded-3 py-1 px-2.5 small fw-semibold"
+                                                                onclick="openCreateQuestionModal('${m.id}')"
+                                                                data-bs-toggle="modal" data-bs-target="#questionModal">
+                                                                <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
+                                                            </button>
+                                                        </div>
+                                                    </div>
 
-                                                                        <!-- Danh sách các lựa chọn có thể mở ra khi bấm (Collapsed mặc định để chống rối mắt) -->
-                                                                        <c:if test="${not empty q.options}">
-                                                                            <div class="collapse mt-2"
-                                                                                id="options-collapse-${q.id}">
-                                                                                <div
-                                                                                    class="p-2.5 rounded-3 bg-light border row g-2 small">
-                                                                                    <c:forEach var="opt"
-                                                                                        items="${q.options}"
-                                                                                        varStatus="optStatus">
-                                                                                        <div class="col-md-6 col-12">
-                                                                                            <div
-                                                                                                class="d-flex align-items-start gap-2 p-1.5 rounded-2 ${opt.correct ? 'bg-success-subtle text-success fw-semibold border border-success-subtle' : 'bg-white border text-secondary'}">
-                                                                                                <span
-                                                                                                    class="badge ${opt.correct ? 'bg-success text-white' : 'bg-secondary-subtle text-secondary'} rounded-circle px-1.5 py-1"
-                                                                                                    style="font-size: 0.7rem; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                                                                                    ${optStatus.index ==
-                                                                                                    0 ? 'A' :
-                                                                                                    (optStatus.index ==
-                                                                                                    1 ? 'B' :
-                                                                                                    (optStatus.index ==
-                                                                                                    2 ? 'C' : 'D'))}
-                                                                                                </span>
-                                                                                                <span
-                                                                                                    class="text-break">
-                                                                                                    <c:out
-                                                                                                        value="${opt.optionText}" />
-                                                                                                </span>
-                                                                                                <c:if
-                                                                                                    test="${opt.correct}">
-                                                                                                    <i
-                                                                                                        class="bi bi-check2 text-success ms-auto flex-shrink-0"></i>
-                                                                                                </c:if>
-                                                                                            </div>
+                                                    <!-- Body Chương: Danh sách câu hỏi -->
+                                                    <div class="collapse show udemy-section-body" id="q-collapse-${m.id}">
+                                                        <c:choose>
+                                                            <c:when test="${not mHasQuestions}">
+                                                                <div class="py-3 px-4 bg-light-subtle d-flex align-items-center justify-content-between text-muted small">
+                                                                    <span class="d-flex align-items-center gap-1.5 text-secondary">
+                                                                        <i class="bi bi-info-circle text-muted"></i>
+                                                                        Chưa có câu hỏi nào trong chương này
+                                                                    </span>
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-link text-success text-decoration-none fw-semibold p-0"
+                                                                        onclick="openCreateQuestionModal('${m.id}')">
+                                                                        + Thêm câu hỏi ngay
+                                                                    </button>
+                                                                </div>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <div class="table-responsive bg-white">
+                                                                    <table class="table clean-table mb-0 align-middle">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th style="width: 65px;" class="text-center">ID</th>
+                                                                                <th>Nội dung câu hỏi &amp; Đáp án đúng</th>
+                                                                                <th style="width: 140px;" class="text-center">Dạng câu</th>
+                                                                                <th style="width: 90px;" class="text-center">Điểm</th>
+                                                                                <th style="width: 80px;" class="text-end pe-3">Xóa</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            <c:forEach var="q" items="${m.questions}">
+                                                                                <tr class="question-row" data-module-id="${q.moduleId}"
+                                                                                    data-type="${q.questionType}"
+                                                                                    data-text="${fn:toLowerCase(q.questionText)}">
+                                                                                    <td class="text-center text-muted small fw-semibold">
+                                                                                        #${q.id}
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div class="fw-medium text-dark mb-1">
+                                                                                            <c:out value="${q.questionText}" />
                                                                                         </div>
-                                                                                    </c:forEach>
-                                                                                </div>
-                                                                            </div>
-                                                                        </c:if>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span
-                                                                            class="badge bg-light text-secondary border text-truncate d-inline-block"
-                                                                            style="max-width: 160px;"
-                                                                            title="${q.moduleTitle}">
-                                                                            ${q.moduleTitle}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td class="text-center">
-                                                                        <span
-                                                                            class="badge bg-light text-secondary border px-2 py-1">
-                                                                            <c:choose>
-                                                                                <c:when
-                                                                                    test="${q.questionType == 'TRUE_FALSE'}">
-                                                                                    Đúng / Sai</c:when>
-                                                                                <c:otherwise>1 Đáp án</c:otherwise>
-                                                                            </c:choose>
-                                                                        </span>
-                                                                    </td>
-                                                                    <td class="text-center fw-semibold text-secondary">
-                                                                        ${q.defaultPoints} đ
-                                                                    </td>
-                                                                    <td class="text-end pe-3 text-nowrap">
-                                                                        <a href="${pageContext.request.contextPath}/quizzes/delete-question?id=${q.id}&courseId=${course.id}"
-                                                                            class="btn btn-sm btn-outline-danger py-1 px-2 rounded-3"
-                                                                            onclick="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi?');"
-                                                                            title="Xóa câu hỏi">
-                                                                            <i class="bi bi-trash3"></i>
-                                                                        </a>
-                                                                    </td>
-                                                                </tr>
-                                                            </c:forEach>
-                                                        </tbody>
-                                                    </table>
+
+                                                                                        <!-- Hiển thị đáp án đúng tinh gọn & toggle xem chi tiết options -->
+                                                                                        <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                                                                                            <c:set var="correctOptText" value="" />
+                                                                                            <c:forEach var="opt" items="${q.options}">
+                                                                                                <c:if test="${opt.correct}">
+                                                                                                    <c:set var="correctOptText" value="${opt.optionText}" />
+                                                                                                </c:if>
+                                                                                            </c:forEach>
+
+                                                                                            <c:if test="${not empty correctOptText}">
+                                                                                                <span class="correct-answer-snippet">
+                                                                                                    <i class="bi bi-check-circle-fill"></i>
+                                                                                                    <span>Đáp án đúng: <strong><c:out value="${correctOptText}" /></strong></span>
+                                                                                                </span>
+                                                                                            </c:if>
+
+                                                                                            <c:if test="${not empty q.options}">
+                                                                                                <button type="button"
+                                                                                                    class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill"
+                                                                                                    data-bs-toggle="collapse"
+                                                                                                    data-bs-target="#options-collapse-${q.id}"
+                                                                                                    title="Xem danh sách tất cả các phương án">
+                                                                                                    <i class="bi bi-list-ul me-1"></i>Xem ${fn:length(q.options)} lựa chọn
+                                                                                                </button>
+                                                                                            </c:if>
+                                                                                        </div>
+
+                                                                                        <!-- Danh sách các lựa chọn có thể mở ra khi bấm -->
+                                                                                        <c:if test="${not empty q.options}">
+                                                                                            <div class="collapse mt-2" id="options-collapse-${q.id}">
+                                                                                                <div class="p-2.5 rounded-3 bg-light border row g-2 small">
+                                                                                                    <c:forEach var="opt" items="${q.options}" varStatus="optStatus">
+                                                                                                        <div class="col-md-6 col-12">
+                                                                                                            <div class="d-flex align-items-start gap-2 p-1.5 rounded-2 ${opt.correct ? 'bg-success-subtle text-success fw-semibold border border-success-subtle' : 'bg-white border text-secondary'}">
+                                                                                                                <span class="badge ${opt.correct ? 'bg-success text-white' : 'bg-secondary-subtle text-secondary'} rounded-circle px-1.5 py-1"
+                                                                                                                    style="font-size: 0.7rem; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                                                                                                    ${optStatus.index == 0 ? 'A' : (optStatus.index == 1 ? 'B' : (optStatus.index == 2 ? 'C' : 'D'))}
+                                                                                                                </span>
+                                                                                                                <span class="text-break">
+                                                                                                                    <c:out value="${opt.optionText}" />
+                                                                                                                </span>
+                                                                                                                <c:if test="${opt.correct}">
+                                                                                                                    <i class="bi bi-check2 text-success ms-auto flex-shrink-0"></i>
+                                                                                                                </c:if>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </c:forEach>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </c:if>
+                                                                                    </td>
+                                                                                    <td class="text-center">
+                                                                                        <span class="badge bg-light text-secondary border px-2 py-1">
+                                                                                            <c:choose>
+                                                                                                <c:when test="${q.questionType == 'TRUE_FALSE'}">
+                                                                                                    Đúng / Sai
+                                                                                                </c:when>
+                                                                                                <c:otherwise>Trắc nghiệm</c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td class="text-center fw-semibold text-secondary">
+                                                                                        ${q.defaultPoints} đ
+                                                                                    </td>
+                                                                                    <td class="text-end pe-3 text-nowrap">
+                                                                                        <a href="${pageContext.request.contextPath}/quizzes/delete-question?id=${q.id}&courseId=${course.id}"
+                                                                                            class="btn btn-sm btn-outline-danger py-1 px-2 rounded-3"
+                                                                                            onclick="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi?');"
+                                                                                            title="Xóa câu hỏi">
+                                                                                            <i class="bi bi-trash3"></i>
+                                                                                        </a>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </c:forEach>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
                                                 </div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
 
                         </div>
@@ -1050,14 +1104,100 @@
                 <jsp:include page="../common/footer.jsp" />
 
                 <script>
+                    // 1. Toggling functions cho Accordion ở cả 2 Tab (Dạng text thuần túy, không viền, không box)
+                    function toggleAllQuizSections() {
+                        const container = document.getElementById('quizCurriculumContainer');
+                        if (!container) return;
+                        const collapses = container.querySelectorAll('.collapse');
+                        const btn = document.getElementById('toggleAllQuizBtn');
+                        let anyOpen = false;
+                        collapses.forEach(c => {
+                            if (c.classList.contains('show')) anyOpen = true;
+                        });
+
+                        collapses.forEach(c => {
+                            const bsCollapse = bootstrap.Collapse.getOrCreateInstance(c, { toggle: false });
+                            if (anyOpen) {
+                                bsCollapse.hide();
+                            } else {
+                                bsCollapse.show();
+                            }
+                        });
+
+                        if (btn) {
+                            if (anyOpen) {
+                                btn.innerHTML = '<i class="bi bi-arrows-expand me-1"></i><span>Mở rộng tất cả</span>';
+                            } else {
+                                btn.innerHTML = '<i class="bi bi-arrows-collapse me-1"></i><span>Thu gọn tất cả</span>';
+                            }
+                        }
+                    }
+
+                    function toggleAllQuestionSections() {
+                        const container = document.getElementById('questionCurriculumContainer');
+                        if (!container) return;
+                        const collapses = container.querySelectorAll('.collapse');
+                        const btn = document.getElementById('toggleAllQuestionBtn');
+                        let anyOpen = false;
+                        collapses.forEach(c => {
+                            if (c.classList.contains('show')) anyOpen = true;
+                        });
+
+                        collapses.forEach(c => {
+                            const bsCollapse = bootstrap.Collapse.getOrCreateInstance(c, { toggle: false });
+                            if (anyOpen) {
+                                bsCollapse.hide();
+                            } else {
+                                bsCollapse.show();
+                            }
+                        });
+
+                        if (btn) {
+                            if (anyOpen) {
+                                btn.innerHTML = '<i class="bi bi-arrows-expand me-1"></i><span>Mở rộng tất cả</span>';
+                            } else {
+                                btn.innerHTML = '<i class="bi bi-arrows-collapse me-1"></i><span>Thu gọn tất cả</span>';
+                            }
+                        }
+                    }
+
                     document.addEventListener('DOMContentLoaded', function () {
-                        // 1. Kích hoạt tab nếu có query param ?tab=questions
+                        // Kích hoạt tab nếu có query param ?tab=questions
                         const urlParams = new URLSearchParams(window.location.search);
                         if (urlParams.get('tab') === 'questions') {
                             const questionsTabBtn = document.getElementById('pills-questions-tab');
                             if (questionsTabBtn) {
                                 bootstrap.Tab.getOrCreateInstance(questionsTabBtn).show();
                             }
+                        }
+
+                        // Tự động đồng bộ trạng thái text nút Toggle khi người dùng click mở/đóng từng chương
+                        const quizContainer = document.getElementById('quizCurriculumContainer');
+                        if (quizContainer) {
+                            quizContainer.addEventListener('shown.bs.collapse', syncQuizToggleBtn);
+                            quizContainer.addEventListener('hidden.bs.collapse', syncQuizToggleBtn);
+                        }
+                        function syncQuizToggleBtn() {
+                            const btn = document.getElementById('toggleAllQuizBtn');
+                            if (!btn || !quizContainer) return;
+                            const anyOpen = Array.from(quizContainer.querySelectorAll('.collapse')).some(c => c.classList.contains('show'));
+                            btn.innerHTML = anyOpen
+                                ? '<i class="bi bi-arrows-collapse me-1"></i><span>Thu gọn tất cả</span>'
+                                : '<i class="bi bi-arrows-expand me-1"></i><span>Mở rộng tất cả</span>';
+                        }
+
+                        const qContainer = document.getElementById('questionCurriculumContainer');
+                        if (qContainer) {
+                            qContainer.addEventListener('shown.bs.collapse', syncQuestionToggleBtn);
+                            qContainer.addEventListener('hidden.bs.collapse', syncQuestionToggleBtn);
+                        }
+                        function syncQuestionToggleBtn() {
+                            const btn = document.getElementById('toggleAllQuestionBtn');
+                            if (!btn || !qContainer) return;
+                            const anyOpen = Array.from(qContainer.querySelectorAll('.collapse')).some(c => c.classList.contains('show'));
+                            btn.innerHTML = anyOpen
+                                ? '<i class="bi bi-arrows-collapse me-1"></i><span>Thu gọn tất cả</span>'
+                                : '<i class="bi bi-arrows-expand me-1"></i><span>Mở rộng tất cả</span>';
                         }
 
                         // 2. Tab 1: Live search & Module filter (All vs Has-Quiz)
@@ -1071,25 +1211,25 @@
                             if (clearQuizBtn) {
                                 clearQuizBtn.classList.toggle('d-none', kw === '');
                             }
-                            const moduleCards = document.querySelectorAll('.module-quiz-card');
+                            const moduleSections = document.querySelectorAll('#quizCurriculumContainer .udemy-section-item');
                             let anyVisible = false;
 
-                            moduleCards.forEach(function (card) {
-                                const hasQuizzes = card.getAttribute('data-has-quizzes') === 'true';
-                                const moduleTitle = card.getAttribute('data-module-title') || '';
+                            moduleSections.forEach(function (sec) {
+                                const hasQuizzes = sec.getAttribute('data-has-quizzes') === 'true';
+                                const moduleTitle = sec.getAttribute('data-module-title') || '';
 
                                 if (currentModuleFilter === 'has-quiz' && !hasQuizzes) {
-                                    card.classList.add('d-none');
+                                    sec.classList.add('d-none');
                                     return;
                                 }
 
                                 if (kw === '') {
-                                    card.classList.remove('d-none');
-                                    card.querySelectorAll('.quiz-row').forEach(r => r.classList.remove('d-none'));
+                                    sec.classList.remove('d-none');
+                                    sec.querySelectorAll('.quiz-row').forEach(r => r.classList.remove('d-none'));
                                     anyVisible = true;
                                 } else {
                                     let matchInQuizzes = false;
-                                    const rows = card.querySelectorAll('.quiz-row');
+                                    const rows = sec.querySelectorAll('.quiz-row');
                                     rows.forEach(function (row) {
                                         const title = row.getAttribute('data-quiz-title') || '';
                                         if (title.includes(kw)) {
@@ -1101,13 +1241,18 @@
                                     });
 
                                     if (matchInQuizzes || moduleTitle.includes(kw)) {
-                                        card.classList.remove('d-none');
+                                        sec.classList.remove('d-none');
                                         if (moduleTitle.includes(kw)) {
                                             rows.forEach(r => r.classList.remove('d-none'));
                                         }
+                                        // Tự động mở rộng section khi có kết quả tìm kiếm
+                                        const collapseEl = sec.querySelector('.collapse');
+                                        if (collapseEl && !collapseEl.classList.contains('show')) {
+                                            bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
+                                        }
                                         anyVisible = true;
                                     } else {
-                                        card.classList.add('d-none');
+                                        sec.classList.add('d-none');
                                     }
                                 }
                             });
@@ -1139,46 +1284,89 @@
 
                         // 3. Tab 2: Live search, Module filter & Question Type filter
                         const qSearch = document.getElementById('questionSearchInput');
+                        const clearQSearchBtn = document.getElementById('clearQuestionSearchBtn');
                         const qModFilter = document.getElementById('questionModuleFilter');
                         const qTypeFilter = document.getElementById('questionTypeFilter');
                         const qVisibleCountEl = document.getElementById('questionVisibleCount');
                         const qEmptyFilterEl = document.getElementById('questionEmptyFilter');
-                        const questionsTable = document.getElementById('questionsTable');
 
                         function filterQuestions() {
                             const kw = qSearch ? qSearch.value.trim().toLowerCase() : '';
+                            if (clearQSearchBtn) {
+                                clearQSearchBtn.classList.toggle('d-none', kw === '');
+                            }
                             const modId = qModFilter ? qModFilter.value : 'all';
                             const type = qTypeFilter ? qTypeFilter.value : 'all';
-                            const rows = document.querySelectorAll('.question-row');
-                            let count = 0;
 
-                            rows.forEach(function (row) {
-                                const rowText = row.getAttribute('data-text') || '';
-                                const rowMod = row.getAttribute('data-module-id') || '';
-                                const rowType = row.getAttribute('data-type') || '';
+                            const moduleSections = document.querySelectorAll('#questionCurriculumContainer .question-module-section');
+                            let totalVisibleQuestions = 0;
+                            let anySectionVisible = false;
 
-                                const matchKw = (kw === '' || rowText.includes(kw));
-                                const matchMod = (modId === 'all' || modId === rowMod);
-                                const matchType = (type === 'all' || type === rowType);
-                                const visible = matchKw && matchMod && matchType;
+                            moduleSections.forEach(function (sec) {
+                                const secModId = sec.getAttribute('data-module-id') || '';
+                                const secTitle = sec.getAttribute('data-module-title') || '';
 
-                                row.classList.toggle('d-none', !visible);
-                                if (visible) count++;
+                                // Lọc theo chương nếu chọn trong dropdown
+                                if (modId !== 'all' && modId !== secModId) {
+                                    sec.classList.add('d-none');
+                                    return;
+                                }
+
+                                const rows = sec.querySelectorAll('.question-row');
+                                let secVisibleQuestions = 0;
+
+                                rows.forEach(function (row) {
+                                    const rowText = row.getAttribute('data-text') || '';
+                                    const rowType = row.getAttribute('data-type') || '';
+
+                                    const matchKw = (kw === '' || rowText.includes(kw) || secTitle.includes(kw));
+                                    const matchType = (type === 'all' || type === rowType);
+                                    const visible = matchKw && matchType;
+
+                                    row.classList.toggle('d-none', !visible);
+                                    if (visible) {
+                                        secVisibleQuestions++;
+                                        totalVisibleQuestions++;
+                                    }
+                                });
+
+                                if (kw === '' && type === 'all') {
+                                    sec.classList.remove('d-none');
+                                    anySectionVisible = true;
+                                } else {
+                                    if (secVisibleQuestions > 0) {
+                                        sec.classList.remove('d-none');
+                                        anySectionVisible = true;
+                                        const collapseEl = sec.querySelector('.collapse');
+                                        if (collapseEl && !collapseEl.classList.contains('show')) {
+                                            bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
+                                        }
+                                    } else {
+                                        sec.classList.add('d-none');
+                                    }
+                                }
                             });
 
-                            if (qVisibleCountEl) qVisibleCountEl.textContent = count;
-                            if (qEmptyFilterEl && questionsTable) {
-                                if (count === 0 && rows.length > 0) {
+                            if (qVisibleCountEl) qVisibleCountEl.textContent = totalVisibleQuestions;
+                            if (qEmptyFilterEl && qContainer) {
+                                if (!anySectionVisible) {
                                     qEmptyFilterEl.classList.remove('d-none');
-                                    questionsTable.classList.add('d-none');
+                                    qContainer.classList.add('d-none');
                                 } else {
                                     qEmptyFilterEl.classList.add('d-none');
-                                    questionsTable.classList.remove('d-none');
+                                    qContainer.classList.remove('d-none');
                                 }
                             }
                         }
 
                         if (qSearch) qSearch.addEventListener('input', filterQuestions);
+                        if (clearQSearchBtn) {
+                            clearQSearchBtn.addEventListener('click', function () {
+                                qSearch.value = '';
+                                filterQuestions();
+                                qSearch.focus();
+                            });
+                        }
                         if (qModFilter) qModFilter.addEventListener('change', filterQuestions);
                         if (qTypeFilter) qTypeFilter.addEventListener('change', filterQuestions);
                     });

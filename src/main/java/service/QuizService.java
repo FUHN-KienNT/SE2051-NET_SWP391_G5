@@ -1,10 +1,14 @@
 package service;
 
+import dao.CourseDao;
+import dao.ModuleDao;
 import dao.QuestionDao;
 import dao.QuizAttemptDao;
 import dao.QuizDao;
 import dao.RegistrationDao;
 import dto.AnswerOptionDto;
+import dto.CourseDto;
+import dto.ModuleDto;
 import dto.QuestionDto;
 import dto.QuizAnswerDto;
 import dto.QuizAttemptDto;
@@ -24,8 +28,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import util.DbConnection;
 import util.ValidationUtil;
 
@@ -34,13 +42,23 @@ public class QuizService {
     private final QuestionDao questionDao;
     private final QuizAttemptDao quizAttemptDao;
     private final RegistrationDao registrationDao;
+    private final CourseDao courseDao;
+    private final ModuleDao moduleDao;
 
     public QuizService(QuizDao quizDao, QuestionDao questionDao,
                        QuizAttemptDao quizAttemptDao, RegistrationDao registrationDao) {
+        this(quizDao, questionDao, quizAttemptDao, registrationDao, new CourseDao(), new ModuleDao());
+    }
+
+    public QuizService(QuizDao quizDao, QuestionDao questionDao,
+                       QuizAttemptDao quizAttemptDao, RegistrationDao registrationDao,
+                       CourseDao courseDao, ModuleDao moduleDao) {
         this.quizDao = quizDao;
         this.questionDao = questionDao;
         this.quizAttemptDao = quizAttemptDao;
         this.registrationDao = registrationDao;
+        this.courseDao = courseDao;
+        this.moduleDao = moduleDao;
     }
 
     public List<QuizDto> getQuizzes(long moduleId) {
@@ -48,7 +66,10 @@ public class QuizService {
             List<Quiz> quizzes = quizDao.findByModuleId(con, moduleId);
             List<QuizDto> dtos = new ArrayList<>();
             for (Quiz q : quizzes) {
-                dtos.add(getQuizDetail(q.getId()));
+                dtos.add(new QuizDto(
+                        q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
+                        q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>()
+                ));
             }
             return dtos;
         } catch (SQLException e) {
@@ -69,27 +90,32 @@ public class QuizService {
             dto.setOrderIndex(quiz.getOrderIndex());
 
             List<QuizQuestion> assignments = quizDao.findAssignments(con, quizId);
-            for (QuizQuestion qq : assignments) {
-                Optional<Question> qOpt = questionDao.findById(con, qq.getQuestionId());
-                if (qOpt.isPresent()) {
-                    Question q = qOpt.get();
-                    QuestionDto qDto = new QuestionDto();
-                    qDto.setId(q.getId());
-                    qDto.setModuleId(q.getModuleId());
-                    qDto.setQuestionText(q.getQuestionText());
-                    qDto.setQuestionType(q.getQuestionType());
-                    qDto.setDefaultPoints(q.getDefaultPoints());
-                    qDto.setAssignedPoints(qq.getPoints());
-                    qDto.setQuizOrderIndex(qq.getOrderIndex());
+            if (!assignments.isEmpty()) {
+                List<Long> qIds = assignments.stream().map(QuizQuestion::getQuestionId).collect(Collectors.toList());
+                Map<Long, Question> questionMap = questionDao.findByIds(con, qIds);
+                Map<Long, List<AnswerOption>> optionsMap = questionDao.findOptionsByQuestionIds(con, qIds);
 
-                    List<AnswerOption> options = questionDao.findOptions(con, q.getId());
-                    for (AnswerOption opt : options) {
-                        qDto.getOptions().add(new AnswerOptionDto(
-                                opt.getId(), opt.getQuestionId(), opt.getOptionText(),
-                                opt.isCorrect(), opt.getOrderIndex()
-                        ));
+                for (QuizQuestion qq : assignments) {
+                    Question q = questionMap.get(qq.getQuestionId());
+                    if (q != null) {
+                        QuestionDto qDto = new QuestionDto();
+                        qDto.setId(q.getId());
+                        qDto.setModuleId(q.getModuleId());
+                        qDto.setQuestionText(q.getQuestionText());
+                        qDto.setQuestionType(q.getQuestionType());
+                        qDto.setDefaultPoints(q.getDefaultPoints());
+                        qDto.setAssignedPoints(qq.getPoints());
+                        qDto.setQuizOrderIndex(qq.getOrderIndex());
+
+                        List<AnswerOption> options = optionsMap.getOrDefault(q.getId(), Collections.emptyList());
+                        for (AnswerOption opt : options) {
+                            qDto.getOptions().add(new AnswerOptionDto(
+                                    opt.getId(), opt.getQuestionId(), opt.getOptionText(),
+                                    opt.isCorrect(), opt.getOrderIndex()
+                            ));
+                        }
+                        dto.getQuestions().add(qDto);
                     }
-                    dto.getQuestions().add(qDto);
                 }
             }
             return dto;
@@ -180,25 +206,7 @@ public class QuizService {
     public List<QuestionDto> getQuestionBank(long moduleId) {
         try (Connection con = DbConnection.getConnection()) {
             List<Question> list = questionDao.findByModuleId(con, moduleId);
-            List<QuestionDto> dtos = new ArrayList<>();
-            for (Question q : list) {
-                QuestionDto qDto = new QuestionDto();
-                qDto.setId(q.getId());
-                qDto.setModuleId(q.getModuleId());
-                qDto.setQuestionText(q.getQuestionText());
-                qDto.setQuestionType(q.getQuestionType());
-                qDto.setDefaultPoints(q.getDefaultPoints());
-
-                List<AnswerOption> options = questionDao.findOptions(con, q.getId());
-                for (AnswerOption opt : options) {
-                    qDto.getOptions().add(new AnswerOptionDto(
-                            opt.getId(), opt.getQuestionId(), opt.getOptionText(),
-                            opt.isCorrect(), opt.getOrderIndex()
-                    ));
-                }
-                dtos.add(qDto);
-            }
-            return dtos;
+            return mapQuestionsWithOptions(con, list);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy ngân hàng câu hỏi: " + e.getMessage(), e);
         }
@@ -207,27 +215,78 @@ public class QuizService {
     public List<QuestionDto> getQuestionsByCourse(long courseId) {
         try (Connection con = DbConnection.getConnection()) {
             List<Question> list = questionDao.findByCourseId(con, courseId);
-            List<QuestionDto> dtos = new ArrayList<>();
-            for (Question q : list) {
-                QuestionDto qDto = new QuestionDto();
-                qDto.setId(q.getId());
-                qDto.setModuleId(q.getModuleId());
-                qDto.setQuestionText(q.getQuestionText());
-                qDto.setQuestionType(q.getQuestionType());
-                qDto.setDefaultPoints(q.getDefaultPoints());
-
-                List<AnswerOption> options = questionDao.findOptions(con, q.getId());
-                for (AnswerOption opt : options) {
-                    qDto.getOptions().add(new AnswerOptionDto(
-                            opt.getId(), opt.getQuestionId(), opt.getOptionText(),
-                            opt.isCorrect(), opt.getOrderIndex()
-                    ));
-                }
-                dtos.add(qDto);
-            }
-            return dtos;
+            return mapQuestionsWithOptions(con, list);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy danh sách câu hỏi của khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    private List<QuestionDto> mapQuestionsWithOptions(Connection con, List<Question> list) throws SQLException {
+        List<QuestionDto> dtos = new ArrayList<>();
+        if (list == null || list.isEmpty()) {
+            return dtos;
+        }
+        List<Long> qIds = list.stream().map(Question::getId).collect(Collectors.toList());
+        Map<Long, List<AnswerOption>> optionsMap = questionDao.findOptionsByQuestionIds(con, qIds);
+
+        for (Question q : list) {
+            QuestionDto qDto = new QuestionDto();
+            qDto.setId(q.getId());
+            qDto.setModuleId(q.getModuleId());
+            qDto.setQuestionText(q.getQuestionText());
+            qDto.setQuestionType(q.getQuestionType());
+            qDto.setDefaultPoints(q.getDefaultPoints());
+
+            List<AnswerOption> options = optionsMap.getOrDefault(q.getId(), Collections.emptyList());
+            for (AnswerOption opt : options) {
+                qDto.getOptions().add(new AnswerOptionDto(
+                        opt.getId(), opt.getQuestionId(), opt.getOptionText(),
+                        opt.isCorrect(), opt.getOrderIndex()
+                ));
+            }
+            dtos.add(qDto);
+        }
+        return dtos;
+    }
+
+    /**
+     * Tải nhanh thông tin khóa học và các Module kèm Quizzes cho màn hình Quiz Management,
+     * tuyệt đối KHÔNG tải Lessons, Videos hay LessonProgress để tối ưu hiệu năng.
+     */
+    public CourseDto getQuizManagementCourse(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            entity.Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
+
+            CourseDto dto = new CourseDto();
+            dto.setId(course.getId());
+            dto.setTitle(course.getTitle());
+
+            List<entity.Module> modules = moduleDao.findByCourseId(con, courseId);
+            List<Quiz> quizzes = quizDao.findByCourseId(con, courseId);
+
+            Map<Long, List<QuizDto>> quizzesByModuleId = new HashMap<>();
+            for (Quiz q : quizzes) {
+                QuizDto qDto = new QuizDto(
+                        q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
+                        q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>()
+                );
+                quizzesByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
+            }
+
+            for (entity.Module m : modules) {
+                ModuleDto mDto = new ModuleDto();
+                mDto.setId(m.getId());
+                mDto.setCourseId(m.getCourseId());
+                mDto.setTitle(m.getTitle());
+                mDto.setOrderIndex(m.getOrderIndex());
+                List<QuizDto> mQuizzes = quizzesByModuleId.getOrDefault(m.getId(), Collections.emptyList());
+                mDto.getQuizzes().addAll(mQuizzes);
+                dto.getModules().add(mDto);
+            }
+            return dto;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy thông tin quản lý bài thi của khóa học: " + e.getMessage(), e);
         }
     }
 

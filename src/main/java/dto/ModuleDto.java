@@ -10,6 +10,7 @@ public class ModuleDto {
     private int orderIndex;
     private List<LessonDto> lessons = new ArrayList<>();
     private List<QuizDto> quizzes = new ArrayList<>();
+    private List<QuestionDto> questions = new ArrayList<>();
 
     public ModuleDto() {
     }
@@ -70,5 +71,29 @@ public class ModuleDto {
 
     public void setQuizzes(List<QuizDto> quizzes) {
         this.quizzes = quizzes != null ? quizzes : new ArrayList<>();
+    }
+
+    public int getQuizCount() {
+        return quizzes != null ? quizzes.size() : 0;
+    }
+
+    public boolean isHasQuizzes() {
+        return quizzes != null && !quizzes.isEmpty();
+    }
+
+    public List<QuestionDto> getQuestions() {
+        return questions;
+    }
+
+    public void setQuestions(List<QuestionDto> questions) {
+        this.questions = questions != null ? questions : new ArrayList<>();
+    }
+
+    public int getQuestionCount() {
+        return questions != null ? questions.size() : 0;
+    }
+
+    public boolean isHasQuestions() {
+        return questions != null && !questions.isEmpty();
     }
 }

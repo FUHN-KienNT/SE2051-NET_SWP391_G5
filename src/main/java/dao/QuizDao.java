@@ -39,6 +39,21 @@ public class QuizDao {
         return list;
     }
 
+    public List<Quiz> findByCourseId(Connection con, long courseId) throws SQLException {
+        String sql = "SELECT q.id, q.module_id, q.title, q.pass_score, q.time_limit_minutes, q.order_index, q.created_at, q.updated_at "
+                + "FROM quizzes q JOIN modules m ON q.module_id = m.id WHERE m.course_id = ? ORDER BY m.order_index ASC, q.order_index ASC";
+        List<Quiz> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapQuiz(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public Optional<Quiz> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);

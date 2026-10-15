@@ -10,7 +10,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class QuestionDao {
@@ -110,6 +112,64 @@ public class QuestionDao {
             }
         }
         return list;
+    }
+
+    public Map<Long, List<AnswerOption>> findOptionsByQuestionIds(Connection con, List<Long> questionIds) throws SQLException {
+        Map<Long, List<AnswerOption>> result = new HashMap<>();
+        if (questionIds == null || questionIds.isEmpty()) {
+            return result;
+        }
+        for (Long qId : questionIds) {
+            result.put(qId, new ArrayList<>());
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, question_id, option_text, is_correct, order_index FROM answer_options WHERE question_id IN (");
+        for (int i = 0; i < questionIds.size(); i++) {
+            if (i > 0) sql.append(", ");
+            sql.append("?");
+        }
+        sql.append(") ORDER BY order_index ASC");
+
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < questionIds.size(); i++) {
+                ps.setLong(i + 1, questionIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AnswerOption ao = mapOption(rs);
+                    result.computeIfAbsent(ao.getQuestionId(), k -> new ArrayList<>()).add(ao);
+                }
+            }
+        }
+        return result;
+    }
+
+    public Map<Long, Question> findByIds(Connection con, List<Long> ids) throws SQLException {
+        Map<Long, Question> map = new HashMap<>();
+        if (ids == null || ids.isEmpty()) {
+            return map;
+        }
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, module_id, question_text, question_type, default_points, created_at FROM questions WHERE id IN (");
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) sql.append(", ");
+            sql.append("?");
+        }
+        sql.append(")");
+
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < ids.size(); i++) {
+                ps.setLong(i + 1, ids.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Question q = mapQuestion(rs);
+                    map.put(q.getId(), q);
+                }
+            }
+        }
+        return map;
     }
 
     public void replaceOptions(Connection con, long questionId, List<AnswerOption> options) throws SQLException {

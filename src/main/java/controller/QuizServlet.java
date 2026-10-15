@@ -1,8 +1,6 @@
 package controller;
 
 import dao.CourseDao;
-import dao.LessonDao;
-import dao.LessonProgressDao;
 import dao.ModuleDao;
 import dao.QuestionDao;
 import dao.QuizAttemptDao;
@@ -26,23 +24,21 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
-import service.CourseService;
 import service.QuizService;
 
 @WebServlet(name = "QuizServlet", urlPatterns = { "/quizzes/*" })
 public class QuizServlet extends HttpServlet {
     private QuizService quizService;
-    private CourseService courseService;
+    private CourseDao courseDao;
     private ModuleDao moduleDao;
 
     @Override
     public void init() throws ServletException {
-        this.quizService = new QuizService(
-                new QuizDao(), new QuestionDao(), new QuizAttemptDao(), new RegistrationDao());
-        this.courseService = new CourseService(
-                new CourseDao(), new ModuleDao(), new LessonDao(),
-                new LessonProgressDao(), new RegistrationDao());
+        this.courseDao = new CourseDao();
         this.moduleDao = new ModuleDao();
+        this.quizService = new QuizService(
+                new QuizDao(), new QuestionDao(), new QuizAttemptDao(), new RegistrationDao(),
+                this.courseDao, this.moduleDao);
     }
 
     @Override
@@ -126,33 +122,34 @@ public class QuizServlet extends HttpServlet {
         }
 
         if (courseId == null) {
-            List<CourseDto> published = courseService.searchPublished(null, null);
-            if (published != null && !published.isEmpty()) {
-                courseId = published.get(0).getId();
+            try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                List<entity.Course> allCourses = courseDao.findAll(con);
+                if (!allCourses.isEmpty()) {
+                    courseId = allCourses.get(0).getId();
+                }
+            } catch (Exception ignored) {
             }
         }
 
         if (courseId != null) {
-            CourseDto course = courseService.getCourseDetail(courseId);
+            CourseDto course = quizService.getQuizManagementCourse(courseId);
             req.setAttribute("course", course);
             req.setAttribute("courseId", courseId);
 
             List<QuestionDto> courseQuestions = quizService.getQuestionsByCourse(courseId);
             if (course != null && course.getModules() != null) {
-                java.util.Map<Long, String> moduleTitleMap = course.getModules().stream()
-                        .collect(Collectors.toMap(ModuleDto::getId, ModuleDto::getTitle, (a, b) -> a));
+                java.util.Map<Long, ModuleDto> moduleMap = course.getModules().stream()
+                        .collect(Collectors.toMap(ModuleDto::getId, m -> m, (a, b) -> a));
                 for (QuestionDto q : courseQuestions) {
-                    q.setModuleTitle(moduleTitleMap.getOrDefault(q.getModuleId(), "Chương #" + q.getModuleId()));
+                    ModuleDto m = moduleMap.get(q.getModuleId());
+                    q.setModuleTitle(m != null ? m.getTitle() : "Chương #" + q.getModuleId());
+                    if (m != null) {
+                        m.getQuestions().add(q);
+                    }
                 }
             }
             req.setAttribute("courseQuestions", courseQuestions);
-        } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
-            long moduleId = Long.parseLong(moduleIdStr.trim());
-            List<QuizDto> quizzes = quizService.getQuizzes(moduleId);
-            req.setAttribute("quizzes", quizzes);
-            req.setAttribute("moduleId", moduleId);
-            List<QuestionDto> questions = quizService.getQuestionBank(moduleId);
-            req.setAttribute("courseQuestions", questions);
+            req.setAttribute("totalQuestions", courseQuestions != null ? courseQuestions.size() : 0);
         }
 
         req.getRequestDispatcher("/WEB-INF/views/quiz/list.jsp").forward(req, resp);
@@ -194,9 +191,13 @@ public class QuizServlet extends HttpServlet {
 
             if (courseId != null) {
                 req.setAttribute("courseId", courseId);
-                try {
-                    CourseDto course = courseService.getCourseDetail(courseId);
-                    req.setAttribute("course", course);
+                try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                    courseDao.findById(con, courseId).ifPresent(c -> {
+                        CourseDto cDto = new CourseDto();
+                        cDto.setId(c.getId());
+                        cDto.setTitle(c.getTitle());
+                        req.setAttribute("course", cDto);
+                    });
                 } catch (Exception ignored) {
                 }
             }
