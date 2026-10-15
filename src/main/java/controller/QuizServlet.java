@@ -70,9 +70,6 @@ public class QuizServlet extends HttpServlet {
             case "delete":
                 deleteQuiz(req, resp);
                 break;
-            case "question-bank":
-                showQuestionBank(req, resp);
-                break;
             case "save-question":
                 saveQuestion(req, resp);
                 break;
@@ -136,20 +133,14 @@ public class QuizServlet extends HttpServlet {
             req.setAttribute("course", course);
             req.setAttribute("courseId", courseId);
 
-            List<QuestionDto> courseQuestions = quizService.getQuestionsByCourse(courseId);
+            // Questions đã được nhóm sẵn vào từng module.questions bởi service
+            int totalQuestions = 0;
             if (course != null && course.getModules() != null) {
-                java.util.Map<Long, ModuleDto> moduleMap = course.getModules().stream()
-                        .collect(Collectors.toMap(ModuleDto::getId, m -> m, (a, b) -> a));
-                for (QuestionDto q : courseQuestions) {
-                    ModuleDto m = moduleMap.get(q.getModuleId());
-                    q.setModuleTitle(m != null ? m.getTitle() : "Chương #" + q.getModuleId());
-                    if (m != null) {
-                        m.getQuestions().add(q);
-                    }
+                for (ModuleDto m : course.getModules()) {
+                    totalQuestions += m.getQuestionCount();
                 }
             }
-            req.setAttribute("courseQuestions", courseQuestions);
-            req.setAttribute("totalQuestions", courseQuestions != null ? courseQuestions.size() : 0);
+            req.setAttribute("totalQuestions", totalQuestions);
         }
 
         req.getRequestDispatcher("/WEB-INF/views/quiz/list.jsp").forward(req, resp);
@@ -263,21 +254,6 @@ public class QuizServlet extends HttpServlet {
         } else {
             resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&success=deleted");
         }
-    }
-
-    private void showQuestionBank(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        String courseIdStr = req.getParameter("courseId");
-        String moduleIdStr = req.getParameter("moduleId");
-        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions");
-            return;
-        }
-        if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr.trim() + "&tab=questions");
-            return;
-        }
-        resp.sendRedirect(req.getContextPath() + "/quizzes/list?tab=questions");
     }
 
     private void saveQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {

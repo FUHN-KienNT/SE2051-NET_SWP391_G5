@@ -250,7 +250,8 @@ public class QuizService {
     }
 
     /**
-     * Tải nhanh thông tin khóa học và các Module kèm Quizzes cho màn hình Quiz Management,
+     * Tải nhanh thông tin khóa học và các Module kèm Quizzes và Questions cho màn hình Quiz Management.
+     * Cả quizzes và questions đều được nhóm sẵn vào từng ModuleDto trong một lần gọi DB duy nhất,
      * tuyệt đối KHÔNG tải Lessons, Videos hay LessonProgress để tối ưu hiệu năng.
      */
     public CourseDto getQuizManagementCourse(long courseId) {
@@ -263,8 +264,9 @@ public class QuizService {
             dto.setTitle(course.getTitle());
 
             List<entity.Module> modules = moduleDao.findByCourseId(con, courseId);
-            List<Quiz> quizzes = quizDao.findByCourseId(con, courseId);
 
+            // Load và nhóm quizzes theo module (giống pattern cũ)
+            List<Quiz> quizzes = quizDao.findByCourseId(con, courseId);
             Map<Long, List<QuizDto>> quizzesByModuleId = new HashMap<>();
             for (Quiz q : quizzes) {
                 QuizDto qDto = new QuizDto(
@@ -274,14 +276,38 @@ public class QuizService {
                 quizzesByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
             }
 
+            // Load và nhóm questions theo module (cùng connection, cùng pattern với quizzes)
+            List<Question> allQuestions = questionDao.findByCourseId(con, courseId);
+            Map<Long, List<QuestionDto>> questionsByModuleId = new HashMap<>();
+            if (!allQuestions.isEmpty()) {
+                List<Long> qIds = allQuestions.stream().map(Question::getId).collect(Collectors.toList());
+                Map<Long, List<AnswerOption>> optionsMap = questionDao.findOptionsByQuestionIds(con, qIds);
+                for (Question q : allQuestions) {
+                    QuestionDto qDto = new QuestionDto();
+                    qDto.setId(q.getId());
+                    qDto.setModuleId(q.getModuleId());
+                    qDto.setQuestionText(q.getQuestionText());
+                    qDto.setQuestionType(q.getQuestionType());
+                    qDto.setDefaultPoints(q.getDefaultPoints());
+                    List<AnswerOption> options = optionsMap.getOrDefault(q.getId(), Collections.emptyList());
+                    for (AnswerOption opt : options) {
+                        qDto.getOptions().add(new AnswerOptionDto(
+                                opt.getId(), opt.getQuestionId(), opt.getOptionText(),
+                                opt.isCorrect(), opt.getOrderIndex()
+                        ));
+                    }
+                    questionsByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
+                }
+            }
+
             for (entity.Module m : modules) {
                 ModuleDto mDto = new ModuleDto();
                 mDto.setId(m.getId());
                 mDto.setCourseId(m.getCourseId());
                 mDto.setTitle(m.getTitle());
                 mDto.setOrderIndex(m.getOrderIndex());
-                List<QuizDto> mQuizzes = quizzesByModuleId.getOrDefault(m.getId(), Collections.emptyList());
-                mDto.getQuizzes().addAll(mQuizzes);
+                mDto.getQuizzes().addAll(quizzesByModuleId.getOrDefault(m.getId(), Collections.emptyList()));
+                mDto.getQuestions().addAll(questionsByModuleId.getOrDefault(m.getId(), Collections.emptyList()));
                 dto.getModules().add(mDto);
             }
             return dto;
