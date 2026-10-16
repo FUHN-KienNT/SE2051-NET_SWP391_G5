@@ -295,12 +295,12 @@
                                         Video YouTube (Tùy chọn)</span>
                                     <span class="badge bg-danger">Tạo tự động</span>
                                 </label>
-                                <textarea name="batchVideoText" rows="4"
+                                <textarea name="batchVideoText" id="newCourseBatchText" rows="4"
                                     class="form-control font-monospace small bg-white"
-                                    placeholder="Dán danh sách các link video YouTube hoặc playlist (mỗi dòng 1 link). Ví dụ:&#10;https://www.youtube.com/watch?v=WVPVpNDKUwM - Buổi 1: Khái quát cơ bản&#10;https://www.youtube.com/watch?v=gJS-1C78Jy0 - Buổi 2: Hướng dẫn thực hành&#10;https://youtu.be/SMaG-tqSzFM - Buổi 3: Ứng dụng thực tế"></textarea>
-                                <div class="form-text small mt-1"><i class="bi bi-magic text-primary me-1"></i>Nếu dán
-                                    link ở đây, hệ thống sẽ tự động tạo ngay toàn bộ bài giảng tương ứng vào khóa học
-                                    chỉ với 1 click!</div>
+                                    placeholder="Dán link playlist YouTube (vd: https://www.youtube.com/watch?v=...&list=PL...) hoặc danh sách các video (mỗi dòng 1 link)..."
+                                    oninput="previewCourseBatchVideos()"></textarea>
+                                <div id="newCourseBatchFeedback" class="mt-2 small d-none"></div>
+                                <div class="form-text small mt-1"><i class="bi bi-magic text-primary me-1"></i>Hỗ trợ nhận diện toàn bộ bài học từ Playlist YouTube hoặc danh sách link video chỉ với 1 click!</div>
                             </div>
                         </div>
                         <div class="modal-footer bg-light border-0 py-3">
@@ -441,6 +441,44 @@
                         inp.value = '';
                     }
                 }
+            }
+
+            var courseBatchTimer = null;
+            function previewCourseBatchVideos() {
+                var text = document.getElementById('newCourseBatchText').value;
+                var feedback = document.getElementById('newCourseBatchFeedback');
+                if (!text || !text.trim()) {
+                    feedback.className = 'mt-2 small d-none';
+                    feedback.innerHTML = '';
+                    return;
+                }
+
+                clearTimeout(courseBatchTimer);
+                feedback.className = 'mt-2 small text-muted';
+                feedback.innerHTML = '<span class="spinner-border spinner-border-sm text-danger me-1"></span>Đang phân tích video / playlist YouTube...';
+
+                courseBatchTimer = setTimeout(function() {
+                    var params = new URLSearchParams();
+                    params.append('batchText', text);
+                    fetch('${pageContext.request.contextPath}/expert/preview-batch-videos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: params.toString()
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data && data.length > 0) {
+                            feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
+                            feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>Đã nhận diện: <strong>' + data.length + ' bài giảng</strong> (sẵn sàng tự động tạo)</span>';
+                        } else {
+                            feedback.className = 'mt-2 small text-muted';
+                            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Chưa nhận diện được video YouTube hợp lệ.';
+                        }
+                    })
+                    .catch(function(err) {
+                        feedback.className = 'mt-2 small d-none';
+                    });
+                }, 500);
             }
         </script>
 

@@ -572,7 +572,7 @@ public class CourseService {
                     l.setContent(dto.getContent() != null ? dto.getContent() : "");
                     l.setVideoUrl(dto.getVideoUrl());
                     l.setDocumentUrl(dto.getDocumentUrl());
-                    l.setOrderIndex(dto.getOrderIndex() > 0 ? dto.getOrderIndex() : (startOrder + count));
+                    l.setOrderIndex(startOrder + count);
                     lessonDao.insert(con, l);
                     count++;
                 }
@@ -590,23 +590,56 @@ public class CourseService {
         }
     }
 
+    /**
+     * Bóc tách danh sách bài học từ chuỗi văn bản (hỗ trợ cả nhiều link YouTube đơn lẻ lẫn YouTube Playlist):
+     * Nếu chuỗi văn bản chứa link danh sách phát (Playlist) dạng 'list=PL...' hoặc 'playlist?list=PL...',
+     * hệ thống sẽ tự động gửi yêu cầu kết nối YouTube để lấy toàn bộ các video có trong playlist đó.
+     */
     public static List<LessonDto> parseBatchVideoText(String text) {
         List<LessonDto> list = new ArrayList<>();
         if (text == null || text.trim().isEmpty()) {
             return list;
         }
+
         String[] lines = text.split("\\r?\\n");
         int seq = 1;
+        java.util.regex.Pattern playlistPattern = java.util.regex.Pattern.compile(
+                "(?:[?&]list=|playlist\\?list=)([a-zA-Z0-9_-]+)|(^PL[a-zA-Z0-9_-]{16,})");
         java.util.regex.Pattern ytIdPattern = java.util.regex.Pattern.compile(
                 "(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
+
+        java.util.Set<String> processedPlaylistIds = new java.util.HashSet<>();
+        java.util.Set<String> seenVideoIds = new java.util.HashSet<>();
+
         for (String line : lines) {
             line = line.trim();
             if (line.isEmpty())
                 continue;
 
-            String videoId = null;
-            String title = null;
+            // 1. Kiểm tra xem dòng có chứa Playlist ID hay không
+            String playlistId = null;
+            java.util.regex.Matcher plMatcher = playlistPattern.matcher(line);
+            if (plMatcher.find()) {
+                playlistId = plMatcher.group(1) != null ? plMatcher.group(1) : plMatcher.group(2);
+            }
 
+            if (playlistId != null && !processedPlaylistIds.contains(playlistId)) {
+                processedPlaylistIds.add(playlistId);
+                List<LessonDto> playlistVideos = fetchYoutubePlaylistVideos(playlistId);
+                if (playlistVideos != null && !playlistVideos.isEmpty()) {
+                    for (LessonDto plDto : playlistVideos) {
+                        String vidId = extractVideoIdFromUrl(plDto.getVideoUrl());
+                        if (vidId != null && seenVideoIds.add(vidId)) {
+                            plDto.setOrderIndex(seq++);
+                            list.add(plDto);
+                        }
+                    }
+                    continue; // Đã xử lý trọn vẹn toàn bộ Playlist
+                }
+            }
+
+            // 2. Nếu không phải Playlist (hoặc tải Playlist thất bại), bóc tách video đơn lẻ
+            String videoId = null;
             String[] tokens = line.split("\\s+");
             for (String token : tokens) {
                 java.util.regex.Matcher m = ytIdPattern.matcher(token);
@@ -616,12 +649,13 @@ public class CourseService {
                 }
             }
 
-            if (videoId != null) {
+            if (videoId != null && seenVideoIds.add(videoId)) {
                 String cleanLine = line.replaceAll("https?://[^\\s]+", "")
                         .replaceAll("^[0-9]+[\\.\\:\\-]\\s*", "")
                         .replaceAll("^[\\-\\–\\—\\|\\:\\.]+\\s*", "")
                         .replaceAll("\\s*[\\-\\–\\—\\|\\:]+$", "")
                         .trim();
+                String title;
                 if (!cleanLine.isEmpty() && cleanLine.length() > 2) {
                     title = cleanLine;
                 } else {
@@ -631,12 +665,130 @@ public class CourseService {
                 LessonDto dto = new LessonDto();
                 dto.setTitle(title);
                 dto.setVideoUrl("https://www.youtube.com/embed/" + videoId);
-                dto.setOrderIndex(seq);
+                dto.setOrderIndex(seq++);
                 list.add(dto);
-                seq++;
             }
         }
         return list;
+    }
+
+    /**
+     * Tự động kết nối YouTube và cào toàn bộ danh sách video (ID + Tiêu đề) từ Playlist công khai.
+     */
+    public static List<LessonDto> fetchYoutubePlaylistVideos(String playlistId) {
+        List<LessonDto> list = new ArrayList<>();
+        if (playlistId == null || playlistId.trim().isEmpty()) {
+            return list;
+        }
+        playlistId = playlistId.trim();
+
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .followRedirects(java.net.http.HttpClient.Redirect.ALWAYS)
+                    .build();
+
+            String url = "https://www.youtube.com/playlist?list=" + playlistId;
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(url))
+                    .timeout(java.time.Duration.ofSeconds(15))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+                    .header("Accept-Language", "vi,en-US;q=0.9,en;q=0.8")
+                    .build();
+
+            java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                return list;
+            }
+
+            String html = response.body();
+            java.util.Set<String> seenIds = new java.util.HashSet<>();
+            int seq = 1;
+
+            // Pattern 1: Modern lockupViewModel with title content
+            java.util.regex.Pattern p1 = java.util.regex.Pattern.compile(
+                    "\"videoId\":\"([a-zA-Z0-9_-]{11})\".{1,1500}?\"title\":\\{\"content\":\"([^\"]+)\"\\}",
+                    java.util.regex.Pattern.DOTALL);
+            java.util.regex.Matcher m1 = p1.matcher(html);
+            while (m1.find()) {
+                String vid = m1.group(1);
+                String rawTitle = unescapeUnicode(m1.group(2));
+                if (seenIds.add(vid)) {
+                    LessonDto dto = new LessonDto();
+                    dto.setTitle(rawTitle);
+                    dto.setVideoUrl("https://www.youtube.com/embed/" + vid);
+                    dto.setOrderIndex(seq++);
+                    list.add(dto);
+                }
+            }
+
+            // Pattern 2: Legacy runs/text title
+            if (list.isEmpty()) {
+                java.util.regex.Pattern p2 = java.util.regex.Pattern.compile(
+                        "\"videoId\":\"([a-zA-Z0-9_-]{11})\".{1,1500}?\"title\":\\{\"runs\":\\[\\{\"text\":\"([^\"]+)\"\\}",
+                        java.util.regex.Pattern.DOTALL);
+                java.util.regex.Matcher m2 = p2.matcher(html);
+                while (m2.find()) {
+                    String vid = m2.group(1);
+                    String rawTitle = unescapeUnicode(m2.group(2));
+                    if (seenIds.add(vid)) {
+                        LessonDto dto = new LessonDto();
+                        dto.setTitle(rawTitle);
+                        dto.setVideoUrl("https://www.youtube.com/embed/" + vid);
+                        dto.setOrderIndex(seq++);
+                        list.add(dto);
+                    }
+                }
+            }
+
+            // Pattern 3: Fallback any videoId
+            if (list.isEmpty()) {
+                java.util.regex.Pattern p3 = java.util.regex.Pattern.compile(
+                        "\"videoId\":\"([a-zA-Z0-9_-]{11})\"",
+                        java.util.regex.Pattern.DOTALL);
+                java.util.regex.Matcher m3 = p3.matcher(html);
+                while (m3.find()) {
+                    String vid = m3.group(1);
+                    if (seenIds.add(vid)) {
+                        LessonDto dto = new LessonDto();
+                        dto.setTitle("Bài " + seq + ": Video bài giảng");
+                        dto.setVideoUrl("https://www.youtube.com/embed/" + vid);
+                        dto.setOrderIndex(seq++);
+                        list.add(dto);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi tải YouTube playlist " + playlistId + ": " + e.getMessage());
+        }
+        return list;
+    }
+
+    private static String extractVideoIdFromUrl(String url) {
+        if (url == null) return null;
+        if (url.contains("/embed/")) {
+            return url.substring(url.lastIndexOf("/embed/") + 7);
+        }
+        java.util.regex.Pattern ytIdPattern = java.util.regex.Pattern.compile(
+                "(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
+        java.util.regex.Matcher m = ytIdPattern.matcher(url);
+        if (m.find()) {
+            return m.group(1) != null ? m.group(1) : m.group(2);
+        }
+        return null;
+    }
+
+    private static String unescapeUnicode(String input) {
+        if (input == null) return "";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\\\u([0-9a-fA-F]{4})");
+        java.util.regex.Matcher m = p.matcher(input);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            char ch = (char) Integer.parseInt(m.group(1), 16);
+            m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(Character.toString(ch)));
+        }
+        m.appendTail(sb);
+        return sb.toString().replace("\\\"", "\"").replace("\\\\", "\\").trim();
     }
 
     public CourseDto getLearningContent(long registrationId, long userId) {

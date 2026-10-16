@@ -270,18 +270,9 @@
         return m ? (m[1] || m[2]) : null;
     }
 
-    function previewBatchVideos() {
-        const text = document.getElementById('batchInputText').value;
-        const box = document.getElementById('batchPreviewBox');
-        const tbody = document.getElementById('batchPreviewTableBody');
-        const countBadge = document.getElementById('batchCountBadge');
+    let previewTimer = null;
 
-        if (!text || !text.trim()) {
-            box.classList.add('d-none');
-            tbody.innerHTML = '';
-            return;
-        }
-
+    function renderLocalPreview(text, box, tbody, countBadge) {
         const lines = text.split('\n');
         let count = 0;
         let html = '';
@@ -322,12 +313,74 @@
 
         if (count > 0) {
             tbody.innerHTML = html;
+            countBadge.className = 'badge bg-success';
             countBadge.textContent = count + " video";
             box.classList.remove('d-none');
         } else {
             box.classList.add('d-none');
             tbody.innerHTML = '';
         }
+    }
+
+    function previewBatchVideos() {
+        const text = document.getElementById('batchInputText').value;
+        const box = document.getElementById('batchPreviewBox');
+        const tbody = document.getElementById('batchPreviewTableBody');
+        const countBadge = document.getElementById('batchCountBadge');
+
+        if (!text || !text.trim()) {
+            box.classList.add('d-none');
+            tbody.innerHTML = '';
+            return;
+        }
+
+        clearTimeout(previewTimer);
+
+        // Nếu phát hiện có chứa tham số danh sách phát (Playlist: 'list=' hoặc 'playlist?')
+        if (/[?&]list=|playlist\?list=|PL[a-zA-Z0-9_-]{16,}/.test(text)) {
+            box.classList.remove('d-none');
+            countBadge.className = 'badge bg-warning text-dark';
+            countBadge.innerHTML = '<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span>Đang tải Playlist...';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">' +
+                '<div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>' +
+                'Đang tự động bóc tách toàn bộ danh sách bài học từ Playlist YouTube... Vui lòng chờ vài giây.' +
+                '</td></tr>';
+
+            previewTimer = setTimeout(function() {
+                const params = new URLSearchParams();
+                params.append('batchText', text);
+                fetch('${pageContext.request.contextPath}/expert/preview-batch-videos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        let html = '';
+                        data.forEach((item, idx) => {
+                            html += '<tr>' +
+                                '<td>' + (idx + 1) + '</td>' +
+                                '<td><img src="https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg" class="rounded" style="width: 50px; height: 30px; object-fit: cover;"></td>' +
+                                '<td class="fw-semibold text-dark">' + item.title + '</td>' +
+                                '<td><code>' + item.videoId + '</code></td>' +
+                            '</tr>';
+                        });
+                        tbody.innerHTML = html;
+                        countBadge.className = 'badge bg-success';
+                        countBadge.textContent = data.length + " video (Playlist)";
+                    } else {
+                        renderLocalPreview(text, box, tbody, countBadge);
+                    }
+                })
+                .catch(err => {
+                    renderLocalPreview(text, box, tbody, countBadge);
+                });
+            }, 600);
+            return;
+        }
+
+        renderLocalPreview(text, box, tbody, countBadge);
     }
 </script>
 

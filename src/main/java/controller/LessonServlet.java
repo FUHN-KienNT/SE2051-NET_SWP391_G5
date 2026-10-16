@@ -121,6 +121,9 @@ public class LessonServlet extends HttpServlet {
             case "get-lesson-draft":
                 getLessonDraft(req, resp);
                 break;
+            case "preview-batch-videos":
+                previewBatchVideos(req, resp);
+                break;
             default:
                 showExpertDashboard(req, resp);
                 break;
@@ -279,6 +282,33 @@ public class LessonServlet extends HttpServlet {
         }
         json.append("}");
         resp.getWriter().write(json.toString());
+    }
+
+    /**
+     * [AJAX API]: Xem trước danh sách bài học bóc tách từ nhiều URL hoặc Playlist YouTube.
+     */
+    private void previewBatchVideos(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String batchText = req.getParameter("batchText");
+        List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
+
+        resp.setContentType("application/json;charset=UTF-8");
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < lessons.size(); i++) {
+            LessonDto l = lessons.get(i);
+            if (i > 0) sb.append(",");
+            String vidId = "";
+            if (l.getVideoUrl() != null && l.getVideoUrl().contains("/embed/")) {
+                vidId = l.getVideoUrl().substring(l.getVideoUrl().lastIndexOf("/embed/") + 7);
+            }
+            sb.append("{")
+              .append("\"orderIndex\":").append(l.getOrderIndex()).append(",")
+              .append("\"title\":\"").append(escapeJson(l.getTitle())).append("\",")
+              .append("\"videoUrl\":\"").append(escapeJson(l.getVideoUrl())).append("\",")
+              .append("\"videoId\":\"").append(escapeJson(vidId)).append("\"")
+              .append("}");
+        }
+        sb.append("]");
+        resp.getWriter().write(sb.toString());
     }
 
     /**
