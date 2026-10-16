@@ -39,15 +39,18 @@
                         </div>
                     </c:if>
 
-                    <form action="${pageContext.request.contextPath}/expert/save-lesson" method="POST">
-                        <input type="hidden" name="courseId" value="${course.id}">
+                    <!-- Container thông báo khôi phục bản nháp tự động -->
+                    <div id="draftRecoveryAlertContainer"></div>
+
+                    <form action="${pageContext.request.contextPath}/expert/save-lesson" method="POST" id="lessonForm">
+                        <input type="hidden" name="courseId" id="lessonCourseId" value="${course.id}">
                         <c:if test="${lesson != null}">
-                            <input type="hidden" name="id" value="${lesson.id}">
+                            <input type="hidden" name="id" id="lessonId" value="${lesson.id}">
                         </c:if>
 
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Thuộc Chương học (Module) <span class="text-danger">*</span></label>
-                            <select name="moduleId" class="form-select" required>
+                            <select name="moduleId" id="lessonModuleId" class="form-select" required>
                                 <c:forEach var="m" items="${course.modules}">
                                     <option value="${m.id}" ${(m.id == selectedModuleId || (lesson != null && m.id == lesson.moduleId)) ? 'selected' : ''}>
                                         Chương ${m.orderIndex}: ${m.title}
@@ -59,11 +62,11 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-9">
                                 <label class="form-label small fw-semibold">Tiêu đề bài học <span class="text-danger">*</span></label>
-                                <input type="text" name="title" class="form-control" value="${lesson != null ? lesson.title : ''}" required placeholder="Ví dụ: Giới thiệu cú pháp Java cơ bản">
+                                <input type="text" name="title" id="lessonTitle" class="form-control" value="${lesson != null ? lesson.title : ''}" required placeholder="Ví dụ: Giới thiệu cú pháp Java cơ bản">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small fw-semibold">Thứ tự hiển thị</label>
-                                <input type="number" name="orderIndex" class="form-control" value="${lesson != null ? lesson.orderIndex : 1}" required>
+                                <input type="number" name="orderIndex" id="lessonOrderIndex" class="form-control" value="${lesson != null ? lesson.orderIndex : 1}" required>
                             </div>
                         </div>
 
@@ -99,17 +102,29 @@
 
                         <div class="mb-3">
                             <label class="form-label small fw-semibold"><i class="bi bi-file-earmark-text text-info me-1"></i>URL Tài liệu đính kèm (Slide / PDF / Google Docs)</label>
-                            <input type="url" name="documentUrl" class="form-control" value="${lesson != null ? lesson.documentUrl : ''}" placeholder="https://drive.google.com/...">
+                            <input type="url" name="documentUrl" id="lessonDocumentUrl" class="form-control" value="${lesson != null ? lesson.documentUrl : ''}" placeholder="https://drive.google.com/...">
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label small fw-semibold">Nội dung chi tiết bài học / Ghi chú lý thuyết</label>
-                            <textarea name="content" rows="6" class="form-control" placeholder="Nhập nội dung bài học, hướng dẫn thực hành hoặc ghi chú quan trọng...">${lesson != null ? lesson.content : ''}</textarea>
+                            <textarea name="content" id="lessonContent" rows="6" class="form-control" placeholder="Nhập nội dung bài học, hướng dẫn thực hành hoặc ghi chú quan trọng...">${lesson != null ? lesson.content : ''}</textarea>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}" class="btn btn-light">Hủy bỏ</a>
-                            <button type="submit" class="btn btn-primary fw-semibold px-4">
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}" class="btn btn-light btn-sm">
+                                    <i class="bi bi-arrow-left me-1"></i>Hủy bỏ
+                                </a>
+                                <!-- Auto-Save 5-minute Status Badge -->
+                                <div id="autoSaveIndicator" class="small text-muted d-inline-flex align-items-center">
+                                    <span class="spinner-grow spinner-grow-sm text-success me-1" style="width: 7px; height: 7px;" role="status"></span>
+                                    <span id="autoSaveStatusText">Tự động lưu nháp sau mỗi 5 phút</span>
+                                </div>
+                                <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 text-primary small" onclick="manualSaveDraft()" title="Lưu nháp ngay vào bộ nhớ máy">
+                                    <i class="bi bi-cloud-arrow-up me-1"></i>Lưu nháp ngay
+                                </button>
+                            </div>
+                            <button type="submit" class="btn btn-primary fw-semibold px-4 shadow-sm" id="btnSubmitLesson">
                                 <i class="bi bi-save me-1"></i>Lưu bài học
                             </button>
                         </div>
@@ -326,9 +341,246 @@
         updateVideoPreview();
     }
 
-    // Auto-init preview on page load if video exists
+    // =========================================================================
+    // AUTO-SAVE DRAFT SYSTEM (TỰ ĐỘNG LƯU NHÁP MỖI 5 PHÚT)
+    // =========================================================================
+    const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 phút = 300,000ms
+    const courseId = document.getElementById('lessonCourseId') ? document.getElementById('lessonCourseId').value : '${course.id}';
+    const lessonIdEl = document.getElementById('lessonId');
+    const lessonId = lessonIdEl ? lessonIdEl.value : 'new';
+    const DRAFT_KEY = 'courson_draft_lesson_' + courseId + '_' + lessonId;
+
+    let isSubmitting = false;
+    let isSavingDraft = false;
+    let initialFormData = null;
+    let cachedDraft = null;
+
+    function getFormData() {
+        return {
+            courseId: courseId,
+            lessonId: lessonId,
+            moduleId: document.getElementById('lessonModuleId') ? document.getElementById('lessonModuleId').value : '',
+            title: document.getElementById('lessonTitle') ? document.getElementById('lessonTitle').value : '',
+            orderIndex: document.getElementById('lessonOrderIndex') ? document.getElementById('lessonOrderIndex').value : '1',
+            videoUrl: document.getElementById('lessonVideoUrl') ? document.getElementById('lessonVideoUrl').value : '',
+            documentUrl: document.getElementById('lessonDocumentUrl') ? document.getElementById('lessonDocumentUrl').value : '',
+            content: document.getElementById('lessonContent') ? document.getElementById('lessonContent').value : ''
+        };
+    }
+
+    function isFormDirty() {
+        if (!initialFormData) return false;
+        const cur = getFormData();
+        return cur.title !== initialFormData.title ||
+               cur.moduleId !== initialFormData.moduleId ||
+               cur.orderIndex !== initialFormData.orderIndex ||
+               cur.videoUrl !== initialFormData.videoUrl ||
+               cur.documentUrl !== initialFormData.documentUrl ||
+               cur.content !== initialFormData.content;
+    }
+
+    function formatTime(d = new Date()) {
+        const pad = (n) => String(n).padStart(2, '0');
+        const hh = pad(d.getHours());
+        const mm = pad(d.getMinutes());
+        const ss = pad(d.getSeconds());
+        const dd = pad(d.getDate());
+        const mo = pad(d.getMonth() + 1);
+        const yyyy = d.getFullYear();
+        return hh + ':' + mm + ':' + ss + ' ' + dd + '/' + mo + '/' + yyyy;
+    }
+
+    function saveDraft(isManual = false) {
+        if (isSubmitting || isSavingDraft) return;
+
+        // Nếu là tự động theo chu kỳ 5 phút mà form không có gì thay đổi thì bỏ qua
+        if (!isManual && !isFormDirty()) {
+            return;
+        }
+
+        isSavingDraft = true;
+        const nowStr = formatTime();
+        const currentData = getFormData();
+        currentData.savedAt = nowStr;
+
+        const statusEl = document.getElementById('autoSaveStatusText');
+        if (statusEl) {
+            statusEl.textContent = isManual ? 'Đang lưu nháp...' : 'Đang tự động lưu nháp...';
+        }
+
+        // 1. Lưu ngay vào localStorage của trình duyệt
+        try {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(currentData));
+        } catch (e) {
+            console.warn('Lỗi lưu nháp localStorage:', e);
+        }
+
+        // 2. Gửi lưu backup lên Session server
+        const params = new URLSearchParams();
+        for (const key in currentData) {
+            params.append(key, currentData[key]);
+        }
+
+        fetch('${pageContext.request.contextPath}/expert/save-lesson-draft', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params.toString()
+        })
+        .then(res => res.json())
+        .then(data => {
+            isSavingDraft = false;
+            const timeDisplay = (data && data.savedAt) ? data.savedAt : nowStr;
+            if (statusEl) {
+                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã lưu nháp lúc ' + timeDisplay + '</span>';
+            }
+        })
+        .catch(err => {
+            isSavingDraft = false;
+            if (statusEl) {
+                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã lưu nháp máy khách lúc ' + nowStr + '</span>';
+            }
+        });
+    }
+
+    function manualSaveDraft() {
+        saveDraft(true);
+    }
+
+    function hasMeaningfulDiff(draft, current) {
+        if (!draft) return false;
+        const hasData = (draft.title && draft.title.trim() !== '') ||
+                        (draft.content && draft.content.trim() !== '') ||
+                        (draft.videoUrl && draft.videoUrl.trim() !== '');
+        if (!hasData) return false;
+
+        return (draft.title || '') !== (current.title || '') ||
+               (draft.content || '') !== (current.content || '') ||
+               (draft.videoUrl || '') !== (current.videoUrl || '') ||
+               (draft.documentUrl || '') !== (current.documentUrl || '') ||
+               (draft.moduleId || '') !== (current.moduleId || '') ||
+               (draft.orderIndex || '') !== (current.orderIndex || '');
+    }
+
+    function showRecoveryBanner(draft) {
+        cachedDraft = draft;
+        const container = document.getElementById('draftRecoveryAlertContainer');
+        if (!container) return;
+
+        const timeStr = draft.savedAt ? ' (lúc ' + draft.savedAt + ')' : '';
+        container.innerHTML = 
+            '<div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4 border-warning border-start border-4 rounded-3" role="alert">' +
+                '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+                    '<div class="d-flex align-items-center gap-3">' +
+                        '<i class="bi bi-clock-history fs-3 text-warning"></i>' +
+                        '<div>' +
+                            '<strong class="text-dark">Phát hiện bản nháp chưa lưu trước đó' + timeStr + '!</strong>' +
+                            '<div class="small text-muted">Hệ thống đã tự động lưu trữ dữ liệu soạn thảo bài học của bạn. Bạn có muốn khôi phục không?</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="d-flex gap-2">' +
+                        '<button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="restoreDraft()">' +
+                            '<i class="bi bi-arrow-counterclockwise me-1"></i>Khôi phục bài' +
+                        '</button>' +
+                        '<button type="button" class="btn btn-outline-secondary btn-sm" onclick="dismissDraft()">' +
+                            'Bỏ qua' +
+                        '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function restoreDraft() {
+        if (!cachedDraft) return;
+
+        if (cachedDraft.title !== undefined) {
+            const el = document.getElementById('lessonTitle');
+            if (el) el.value = cachedDraft.title;
+        }
+        if (cachedDraft.moduleId !== undefined) {
+            const el = document.getElementById('lessonModuleId');
+            if (el) el.value = cachedDraft.moduleId;
+        }
+        if (cachedDraft.orderIndex !== undefined) {
+            const el = document.getElementById('lessonOrderIndex');
+            if (el) el.value = cachedDraft.orderIndex;
+        }
+        if (cachedDraft.videoUrl !== undefined) {
+            const el = document.getElementById('lessonVideoUrl');
+            if (el) {
+                el.value = cachedDraft.videoUrl;
+                updateVideoPreview();
+            }
+        }
+        if (cachedDraft.documentUrl !== undefined) {
+            const el = document.getElementById('lessonDocumentUrl');
+            if (el) el.value = cachedDraft.documentUrl;
+        }
+        if (cachedDraft.content !== undefined) {
+            const el = document.getElementById('lessonContent');
+            if (el) el.value = cachedDraft.content;
+        }
+
+        const container = document.getElementById('draftRecoveryAlertContainer');
+        if (container) {
+            container.innerHTML = 
+                '<div class="alert alert-success alert-dismissible fade show shadow-sm mb-4 py-2 px-3 small rounded-3" role="alert">' +
+                    '<i class="bi bi-check-circle-fill me-2"></i>Đã khôi phục thành công dữ liệu từ bản nháp ' + (cachedDraft.savedAt ? '(' + cachedDraft.savedAt + ')' : '') + '.' +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                '</div>';
+        }
+
+        const statusEl = document.getElementById('autoSaveStatusText');
+        if (statusEl) {
+            statusEl.innerHTML = '<span class="text-success"><i class="bi bi-arrow-counterclockwise me-1"></i>Đã khôi phục bản nháp</span>';
+        }
+    }
+
+    function dismissDraft() {
+        const container = document.getElementById('draftRecoveryAlertContainer');
+        if (container) {
+            container.innerHTML = '';
+        }
+        try {
+            localStorage.removeItem(DRAFT_KEY);
+        } catch (e) {}
+    }
+
+    function checkExistingDraft() {
+        // 1. Kiểm tra localStorage máy khách
+        let localDraft = null;
+        try {
+            const raw = localStorage.getItem(DRAFT_KEY);
+            if (raw) {
+                localDraft = JSON.parse(raw);
+            }
+        } catch (e) {}
+
+        if (localDraft && hasMeaningfulDiff(localDraft, initialFormData)) {
+            showRecoveryBanner(localDraft);
+            return;
+        }
+
+        // 2. Dự phòng: Kiểm tra Session máy chủ
+        fetch('${pageContext.request.contextPath}/expert/get-lesson-draft?courseId=' + encodeURIComponent(courseId) + '&lessonId=' + encodeURIComponent(lessonId))
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.exists && hasMeaningfulDiff(data, initialFormData)) {
+                    showRecoveryBanner(data);
+                }
+            })
+            .catch(err => {
+                // Ignore fetch error
+            });
+    }
+
+    // Khởi tạo các sự kiện khi DOM sẵn sàng
     document.addEventListener('DOMContentLoaded', function() {
-        const curVal = document.getElementById('lessonVideoUrl').value.trim();
+        initialFormData = getFormData();
+
+        // Khởi tạo video preview nếu đã có URL
+        const curVal = document.getElementById('lessonVideoUrl') ? document.getElementById('lessonVideoUrl').value.trim() : '';
         if (curVal) {
             updateVideoPreview();
             const id = extractYoutubeId(curVal);
@@ -336,6 +588,49 @@
                 setSelectedVideoId(id);
             }
         }
+
+        // Kiểm tra xem có bản nháp chưa lưu không
+        checkExistingDraft();
+
+        // Kích hoạt bộ định thời tự động lưu sau mỗi 5 phút (300,000 ms)
+        setInterval(function() {
+            saveDraft(false);
+        }, AUTO_SAVE_INTERVAL_MS);
+
+        // Bắt sự kiện nộp biểu mẫu: dọn dẹp nháp
+        const formEl = document.getElementById('lessonForm');
+        if (formEl) {
+            formEl.addEventListener('submit', function() {
+                isSubmitting = true;
+                try {
+                    localStorage.removeItem(DRAFT_KEY);
+                } catch (e) {}
+            });
+        }
+
+        // Cảnh báo khi người dùng tắt tab/rời trang khi chưa lưu và cố gắng bảo toàn nháp
+        window.addEventListener('beforeunload', function(e) {
+            if (isSubmitting) return;
+            if (isFormDirty()) {
+                const cur = getFormData();
+                cur.savedAt = formatTime();
+                try {
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(cur));
+                } catch (err) {}
+
+                if (navigator.sendBeacon) {
+                    const params = new URLSearchParams();
+                    for (const key in cur) {
+                        params.append(key, cur[key]);
+                    }
+                    navigator.sendBeacon('${pageContext.request.contextPath}/expert/save-lesson-draft', params);
+                }
+
+                e.preventDefault();
+                e.returnValue = 'Bạn có thay đổi chưa lưu. Dữ liệu đã được tự động bảo toàn.';
+                return e.returnValue;
+            }
+        });
     });
 </script>
 

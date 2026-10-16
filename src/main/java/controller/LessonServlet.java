@@ -115,6 +115,12 @@ public class LessonServlet extends HttpServlet {
             case "get-course":
                 getCourseJson(req, resp);
                 break;
+            case "save-lesson-draft":
+                saveLessonDraft(req, resp);
+                break;
+            case "get-lesson-draft":
+                getLessonDraft(req, resp);
+                break;
             default:
                 showExpertDashboard(req, resp);
                 break;
@@ -209,6 +215,70 @@ public class LessonServlet extends HttpServlet {
                    .replace("\n", "\\n")
                    .replace("\r", "\\r")
                    .replace("\t", "\\t");
+    }
+
+    /**
+     * [Tự động lưu nháp sau mỗi 5 phút - Backup Session]:
+     * Nhận yêu cầu tự động lưu bản nháp từ màn hình soạn thảo bài học,
+     * lưu trữ tạm thời trong Session để bảo toàn dữ liệu tránh mất mát bài khi chưa kịp ấn lưu.
+     */
+    private void saveLessonDraft(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().write("{\"error\":\"Chưa đăng nhập\"}");
+            return;
+        }
+
+        String courseId = req.getParameter("courseId");
+        String lessonId = req.getParameter("lessonId");
+        String title = req.getParameter("title");
+        String moduleId = req.getParameter("moduleId");
+        String orderIndex = req.getParameter("orderIndex");
+        String videoUrl = req.getParameter("videoUrl");
+        String documentUrl = req.getParameter("documentUrl");
+        String content = req.getParameter("content");
+
+        String draftKey = "draft_lesson_" + (courseId != null ? courseId : "0") + "_" + (lessonId != null && !lessonId.trim().isEmpty() ? lessonId.trim() : "new");
+        java.util.Map<String, String> draft = new java.util.HashMap<>();
+        draft.put("courseId", courseId != null ? courseId : "");
+        draft.put("lessonId", lessonId != null ? lessonId : "");
+        draft.put("title", title != null ? title : "");
+        draft.put("moduleId", moduleId != null ? moduleId : "");
+        draft.put("orderIndex", orderIndex != null ? orderIndex : "1");
+        draft.put("videoUrl", videoUrl != null ? videoUrl : "");
+        draft.put("documentUrl", documentUrl != null ? documentUrl : "");
+        draft.put("content", content != null ? content : "");
+        draft.put("savedAt", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")));
+
+        req.getSession().setAttribute(draftKey, draft);
+
+        resp.setContentType("application/json;charset=UTF-8");
+        resp.getWriter().write("{\"success\":true,\"savedAt\":\"" + draft.get("savedAt") + "\"}");
+    }
+
+    /**
+     * [Khôi phục bản nháp từ Session]:
+     */
+    private void getLessonDraft(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String courseId = req.getParameter("courseId");
+        String lessonId = req.getParameter("lessonId");
+        String draftKey = "draft_lesson_" + (courseId != null ? courseId : "0") + "_" + (lessonId != null && !lessonId.trim().isEmpty() ? lessonId.trim() : "new");
+
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, String> draft = (java.util.Map<String, String>) req.getSession().getAttribute(draftKey);
+        resp.setContentType("application/json;charset=UTF-8");
+        if (draft == null) {
+            resp.getWriter().write("{\"exists\":false}");
+            return;
+        }
+        StringBuilder json = new StringBuilder("{\"exists\":true");
+        for (java.util.Map.Entry<String, String> entry : draft.entrySet()) {
+            json.append(",\"").append(entry.getKey()).append("\":\"").append(escapeJson(entry.getValue())).append("\"");
+        }
+        json.append("}");
+        resp.getWriter().write(json.toString());
     }
 
     /**
@@ -496,6 +566,10 @@ public class LessonServlet extends HttpServlet {
             dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
 
             courseService.saveLesson(dto);
+
+            // [Xóa bản nháp]: Khi người dùng đã lưu thành công bài học, xóa bỏ draft trong session
+            String draftKey = "draft_lesson_" + (courseIdStr != null ? courseIdStr : "0") + "_" + (dto.getId() != null ? dto.getId() : "new");
+            req.getSession().removeAttribute(draftKey);
 
             // [Flash Attribute chống XSS]: Lưu thông báo an toàn qua session
             SessionUtil.setFlashSuccess(req, "Đã lưu thông tin bài học thành công!");
