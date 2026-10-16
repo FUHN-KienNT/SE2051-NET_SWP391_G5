@@ -86,6 +86,33 @@ public class CourseService {
     }
 
     /**
+     * [Tối ưu hiệu năng]: Lấy trực tiếp thông tin 1 khóa học theo courseId (chỉ mục ID trong CSDL),
+     * phục vụ form sửa thông tin khóa học mà không cần tải toàn bộ cây modules, bài học hay bài kiểm tra.
+     */
+    public CourseDto getCourseById(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
+            CourseDto dto = new CourseDto();
+            dto.setId(course.getId());
+            dto.setTitle(course.getTitle());
+            dto.setCategoryId(course.getCategoryId());
+            dto.setDescription(course.getDescription());
+            dto.setPrice(course.getPrice());
+            dto.setStatus(course.getStatus());
+            dto.setManagerId(course.getManagerId());
+            dto.setExpertId(course.getExpertId());
+            if (course.getCategoryId() != null) {
+                SettingDao sDao = new SettingDao();
+                sDao.findById(con, course.getCategoryId()).ifPresent(s -> dto.setCategoryName(s.getName()));
+            }
+            return dto;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xem thông tin khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * [Tối ưu hiệu năng]: Lấy trực tiếp thông tin 1 bài học theo lessonId (O(1)),
      * không cần tải toàn bộ cây khóa học.
      */

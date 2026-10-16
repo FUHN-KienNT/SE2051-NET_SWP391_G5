@@ -216,8 +216,7 @@
                                                         </a>
                                                         <button type="button"
                                                             class="btn btn-outline-secondary btn-sm text-nowrap"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#editCourseModal_${c.id}"
+                                                            onclick="openEditCourseModal(${c.id})"
                                                             title="Chỉnh sửa thông tin khóa học">
                                                             <i class="bi bi-gear me-1"></i>Sửa thông tin
                                                         </button>
@@ -229,75 +228,6 @@
                                                     </div>
                                                 </td>
                                             </tr>
-
-                                            <!-- Edit Course Modal for Course #${c.id} -->
-                                            <div class="modal fade" id="editCourseModal_${c.id}" tabindex="-1">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <form
-                                                            action="${pageContext.request.contextPath}/expert/save-course"
-                                                            method="POST">
-                                                            <input type="hidden" name="id" value="${c.id}">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title fw-bold">Chỉnh sửa thông tin Khóa
-                                                                    học #${c.id}</h5>
-                                                                <button type="button" class="btn-close"
-                                                                    data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label small fw-semibold">Tên khóa
-                                                                        học <span class="text-danger">*</span></label>
-                                                                    <input type="text" name="title" class="form-control"
-                                                                        value="${c.title}" required>
-                                                                </div>
-                                                                <div class="row g-2 mb-3">
-                                                                    <div class="col-md-7">
-                                                                        <label class="form-label small fw-semibold">Danh
-                                                                            mục</label>
-                                                                        <select name="categoryId" class="form-select"
-                                                                            onchange="toggleCustomCategory(this, 'editCourseCustomCatDiv_${c.id}')">
-                                                                            <c:forEach var="cat" items="${categories}">
-                                                                                <option value="${cat.id}"
-                                                                                    ${cat.id==c.categoryId ? 'selected'
-                                                                                    : '' }>${cat.name}</option>
-                                                                            </c:forEach>
-                                                                            <option value="__NEW__"
-                                                                                class="fw-bold text-primary">➕ + Nhập
-                                                                                danh mục mới...</option>
-                                                                        </select>
-                                                                        <div id="editCourseCustomCatDiv_${c.id}"
-                                                                            class="mt-2" style="display: none;">
-                                                                            <input type="text" name="customCategory"
-                                                                                class="form-control form-control-sm border-primary"
-                                                                                placeholder="✨ Nhập tên danh mục đào tạo mới...">
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-5">
-                                                                        <label class="form-label small fw-semibold">Học
-                                                                            phí (VNĐ)</label>
-                                                                        <input type="number" name="price"
-                                                                            class="form-control" value="${c.price}">
-                                                                    </div>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label small fw-semibold">Mô tả
-                                                                        tóm tắt</label>
-                                                                    <textarea name="description" rows="3"
-                                                                        class="form-control">${c.description}</textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-light"
-                                                                    data-bs-dismiss="modal">Hủy</button>
-                                                                <button type="submit"
-                                                                    class="btn btn-primary fw-semibold">Lưu thay
-                                                                    đổi</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </c:forEach>
                                     </c:otherwise>
                                 </c:choose>
@@ -384,7 +314,116 @@
             </div>
         </div>
 
+        <!-- Single Reusable Edit Course Modal (Loaded On-Demand by Exact Course ID) -->
+        <div class="modal fade" id="editCourseModal" tabindex="-1" aria-labelledby="editCourseModalTitle" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    <form action="${pageContext.request.contextPath}/expert/save-course" method="POST">
+                        <input type="hidden" name="id" id="editCourseId">
+                        <div class="modal-header bg-dark text-white border-0 py-3">
+                            <h5 class="modal-title fw-bold" id="editCourseModalTitle">
+                                <i class="bi bi-gear-fill text-warning me-2"></i>Chỉnh sửa Khóa học
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <!-- Loading state -->
+                            <div id="editCourseLoading" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                                <div class="small text-muted mt-2">Đang tải thông tin khóa học từ cơ sở dữ liệu...</div>
+                            </div>
+
+                            <!-- Course Form Fields -->
+                            <div id="editCourseFormFields" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Tên khóa học <span class="text-danger">*</span></label>
+                                    <input type="text" name="title" id="editCourseTitle" class="form-control" required>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-7">
+                                        <label class="form-label small fw-semibold">Danh mục</label>
+                                        <select name="categoryId" id="editCourseCategory" class="form-select"
+                                            onchange="toggleCustomCategory(this, 'editCourseCustomCatDiv')">
+                                            <c:forEach var="cat" items="${categories}">
+                                                <option value="${cat.id}">${cat.name}</option>
+                                            </c:forEach>
+                                            <option value="__NEW__" class="fw-bold text-primary">➕ + Nhập danh mục mới...</option>
+                                        </select>
+                                        <div id="editCourseCustomCatDiv" class="mt-2" style="display: none;">
+                                            <input type="text" name="customCategory" class="form-control form-control-sm border-primary"
+                                                placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-semibold">Học phí (VNĐ)</label>
+                                        <input type="number" name="price" id="editCoursePrice" class="form-control" min="0" step="1000">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Mô tả tóm tắt</label>
+                                    <textarea name="description" id="editCourseDescription" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light border-0 py-3">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary fw-semibold px-4" id="editCourseSubmitBtn" disabled>
+                                <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <script>
+            function openEditCourseModal(courseId) {
+                var modalEl = document.getElementById('editCourseModal');
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+                document.getElementById('editCourseModalTitle').innerHTML = '<i class="bi bi-gear-fill text-warning me-2"></i>Chỉnh sửa Khóa học #' + courseId;
+                document.getElementById('editCourseId').value = courseId;
+                document.getElementById('editCourseLoading').style.display = 'block';
+                document.getElementById('editCourseFormFields').style.display = 'none';
+                document.getElementById('editCourseSubmitBtn').disabled = true;
+
+                var customDiv = document.getElementById('editCourseCustomCatDiv');
+                if (customDiv) customDiv.style.display = 'none';
+
+                modal.show();
+
+                // Gọi chính xác index/ID của khóa học trong database để lấy dữ liệu O(1)
+                fetch('${pageContext.request.contextPath}/expert/get-course?id=' + encodeURIComponent(courseId))
+                    .then(function(res) {
+                        if (!res.ok) throw new Error('Không thể tải khóa học #' + courseId);
+                        return res.json();
+                    })
+                    .then(function(data) {
+                        if (data.error) {
+                            alert(data.error);
+                            modal.hide();
+                            return;
+                        }
+                        document.getElementById('editCourseId').value = data.id;
+                        document.getElementById('editCourseTitle').value = data.title || '';
+                        if (data.categoryId) {
+                            document.getElementById('editCourseCategory').value = data.categoryId;
+                        }
+                        document.getElementById('editCoursePrice').value = data.price != null ? data.price : 0;
+                        document.getElementById('editCourseDescription').value = data.description || '';
+
+                        document.getElementById('editCourseLoading').style.display = 'none';
+                        document.getElementById('editCourseFormFields').style.display = 'block';
+                        document.getElementById('editCourseSubmitBtn').disabled = false;
+                    })
+                    .catch(function(err) {
+                        alert('Lỗi khi truy vấn khóa học từ CSDL: ' + err.message);
+                        modal.hide();
+                    });
+            }
+
             function toggleCustomCategory(selectEl, targetDivId) {
                 var div = document.getElementById(targetDivId);
                 if (!div) return;

@@ -112,6 +112,9 @@ public class LessonServlet extends HttpServlet {
             case "delete-course":
                 deleteCourse(req, resp);
                 break;
+            case "get-course":
+                getCourseJson(req, resp);
+                break;
             default:
                 showExpertDashboard(req, resp);
                 break;
@@ -140,6 +143,72 @@ public class LessonServlet extends HttpServlet {
         req.setAttribute("courses", courses);
         req.setAttribute("categories", categories);
         req.getRequestDispatcher("/WEB-INF/views/expert/dashboard.jsp").forward(req, resp);
+    }
+
+    /**
+     * [Tối ưu hiệu năng & Indexed Query]:
+     * Lấy trực tiếp thông tin 1 khóa học bằng index (ID) duy nhất trong CSDL
+     * trả về JSON để hiển thị lên Modal sửa khóa học thay vì phải tải toàn bộ thông tin
+     * tất cả các khóa học vào DOM.
+     */
+    private void getCourseJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().write("{\"error\":\"Vui lòng đăng nhập để tiếp tục.\"}");
+            return;
+        }
+
+        String idStr = req.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().write("{\"error\":\"Thiếu ID khóa học cần lấy thông tin.\"}");
+            return;
+        }
+
+        try {
+            long courseId = Long.parseLong(idStr.trim());
+            // [IDOR Defense]: Kiểm tra quyền hạn của Expert đối với khóa học
+            courseService.checkCourseOwnership(courseId, currentUser);
+
+            // Truy vấn trực tiếp bản ghi bằng index khóa chính trong CSDL O(1)
+            CourseDto course = courseService.getCourseById(courseId);
+
+            resp.setContentType("application/json;charset=UTF-8");
+            StringBuilder json = new StringBuilder();
+            json.append("{");
+            json.append("\"id\":").append(course.getId()).append(",");
+            json.append("\"title\":\"").append(escapeJson(course.getTitle())).append("\",");
+            json.append("\"categoryId\":").append(course.getCategoryId() != null ? course.getCategoryId() : "null").append(",");
+            json.append("\"categoryName\":\"").append(escapeJson(course.getCategoryName())).append("\",");
+            json.append("\"price\":").append(course.getPrice() != null ? course.getPrice() : "0").append(",");
+            json.append("\"status\":\"").append(course.getStatus() != null ? course.getStatus().name() : "DRAFT").append("\",");
+            json.append("\"description\":\"").append(escapeJson(course.getDescription())).append("\"");
+            json.append("}");
+
+            resp.getWriter().write(json.toString());
+        } catch (SecurityException se) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().write("{\"error\":\"" + escapeJson(se.getMessage()) + "\"}");
+        } catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().write("{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+
+    private String escapeJson(String text) {
+        if (text == null) return "";
+        return text.replace("\\", "\\\\")
+                   .replace("\"", "\\\"")
+                   .replace("\b", "\\b")
+                   .replace("\f", "\\f")
+                   .replace("\n", "\\n")
+                   .replace("\r", "\\r")
+                   .replace("\t", "\\t");
     }
 
     /**
