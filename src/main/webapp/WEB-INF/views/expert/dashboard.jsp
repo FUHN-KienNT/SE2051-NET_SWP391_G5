@@ -268,8 +268,7 @@
                                         <c:forEach var="cat" items="${categories}">
                                             <option value="${cat.id}">${cat.name}</option>
                                         </c:forEach>
-                                        <option value="__NEW__" class="fw-bold text-primary">➕ + Nhập danh mục mới...
-                                        </option>
+                                        <option value="__NEW__" class="fw-bold text-primary">+ Nhập danh mục mới...</option>
                                     </select>
                                     <div id="newCourseCustomCatDiv" class="mt-2" style="display: none;">
                                         <input type="text" name="customCategory"
@@ -349,7 +348,7 @@
                                             <c:forEach var="cat" items="${categories}">
                                                 <option value="${cat.id}">${cat.name}</option>
                                             </c:forEach>
-                                            <option value="__NEW__" class="fw-bold text-primary">➕ + Nhập danh mục mới...</option>
+                                            <option value="__NEW__" class="fw-bold text-primary">+ Nhập danh mục mới...</option>
                                         </select>
                                         <div id="editCourseCustomCatDiv" class="mt-2" style="display: none;">
                                             <input type="text" name="customCategory" class="form-control form-control-sm border-primary"
