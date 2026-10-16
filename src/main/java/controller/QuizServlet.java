@@ -180,6 +180,7 @@ public class QuizServlet extends HttpServlet {
             } catch (Exception ignored) {
             }
 
+            //lay thong tin course
             if (courseId != null) {
                 req.setAttribute("courseId", courseId);
                 try (java.sql.Connection con = util.DbConnection.getConnection()) {
@@ -262,16 +263,21 @@ public class QuizServlet extends HttpServlet {
         String courseIdStr = req.getParameter("courseId");
         try {
             long questionId = quizService.saveQuestion(dto);
-            // Nếu có quizId, tự động gán câu hỏi này vào Quiz luôn!
+            boolean isNewQuestion = (dto.getId() == null || dto.getId() <= 0);
+            // Nếu có quizId VÀ câu hỏi mới tạo, tự động gán câu hỏi này vào Quiz luôn!
             if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
                 long quizId = Long.parseLong(quizIdStr.trim());
-                BigDecimal points = dto.getDefaultPoints() != null ? dto.getDefaultPoints() : BigDecimal.ONE;
-                quizService.assignQuestion(quizId, questionId, points, 0);
                 String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
                 if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                     target += "&courseId=" + courseIdStr.trim();
                 }
-                resp.sendRedirect(target + "&success=question_created_and_assigned");
+                if (isNewQuestion) {
+                    BigDecimal points = dto.getDefaultPoints() != null ? dto.getDefaultPoints() : BigDecimal.ONE;
+                    quizService.assignQuestion(quizId, questionId, points, 0);
+                    resp.sendRedirect(target + "&success=question_created_and_assigned");
+                } else {
+                    resp.sendRedirect(target + "&success=question_updated");
+                }
                 return;
             }
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {

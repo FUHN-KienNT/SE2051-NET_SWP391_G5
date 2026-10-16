@@ -266,7 +266,7 @@
                             <div>
                                 <h3 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
                                     <span class="text-orange"><i class="bi bi-patch-question-fill"></i></span>
-                                    <span>Quiz: ${course.title}</span>
+                                    <span>Quản lý Quiz: ${course.title}</span>
                                 </h3>
                                 <p class="text-muted small mb-0">
                                     Quản lý bài kiểm tra theo từng chương và kho ngân hàng câu hỏi tập trung của khóa
@@ -345,7 +345,7 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="pills-quizzes-tab" data-bs-toggle="tab"
                                     data-bs-target="#pills-quizzes" type="button" role="tab">
-                                    <i class="bi bi-collection me-1.5"></i>Danh sách Quiz theo Chương
+                                    <i class="bi bi-collection me-1"></i>Danh sách Quiz
                                     <c:if test="${not empty course}">
                                         <span
                                             class="badge bg-orange-subtle text-orange border border-orange-subtle rounded-pill ms-1.5">
@@ -357,7 +357,7 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="pills-questions-tab" data-bs-toggle="tab"
                                     data-bs-target="#pills-questions" type="button" role="tab">
-                                    <i class="bi bi-database me-1.5"></i>Ngân hàng câu hỏi khóa học
+                                    <i class="bi bi-database me-1"></i>Ngân hàng câu hỏi
                                     <span class="badge bg-secondary-subtle text-secondary border rounded-pill ms-1.5"
                                         id="totalQuestionsBadge">
                                         ${totalQuestions}
@@ -788,16 +788,28 @@
                                                                                     class="text-center">Dạng câu</th>
                                                                                 <th style="width: 90px;"
                                                                                     class="text-center">Điểm</th>
-                                                                                <th style="width: 80px;"
-                                                                                    class="text-end pe-3">Xóa</th>
+                                                                                <th style="width: 120px;"
+                                                                                    class="text-end pe-3">Hành động</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
                                                                             <c:forEach var="q" items="${m.questions}">
+                                                                                <%-- Build options JSON for JS edit modal --%>
+                                                                                <c:set var="qOptionsJson" value="[" />
+                                                                                <c:forEach var="opt" items="${q.options}" varStatus="os">
+                                                                                    <c:set var="escaped" value="${fn:replace(opt.optionText, '\"', '&quot;')}" />
+                                                                                    <c:set var="qOptionsJson" value='${qOptionsJson}{"text":"${escaped}","correct":${opt.correct}}' />
+                                                                                    <c:if test="${!os.last}"><c:set var="qOptionsJson" value="${qOptionsJson}," /></c:if>
+                                                                                </c:forEach>
+                                                                                <c:set var="qOptionsJson" value="${qOptionsJson}]" />
                                                                                 <tr class="question-row"
                                                                                     data-module-id="${q.moduleId}"
                                                                                     data-type="${q.questionType}"
-                                                                                    data-text="${fn:toLowerCase(q.questionText)}">
+                                                                                    data-text="${fn:toLowerCase(q.questionText)}"
+                                                                                    data-q-id="${q.id}"
+                                                                                    data-q-points="${q.defaultPoints}"
+                                                                                    data-q-text="${q.questionText}"
+                                                                                    data-q-options='${qOptionsJson}'>
                                                                                     <td
                                                                                         class="text-center text-muted small fw-semibold">
                                                                                         #${q.id}
@@ -923,6 +935,12 @@
                                                                                     </td>
                                                                                     <td
                                                                                         class="text-end pe-3 text-nowrap">
+                                                                                        <button type="button"
+                                                                                            class="btn btn-sm btn-outline-primary py-1 px-2 rounded-3 me-1"
+                                                                                            title="Sửa câu hỏi"
+                                                                                            onclick="openEditQuestionModal(this)">
+                                                                                            <i class="bi bi-pencil-square"></i>
+                                                                                        </button>
                                                                                         <a href="${pageContext.request.contextPath}/quizzes/delete-question?id=${q.id}&courseId=${course.id}"
                                                                                             class="btn btn-sm btn-outline-danger py-1 px-2 rounded-3"
                                                                                             onclick="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi?');"
@@ -1084,9 +1102,9 @@
                                 </c:if>
 
                                 <div class="modal-header py-3 px-4 bg-light border-bottom">
-                                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
-                                        <span class="text-success"><i class="bi bi-database-add"></i></span>
-                                        Tạo câu hỏi mới vào Ngân hàng
+                                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="questionModalLabel">
+                                        <span id="questionModalIcon" class="text-success"><i class="bi bi-database-add"></i></span>
+                                        <span id="questionModalTitle">Tạo câu hỏi mới vào Ngân hàng</span>
                                     </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
@@ -1201,9 +1219,9 @@
                                 <div class="modal-footer py-2.5 px-4 bg-light border-top">
                                     <button type="button" class="btn btn-secondary btn-sm fw-semibold rounded-3"
                                         data-bs-dismiss="modal">Hủy</button>
-                                    <button type="submit"
+                                    <button type="submit" id="questionModalSubmitBtn"
                                         class="btn btn-success btn-sm fw-semibold rounded-3 px-3 shadow-sm">
-                                        <i class="bi bi-save me-1"></i>Lưu vào ngân hàng
+                                        <i class="bi bi-save me-1"></i><span id="questionModalSubmitText">Lưu vào ngân hàng</span>
                                     </button>
                                 </div>
                             </form>
@@ -1578,6 +1596,7 @@
                     }
 
                     function openCreateQuestionModal(moduleId) {
+                        // Reset về chế độ tạo mới
                         const qId = document.getElementById('modalQId');
                         if (qId) qId.value = '';
                         const qText = document.getElementById('modalQText');
@@ -1588,10 +1607,81 @@
                             const modSelect = document.getElementById('modalQModuleSelect');
                             if (modSelect) modSelect.value = moduleId;
                         }
+                        // Reset options về trống
+                        ['modalQOptA','modalQOptB','modalQOptC','modalQOptD'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = '';
+                        });
+                        // Reset radio về đáp án A
+                        const firstRadio = document.querySelector('#bankQuestionForm input[name="correctOption"][value="0"]');
+                        if (firstRadio) firstRadio.checked = true;
+                        // Reset header & button
+                        const icon = document.getElementById('questionModalIcon');
+                        if (icon) icon.innerHTML = '<i class="bi bi-database-add"></i>';
+                        if (icon) icon.className = 'text-success';
+                        const title = document.getElementById('questionModalTitle');
+                        if (title) title.textContent = 'Tạo câu hỏi mới vào Ngân hàng';
+                        const submitBtn = document.getElementById('questionModalSubmitBtn');
+                        if (submitBtn) submitBtn.className = 'btn btn-success btn-sm fw-semibold rounded-3 px-3 shadow-sm';
+                        const submitText = document.getElementById('questionModalSubmitText');
+                        if (submitText) submitText.textContent = 'Lưu vào ngân hàng';
+                        // Reset type
+                        const qType = document.getElementById('modalQType');
+                        if (qType) qType.value = 'SINGLE_CHOICE';
                         handleModalQTypeChange('SINGLE_CHOICE');
                         const modalEl = document.getElementById('questionModal');
                         if (modalEl) {
                             bootstrap.Modal.getOrCreateInstance(modalEl).show();
                         }
+                    }
+
+                    function openEditQuestionModal(btn) {
+                        const tr = btn.closest('tr.question-row');
+                        if (!tr) return;
+
+                        const qId     = tr.getAttribute('data-q-id');
+                        const qText   = tr.getAttribute('data-q-text');
+                        const qPoints = tr.getAttribute('data-q-points');
+                        const qType   = tr.getAttribute('data-type');
+                        const moduleId = tr.getAttribute('data-module-id');
+                        let   options  = [];
+                        try { options = JSON.parse(tr.getAttribute('data-q-options') || '[]'); } catch(e) {}
+
+                        // Điền id, text, points, type, module
+                        document.getElementById('modalQId').value = qId;
+                        document.getElementById('modalQText').value = qText;
+                        document.getElementById('modalQPoints').value = qPoints;
+                        const typeEl = document.getElementById('modalQType');
+                        if (typeEl) typeEl.value = qType;
+                        const modSel = document.getElementById('modalQModuleSelect');
+                        if (modSel && moduleId) modSel.value = moduleId;
+
+                        // Điền options A/B/C/D
+                        const optIds = ['modalQOptA','modalQOptB','modalQOptC','modalQOptD'];
+                        const radios = document.querySelectorAll('#bankQuestionForm input[name="correctOption"]');
+                        optIds.forEach((id, i) => {
+                            const el = document.getElementById(id);
+                            if (!el) return;
+                            const opt = options[i];
+                            el.value = opt ? opt.text : '';
+                            if (radios[i]) radios[i].checked = opt ? opt.correct : (i === 0);
+                        });
+
+                        // Áp dụng hiển thị theo loại câu hỏi
+                        handleModalQTypeChange(qType);
+
+                        // Đổi header & nút submit sang Edit mode
+                        const icon = document.getElementById('questionModalIcon');
+                        if (icon) { icon.innerHTML = '<i class="bi bi-pencil-square"></i>'; icon.className = 'text-primary'; }
+                        const titleEl = document.getElementById('questionModalTitle');
+                        if (titleEl) titleEl.textContent = 'Chỉnh sửa câu hỏi #' + qId;
+                        const submitBtn = document.getElementById('questionModalSubmitBtn');
+                        if (submitBtn) submitBtn.className = 'btn btn-primary btn-sm fw-semibold rounded-3 px-3 shadow-sm';
+                        const submitText = document.getElementById('questionModalSubmitText');
+                        if (submitText) submitText.textContent = 'Lưu thay đổi';
+
+                        // Hiện modal
+                        const modalEl = document.getElementById('questionModal');
+                        if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
                     }
                 </script>

@@ -61,6 +61,7 @@ public class QuizService {
         this.moduleDao = moduleDao;
     }
 
+    //chi lay thong tin quiz
     public List<QuizDto> getQuizzes(long moduleId) {
         try (Connection con = DbConnection.getConnection()) {
             List<Quiz> quizzes = quizDao.findByModuleId(con, moduleId);
@@ -77,6 +78,7 @@ public class QuizService {
         }
     }
 
+    //toan bo quiz tree
     public QuizDto getQuizDetail(long quizId) {
         try (Connection con = DbConnection.getConnection()) {
             Quiz quiz = quizDao.findById(con, quizId)
