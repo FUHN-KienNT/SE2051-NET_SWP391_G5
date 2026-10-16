@@ -495,9 +495,10 @@
                 })
                 .then(r => r.json())
                 .then(data => {
-                    if (data && data.length > 0) {
+                    const list = Array.isArray(data) ? data : (data.videos || []);
+                    if (list && list.length > 0) {
                         let html = '';
-                        data.forEach((item, idx) => {
+                        list.forEach((item, idx) => {
                             html += '<tr>' +
                                 '<td>' + (idx + 1) + '</td>' +
                                 '<td><img src="https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg" class="rounded" style="width: 50px; height: 30px; object-fit: cover;"></td>' +
@@ -507,7 +508,11 @@
                         });
                         tbody.innerHTML = html;
                         countBadge.className = 'badge bg-success';
-                        countBadge.textContent = data.length + " video (Playlist)";
+                        countBadge.textContent = list.length + " video" + (data.playlistTitle ? " (" + data.playlistTitle + ")" : " (Playlist)");
+                        const modTitleInp = document.getElementById('batchNewModuleTitle');
+                        if (modTitleInp && data.playlistTitle && !modTitleInp.value) {
+                            modTitleInp.placeholder = data.playlistTitle;
+                        }
                     } else {
                         renderLocalPreview(text, box, tbody, countBadge);
                     }

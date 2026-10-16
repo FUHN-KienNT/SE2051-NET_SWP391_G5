@@ -297,10 +297,18 @@ public class LessonServlet extends HttpServlet {
      */
     private void previewBatchVideos(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String batchText = req.getParameter("batchText");
-        List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
+        CourseService.BatchParseResult result = CourseService.parseBatchVideoResult(batchText);
 
         resp.setContentType("application/json;charset=UTF-8");
-        StringBuilder sb = new StringBuilder("[");
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("\"playlistTitle\":");
+        if (result.getPlaylistTitle() != null && !result.getPlaylistTitle().isEmpty()) {
+            sb.append("\"").append(escapeJson(result.getPlaylistTitle())).append("\"");
+        } else {
+            sb.append("null");
+        }
+        sb.append(",\"videos\":[");
+        List<LessonDto> lessons = result.getLessons();
         for (int i = 0; i < lessons.size(); i++) {
             LessonDto l = lessons.get(i);
             if (i > 0) sb.append(",");
@@ -315,7 +323,7 @@ public class LessonServlet extends HttpServlet {
               .append("\"videoId\":\"").append(escapeJson(vidId)).append("\"")
               .append("}");
         }
-        sb.append("]");
+        sb.append("]}");
         resp.getWriter().write(sb.toString());
     }
 
@@ -358,7 +366,20 @@ public class LessonServlet extends HttpServlet {
             dto.setManagerId(2L); // ID Manager mặc định
         }
 
-        dto.setTitle(req.getParameter("title"));
+        String title = req.getParameter("title");
+        String batchText = req.getParameter("batchVideoText");
+        String batchModuleTitle = req.getParameter("batchModuleTitle");
+        CourseService.BatchParseResult batchResult = null;
+        if (batchText != null && !batchText.trim().isEmpty()) {
+            batchResult = CourseService.parseBatchVideoResult(batchText);
+        }
+
+        // Tự động gán tên Playlist YouTube làm tên khóa học nếu người dùng chưa nhập tiêu đề
+        if ((title == null || title.trim().isEmpty()) && batchResult != null && batchResult.getPlaylistTitle() != null && !batchResult.getPlaylistTitle().trim().isEmpty()) {
+            title = batchResult.getPlaylistTitle().trim();
+        }
+
+        dto.setTitle(title);
         dto.setDescription(req.getParameter("description"));
         String catIdStr = req.getParameter("categoryId");
         String customCategory = req.getParameter("customCategory");
@@ -377,13 +398,8 @@ public class LessonServlet extends HttpServlet {
             long savedId = courseService.saveCourse(dto);
 
             // Kiểm tra nếu có nhập danh sách link video hàng loạt kèm theo
-            String batchText = req.getParameter("batchVideoText");
-            String batchModuleTitle = req.getParameter("batchModuleTitle");
-            if (batchText != null && !batchText.trim().isEmpty()) {
-                List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
-                if (!lessons.isEmpty()) {
-                    courseService.saveBatchLessons(savedId, null, batchModuleTitle, lessons);
-                }
+            if (batchResult != null && !batchResult.getLessons().isEmpty()) {
+                courseService.saveBatchLessons(savedId, null, batchModuleTitle, batchResult.getLessons());
             }
 
             SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");

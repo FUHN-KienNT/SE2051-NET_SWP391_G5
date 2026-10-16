@@ -298,8 +298,9 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Tên khóa học <span
                                         class="text-danger">*</span></label>
-                                <input type="text" name="title" class="form-control"
-                                    placeholder="Ví dụ: Khóa học Lập trình Web Fullstack..." required>
+                                <input type="text" name="title" id="newCourseTitle" class="form-control"
+                                    placeholder="Ví dụ: Khóa học Lập trình Web Fullstack (hoặc tự động nhận diện từ Playlist)..." required oninput="this.dataset.autofilled = 'false'">
+                                <div class="form-text small text-muted">Nếu bạn dán link Playlist YouTube bên dưới, hệ thống sẽ tự động lấy tên Playlist điền vào đây.</div>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-md-7">
@@ -528,14 +529,25 @@
                     })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
-                        if (data && data.length > 0) {
+                        var list = Array.isArray(data) ? data : (data.videos || []);
+                        if (list && list.length > 0) {
+                            var plTitle = data.playlistTitle;
+                            var infoText = 'Đã nhận diện: <strong>' + list.length + ' bài giảng</strong>';
+                            if (plTitle) {
+                                infoText += ' từ Playlist: "<strong>' + plTitle + '</strong>"';
+                                var titleInp = document.getElementById('newCourseTitle');
+                                if (titleInp && (!titleInp.value.trim() || titleInp.dataset.autofilled === 'true')) {
+                                    titleInp.value = plTitle;
+                                    titleInp.dataset.autofilled = 'true';
+                                }
+                            }
                             feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
-                            feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>Đã nhận diện: <strong>' + data.length + ' bài giảng</strong> (sẵn sàng tạo)</span>';
+                            feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + '</span>';
                             if (moduleDiv) moduleDiv.classList.remove('d-none');
                             if (moduleTitleInp) {
                                 moduleTitleInp.required = false;
                                 if (!moduleTitleInp.value) {
-                                    moduleTitleInp.placeholder = "Nhập tên chương học cho " + data.length + " bài này (hoặc để trống)...";
+                                    moduleTitleInp.placeholder = plTitle ? plTitle : ("Nhập tên chương học cho " + list.length + " bài này (hoặc để trống)...");
                                 }
                             }
                         } else {

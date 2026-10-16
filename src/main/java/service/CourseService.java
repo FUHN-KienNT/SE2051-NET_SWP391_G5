@@ -668,10 +668,56 @@ public class CourseService {
      * - Nếu là Video đơn lẻ: Bóc tách Video ID và lọc tiêu đề tiếng Việt tương ứng trên mỗi dòng.
      * - Cơ chế chống trùng lặp: 'seenVideoIds' loại bỏ các video bị trùng nếu người dùng dán nhiều lần.
      */
-    public static List<LessonDto> parseBatchVideoText(String text) {
+    public static class BatchParseResult {
+        private String playlistTitle;
+        private List<LessonDto> lessons = new ArrayList<>();
+
+        public BatchParseResult() {}
+
+        public BatchParseResult(String playlistTitle, List<LessonDto> lessons) {
+            this.playlistTitle = playlistTitle;
+            this.lessons = lessons != null ? lessons : new ArrayList<>();
+        }
+
+        public String getPlaylistTitle() { return playlistTitle; }
+        public void setPlaylistTitle(String playlistTitle) { this.playlistTitle = playlistTitle; }
+        public List<LessonDto> getLessons() { return lessons; }
+        public void setLessons(List<LessonDto> lessons) { this.lessons = lessons; }
+    }
+
+    public static class YoutubePlaylistData {
+        private String title;
+        private List<LessonDto> lessons = new ArrayList<>();
+
+        public YoutubePlaylistData() {}
+
+        public YoutubePlaylistData(String title, List<LessonDto> lessons) {
+            this.title = title;
+            this.lessons = lessons != null ? lessons : new ArrayList<>();
+        }
+
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        public List<LessonDto> getLessons() { return lessons; }
+        public void setLessons(List<LessonDto> lessons) { this.lessons = lessons; }
+    }
+
+    private static String unescapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&amp;", "&")
+                   .replace("&quot;", "\"")
+                   .replace("&#39;", "'")
+                   .replace("&lt;", "<")
+                   .replace("&gt;", ">")
+                   .replace("&apos;", "'");
+    }
+
+    public static BatchParseResult parseBatchVideoResult(String text) {
+        BatchParseResult result = new BatchParseResult();
         List<LessonDto> list = new ArrayList<>();
         if (text == null || text.trim().isEmpty()) {
-            return list;
+            result.setLessons(list);
+            return result;
         }
 
         String[] lines = text.split("\\r?\\n");
@@ -698,7 +744,11 @@ public class CourseService {
 
             if (playlistId != null && !processedPlaylistIds.contains(playlistId)) {
                 processedPlaylistIds.add(playlistId);
-                List<LessonDto> playlistVideos = fetchYoutubePlaylistVideos(playlistId);
+                YoutubePlaylistData playlistData = fetchYoutubePlaylistData(playlistId);
+                if (result.getPlaylistTitle() == null && playlistData.getTitle() != null && !playlistData.getTitle().isEmpty()) {
+                    result.setPlaylistTitle(playlistData.getTitle());
+                }
+                List<LessonDto> playlistVideos = playlistData.getLessons();
                 if (playlistVideos != null && !playlistVideos.isEmpty()) {
                     for (LessonDto plDto : playlistVideos) {
                         String vidId = extractVideoIdFromUrl(plDto.getVideoUrl());
@@ -742,16 +792,21 @@ public class CourseService {
                 list.add(dto);
             }
         }
-        return list;
+        result.setLessons(list);
+        return result;
+    }
+
+    public static List<LessonDto> parseBatchVideoText(String text) {
+        return parseBatchVideoResult(text).getLessons();
     }
 
     /**
-     * Tự động kết nối YouTube và cào toàn bộ danh sách video (ID + Tiêu đề) từ Playlist công khai.
+     * Tự động kết nối YouTube và cào toàn bộ danh sách video (ID + Tiêu đề) và tên Playlist từ Playlist công khai.
      */
-    public static List<LessonDto> fetchYoutubePlaylistVideos(String playlistId) {
-        List<LessonDto> list = new ArrayList<>();
+    public static YoutubePlaylistData fetchYoutubePlaylistData(String playlistId) {
+        YoutubePlaylistData data = new YoutubePlaylistData();
         if (playlistId == null || playlistId.trim().isEmpty()) {
-            return list;
+            return data;
         }
         playlistId = playlistId.trim();
 
@@ -769,12 +824,34 @@ public class CourseService {
                     .header("Accept-Language", "vi,en-US;q=0.9,en;q=0.8")
                     .build();
 
-            java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+            java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString(java.nio.charset.StandardCharsets.UTF_8));
             if (response.statusCode() != 200) {
-                return list;
+                return data;
             }
 
             String html = response.body();
+
+            // 1. Bóc tách tiêu đề của Playlist
+            String plTitle = null;
+            java.util.regex.Matcher mOg = java.util.regex.Pattern.compile("<meta property=\"og:title\" content=\"([^\"]+)\"").matcher(html);
+            if (mOg.find()) {
+                plTitle = unescapeHtml(unescapeUnicode(mOg.group(1)));
+            }
+            if (plTitle == null || plTitle.isEmpty()) {
+                java.util.regex.Matcher mMeta = java.util.regex.Pattern.compile("\"playlistMetadataRenderer\":\\{\"title\":\"([^\"]+)\"").matcher(html);
+                if (mMeta.find()) {
+                    plTitle = unescapeUnicode(mMeta.group(1));
+                }
+            }
+            if (plTitle == null || plTitle.isEmpty()) {
+                java.util.regex.Matcher mTitle = java.util.regex.Pattern.compile("<title>([^<]+?)(?:\\s*-\\s*YouTube)?</title>").matcher(html);
+                if (mTitle.find()) {
+                    plTitle = unescapeHtml(unescapeUnicode(mTitle.group(1).trim()));
+                }
+            }
+            data.setTitle(plTitle);
+
+            List<LessonDto> list = new ArrayList<>();
             java.util.Set<String> seenIds = new java.util.HashSet<>();
             int seq = 1;
 
@@ -831,10 +908,15 @@ public class CourseService {
                     }
                 }
             }
+            data.setLessons(list);
         } catch (Exception e) {
             System.err.println("Lỗi khi tải YouTube playlist " + playlistId + ": " + e.getMessage());
         }
-        return list;
+        return data;
+    }
+
+    public static List<LessonDto> fetchYoutubePlaylistVideos(String playlistId) {
+        return fetchYoutubePlaylistData(playlistId).getLessons();
     }
 
     private static String extractVideoIdFromUrl(String url) {
