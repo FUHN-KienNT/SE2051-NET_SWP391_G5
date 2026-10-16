@@ -3,6 +3,7 @@ package controller;
 import dto.CourseDto;
 import dto.RegistrationDto;
 import dto.UserDto;
+import entity.enums.CourseStatus;
 import service.CourseService;
 import service.RegistrationService;
 import util.SessionUtil;
@@ -52,9 +53,9 @@ public class ManagerDashboardServlet extends HttpServlet {
         List<CourseDto> managerCourses = courseService.searchAdminCourses(null, null, managerId, null);
         int totalCourses = managerCourses.size();
         
-        long publishedCount = managerCourses.stream().filter(c -> "PUBLISHED".equals(c.getStatus())).count();
-        long draftCount = managerCourses.stream().filter(c -> "DRAFT".equals(c.getStatus())).count();
-        long pendingCount = managerCourses.stream().filter(c -> "PENDING_REVIEW".equals(c.getStatus())).count();
+        long publishedCount = managerCourses.stream().filter(c -> c.getStatus() == CourseStatus.PUBLISHED).count();
+        long draftCount = managerCourses.stream().filter(c -> c.getStatus() == CourseStatus.DRAFT).count();
+        long pendingCount = managerCourses.stream().filter(c -> c.getStatus() == CourseStatus.PENDING_REVIEW).count();
 
         // 2. Tổng quan đăng ký và doanh thu
         int totalRegistrations = registrationService.countByManagerId(managerId);

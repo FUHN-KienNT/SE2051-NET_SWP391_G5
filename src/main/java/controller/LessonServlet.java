@@ -9,6 +9,7 @@ import dto.CourseDto;
 import dto.LessonDto;
 import dto.ModuleDto;
 import dto.UserDto;
+import entity.enums.CourseStatus;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -123,6 +124,12 @@ public class LessonServlet extends HttpServlet {
                 break;
             case "preview-batch-videos":
                 previewBatchVideos(req, resp);
+                break;
+            case "request-publish":
+                requestPublish(req, resp);
+                break;
+            case "cancel-request-publish":
+                cancelRequestPublish(req, resp);
                 break;
             default:
                 showExpertDashboard(req, resp);
@@ -290,10 +297,18 @@ public class LessonServlet extends HttpServlet {
      */
     private void previewBatchVideos(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String batchText = req.getParameter("batchText");
-        List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
+        CourseService.BatchParseResult result = CourseService.parseBatchVideoResult(batchText);
 
         resp.setContentType("application/json;charset=UTF-8");
-        StringBuilder sb = new StringBuilder("[");
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("\"playlistTitle\":");
+        if (result.getPlaylistTitle() != null && !result.getPlaylistTitle().isEmpty()) {
+            sb.append("\"").append(escapeJson(result.getPlaylistTitle())).append("\"");
+        } else {
+            sb.append("null");
+        }
+        sb.append(",\"videos\":[");
+        List<LessonDto> lessons = result.getLessons();
         for (int i = 0; i < lessons.size(); i++) {
             LessonDto l = lessons.get(i);
             if (i > 0) sb.append(",");
@@ -308,7 +323,7 @@ public class LessonServlet extends HttpServlet {
               .append("\"videoId\":\"").append(escapeJson(vidId)).append("\"")
               .append("}");
         }
-        sb.append("]");
+        sb.append("]}");
         resp.getWriter().write(sb.toString());
     }
 
@@ -351,7 +366,20 @@ public class LessonServlet extends HttpServlet {
             dto.setManagerId(2L); // ID Manager mặc định
         }
 
-        dto.setTitle(req.getParameter("title"));
+        String title = req.getParameter("title");
+        String batchText = req.getParameter("batchVideoText");
+        String batchModuleTitle = req.getParameter("batchModuleTitle");
+        CourseService.BatchParseResult batchResult = null;
+        if (batchText != null && !batchText.trim().isEmpty()) {
+            batchResult = CourseService.parseBatchVideoResult(batchText);
+        }
+
+        // Tự động gán tên Playlist YouTube làm tên khóa học nếu người dùng chưa nhập tiêu đề
+        if ((title == null || title.trim().isEmpty()) && batchResult != null && batchResult.getPlaylistTitle() != null && !batchResult.getPlaylistTitle().trim().isEmpty()) {
+            title = batchResult.getPlaylistTitle().trim();
+        }
+
+        dto.setTitle(title);
         dto.setDescription(req.getParameter("description"));
         String catIdStr = req.getParameter("categoryId");
         String customCategory = req.getParameter("customCategory");
@@ -370,13 +398,8 @@ public class LessonServlet extends HttpServlet {
             long savedId = courseService.saveCourse(dto);
 
             // Kiểm tra nếu có nhập danh sách link video hàng loạt kèm theo
-            String batchText = req.getParameter("batchVideoText");
-            String batchModuleTitle = req.getParameter("batchModuleTitle");
-            if (batchText != null && !batchText.trim().isEmpty()) {
-                List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
-                if (!lessons.isEmpty()) {
-                    courseService.saveBatchLessons(savedId, null, batchModuleTitle, lessons);
-                }
+            if (batchResult != null && !batchResult.getLessons().isEmpty()) {
+                courseService.saveBatchLessons(savedId, null, batchModuleTitle, batchResult.getLessons());
             }
 
             SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
@@ -458,6 +481,97 @@ public class LessonServlet extends HttpServlet {
             }
         }
         resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+    }
+
+    /**
+     * Gửi yêu cầu duyệt xuất bản khóa học:
+     * - Chỉ Expert phụ trách khóa học mới có quyền gửi yêu cầu.
+     * - Điều kiện tiên quyết: Khóa học phải có ít nhất 1 chương học và 1 bài học.
+     * - Chuyển trạng thái từ DRAFT sang PENDING_REVIEW để Ban Quản Trị xem xét.
+     */
+    private void requestPublish(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            return;
+        }
+
+        try {
+            long courseId = Long.parseLong(courseIdStr.trim());
+            courseService.checkCourseOwnership(courseId, currentUser);
+
+            CourseDto course = courseService.getCourseDetail(courseId);
+            if (course == null) {
+                throw new IllegalArgumentException("Không tìm thấy khóa học.");
+            }
+
+            if (course.getStatus() == CourseStatus.PUBLISHED) {
+                SessionUtil.setFlashError(req, "Khóa học này đã được công khai trên hệ thống.");
+            } else if (course.getTotalLessons() <= 0) {
+                SessionUtil.setFlashError(req, "Khóa học chưa có bài giảng nào! Vui lòng thêm ít nhất một bài học trước khi gửi yêu cầu duyệt xuất bản.");
+            } else {
+                courseService.updateCourseStatus(courseId, CourseStatus.PENDING_REVIEW);
+                SessionUtil.setFlashSuccess(req, "Đã gửi yêu cầu xét duyệt xuất bản khóa học \"" + course.getTitle() + "\" đến Ban Quản Trị thành công!");
+            }
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, e.getMessage());
+        }
+
+        String from = req.getParameter("from");
+        if ("lessons".equalsIgnoreCase(from)) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+        }
+    }
+
+    /**
+     * Thu hồi yêu cầu xuất bản khóa học:
+     * - Cho phép Expert rút lại yêu cầu duyệt để tiếp tục bổ sung/chỉnh sửa nội dung.
+     * - Chuyển trạng thái từ PENDING_REVIEW trở lại DRAFT.
+     */
+    private void cancelRequestPublish(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            return;
+        }
+
+        try {
+            long courseId = Long.parseLong(courseIdStr.trim());
+            courseService.checkCourseOwnership(courseId, currentUser);
+
+            CourseDto course = courseService.getCourseDetail(courseId);
+            if (course == null) {
+                throw new IllegalArgumentException("Không tìm thấy khóa học.");
+            }
+
+            if (course.getStatus() != CourseStatus.PENDING_REVIEW) {
+                SessionUtil.setFlashError(req, "Khóa học hiện không ở trạng thái chờ duyệt.");
+            } else {
+                courseService.updateCourseStatus(courseId, CourseStatus.DRAFT);
+                SessionUtil.setFlashSuccess(req, "Đã thu hồi yêu cầu xuất bản. Khóa học đã trở về Bản nháp để bạn tiếp tục chỉnh sửa.");
+            }
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, e.getMessage());
+        }
+
+        String from = req.getParameter("from");
+        if ("lessons".equalsIgnoreCase(from)) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+        }
     }
 
     // =========================================================================
@@ -584,12 +698,20 @@ public class LessonServlet extends HttpServlet {
                 dto.setId(lessonId);
             }
 
+            Long courseId = (courseIdStr != null && !courseIdStr.trim().isEmpty()) ? Long.parseLong(courseIdStr.trim()) : null;
+            if (courseId != null) {
+                dto.setCourseId(courseId);
+            }
+
             String moduleId = req.getParameter("moduleId");
-            if (moduleId != null && !moduleId.trim().isEmpty()) {
+            if (moduleId != null && !moduleId.trim().isEmpty() && !"__NONE__".equals(moduleId.trim())) {
                 long modId = Long.parseLong(moduleId.trim());
                 // [IDOR Defense]: Kiểm tra quyền sở hữu chương học trước khi lưu
                 courseService.checkModuleOwnership(modId, currentUser);
                 dto.setModuleId(modId);
+            } else if (courseId != null) {
+                // Tự động gán vào module mặc định của khóa học nếu người dùng không chọn chương
+                dto.setModuleId(courseService.getOrCreateDefaultModuleId(courseId));
             }
 
             dto.setTitle(req.getParameter("title"));

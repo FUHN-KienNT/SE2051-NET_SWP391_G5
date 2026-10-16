@@ -71,7 +71,16 @@
                         <i class="bi bi-server fs-1 text-white-50"></i>
                     </div>
                 </div>
-                <span class="badge bg-warning text-dark px-3 py-2 fw-bold">${draftCourses.size()} khóa chờ duyệt</span>
+            </div>
+        </div>
+
+        <!-- Khóa học chờ duyệt xuất bản (Chỉ hiện các khóa Expert đã bấm Gửi duyệt) -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-patch-check-fill text-warning me-2"></i>Khóa học chờ duyệt xuất bản
+                </h5>
+                <span class="badge bg-warning text-dark px-3 py-2 fw-bold">${pendingCourses.size()} khóa chờ duyệt</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -82,12 +91,12 @@
                             <th>Chuyên gia biên soạn</th>
                             <th>Số bài học</th>
                             <th>Học phí</th>
-                            <th class="text-end" style="min-width: 240px;">Quyết định duyệt (1-Click)</th>
+                            <th class="text-end" style="min-width: 260px;">Quyết định duyệt</th>
                         </tr>
                     </thead>
                     <tbody>
                         <c:choose>
-                            <c:when test="${empty draftCourses}">
+                            <c:when test="${empty pendingCourses}">
                                 <tr>
                                     <td colspan="6" class="text-center py-4">
                                         <div class="text-success fw-semibold">
@@ -98,7 +107,7 @@
                                 </tr>
                             </c:when>
                             <c:otherwise>
-                                <c:forEach var="c" items="${draftCourses}">
+                                <c:forEach var="c" items="${pendingCourses}">
                                     <tr class="table-warning bg-opacity-25">
                                         <td><span class="badge bg-warning text-dark">#${c.id}</span></td>
                                         <td>
@@ -129,8 +138,13 @@
                                             </span>
                                         </td>
                                         <td class="text-end">
-                                            <a href="${pageContext.request.contextPath}/admin/toggle-status?id=${c.id}&fromDashboard=true" class="btn btn-success btn-sm shadow-sm fw-semibold me-1" title="Duyệt xuất bản ngay">
+                                            <a href="${pageContext.request.contextPath}/admin/toggle-status?id=${c.id}&status=PUBLISHED&fromDashboard=true" class="btn btn-success btn-sm shadow-sm fw-semibold me-1" title="Duyệt xuất bản ngay">
                                                 <i class="bi bi-check-lg me-1"></i>Đồng ý xuất bản
+                                            </a>
+                                            <a href="${pageContext.request.contextPath}/admin/toggle-status?id=${c.id}&status=DRAFT&fromDashboard=true" class="btn btn-outline-danger btn-sm me-1"
+                                               onclick="return confirm('Bạn có chắc muốn từ chối và chuyển khóa học &quot;${c.title}&quot; về bản nháp để Chuyên gia hoàn thiện thêm không?');"
+                                               title="Từ chối và trả về bản nháp">
+                                                <i class="bi bi-x-circle me-1"></i>Từ chối
                                             </a>
                                             <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" class="btn btn-outline-secondary btn-sm" target="_blank" title="Xem trước trang khóa học">
                                                 <i class="bi bi-eye"></i> Xem trước

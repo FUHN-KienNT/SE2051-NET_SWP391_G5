@@ -47,14 +47,52 @@
 
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <div>
-                <h3 class="fw-bold mb-1"><i class="bi bi-journal-bookmark me-2"></i>Chương trình học: ${course.title}</h3>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <h3 class="fw-bold mb-0"><i class="bi bi-journal-bookmark me-2"></i>Chương trình học: ${course.title}</h3>
+                    <c:choose>
+                        <c:when test="${course.status == 'PUBLISHED'}">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                <i class="bi bi-check-circle-fill me-1"></i>Đã công khai
+                            </span>
+                        </c:when>
+                        <c:when test="${course.status == 'PENDING_REVIEW'}">
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1">
+                                <i class="bi bi-hourglass-split me-1"></i>Đang chờ Admin duyệt
+                            </span>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
+                                <i class="bi bi-pencil-square me-1"></i>Bản nháp (DRAFT)
+                            </span>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
                 <p class="text-muted small mb-0">Quản lý các chương học (Modules) và các bài giảng (Lessons) - Màn hình II.4.1</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-primary fw-semibold shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm Bài học
+                </a>
+                <c:choose>
+                    <c:when test="${course.status == 'DRAFT'}">
+                        <a href="${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons"
+                           class="btn btn-success fw-semibold shadow-sm"
+                           onclick="return confirm('Bạn có chắc chắn muốn gửi duyệt xuất bản khóa học &quot;${course.title}&quot; để Ban Quản Trị duyệt?');">
+                            <i class="bi bi-send-check me-1"></i>Gửi duyệt xuất bản
+                        </a>
+                    </c:when>
+                    <c:when test="${course.status == 'PENDING_REVIEW'}">
+                        <a href="${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons"
+                           class="btn btn-outline-warning fw-semibold shadow-sm"
+                           onclick="return confirm('Bạn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học &quot;${course.title}&quot;?');">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Thu hồi yêu cầu
+                        </a>
+                    </c:when>
+                </c:choose>
                 <button type="button" class="btn btn-danger fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
                     <i class="bi bi-youtube me-1"></i>Nhập Playlist / Hàng loạt Video
                 </button>
-                <button type="button" class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#newModuleModal">
+                <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-toggle="modal" data-bs-target="#newModuleModal">
                     <i class="bi bi-folder-plus me-1"></i>Thêm Chương mới
                 </button>
             </div>
@@ -63,15 +101,18 @@
         <c:choose>
             <c:when test="${empty course.modules}">
                 <div class="card p-5 text-center border-0 shadow-sm rounded-3">
-                    <i class="bi bi-folder2-open fs-1 text-muted mb-3"></i>
-                    <h5>Khóa học này chưa có chương học nào!</h5>
-                    <p class="text-muted small">Hãy bấm nút <strong>"Nhập Playlist / Hàng loạt Video"</strong> để tạo nhanh toàn bộ bài học, hoặc bấm "Thêm Chương mới".</p>
-                    <div class="d-flex justify-content-center gap-2 mt-2">
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
+                    <i class="bi bi-journal-plus fs-1 text-primary mb-3"></i>
+                    <h5>Khóa học này chưa có nội dung bài học!</h5>
+                    <p class="text-muted small">Bạn có thể thêm từng bài học trực tiếp (không bắt buộc phải chia chương), nhập Playlist YouTube hàng loạt hoặc tạo các chương để phân loại.</p>
+                    <div class="d-flex justify-content-center flex-wrap gap-2 mt-2">
+                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-primary fw-semibold">
+                            <i class="bi bi-plus-lg me-1"></i>Thêm Bài học mới
+                        </a>
+                        <button type="button" class="btn btn-danger fw-semibold" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
                             <i class="bi bi-youtube me-1"></i>Nhập hàng loạt video YouTube
                         </button>
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newModuleModal">
-                            <i class="bi bi-folder-plus me-1"></i>Thêm Chương thủ công
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newModuleModal">
+                            <i class="bi bi-folder-plus me-1"></i>Tạo Chương học (Tùy chọn)
                         </button>
                     </div>
                 </div>
@@ -83,8 +124,16 @@
                             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                                 <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-primary">Chương ${m.orderIndex}</span>
-                                        <h5 class="fw-bold mb-0">${m.title}</h5>
+                                        <c:choose>
+                                            <c:when test="${course.modules.size() == 1 && (m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung')}">
+                                                <span class="badge bg-secondary-subtle text-secondary border"><i class="bi bi-list-ul me-1"></i>Bài học chung</span>
+                                                <h5 class="fw-bold mb-0">${m.title}</h5>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="badge bg-primary">Chương ${m.orderIndex}</span>
+                                                <h5 class="fw-bold mb-0">${m.title}</h5>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
                                     <div class="d-flex gap-2">
                                         <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-primary">
@@ -96,10 +145,14 @@
                                         <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}#module-${m.id}" class="btn btn-sm btn-outline-warning">
                                             <i class="bi bi-patch-question me-1"></i>Quản lý Quiz
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditModuleModal('${m.id}', '<c:out value="${m.title}" escapeXml="true" />', '${m.orderIndex}')" title="Sửa tên chương">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                data-id="${m.id}"
+                                                data-title="<c:out value="${m.title}" />"
+                                                data-order="${m.orderIndex}"
+                                                onclick="openEditModuleModal(this)" title="Sửa tên chương">
                                             <i class="bi bi-pencil me-1"></i>Sửa tên chương
                                         </button>
-                                        <a href="${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa chương \'${m.title}\' và tất cả bài học bên trong không?');" title="Xóa chương này">
+                                        <a href="${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa chương &quot;<c:out value="${m.title}" />&quot; và tất cả bài học bên trong không?');" title="Xóa chương này">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -170,17 +223,27 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Thêm vào Chương học:</label>
+                        <label class="form-label small fw-semibold">Thêm vào Chương học: <span class="text-muted fw-normal">(Tùy chọn)</span></label>
                         <select name="moduleId" id="batchTargetModule" class="form-select" onchange="toggleBatchModuleChoice(this)">
+                            <option value="" ${empty course.modules ? 'selected' : ''}>-- Bài học chung (Không chia chương) --</option>
                             <c:forEach var="m" items="${course.modules}">
-                                <option value="${m.id}">Chương ${m.orderIndex}: ${m.title}</option>
+                                <option value="${m.id}">
+                                    <c:choose>
+                                        <c:when test="${m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung'}">
+                                            ${m.title}
+                                        </c:when>
+                                        <c:otherwise>
+                                            Chương ${m.orderIndex}: ${m.title}
+                                        </c:otherwise>
+                                    </c:choose>
+                                </option>
                             </c:forEach>
-                            <option value="__NEW__" ${empty course.modules ? 'selected' : ''}>+ Tạo Chương học mới...</option>
+                            <option value="__NEW__">+ Tạo Chương học mới...</option>
                         </select>
-                        <div id="batchNewModuleInputDiv" class="mt-2 ${empty course.modules ? '' : 'd-none'}">
-                            <label class="form-label small fw-semibold text-primary">Tên chương học mới <span class="text-danger">*</span></label>
-                            <input type="text" name="newModuleTitle" id="batchNewModuleTitle" class="form-control form-control-sm border-primary" placeholder="Ví dụ: Chương 1: Giới thiệu khóa học..." ${empty course.modules ? 'required' : ''}>
-                            <div class="form-text small text-muted">Vui lòng nhập tên chương học thay vì để hệ thống tự động đặt tên.</div>
+                        <div id="batchNewModuleInputDiv" class="mt-2 d-none">
+                            <label class="form-label small fw-semibold text-primary">Tên chương học mới <span class="text-muted fw-normal">(Tùy chọn)</span></label>
+                            <input type="text" name="newModuleTitle" id="batchNewModuleTitle" class="form-control form-control-sm border-primary" placeholder="Nhập tên chương học (để trống nếu không chia chương)">
+                            <div class="form-text small text-muted">Nếu để trống, hệ thống sẽ tự động xếp vào danh sách bài học chung.</div>
                         </div>
                     </div>
 
@@ -286,10 +349,20 @@
 </div>
 
 <script>
-    function openEditModuleModal(id, title, order) {
-        document.getElementById('editModuleId').value = id;
-        document.getElementById('editModuleTitle').value = title;
-        document.getElementById('editModuleOrder').value = order;
+    function openEditModuleModal(arg1, arg2, arg3) {
+        let id, title, order;
+        if (typeof arg1 === 'object' && arg1 !== null) {
+            id = arg1.getAttribute('data-id');
+            title = arg1.getAttribute('data-title');
+            order = arg1.getAttribute('data-order');
+        } else {
+            id = arg1;
+            title = arg2;
+            order = arg3;
+        }
+        document.getElementById('editModuleId').value = id || '';
+        document.getElementById('editModuleTitle').value = title || '';
+        document.getElementById('editModuleOrder').value = order || '1';
         const modal = new bootstrap.Modal(document.getElementById('editModuleModal'));
         modal.show();
     }
@@ -300,7 +373,7 @@
         if (!div || !inp) return;
         if (sel.value === '__NEW__') {
             div.classList.remove('d-none');
-            inp.required = true;
+            inp.required = false;
             inp.focus();
         } else {
             div.classList.add('d-none');
@@ -422,9 +495,10 @@
                 })
                 .then(r => r.json())
                 .then(data => {
-                    if (data && data.length > 0) {
+                    const list = Array.isArray(data) ? data : (data.videos || []);
+                    if (list && list.length > 0) {
                         let html = '';
-                        data.forEach((item, idx) => {
+                        list.forEach((item, idx) => {
                             html += '<tr>' +
                                 '<td>' + (idx + 1) + '</td>' +
                                 '<td><img src="https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg" class="rounded" style="width: 50px; height: 30px; object-fit: cover;"></td>' +
@@ -434,7 +508,11 @@
                         });
                         tbody.innerHTML = html;
                         countBadge.className = 'badge bg-success';
-                        countBadge.textContent = data.length + " video (Playlist)";
+                        countBadge.textContent = list.length + " video" + (data.playlistTitle ? " (" + data.playlistTitle + ")" : " (Playlist)");
+                        const modTitleInp = document.getElementById('batchNewModuleTitle');
+                        if (modTitleInp && data.playlistTitle && !modTitleInp.value) {
+                            modTitleInp.placeholder = data.playlistTitle;
+                        }
                     } else {
                         renderLocalPreview(text, box, tbody, countBadge);
                     }

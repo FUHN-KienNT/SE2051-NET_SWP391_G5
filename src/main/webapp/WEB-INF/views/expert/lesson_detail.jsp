@@ -49,14 +49,25 @@
                         </c:if>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Thuộc Chương học (Module) <span class="text-danger">*</span></label>
-                            <select name="moduleId" id="lessonModuleId" class="form-select" required>
+                            <label class="form-label small fw-semibold">Thuộc Chương học (Module) <span class="text-muted fw-normal">(Tùy chọn)</span></label>
+                            <select name="moduleId" id="lessonModuleId" class="form-select">
+                                <option value="" ${empty selectedModuleId && (lesson == null || empty lesson.moduleId) ? 'selected' : ''}>
+                                    -- Bài học chung (Không chia chương) --
+                                </option>
                                 <c:forEach var="m" items="${course.modules}">
                                     <option value="${m.id}" ${(m.id == selectedModuleId || (lesson != null && m.id == lesson.moduleId)) ? 'selected' : ''}>
-                                        Chương ${m.orderIndex}: ${m.title}
+                                        <c:choose>
+                                            <c:when test="${m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung'}">
+                                                ${m.title}
+                                            </c:when>
+                                            <c:otherwise>
+                                                Chương ${m.orderIndex}: ${m.title}
+                                            </c:otherwise>
+                                        </c:choose>
                                     </option>
                                 </c:forEach>
                             </select>
+                            <div class="form-text small text-muted">Nếu khóa học không chia theo từng chương, bạn có thể chọn "Bài học chung (Không chia chương)".</div>
                         </div>
 
                         <div class="row g-3 mb-3">
