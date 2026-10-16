@@ -220,6 +220,14 @@
                                                             title="Chỉnh sửa thông tin khóa học">
                                                             <i class="bi bi-gear me-1"></i>Sửa thông tin
                                                         </button>
+                                                        <c:if test="${c.status == 'DRAFT'}">
+                                                            <a href="${pageContext.request.contextPath}/expert/delete-course?id=${c.id}"
+                                                                class="btn btn-outline-danger btn-sm text-nowrap"
+                                                                onclick="return confirm('Bạn có chắc chắn muốn xóa bản nháp khóa học &quot;${c.title}&quot; này không? Toàn bộ bài học cũng sẽ bị xóa vĩnh viễn.');"
+                                                                title="Xóa khóa học bản nháp">
+                                                                <i class="bi bi-trash3 me-1"></i>Xóa nháp
+                                                            </a>
+                                                        </c:if>
                                                         <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}"
                                                             class="btn btn-light btn-sm border text-nowrap"
                                                             target="_blank" title="Xem trước trang khóa học">
@@ -300,6 +308,13 @@
                                     placeholder="Dán link playlist YouTube (vd: https://www.youtube.com/watch?v=...&list=PL...) hoặc danh sách các video (mỗi dòng 1 link)..."
                                     oninput="previewCourseBatchVideos()"></textarea>
                                 <div id="newCourseBatchFeedback" class="mt-2 small d-none"></div>
+                                <div id="newCourseBatchModuleDiv" class="mt-2 p-2 bg-white rounded border border-primary-subtle d-none">
+                                    <label class="form-label small fw-bold text-primary mb-1">
+                                        <i class="bi bi-folder-plus me-1"></i>Tên chương học chứa các video này <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" name="batchModuleTitle" id="newCourseBatchModuleTitle" class="form-control form-control-sm" placeholder="Ví dụ: Chương 1: Giới thiệu khóa học...">
+                                    <div class="form-text small text-muted">Bạn tự đặt tên cho chương học này thay vì để hệ thống tự động đặt tên.</div>
+                                </div>
                                 <div class="form-text small mt-1"><i class="bi bi-magic text-primary me-1"></i>Hỗ trợ nhận diện toàn bộ bài học từ Playlist YouTube hoặc danh sách link video chỉ với 1 click!</div>
                             </div>
                         </div>
@@ -366,11 +381,16 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer bg-light border-0 py-3">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-primary fw-semibold px-4" id="editCourseSubmitBtn" disabled>
-                                <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                        <div class="modal-footer bg-light border-0 py-3 d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="editCourseDeleteBtn" onclick="deleteEditingCourse()">
+                                <i class="bi bi-trash3 me-1"></i>Xóa khóa học này
                             </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary fw-semibold px-4" id="editCourseSubmitBtn" disabled>
+                                    <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -451,9 +471,13 @@
             function previewCourseBatchVideos() {
                 var text = document.getElementById('newCourseBatchText').value;
                 var feedback = document.getElementById('newCourseBatchFeedback');
+                var moduleDiv = document.getElementById('newCourseBatchModuleDiv');
+                var moduleTitleInp = document.getElementById('newCourseBatchModuleTitle');
                 if (!text || !text.trim()) {
                     feedback.className = 'mt-2 small d-none';
                     feedback.innerHTML = '';
+                    if (moduleDiv) moduleDiv.classList.add('d-none');
+                    if (moduleTitleInp) moduleTitleInp.required = false;
                     return;
                 }
 
@@ -473,16 +497,33 @@
                     .then(function(data) {
                         if (data && data.length > 0) {
                             feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
-                            feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>Đã nhận diện: <strong>' + data.length + ' bài giảng</strong> (sẵn sàng tự động tạo)</span>';
+                            feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>Đã nhận diện: <strong>' + data.length + ' bài giảng</strong> (sẵn sàng tạo)</span>';
+                            if (moduleDiv) moduleDiv.classList.remove('d-none');
+                            if (moduleTitleInp) {
+                                moduleTitleInp.required = true;
+                                if (!moduleTitleInp.value) {
+                                    moduleTitleInp.placeholder = "Nhập tên chương học cho " + data.length + " bài này...";
+                                }
+                            }
                         } else {
                             feedback.className = 'mt-2 small text-muted';
                             feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Chưa nhận diện được video YouTube hợp lệ.';
+                            if (moduleDiv) moduleDiv.classList.add('d-none');
+                            if (moduleTitleInp) moduleTitleInp.required = false;
                         }
                     })
                     .catch(function(err) {
                         feedback.className = 'mt-2 small d-none';
                     });
                 }, 500);
+            }
+
+            function deleteEditingCourse() {
+                var id = document.getElementById('editCourseId').value;
+                var title = document.getElementById('editCourseTitle').value;
+                if (confirm('Bạn có chắc chắn muốn xóa vĩnh viễn khóa học "' + title + '" (cùng toàn bộ bài học bên trong) không?')) {
+                    window.location.href = '${pageContext.request.contextPath}/expert/delete-course?id=' + encodeURIComponent(id);
+                }
             }
         </script>
 

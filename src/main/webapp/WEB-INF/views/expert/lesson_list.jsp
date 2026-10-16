@@ -96,7 +96,10 @@
                                         <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}#module-${m.id}" class="btn btn-sm btn-outline-warning">
                                             <i class="bi bi-patch-question me-1"></i>Quản lý Quiz
                                         </a>
-                                        <a href="${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa chương này sẽ xóa tất cả bài học bên trong. Bạn có chắc không?');">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditModuleModal('${m.id}', '<c:out value="${m.title}" escapeXml="true" />', '${m.orderIndex}')" title="Sửa tên chương">
+                                            <i class="bi bi-pencil me-1"></i>Sửa tên chương
+                                        </button>
+                                        <a href="${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa chương \'${m.title}\' và tất cả bài học bên trong không?');" title="Xóa chương này">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -168,12 +171,17 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Thêm vào Chương học:</label>
-                        <select name="moduleId" id="batchTargetModule" class="form-select">
+                        <select name="moduleId" id="batchTargetModule" class="form-select" onchange="toggleBatchModuleChoice(this)">
                             <c:forEach var="m" items="${course.modules}">
                                 <option value="${m.id}">Chương ${m.orderIndex}: ${m.title}</option>
                             </c:forEach>
-                            <option value="">+ Tự động tạo Chương mới (nếu chưa có)</option>
+                            <option value="__NEW__" ${empty course.modules ? 'selected' : ''}>+ Tạo Chương học mới...</option>
                         </select>
+                        <div id="batchNewModuleInputDiv" class="mt-2 ${empty course.modules ? '' : 'd-none'}">
+                            <label class="form-label small fw-semibold text-primary">Tên chương học mới <span class="text-danger">*</span></label>
+                            <input type="text" name="newModuleTitle" id="batchNewModuleTitle" class="form-control form-control-sm border-primary" placeholder="Ví dụ: Chương 1: Giới thiệu khóa học..." ${empty course.modules ? 'required' : ''}>
+                            <div class="form-text small text-muted">Vui lòng nhập tên chương học thay vì để hệ thống tự động đặt tên.</div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -247,11 +255,65 @@
     </div>
 </div>
 
+<!-- Modal Edit Module -->
+<div class="modal fade" id="editModuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+            <form action="${pageContext.request.contextPath}/expert/save-module" method="POST">
+                <input type="hidden" name="courseId" value="${course.id}">
+                <input type="hidden" name="id" id="editModuleId">
+                <div class="modal-header bg-light py-3">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>Chỉnh sửa Chương học</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Tên chương <span class="text-danger">*</span></label>
+                        <input type="text" name="title" id="editModuleTitle" class="form-control" required placeholder="Nhập tên chương học...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Thứ tự chương</label>
+                        <input type="number" name="orderIndex" id="editModuleOrder" class="form-control" required min="1">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4"><i class="bi bi-check2 me-1"></i>Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+    function openEditModuleModal(id, title, order) {
+        document.getElementById('editModuleId').value = id;
+        document.getElementById('editModuleTitle').value = title;
+        document.getElementById('editModuleOrder').value = order;
+        const modal = new bootstrap.Modal(document.getElementById('editModuleModal'));
+        modal.show();
+    }
+
+    function toggleBatchModuleChoice(sel) {
+        const div = document.getElementById('batchNewModuleInputDiv');
+        const inp = document.getElementById('batchNewModuleTitle');
+        if (!div || !inp) return;
+        if (sel.value === '__NEW__') {
+            div.classList.remove('d-none');
+            inp.required = true;
+            inp.focus();
+        } else {
+            div.classList.add('d-none');
+            inp.required = false;
+            inp.value = '';
+        }
+    }
+
     function selectBatchModule(modId) {
         const sel = document.getElementById('batchTargetModule');
         if (sel) {
             sel.value = modId;
+            toggleBatchModuleChoice(sel);
         }
     }
 

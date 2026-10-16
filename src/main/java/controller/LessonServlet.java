@@ -371,10 +371,11 @@ public class LessonServlet extends HttpServlet {
 
             // Kiểm tra nếu có nhập danh sách link video hàng loạt kèm theo
             String batchText = req.getParameter("batchVideoText");
+            String batchModuleTitle = req.getParameter("batchModuleTitle");
             if (batchText != null && !batchText.trim().isEmpty()) {
                 List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
                 if (!lessons.isEmpty()) {
-                    courseService.saveBatchLessons(savedId, null, lessons);
+                    courseService.saveBatchLessons(savedId, null, batchModuleTitle, lessons);
                 }
             }
 
@@ -390,7 +391,7 @@ public class LessonServlet extends HttpServlet {
      * Nhập hàng loạt bài giảng (Batch Import) từ Playlist / nhiều link YouTube:
      * - [IDOR Defense]: Kiểm tra quyền sở hữu khóa học và chương học.
      * - Bóc tách danh sách URL YouTube từ chuỗi text.
-     * - Tự động tạo bài giảng và gán vào Module chỉ định (hoặc tự tạo Module mới).
+     * - Tự động tạo bài giảng và gán vào Module chỉ định (hoặc tạo Module mới với tên do người dùng đặt).
      */
     private void batchSaveLessons(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
@@ -401,6 +402,7 @@ public class LessonServlet extends HttpServlet {
 
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
+        String newModuleTitle = req.getParameter("newModuleTitle");
         String batchText = req.getParameter("batchText");
 
         if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
@@ -409,7 +411,8 @@ public class LessonServlet extends HttpServlet {
         }
 
         long courseId = Long.parseLong(courseIdStr.trim());
-        Long moduleId = (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) ? Long.parseLong(moduleIdStr.trim()) : null;
+        Long moduleId = (moduleIdStr != null && !moduleIdStr.trim().isEmpty() && !"__NEW__".equals(moduleIdStr.trim()))
+                ? Long.parseLong(moduleIdStr.trim()) : null;
 
         try {
             // [IDOR Defense]: Kiểm tra quyền sở hữu
@@ -419,7 +422,7 @@ public class LessonServlet extends HttpServlet {
             }
 
             List<LessonDto> lessons = CourseService.parseBatchVideoText(batchText);
-            int count = courseService.saveBatchLessons(courseId, moduleId, lessons);
+            int count = courseService.saveBatchLessons(courseId, moduleId, newModuleTitle, lessons);
             SessionUtil.setFlashSuccess(req, "Đã nhập và khởi tạo thành công " + count + " bài học từ danh sách video YouTube!");
             resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId);
         } catch (SecurityException se) {

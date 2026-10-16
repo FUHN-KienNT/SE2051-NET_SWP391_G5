@@ -387,9 +387,23 @@ public class CourseService {
 
     public void deleteCourse(long courseId) {
         try (Connection con = DbConnection.getConnection()) {
-            boolean deleted = courseDao.delete(con, courseId);
-            if (!deleted) {
-                throw new IllegalArgumentException("Không tìm thấy khóa học cần xóa.");
+            con.setAutoCommit(false);
+            try {
+                // Xóa đăng ký học phụ thuộc nếu có
+                try (java.sql.PreparedStatement ps = con.prepareStatement("DELETE FROM registrations WHERE course_id = ?")) {
+                    ps.setLong(1, courseId);
+                    ps.executeUpdate();
+                }
+                boolean deleted = courseDao.delete(con, courseId);
+                if (!deleted) {
+                    throw new IllegalArgumentException("Không tìm thấy khóa học cần xóa.");
+                }
+                con.commit();
+            } catch (Exception ex) {
+                DbConnection.rollbackQuietly(con);
+                throw ex;
+            } finally {
+                con.setAutoCommit(true);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa khóa học: " + e.getMessage(), e);
@@ -538,6 +552,10 @@ public class CourseService {
     }
 
     public int saveBatchLessons(long courseId, Long moduleId, List<LessonDto> lessons) {
+        return saveBatchLessons(courseId, moduleId, null, lessons);
+    }
+
+    public int saveBatchLessons(long courseId, Long moduleId, String newModuleTitle, List<LessonDto> lessons) {
         if (lessons == null || lessons.isEmpty()) {
             return 0;
         }
@@ -549,14 +567,19 @@ public class CourseService {
                     targetModuleId = moduleId;
                 } else {
                     List<Module> existingModules = moduleDao.findByCourseId(con, courseId);
-                    if (!existingModules.isEmpty()) {
-                        targetModuleId = existingModules.get(0).getId();
-                    } else {
+                    if (existingModules.isEmpty() || (newModuleTitle != null && !newModuleTitle.trim().isEmpty())) {
+                        String modTitle = (newModuleTitle != null && !newModuleTitle.trim().isEmpty())
+                                ? newModuleTitle.trim() : null;
+                        if (modTitle == null) {
+                            throw new IllegalArgumentException("Vui lòng nhập tên chương học để chứa danh sách bài giảng.");
+                        }
                         Module newModule = new Module();
                         newModule.setCourseId(courseId);
-                        newModule.setTitle("Chương 1: Danh sách bài giảng");
-                        newModule.setOrderIndex(1);
+                        newModule.setTitle(modTitle);
+                        newModule.setOrderIndex(existingModules.size() + 1);
                         targetModuleId = moduleDao.insert(con, newModule);
+                    } else {
+                        targetModuleId = existingModules.get(0).getId();
                     }
                 }
 
