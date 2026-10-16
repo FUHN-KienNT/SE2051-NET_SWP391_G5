@@ -270,6 +270,10 @@
         return m ? (m[1] || m[2]) : null;
     }
 
+    // =========================================================================
+    // [TÍNH NĂNG] XEM TRƯỚC BÀI HỌC TỪ YOUTUBE PLAYLIST & DANH SÁCH VIDEO
+    // Tag tìm kiếm: #YOUTUBE_PLAYLIST_IMPORT #BATCH_PREVIEW
+    // =========================================================================
     let previewTimer = null;
 
     function renderLocalPreview(text, box, tbody, countBadge) {

@@ -443,6 +443,10 @@
                 }
             }
 
+            // =========================================================================
+            // [TÍNH NĂNG] NHẬN DIỆN & XEM TRƯỚC YOUTUBE PLAYLIST KHI TẠO KHÓA HỌC
+            // Tag tìm kiếm: #YOUTUBE_PLAYLIST_IMPORT #COURSE_BATCH_PREVIEW
+            // =========================================================================
             var courseBatchTimer = null;
             function previewCourseBatchVideos() {
                 var text = document.getElementById('newCourseBatchText').value;

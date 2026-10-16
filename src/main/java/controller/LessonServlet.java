@@ -286,6 +286,7 @@ public class LessonServlet extends HttpServlet {
 
     /**
      * [AJAX API]: Xem trước danh sách bài học bóc tách từ nhiều URL hoặc Playlist YouTube.
+     * Tag tìm kiếm: #YOUTUBE_PLAYLIST_IMPORT #PREVIEW_BATCH
      */
     private void previewBatchVideos(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String batchText = req.getParameter("batchText");

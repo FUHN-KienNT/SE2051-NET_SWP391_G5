@@ -590,10 +590,17 @@ public class CourseService {
         }
     }
 
+    // =========================================================================
+    // [TÍNH NĂNG]: CÀO YOUTUBE PLAYLIST & NHẬP BÀI HỌC HÀNG LOẠT (BATCH IMPORT)
+    // Tag tìm kiếm: #YOUTUBE_PLAYLIST_IMPORT #BATCH_LESSON_PARSER
+    // =========================================================================
+
     /**
      * Bóc tách danh sách bài học từ chuỗi văn bản (hỗ trợ cả nhiều link YouTube đơn lẻ lẫn YouTube Playlist):
-     * Nếu chuỗi văn bản chứa link danh sách phát (Playlist) dạng 'list=PL...' hoặc 'playlist?list=PL...',
-     * hệ thống sẽ tự động gửi yêu cầu kết nối YouTube để lấy toàn bộ các video có trong playlist đó.
+     * - Tự động phát hiện tham số danh sách phát (Playlist) dạng 'list=PL...' hoặc 'playlist?list=PL...' hoặc mã ID 'PL...'.
+     * - Nếu là Playlist: Tự động gửi request HTTP ngầm lên YouTube để cào toàn bộ video và tiêu đề gốc.
+     * - Nếu là Video đơn lẻ: Bóc tách Video ID và lọc tiêu đề tiếng Việt tương ứng trên mỗi dòng.
+     * - Cơ chế chống trùng lặp: 'seenVideoIds' loại bỏ các video bị trùng nếu người dùng dán nhiều lần.
      */
     public static List<LessonDto> parseBatchVideoText(String text) {
         List<LessonDto> list = new ArrayList<>();
