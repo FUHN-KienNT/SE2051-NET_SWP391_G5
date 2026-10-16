@@ -9,6 +9,7 @@ import dto.CourseDto;
 import dto.LessonDto;
 import dto.ModuleDto;
 import dto.UserDto;
+import entity.enums.CourseStatus;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -123,6 +124,12 @@ public class LessonServlet extends HttpServlet {
                 break;
             case "preview-batch-videos":
                 previewBatchVideos(req, resp);
+                break;
+            case "request-publish":
+                requestPublish(req, resp);
+                break;
+            case "cancel-request-publish":
+                cancelRequestPublish(req, resp);
                 break;
             default:
                 showExpertDashboard(req, resp);
@@ -458,6 +465,97 @@ public class LessonServlet extends HttpServlet {
             }
         }
         resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+    }
+
+    /**
+     * Gửi yêu cầu duyệt xuất bản khóa học:
+     * - Chỉ Expert phụ trách khóa học mới có quyền gửi yêu cầu.
+     * - Điều kiện tiên quyết: Khóa học phải có ít nhất 1 chương học và 1 bài học.
+     * - Chuyển trạng thái từ DRAFT sang PENDING_REVIEW để Ban Quản Trị xem xét.
+     */
+    private void requestPublish(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            return;
+        }
+
+        try {
+            long courseId = Long.parseLong(courseIdStr.trim());
+            courseService.checkCourseOwnership(courseId, currentUser);
+
+            CourseDto course = courseService.getCourseDetail(courseId);
+            if (course == null) {
+                throw new IllegalArgumentException("Không tìm thấy khóa học.");
+            }
+
+            if (course.getStatus() == CourseStatus.PUBLISHED) {
+                SessionUtil.setFlashError(req, "Khóa học này đã được công khai trên hệ thống.");
+            } else if (course.getModules() == null || course.getModules().isEmpty() || course.getTotalLessons() <= 0) {
+                SessionUtil.setFlashError(req, "Khóa học chưa có bài giảng nào! Vui lòng thêm ít nhất một bài học trước khi gửi yêu cầu duyệt xuất bản.");
+            } else {
+                courseService.updateCourseStatus(courseId, CourseStatus.PENDING_REVIEW);
+                SessionUtil.setFlashSuccess(req, "Đã gửi yêu cầu xét duyệt xuất bản khóa học \"" + course.getTitle() + "\" đến Ban Quản Trị thành công!");
+            }
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, e.getMessage());
+        }
+
+        String from = req.getParameter("from");
+        if ("lessons".equalsIgnoreCase(from)) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+        }
+    }
+
+    /**
+     * Thu hồi yêu cầu xuất bản khóa học:
+     * - Cho phép Expert rút lại yêu cầu duyệt để tiếp tục bổ sung/chỉnh sửa nội dung.
+     * - Chuyển trạng thái từ PENDING_REVIEW trở lại DRAFT.
+     */
+    private void cancelRequestPublish(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            return;
+        }
+
+        try {
+            long courseId = Long.parseLong(courseIdStr.trim());
+            courseService.checkCourseOwnership(courseId, currentUser);
+
+            CourseDto course = courseService.getCourseDetail(courseId);
+            if (course == null) {
+                throw new IllegalArgumentException("Không tìm thấy khóa học.");
+            }
+
+            if (course.getStatus() != CourseStatus.PENDING_REVIEW) {
+                SessionUtil.setFlashError(req, "Khóa học hiện không ở trạng thái chờ duyệt.");
+            } else {
+                courseService.updateCourseStatus(courseId, CourseStatus.DRAFT);
+                SessionUtil.setFlashSuccess(req, "Đã thu hồi yêu cầu xuất bản. Khóa học đã trở về Bản nháp để bạn tiếp tục chỉnh sửa.");
+            }
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, e.getMessage());
+        }
+
+        String from = req.getParameter("from");
+        if ("lessons".equalsIgnoreCase(from)) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+        }
     }
 
     // =========================================================================

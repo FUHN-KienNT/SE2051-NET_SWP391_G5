@@ -45,15 +45,21 @@
 
                 <!-- Metric summary -->
                 <c:set var="publishedCount" value="0" />
+                <c:set var="pendingCount" value="0" />
                 <c:set var="draftCount" value="0" />
                 <c:set var="totalAllQuizzes" value="0" />
                 <c:forEach var="c" items="${courses}">
-                    <c:if test="${c.status == 'PUBLISHED'}">
-                        <c:set var="publishedCount" value="${publishedCount + 1}" />
-                    </c:if>
-                    <c:if test="${c.status == 'DRAFT'}">
-                        <c:set var="draftCount" value="${draftCount + 1}" />
-                    </c:if>
+                    <c:choose>
+                        <c:when test="${c.status == 'PUBLISHED'}">
+                            <c:set var="publishedCount" value="${publishedCount + 1}" />
+                        </c:when>
+                        <c:when test="${c.status == 'PENDING_REVIEW'}">
+                            <c:set var="pendingCount" value="${pendingCount + 1}" />
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="draftCount" value="${draftCount + 1}" />
+                        </c:otherwise>
+                    </c:choose>
                     <c:set var="totalAllQuizzes" value="${totalAllQuizzes + c.totalQuizzes}" />
                 </c:forEach>
 
@@ -84,23 +90,21 @@
                         <div class="card p-4 border-0 shadow-sm rounded-3 bg-warning text-dark h-100">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="small text-dark text-opacity-75 text-uppercase fw-bold">Bản nháp / Chờ
-                                        duyệt</div>
-                                    <div class="fs-2 fw-bold mt-1">${draftCount}</div>
+                                    <div class="small text-dark text-opacity-75 text-uppercase fw-bold">Chờ Admin duyệt</div>
+                                    <div class="fs-2 fw-bold mt-1">${pendingCount}</div>
                                 </div>
                                 <i class="bi bi-hourglass-split fs-1 text-dark text-opacity-50"></i>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card p-4 border-0 shadow-sm rounded-3 text-white h-100"
-                            style="background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);">
+                        <div class="card p-4 border-0 shadow-sm rounded-3 bg-secondary text-white h-100">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="small text-white-50 text-uppercase fw-bold">Tổng số bài Quiz</div>
-                                    <div class="fs-2 fw-bold mt-1">${totalAllQuizzes}</div>
+                                    <div class="small text-white-50 text-uppercase fw-bold">Bản nháp riêng tư</div>
+                                    <div class="fs-2 fw-bold mt-1">${draftCount}</div>
                                 </div>
-                                <i class="bi bi-patch-question-fill fs-1 text-white-50"></i>
+                                <i class="bi bi-pencil-square fs-1 text-white-50"></i>
                             </div>
                         </div>
                     </div>
@@ -189,12 +193,24 @@
                                                                 (PUBLISHED)
                                                             </span>
                                                         </c:when>
+                                                        <c:when test="${c.status == 'PENDING_REVIEW'}">
+                                                            <span
+                                                                class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1"
+                                                                title="Khóa học đang chờ Admin xét duyệt xuất bản">
+                                                                <i class="bi bi-hourglass-split me-1"></i>Chờ duyệt (PENDING)
+                                                            </span>
+                                                        </c:when>
+                                                        <c:when test="${c.status == 'ARCHIVED'}">
+                                                            <span
+                                                                class="badge bg-secondary-subtle text-secondary border px-2 py-1">
+                                                                <i class="bi bi-archive me-1"></i>Lưu trữ (ARCHIVED)
+                                                            </span>
+                                                        </c:when>
                                                         <c:otherwise>
                                                             <span
-                                                                class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1"
-                                                                title="Khóa học đang ở dạng bản nháp, học viên chưa thấy">
-                                                                <i class="bi bi-hourglass-split me-1"></i>Bản nháp
-                                                                (DRAFT) - Đang chờ duyệt
+                                                                class="badge bg-secondary-subtle text-secondary border px-2 py-1"
+                                                                title="Bản nháp riêng tư, chỉ bạn nhìn thấy">
+                                                                <i class="bi bi-pencil-square me-1"></i>Bản nháp (DRAFT)
                                                             </span>
                                                         </c:otherwise>
                                                     </c:choose>
@@ -202,11 +218,28 @@
                                                 <td class="text-end text-nowrap">
                                                     <div
                                                         class="d-inline-flex align-items-center justify-content-end gap-1">
+                                                        <c:choose>
+                                                            <c:when test="${c.status == 'DRAFT'}">
+                                                                <a href="${pageContext.request.contextPath}/expert/request-publish?courseId=${c.id}"
+                                                                    class="btn btn-success btn-sm shadow-sm text-nowrap fw-semibold"
+                                                                    onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu xuất bản khóa học &quot;${c.title}&quot; để Ban Quản Trị duyệt?');"
+                                                                    title="Gửi yêu cầu xuất bản khóa học này">
+                                                                    <i class="bi bi-send-check me-1"></i>Gửi duyệt
+                                                                </a>
+                                                            </c:when>
+                                                            <c:when test="${c.status == 'PENDING_REVIEW'}">
+                                                                <a href="${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${c.id}"
+                                                                    class="btn btn-outline-warning btn-sm text-nowrap fw-semibold"
+                                                                    onclick="return confirm('Bạn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học &quot;${c.title}&quot;?');"
+                                                                    title="Thu hồi yêu cầu xuất bản về bản nháp">
+                                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Thu hồi
+                                                                </a>
+                                                            </c:when>
+                                                        </c:choose>
                                                         <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
                                                             class="btn btn-primary btn-sm shadow-sm text-nowrap"
                                                             title="Quản lý chương và bài học">
-                                                            <i class="bi bi-journal-text me-1"></i>Soạn Bài học
-                                                            (${c.totalLessons})
+                                                            <i class="bi bi-journal-text me-1"></i>Soạn Bài (${c.totalLessons})
                                                         </a>
                                                         <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}"
                                                             class="btn btn-warning btn-sm shadow-sm text-dark fw-semibold text-nowrap"
@@ -220,12 +253,12 @@
                                                             title="Chỉnh sửa thông tin khóa học">
                                                             <i class="bi bi-gear me-1"></i>Sửa thông tin
                                                         </button>
-                                                        <c:if test="${c.status == 'DRAFT'}">
+                                                        <c:if test="${c.status == 'DRAFT' || c.status == 'PENDING_REVIEW'}">
                                                             <a href="${pageContext.request.contextPath}/expert/delete-course?id=${c.id}"
                                                                 class="btn btn-outline-danger btn-sm text-nowrap"
-                                                                onclick="return confirm('Bạn có chắc chắn muốn xóa bản nháp khóa học &quot;${c.title}&quot; này không? Toàn bộ bài học cũng sẽ bị xóa vĩnh viễn.');"
-                                                                title="Xóa khóa học bản nháp">
-                                                                <i class="bi bi-trash3 me-1"></i>Xóa nháp
+                                                                onclick="return confirm('Bạn có chắc chắn muốn xóa khóa học &quot;${c.title}&quot; này không? Toàn bộ bài học cũng sẽ bị xóa vĩnh viễn.');"
+                                                                title="Xóa khóa học">
+                                                                <i class="bi bi-trash3 me-1"></i>Xóa
                                                             </a>
                                                         </c:if>
                                                         <a href="${pageContext.request.contextPath}/courses/detail?id=${c.id}"

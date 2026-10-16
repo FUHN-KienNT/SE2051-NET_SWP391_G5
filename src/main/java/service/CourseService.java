@@ -411,7 +411,7 @@ public class CourseService {
     }
 
     public long saveModule(ModuleDto dto) {
-        if (dto == null || dto.getCourseId() == null) {
+        if (dto == null) {
             throw new IllegalArgumentException("Dữ liệu chương học không hợp lệ.");
         }
         ValidationUtil.requireText(dto.getTitle(), "Tiêu đề chương");
@@ -423,14 +423,24 @@ public class CourseService {
                     Module m = moduleDao.findById(con, dto.getId())
                             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương cần sửa."));
                     m.setTitle(dto.getTitle().trim());
-                    m.setOrderIndex(dto.getOrderIndex());
+                    if (dto.getOrderIndex() > 0 && !moduleDao.existsOrderIndex(con, m.getCourseId(), dto.getOrderIndex(), m.getId())) {
+                        m.setOrderIndex(dto.getOrderIndex());
+                    }
                     moduleDao.update(con, m);
                     id = m.getId();
                 } else {
+                    if (dto.getCourseId() == null) {
+                        throw new IllegalArgumentException("Khóa học không hợp lệ.");
+                    }
                     Module m = new Module();
                     m.setCourseId(dto.getCourseId());
                     m.setTitle(dto.getTitle().trim());
-                    m.setOrderIndex(dto.getOrderIndex());
+                    int order = dto.getOrderIndex();
+                    if (order <= 0 || moduleDao.existsOrderIndex(con, dto.getCourseId(), order, null)) {
+                        List<Module> currentModules = moduleDao.findByCourseId(con, dto.getCourseId());
+                        order = currentModules.stream().mapToInt(Module::getOrderIndex).max().orElse(0) + 1;
+                    }
+                    m.setOrderIndex(order);
                     id = moduleDao.insert(con, m);
                 }
                 con.commit();

@@ -92,11 +92,17 @@ public class AdminCourseServlet extends HttpServlet {
     private void toggleCourseStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         String fromDashboard = req.getParameter("fromDashboard");
+        String targetStatus = req.getParameter("status");
         if (idStr != null) {
             try {
-                long courseId = Long.parseLong(idStr);
+                long courseId = Long.parseLong(idStr.trim());
                 CourseDto course = courseService.getCourseDetail(courseId);
-                CourseStatus newStatus = course.getStatus() == CourseStatus.PUBLISHED ? CourseStatus.DRAFT : CourseStatus.PUBLISHED;
+                CourseStatus newStatus;
+                if (targetStatus != null && !targetStatus.trim().isEmpty()) {
+                    newStatus = CourseStatus.fromDb(targetStatus.trim());
+                } else {
+                    newStatus = course.getStatus() == CourseStatus.PUBLISHED ? CourseStatus.DRAFT : CourseStatus.PUBLISHED;
+                }
                 courseService.updateCourseStatus(courseId, newStatus);
             } catch (Exception ignored) {}
         }
@@ -119,14 +125,17 @@ public class AdminCourseServlet extends HttpServlet {
         List<UserDto> allUsers = userService.getUsers();
         List<SettingDto> categories = settingService.getByType(SettingType.COURSE_CATEGORY);
 
-        List<CourseDto> draftCourses = new java.util.ArrayList<>();
+        List<CourseDto> pendingCourses = new java.util.ArrayList<>();
         int publishedCount = 0;
         int draftCount = 0;
+        int pendingReviewCount = 0;
         if (allCourses != null) {
             for (CourseDto c : allCourses) {
-                if (c.getStatus() == CourseStatus.DRAFT || c.getStatus() == CourseStatus.PENDING_REVIEW) {
+                if (c.getStatus() == CourseStatus.PENDING_REVIEW) {
+                    pendingReviewCount++;
+                    pendingCourses.add(c);
+                } else if (c.getStatus() == CourseStatus.DRAFT) {
                     draftCount++;
-                    draftCourses.add(c);
                 } else if (c.getStatus() == CourseStatus.PUBLISHED) {
                     publishedCount++;
                 }
@@ -136,7 +145,9 @@ public class AdminCourseServlet extends HttpServlet {
         req.setAttribute("totalCourses", allCourses != null ? allCourses.size() : 0);
         req.setAttribute("publishedCount", publishedCount);
         req.setAttribute("draftCount", draftCount);
-        req.setAttribute("draftCourses", draftCourses);
+        req.setAttribute("pendingReviewCount", pendingReviewCount);
+        req.setAttribute("pendingCourses", pendingCourses);
+        req.setAttribute("draftCourses", pendingCourses);
         req.setAttribute("totalExperts", experts != null ? experts.size() : 0);
         req.setAttribute("totalUsers", allUsers != null ? allUsers.size() : 0);
         req.setAttribute("totalCategories", categories != null ? categories.size() : 0);
