@@ -496,7 +496,7 @@ public class LessonServlet extends HttpServlet {
 
             if (course.getStatus() == CourseStatus.PUBLISHED) {
                 SessionUtil.setFlashError(req, "Khóa học này đã được công khai trên hệ thống.");
-            } else if (course.getModules() == null || course.getModules().isEmpty() || course.getTotalLessons() <= 0) {
+            } else if (course.getTotalLessons() <= 0) {
                 SessionUtil.setFlashError(req, "Khóa học chưa có bài giảng nào! Vui lòng thêm ít nhất một bài học trước khi gửi yêu cầu duyệt xuất bản.");
             } else {
                 courseService.updateCourseStatus(courseId, CourseStatus.PENDING_REVIEW);
@@ -682,12 +682,20 @@ public class LessonServlet extends HttpServlet {
                 dto.setId(lessonId);
             }
 
+            Long courseId = (courseIdStr != null && !courseIdStr.trim().isEmpty()) ? Long.parseLong(courseIdStr.trim()) : null;
+            if (courseId != null) {
+                dto.setCourseId(courseId);
+            }
+
             String moduleId = req.getParameter("moduleId");
-            if (moduleId != null && !moduleId.trim().isEmpty()) {
+            if (moduleId != null && !moduleId.trim().isEmpty() && !"__NONE__".equals(moduleId.trim())) {
                 long modId = Long.parseLong(moduleId.trim());
                 // [IDOR Defense]: Kiểm tra quyền sở hữu chương học trước khi lưu
                 courseService.checkModuleOwnership(modId, currentUser);
                 dto.setModuleId(modId);
+            } else if (courseId != null) {
+                // Tự động gán vào module mặc định của khóa học nếu người dùng không chọn chương
+                dto.setModuleId(courseService.getOrCreateDefaultModuleId(courseId));
             }
 
             dto.setTitle(req.getParameter("title"));

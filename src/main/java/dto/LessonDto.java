@@ -11,6 +11,7 @@ public class LessonDto {
     private String documentUrl;
     private int orderIndex;
     private LessonProgressStatus progressStatus;
+    private Long courseId;
 
     public LessonDto() {
     }
@@ -25,6 +26,14 @@ public class LessonDto {
         this.documentUrl = documentUrl;
         this.orderIndex = orderIndex;
         this.progressStatus = progressStatus;
+    }
+
+    public Long getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
     }
 
     public Long getId() {

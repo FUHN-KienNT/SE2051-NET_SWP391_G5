@@ -343,10 +343,10 @@
                                 <div id="newCourseBatchFeedback" class="mt-2 small d-none"></div>
                                 <div id="newCourseBatchModuleDiv" class="mt-2 p-2 bg-white rounded border border-primary-subtle d-none">
                                     <label class="form-label small fw-bold text-primary mb-1">
-                                        <i class="bi bi-folder-plus me-1"></i>Tên chương học chứa các video này <span class="text-danger">*</span>
+                                        <i class="bi bi-folder-plus me-1"></i>Tên chương học chứa các video này <span class="text-muted fw-normal">(Tùy chọn)</span>
                                     </label>
-                                    <input type="text" name="batchModuleTitle" id="newCourseBatchModuleTitle" class="form-control form-control-sm" placeholder="Ví dụ: Chương 1: Giới thiệu khóa học...">
-                                    <div class="form-text small text-muted">Bạn tự đặt tên cho chương học này thay vì để hệ thống tự động đặt tên.</div>
+                                    <input type="text" name="batchModuleTitle" id="newCourseBatchModuleTitle" class="form-control form-control-sm" placeholder="Ví dụ: Chương 1: Giới thiệu (để trống nếu không chia chương)...">
+                                    <div class="form-text small text-muted">Nếu để trống, hệ thống sẽ tự động tạo bài học vào danh sách bài học chung mà không bắt buộc tạo chương.</div>
                                 </div>
                                 <div class="form-text small mt-1"><i class="bi bi-magic text-primary me-1"></i>Hỗ trợ nhận diện toàn bộ bài học từ Playlist YouTube hoặc danh sách link video chỉ với 1 click!</div>
                             </div>
@@ -533,9 +533,9 @@
                             feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>Đã nhận diện: <strong>' + data.length + ' bài giảng</strong> (sẵn sàng tạo)</span>';
                             if (moduleDiv) moduleDiv.classList.remove('d-none');
                             if (moduleTitleInp) {
-                                moduleTitleInp.required = true;
+                                moduleTitleInp.required = false;
                                 if (!moduleTitleInp.value) {
-                                    moduleTitleInp.placeholder = "Nhập tên chương học cho " + data.length + " bài này...";
+                                    moduleTitleInp.placeholder = "Nhập tên chương học cho " + data.length + " bài này (hoặc để trống)...";
                                 }
                             }
                         } else {

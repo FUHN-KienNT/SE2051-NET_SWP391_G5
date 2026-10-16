@@ -70,6 +70,9 @@
                 <p class="text-muted small mb-0">Quản lý các chương học (Modules) và các bài giảng (Lessons) - Màn hình II.4.1</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
+                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-primary fw-semibold shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm Bài học
+                </a>
                 <c:choose>
                     <c:when test="${course.status == 'DRAFT'}">
                         <a href="${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons"
@@ -89,7 +92,7 @@
                 <button type="button" class="btn btn-danger fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
                     <i class="bi bi-youtube me-1"></i>Nhập Playlist / Hàng loạt Video
                 </button>
-                <button type="button" class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#newModuleModal">
+                <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-toggle="modal" data-bs-target="#newModuleModal">
                     <i class="bi bi-folder-plus me-1"></i>Thêm Chương mới
                 </button>
             </div>
@@ -98,15 +101,18 @@
         <c:choose>
             <c:when test="${empty course.modules}">
                 <div class="card p-5 text-center border-0 shadow-sm rounded-3">
-                    <i class="bi bi-folder2-open fs-1 text-muted mb-3"></i>
-                    <h5>Khóa học này chưa có chương học nào!</h5>
-                    <p class="text-muted small">Hãy bấm nút <strong>"Nhập Playlist / Hàng loạt Video"</strong> để tạo nhanh toàn bộ bài học, hoặc bấm "Thêm Chương mới".</p>
-                    <div class="d-flex justify-content-center gap-2 mt-2">
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
+                    <i class="bi bi-journal-plus fs-1 text-primary mb-3"></i>
+                    <h5>Khóa học này chưa có nội dung bài học!</h5>
+                    <p class="text-muted small">Bạn có thể thêm từng bài học trực tiếp (không bắt buộc phải chia chương), nhập Playlist YouTube hàng loạt hoặc tạo các chương để phân loại.</p>
+                    <div class="d-flex justify-content-center flex-wrap gap-2 mt-2">
+                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-primary fw-semibold">
+                            <i class="bi bi-plus-lg me-1"></i>Thêm Bài học mới
+                        </a>
+                        <button type="button" class="btn btn-danger fw-semibold" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
                             <i class="bi bi-youtube me-1"></i>Nhập hàng loạt video YouTube
                         </button>
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newModuleModal">
-                            <i class="bi bi-folder-plus me-1"></i>Thêm Chương thủ công
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newModuleModal">
+                            <i class="bi bi-folder-plus me-1"></i>Tạo Chương học (Tùy chọn)
                         </button>
                     </div>
                 </div>
@@ -118,8 +124,16 @@
                             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                                 <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-primary">Chương ${m.orderIndex}</span>
-                                        <h5 class="fw-bold mb-0">${m.title}</h5>
+                                        <c:choose>
+                                            <c:when test="${course.modules.size() == 1 && (m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung')}">
+                                                <span class="badge bg-secondary-subtle text-secondary border"><i class="bi bi-list-ul me-1"></i>Bài học chung</span>
+                                                <h5 class="fw-bold mb-0">${m.title}</h5>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="badge bg-primary">Chương ${m.orderIndex}</span>
+                                                <h5 class="fw-bold mb-0">${m.title}</h5>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
                                     <div class="d-flex gap-2">
                                         <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-primary">
@@ -209,17 +223,27 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Thêm vào Chương học:</label>
+                        <label class="form-label small fw-semibold">Thêm vào Chương học: <span class="text-muted fw-normal">(Tùy chọn)</span></label>
                         <select name="moduleId" id="batchTargetModule" class="form-select" onchange="toggleBatchModuleChoice(this)">
+                            <option value="" ${empty course.modules ? 'selected' : ''}>-- Bài học chung (Không chia chương) --</option>
                             <c:forEach var="m" items="${course.modules}">
-                                <option value="${m.id}">Chương ${m.orderIndex}: ${m.title}</option>
+                                <option value="${m.id}">
+                                    <c:choose>
+                                        <c:when test="${m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung'}">
+                                            ${m.title}
+                                        </c:when>
+                                        <c:otherwise>
+                                            Chương ${m.orderIndex}: ${m.title}
+                                        </c:otherwise>
+                                    </c:choose>
+                                </option>
                             </c:forEach>
-                            <option value="__NEW__" ${empty course.modules ? 'selected' : ''}>+ Tạo Chương học mới...</option>
+                            <option value="__NEW__">+ Tạo Chương học mới...</option>
                         </select>
-                        <div id="batchNewModuleInputDiv" class="mt-2 ${empty course.modules ? '' : 'd-none'}">
-                            <label class="form-label small fw-semibold text-primary">Tên chương học mới <span class="text-danger">*</span></label>
-                            <input type="text" name="newModuleTitle" id="batchNewModuleTitle" class="form-control form-control-sm border-primary" placeholder="Ví dụ: Chương 1: Giới thiệu khóa học..." ${empty course.modules ? 'required' : ''}>
-                            <div class="form-text small text-muted">Vui lòng nhập tên chương học thay vì để hệ thống tự động đặt tên.</div>
+                        <div id="batchNewModuleInputDiv" class="mt-2 d-none">
+                            <label class="form-label small fw-semibold text-primary">Tên chương học mới <span class="text-muted fw-normal">(Tùy chọn)</span></label>
+                            <input type="text" name="newModuleTitle" id="batchNewModuleTitle" class="form-control form-control-sm border-primary" placeholder="Nhập tên chương học (để trống nếu không chia chương)">
+                            <div class="form-text small text-muted">Nếu để trống, hệ thống sẽ tự động xếp vào danh sách bài học chung.</div>
                         </div>
                     </div>
 
@@ -349,7 +373,7 @@
         if (!div || !inp) return;
         if (sel.value === '__NEW__') {
             div.classList.remove('d-none');
-            inp.required = true;
+            inp.required = false;
             inp.focus();
         } else {
             div.classList.add('d-none');

@@ -467,12 +467,42 @@ public class CourseService {
         }
     }
 
+    public long getOrCreateDefaultModuleId(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Module> existing = moduleDao.findByCourseId(con, courseId);
+            for (Module m : existing) {
+                if ("Danh sách bài học".equalsIgnoreCase(m.getTitle()) || "Bài học chung".equalsIgnoreCase(m.getTitle())) {
+                    return m.getId();
+                }
+            }
+            if (existing.isEmpty()) {
+                Module m = new Module();
+                m.setCourseId(courseId);
+                m.setTitle("Danh sách bài học");
+                m.setOrderIndex(1);
+                return moduleDao.insert(con, m);
+            }
+            // Nếu đã có các chương riêng biệt, tạo một mục "Bài học chung"
+            Module m = new Module();
+            m.setCourseId(courseId);
+            m.setTitle("Bài học chung");
+            m.setOrderIndex(existing.size() + 1);
+            return moduleDao.insert(con, m);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm hoặc tạo chương học mặc định: " + e.getMessage(), e);
+        }
+    }
+
     public long saveLesson(LessonDto dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Dữ liệu bài học không hợp lệ.");
         }
         if (dto.getModuleId() == null || dto.getModuleId() <= 0) {
-            throw new IllegalArgumentException("Vui lòng chọn chương học hợp lệ.");
+            if (dto.getCourseId() != null && dto.getCourseId() > 0) {
+                dto.setModuleId(getOrCreateDefaultModuleId(dto.getCourseId()));
+            } else {
+                throw new IllegalArgumentException("Vui lòng chọn khóa học hoặc chương học hợp lệ.");
+            }
         }
         ValidationUtil.requireText(dto.getTitle(), "Tiêu đề bài học");
         ValidationUtil.requireMaxLength(dto.getTitle(), 255, "Tiêu đề bài học");
@@ -577,19 +607,22 @@ public class CourseService {
                     targetModuleId = moduleId;
                 } else {
                     List<Module> existingModules = moduleDao.findByCourseId(con, courseId);
-                    if (existingModules.isEmpty() || (newModuleTitle != null && !newModuleTitle.trim().isEmpty())) {
-                        String modTitle = (newModuleTitle != null && !newModuleTitle.trim().isEmpty())
-                                ? newModuleTitle.trim() : null;
-                        if (modTitle == null) {
-                            throw new IllegalArgumentException("Vui lòng nhập tên chương học để chứa danh sách bài giảng.");
-                        }
+                    if (newModuleTitle != null && !newModuleTitle.trim().isEmpty()) {
                         Module newModule = new Module();
                         newModule.setCourseId(courseId);
-                        newModule.setTitle(modTitle);
+                        newModule.setTitle(newModuleTitle.trim());
                         newModule.setOrderIndex(existingModules.size() + 1);
                         targetModuleId = moduleDao.insert(con, newModule);
+                    } else if (!existingModules.isEmpty()) {
+                        // Thêm tiếp vào module hiện có
+                        targetModuleId = existingModules.get(existingModules.size() - 1).getId();
                     } else {
-                        targetModuleId = existingModules.get(0).getId();
+                        // Tự động tạo container bài học chung nếu khóa học chưa có chương nào
+                        Module defaultModule = new Module();
+                        defaultModule.setCourseId(courseId);
+                        defaultModule.setTitle("Danh sách bài học");
+                        defaultModule.setOrderIndex(1);
+                        targetModuleId = moduleDao.insert(con, defaultModule);
                     }
                 }
 
