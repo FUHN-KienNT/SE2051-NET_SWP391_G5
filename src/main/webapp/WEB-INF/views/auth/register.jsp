@@ -15,8 +15,8 @@
             }
 
             body {
-                background-color: #1F1F20;
-                color: #fff;
+                background-color: #F8F9FA;
+                color: #111827;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
                 min-height: 100vh;
                 display: flex;
@@ -44,24 +44,24 @@
             }
             .brand-icon {
                 font-size: 1.8rem;
-                color: #fff;
+                color: #111827;
             }
             .brand-name {
                 font-size: 1.25rem;
                 font-weight: 800;
-                color: #fff;
+                color: #111827;
                 letter-spacing: -0.3px;
             }
             .auth-title {
                 font-size: 1.45rem;
                 font-weight: 700;
-                color: #fff;
+                color: #111827;
                 margin-bottom: 6px;
                 letter-spacing: -0.4px;
             }
             .auth-subtitle {
                 font-size: 0.9rem;
-                color: #a8a8a8;
+                color: #6B7280;
                 line-height: 1.4;
             }
 
@@ -83,27 +83,28 @@
                 display: block;
                 font-size: 0.88rem;
                 font-weight: 600;
-                color: #f5f5f5;
+                color: #374151;
                 margin-bottom: 8px;
             }
             .field-input {
                 width: 100%;
-                background-color: #121212;
-                border: 1px solid #363636;
+                background-color: #FFFFFF;
+                border: 1px solid #E5E7EB;
                 border-radius: 12px;
-                color: #fff;
+                color: #111827;
                 font-size: 0.92rem;
                 padding: 13px 16px;
                 outline: none;
-                transition: border-color 0.2s, background-color 0.2s;
+                transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
                 appearance: none;
             }
             .field-input::placeholder {
-                color: #737373;
+                color: #9CA3AF;
             }
             .field-input:focus {
-                border-color: #737373;
-                background-color: #161616;
+                background-color: #FFFFFF;
+                border-color: #F38020;
+                box-shadow: 0 0 0 3px rgba(243, 128, 32, 0.15);
             }
             .field-input.field-err {
                 border-color: #ed4956;
@@ -125,7 +126,7 @@
                 position: absolute;
                 right: 14px;
                 cursor: pointer;
-                color: #a8a8a8;
+                color: #9CA3AF;
                 font-size: 1.25rem;
                 display: none;
                 align-items: center;
@@ -134,7 +135,7 @@
                 transition: color 0.15s;
             }
             .toggle-icon:hover {
-                color: #fff;
+                color: #111827;
             }
 
             .strength-bars {
@@ -149,7 +150,7 @@
                 height: 3px;
                 flex: 1;
                 border-radius: 2px;
-                background-color: #363636;
+                background-color: #E5E7EB;
                 transition: background-color 0.2s;
             }
             .s-bar.weak   {
@@ -180,16 +181,16 @@
                 height: 17px;
                 min-width: 17px;
                 margin-top: 2px;
-                accent-color: #0095f6;
+                accent-color: #F38020;
                 cursor: pointer;
             }
             .terms-label {
                 font-size: 0.8rem;
-                color: #a8a8a8;
+                color: #6B7280;
                 line-height: 1.5;
             }
             .terms-label a {
-                color: #0095f6;
+                color: #F38020;
                 text-decoration: none;
                 font-weight: 600;
             }
@@ -200,7 +201,7 @@
             .btn-submit {
                 display: block;
                 width: 100%;
-                background-color: #0095f6;
+                background-color: #F38020;
                 color: #fff;
                 border: none;
                 border-radius: 9999px;
@@ -213,15 +214,15 @@
                 text-align: center;
             }
             .btn-submit:hover {
-                background-color: #1877f2;
+                background-color: #E56B00;
             }
 
             .btn-have-account {
                 display: block;
                 width: 100%;
-                background-color: #262626;
-                color: #f5f5f5;
-                border: 1px solid #363636;
+                background-color: #FFFFFF;
+                color: #374151;
+                border: 1px solid #E5E7EB;
                 border-radius: 9999px;
                 font-size: 0.92rem;
                 font-weight: 600;
@@ -230,11 +231,12 @@
                 text-align: center;
                 text-decoration: none;
                 cursor: pointer;
-                transition: background-color 0.15s, color 0.15s;
+                transition: all 0.15s ease;
             }
             .btn-have-account:hover {
-                background-color: #333333;
-                color: #fff;
+                background-color: #FFF7ED;
+                border-color: #F38020;
+                color: #F38020;
             }
 
             .auth-footer {
@@ -242,118 +244,12 @@
                 padding-bottom: 24px;
                 text-align: center;
                 font-size: 0.78rem;
-                color: #737373;
+                color: #9CA3AF;
                 line-height: 1.5;
             }
-            .theme-toggle-btn {
-                position: fixed;
-                top: 20px;
-                right: 24px;
-                z-index: 1000;
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                background-color: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.18);
-                color: #F38020;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.3rem;
-                cursor: pointer;
-                transition: all 0.25s ease;
-                backdrop-filter: blur(10px);
-                outline: none;
-            }
-            .theme-toggle-btn:hover {
-                transform: scale(1.1) rotate(15deg);
-                background-color: rgba(255, 255, 255, 0.2);
-                border-color: #F38020;
-            }
-
-            [data-theme="light"] body {
-                background-color: #F8F9FA;
-                color: #111827;
-            }
-            [data-theme="light"] .theme-toggle-btn {
-                background-color: #FFFFFF;
-                border-color: #E5E7EB;
-                color: #F38020;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            }
-            [data-theme="light"] .theme-toggle-btn:hover {
-                background-color: #FFF7ED;
-                border-color: #F38020;
-            }
-            [data-theme="light"] .auth-title {
-                color: #111827;
-            }
-            [data-theme="light"] .auth-subtitle {
-                color: #6B7280;
-            }
-            [data-theme="light"] .field-label {
-                color: #374151;
-            }
-            [data-theme="light"] .field-input {
-                background-color: #FFFFFF;
-                border-color: #E5E7EB;
-                color: #111827;
-            }
-            [data-theme="light"] .field-input:focus {
-                background-color: #FFFFFF;
-                border-color: #F38020;
-                box-shadow: 0 0 0 3px rgba(243, 128, 32, 0.15);
-            }
-            [data-theme="light"] .s-bar {
-                background-color: #E5E7EB;
-            }
-            [data-theme="light"] .terms-label {
-                color: #6B7280;
-            }
-            [data-theme="light"] .terms-label a {
-                color: #F38020;
-            }
-            [data-theme="light"] .terms-check {
-                accent-color: #F38020;
-            }
-            [data-theme="light"] .btn-submit {
-                background-color: #F38020;
-                color: #FFFFFF;
-            }
-            [data-theme="light"] .btn-submit:hover {
-                background-color: #E56B00;
-            }
-            [data-theme="light"] .btn-have-account {
-                background-color: #FFFFFF;
-                border-color: #E5E7EB;
-                color: #374151;
-            }
-            [data-theme="light"] .btn-have-account:hover {
-                background-color: #FFF7ED;
-                border-color: #F38020;
-                color: #F38020;
-            }
-            [data-theme="light"] .auth-footer {
-                color: #9CA3AF;
-            }
-
-            body, .field-input, .btn-submit, .btn-have-account {
-                transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
-            }
         </style>
-
-        <script>
-            (function () {
-                if (localStorage.getItem('courson_auth_theme') === 'light') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                }
-            })();
-        </script>
     </head>
     <body>
-        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="Chuyển chế độ sáng/tối" title="Chuyển chế độ Sáng/Tối">
-            <i class="bi bi-sun-fill" id="themeIcon"></i>
-        </button>
         <div class="auth-container">
 
             <div class="auth-header">
@@ -383,6 +279,22 @@
             </c:if>
 
             <form id="registerForm" action="${pageContext.request.contextPath}/auth/register" method="POST" novalidate>
+
+                <div class="field-group">
+                    <label class="field-label" for="fullName">Họ Và Tên</label>
+                    <input type="text" id="fullName" name="fullName" class="field-input"
+                           value="<c:out value='${registerDto.fullName}'/>"
+                           placeholder="Nhập họ và tên đầy đủ" autocomplete="name">
+                    <div class="field-error" id="fullNameError"></div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="username">Tên người dùng</label>
+                    <input type="text" id="username" name="username" class="field-input"
+                           value="<c:out value='${registerDto.username}'/>"
+                           placeholder="Nhập tên người dùng" autocomplete="username">
+                    <div class="field-error" id="usernameError"></div>
+                </div>
 
                 <div class="field-group">
                     <label class="field-label" for="email">Email</label>
@@ -420,22 +332,6 @@
                         </span>
                     </div>
                     <div class="field-error" id="confirmError"></div>
-                </div>
-
-                <div class="field-group">
-                    <label class="field-label" for="fullName">Tên</label>
-                    <input type="text" id="fullName" name="fullName" class="field-input"
-                           value="<c:out value='${registerDto.fullName}'/>"
-                           placeholder="Tên đầy đủ" autocomplete="name">
-                    <div class="field-error" id="fullNameError"></div>
-                </div>
-
-                <div class="field-group">
-                    <label class="field-label" for="username">Tên người dùng</label>
-                    <input type="text" id="username" name="username" class="field-input"
-                           value="<c:out value='${registerDto.username}'/>"
-                           placeholder="Tên người dùng" autocomplete="username">
-                    <div class="field-error" id="usernameError"></div>
                 </div>
 
                 <div class="terms-row">
@@ -643,30 +539,6 @@
 
                 if (!ok)
                     e.preventDefault();
-            });
-            const themeToggleBtn = document.getElementById('themeToggleBtn');
-            const themeIcon = document.getElementById('themeIcon');
-
-            function updateThemeDisplay(theme) {
-                if (theme === 'light') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    themeIcon.className = 'bi bi-moon-stars-fill';
-                    themeToggleBtn.setAttribute('title', 'Chuyển sang chế độ Tối (Night Mode)');
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                    themeIcon.className = 'bi bi-sun-fill';
-                    themeToggleBtn.setAttribute('title', 'Chuyển sang chế độ Sáng (Light Mode)');
-                }
-            }
-
-            const savedTheme = localStorage.getItem('courson_auth_theme') || 'dark';
-            updateThemeDisplay(savedTheme);
-
-            themeToggleBtn.addEventListener('click', function () {
-                const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-                const newTheme = isLight ? 'dark' : 'light';
-                localStorage.setItem('courson_auth_theme', newTheme);
-                updateThemeDisplay(newTheme);
             });
         </script>
 

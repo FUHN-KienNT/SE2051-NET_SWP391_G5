@@ -8,14 +8,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Kiểm tra email của bạn - Courson LMS</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-        <script>
-            (function () {
-                const theme = localStorage.getItem('courson_auth_theme');
-                if (theme === 'light') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                }
-            })();
-        </script>
         <style>
             /* Toast Notification Styles */
             .courson-toast-container {
@@ -122,21 +114,6 @@
             }
 
             :root {
-                --bg-main: #0d0d0e;
-                --bg-card: #18181b;
-                --border-card: rgba(255, 255, 255, 0.1);
-                --text-main: #ffffff;
-                --text-muted: #a1a1aa;
-                --text-sub: #71717a;
-                --primary: #F38020;
-                --primary-hover: #E56B00;
-                --primary-glow: rgba(243, 128, 32, 0.25);
-                --box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-                --tip-bg: rgba(243, 128, 32, 0.08);
-                --tip-border: rgba(243, 128, 32, 0.25);
-            }
-
-            [data-theme="light"] {
                 --bg-main: #F5EFEB;
                 --bg-card: #ffffff;
                 --border-card: #E5DFD7;
@@ -161,44 +138,6 @@
                 justify-content: center;
                 padding: 32px 16px;
                 transition: background-color 0.3s ease, color 0.3s ease;
-            }
-
-            /* Theme toggle (đồng bộ chuẩn Login / Register) */
-            .theme-toggle-btn {
-                position: fixed;
-                top: 20px;
-                right: 24px;
-                z-index: 1000;
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                background-color: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.18);
-                color: #F38020;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.3rem;
-                cursor: pointer;
-                transition: all 0.25s ease;
-                backdrop-filter: blur(10px);
-                outline: none;
-            }
-            .theme-toggle-btn:hover {
-                transform: scale(1.1) rotate(15deg);
-                background-color: rgba(255, 255, 255, 0.2);
-                border-color: #F38020;
-            }
-
-            [data-theme="light"] .theme-toggle-btn {
-                background-color: #FFFFFF;
-                border-color: #E5E7EB;
-                color: #F38020;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            }
-            [data-theme="light"] .theme-toggle-btn:hover {
-                background-color: #FFF7ED;
-                border-color: #F38020;
             }
 
             .email-card {
@@ -378,11 +317,6 @@
     </head>
     <body>
 
-        <!-- Theme Toggle -->
-        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Chuyển chế độ giao diện">
-            <i class="bi bi-sun-fill" id="themeIcon"></i>
-        </button>
-
         <div class="email-card">
             <!-- Brand -->
             <a href="${pageContext.request.contextPath}/home" class="brand-badge">
@@ -557,30 +491,6 @@
                 }
                 global.CoursonToast = CoursonToast;
             })(window);
-
-            // Theme toggle logic
-            const themeToggleBtn = document.getElementById('themeToggleBtn');
-            const themeIcon = document.getElementById('themeIcon');
-
-            function updateThemeDisplay(theme) {
-                if (theme === 'light') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    themeIcon.className = 'bi bi-moon-stars-fill';
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                    themeIcon.className = 'bi bi-sun-fill';
-                }
-            }
-
-            const currentTheme = localStorage.getItem('courson_auth_theme') || 'dark';
-            updateThemeDisplay(currentTheme);
-
-            themeToggleBtn.addEventListener('click', function () {
-                const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-                const nextTheme = isLight ? 'dark' : 'light';
-                localStorage.setItem('courson_auth_theme', nextTheme);
-                updateThemeDisplay(nextTheme);
-            });
 
             // 60-Second Countdown Timer for Resend Button
             const resendBtn = document.getElementById('resendBtn');
