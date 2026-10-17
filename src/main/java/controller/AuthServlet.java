@@ -16,6 +16,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import service.AuthService;
 import service.InactiveAccountException;
+import util.GoogleOAuthUtil;
 import util.SessionUtil;
 
 @WebServlet(name = "AuthServlet", urlPatterns = { "/auth/*" })
@@ -68,7 +69,12 @@ public class AuthServlet extends HttpServlet {
             case "logout":
                 logout(req, resp);
                 break;
+            case "google":
+                // Bước 1: Redirect người dùng tới Google để xác thực
+                initiateGoogleLogin(req, resp);
+                break;
             case "google-callback":
+                // Bước 2: Google redirect về đây với ?code=... sau khi người dùng đồng ý
                 googleCallback(req, resp);
                 break;
             default:
@@ -171,15 +177,104 @@ public class AuthServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/home");
     }
 
-    private void googleCallback(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String email = req.getParameter("email");
-        String name = req.getParameter("name");
+    /**
+     * Bước 1 – Redirect trình duyệt người dùng tới Google OAuth consent screen.
+     * Sinh CSRF state token, lưu vào session để xác thực ở callback.
+     */
+    private void initiateGoogleLogin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (!GoogleOAuthUtil.isConfigured()) {
+            // Credentials chưa được điền → hiển thị trang login với thông báo lỗi
+            HttpSession session = req.getSession(true);
+            session.setAttribute("flashToastType", "error");
+            session.setAttribute("flashToastMessage",
+                "Chức năng đăng nhập Google chưa được cấu hình. Vui lòng liên hệ quản trị viên.");
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        // Tạo CSRF state token để chống CSRF attack
+        String state = java.util.UUID.randomUUID().toString();
+        HttpSession session = req.getSession(true);
+        session.setAttribute("oauth_state", state);
+
         try {
-            UserDto user = authService.authenticateGoogle(email, name);
+            String authUrl = GoogleOAuthUtil.buildAuthUrl(state);
+            resp.sendRedirect(authUrl);
+        } catch (IOException e) {
+            session.setAttribute("flashToastType", "error");
+            session.setAttribute("flashToastMessage", "Không thể kết nối tới Google. Vui lòng thử lại.");
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+        }
+    }
+
+    /**
+     * Bước 2 – Google redirect về đây sau khi người dùng đồng ý (hoặc từ chối).
+     * Xử lý: xác thực state, đổi code lấy token, lấy user info, đăng nhập/tạo account.
+     */
+    private void googleCallback(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        String ctx = req.getContextPath();
+
+        // ── Kiểm tra người dùng từ chối đăng nhập Google ──
+        String error = req.getParameter("error");
+        if (error != null) {
+            if (session != null) {
+                session.setAttribute("flashToastType", "info");
+                session.setAttribute("flashToastMessage", "Bạn đã huỷ đăng nhập bằng Google.");
+            }
+            resp.sendRedirect(ctx + "/auth/login");
+            return;
+        }
+
+        // ── Xác thực CSRF state ──
+        String returnedState = req.getParameter("state");
+        String savedState = (session != null) ? (String) session.getAttribute("oauth_state") : null;
+        if (savedState == null || !savedState.equals(returnedState)) {
+            if (session != null) {
+                session.setAttribute("flashToastType", "error");
+                session.setAttribute("flashToastMessage", "Phiên đăng nhập không hợp lệ. Vui lòng thử lại.");
+            }
+            resp.sendRedirect(ctx + "/auth/login");
+            return;
+        }
+        // Xoá state đã dùng
+        if (session != null) {
+            session.removeAttribute("oauth_state");
+        }
+
+        // ── Lấy authorization code từ Google ──
+        String code = req.getParameter("code");
+        if (code == null || code.isBlank()) {
+            if (session == null) session = req.getSession(true);
+            session.setAttribute("flashToastType", "error");
+            session.setAttribute("flashToastMessage", "Không nhận được mã xác thực từ Google.");
+            resp.sendRedirect(ctx + "/auth/login");
+            return;
+        }
+
+        try {
+            // ── Bước 2a: Đổi code → access token ──
+            String accessToken = GoogleOAuthUtil.exchangeCodeForToken(code);
+
+            // ── Bước 2b: Lấy thông tin người dùng từ Google ──
+            GoogleOAuthUtil.GoogleUserInfo googleUser = GoogleOAuthUtil.getUserInfo(accessToken);
+
+            if (googleUser.getEmail() == null || googleUser.getEmail().isBlank()) {
+                throw new IllegalArgumentException("Không lấy được email từ tài khoản Google.");
+            }
+
+            // ── Bước 2c: Đăng nhập hoặc tạo tài khoản ──
+            UserDto user = authService.authenticateGoogle(googleUser.getEmail(), googleUser.getName());
             SessionUtil.setCurrentUser(req, user);
             redirectByRole(user, req, resp);
+
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/auth/login?error=" + e.getMessage());
+            String msg = e.getMessage();
+            if (msg == null || msg.isBlank()) msg = "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
+            if (session == null) session = req.getSession(true);
+            session.setAttribute("flashToastType", "error");
+            session.setAttribute("flashToastMessage", msg);
+            resp.sendRedirect(ctx + "/auth/login");
         }
     }
 
