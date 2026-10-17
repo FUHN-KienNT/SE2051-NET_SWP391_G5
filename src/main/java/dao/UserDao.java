@@ -16,6 +16,7 @@ import java.util.Optional;
 public class UserDao {
     private static final String SQL_FIND_ALL = "SELECT id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at FROM users ORDER BY id DESC";
     private static final String SQL_FIND_BY_ID = "SELECT id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at FROM users WHERE id = ?";
+    private static final String SQL_FIND_BY_EMAIL = "SELECT id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at FROM users WHERE LOWER(email) = LOWER(?)";
     private static final String SQL_FIND_BY_USERNAME_OR_EMAIL = "SELECT id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at FROM users WHERE username = ? OR LOWER(email) = LOWER(?)";
     private static final String SQL_EXISTS_USERNAME = "SELECT COUNT(1) FROM users WHERE username = ? AND (? IS NULL OR id != ?)";
     private static final String SQL_EXISTS_EMAIL = "SELECT COUNT(1) FROM users WHERE LOWER(email) = LOWER(?) AND (? IS NULL OR id != ?)";
@@ -64,6 +65,22 @@ public class UserDao {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_USERNAME_OR_EMAIL)) {
             ps.setString(1, value);
             ps.setString(2, value);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Tìm user theo email chính xác (case-insensitive).
+     * Dùng cho Google OAuth — tránh nhầm với username trùng.
+     */
+    public Optional<User> findByEmail(Connection con, String email) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_EMAIL)) {
+            ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapRow(rs));
