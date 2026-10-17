@@ -26,6 +26,10 @@ doc/
 # Environment variables
 .env
 
+# Sensitive credentials (fill in locally, never commit)
+src/main/resources/google-oauth.properties
+src/main/resources/mail.properties
+
 # Python
 __pycache__/
 *.pyc
