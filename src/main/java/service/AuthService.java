@@ -107,30 +107,64 @@ public class AuthService {
     }
 
     public UserDto authenticateGoogle(String email, String name) {
-        if (!ValidationUtil.isEmail(email)) {
+        if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email Google không hợp lệ.");
+        }
+        if (!ValidationUtil.isEmail(email)) {
+            throw new IllegalArgumentException("Email Google không đúng định dạng.");
         }
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
-                Optional<User> userOpt = userDao.findByUsernameOrEmail(con, email.trim());
+                // ── 1. Tìm theo email chính xác ──────────────────────────────
+                Optional<User> userOpt = userDao.findByEmail(con, email.trim());
                 User user;
+
                 if (userOpt.isPresent()) {
+                    // ── 2a. Đã có tài khoản với email này ────────────────────
                     user = userOpt.get();
+
+                    // Kiểm tra tài khoản bị khoá
+                    if (user.getStatus() == UserStatus.BANNED) {
+                        throw new IllegalStateException("Tài khoản của bạn đã bị khóa.");
+                    }
+
+                    // Nếu tài khoản LOCAL nhưng chưa verify (INACTIVE), Google đăng nhập
+                    // sẽ tự động verify luôn (email đã xác thực qua Google)
+                    if (user.getStatus() == UserStatus.INACTIVE) {
+                        userDao.updateStatus(con, user.getId(), UserStatus.ACTIVE);
+                        user.setStatus(UserStatus.ACTIVE);
+                    }
+
+                    // Nếu trước đây đăng ký LOCAL, cập nhật auth_provider → GOOGLE
+                    if (user.getAuthProvider() == AuthProvider.LOCAL) {
+                        updateAuthProviderToGoogle(con, user.getId());
+                        user.setAuthProvider(AuthProvider.GOOGLE);
+                    }
+
                 } else {
+                    // ── 2b. Chưa có tài khoản → tạo mới ─────────────────────
                     Setting studentRole = resolveStudentRole();
+
+                    // Tạo username từ phần trước @ của email
+                    String baseUsername = sanitizeUsername(email.split("@")[0]);
+                    String username = resolveUniqueUsername(con, baseUsername);
+
                     user = new User();
-                    user.setUsername(email.split("@")[0]);
+                    user.setUsername(username);
                     user.setEmail(email.trim());
-                    user.setPasswordHash(null);
-                    user.setFullName(name != null && !name.trim().isEmpty() ? name.trim() : email.split("@")[0]);
+                    user.setPasswordHash(null); // Google user không có password
+                    user.setFullName(name != null && !name.trim().isEmpty()
+                        ? name.trim()
+                        : baseUsername);
                     user.setRoleId(studentRole != null ? studentRole.getId() : null);
                     user.setRoleType(SettingType.USER_ROLE);
                     user.setAuthProvider(AuthProvider.GOOGLE);
-                    user.setStatus(UserStatus.ACTIVE);
+                    user.setStatus(UserStatus.ACTIVE); // Google đã verify email rồi
                     long id = userDao.insert(con, user);
                     user.setId(id);
                 }
+
                 con.commit();
                 return mapUser(user);
             } catch (Exception ex) {
@@ -207,6 +241,55 @@ public class AuthService {
         } catch (SQLException e) {
             return null;
         }
+    }
+
+    /**
+     * Cập nhật cột auth_provider của user thành GOOGLE.
+     * Dùng khi user đã đăng ký bằng LOCAL sau đó đăng nhập bằng Google cùng email.
+     */
+    private void updateAuthProviderToGoogle(Connection con, long userId) throws java.sql.SQLException {
+        String sql = "UPDATE users SET auth_provider = 'GOOGLE', updated_at = ? WHERE id = ?";
+        try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setObject(1, java.time.OffsetDateTime.now());
+            ps.setLong(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Làm sạch phần trước @ của email thành username hợp lệ:
+     * chỉ giữ lại chữ cái, số, dấu gạch dưới; tối thiểu 4 ký tự.
+     */
+    private String sanitizeUsername(String emailPrefix) {
+        if (emailPrefix == null) return "user";
+        // Thay ký tự không hợp lệ bằng gạch dưới
+        String cleaned = emailPrefix.replaceAll("[^a-zA-Z0-9_]", "_");
+        // Xoá gạch dưới thừa ở đầu/cuối
+        cleaned = cleaned.replaceAll("^_+|_+$", "");
+        if (cleaned.isEmpty()) cleaned = "user";
+        // Đảm bảo tối thiểu 4 ký tự
+        if (cleaned.length() < 4) cleaned = cleaned + "user";
+        // Giới hạn tối đa 20 ký tự (để còn chỗ thêm suffix số)
+        if (cleaned.length() > 20) cleaned = cleaned.substring(0, 20);
+        return cleaned.toLowerCase();
+    }
+
+    /**
+     * Tìm username chưa bị trùng trong DB.
+     * Nếu {@code base} đã tồn tại, thử: base2, base3, ... tới base99.
+     */
+    private String resolveUniqueUsername(Connection con, String base) throws java.sql.SQLException {
+        if (!userDao.existsUsername(con, base, null)) {
+            return base;
+        }
+        for (int i = 2; i <= 9999; i++) {
+            String candidate = base + i;
+            if (!userDao.existsUsername(con, candidate, null)) {
+                return candidate;
+            }
+        }
+        // Fallback cực kỳ hiếm: dùng timestamp
+        return base + System.currentTimeMillis();
     }
 
     private UserDto mapUser(User user) {
