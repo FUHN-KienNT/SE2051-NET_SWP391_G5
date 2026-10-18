@@ -516,8 +516,32 @@
                         </c:forEach>
                     </c:when>
                     <c:otherwise>
-                        <a href="${pageContext.request.contextPath}/courses/catalog" class="topic-pill">
-                            Tất cả chủ đề
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Nhân+Tướng" class="topic-pill">
+                            Nhân tướng học & Nhân trắc học
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Tử+Vi" class="topic-pill">
+                            Tử Vi & Phong Thủy
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Cung+Hoàng+Đạo" class="topic-pill">
+                            Chiêm Tinh & Cung Hoàng Đạo
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Web" class="topic-pill">
+                            Phát triển Web Fullstack
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Data" class="topic-pill">
+                            Trí tuệ nhân tạo & Data
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=SQL" class="topic-pill">
+                            Cơ sở dữ liệu & Tối ưu hóa
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Java" class="topic-pill">
+                            Lập trình Cốt lõi
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Cloud" class="topic-pill">
+                            DevOps & Điện toán Đám mây
+                        </a>
+                        <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Mobile" class="topic-pill">
+                            Lập trình Mobile
                         </a>
                     </c:otherwise>
                 </c:choose>
