@@ -30,10 +30,6 @@ body {
     color: var(--saas-text-body);
 }
 
-.saas-container {
-    max-width: 1280px;
-    margin: 0 auto;
-}
 
 .saas-card {
     background: var(--saas-card-bg);
@@ -129,7 +125,7 @@ body {
 </style>
 
 <main class="main-content py-4">
-    <div class="saas-container px-3 px-md-4">
+    <div class="container">
         <!-- Breadcrumb & Title -->
         <nav class="mb-4">
             <ol class="breadcrumb small mb-0">

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Quản lý bài học - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
@@ -34,10 +35,6 @@ body {
     color: var(--saas-text-body);
 }
 
-.saas-container {
-    max-width: 1280px;
-    margin: 0 auto;
-}
 
 /* Breadcrumbs */
 .saas-breadcrumb {
@@ -443,7 +440,7 @@ body {
 </style>
 
 <main class="main-content py-4">
-    <div class="container saas-container">
+    <div class="container">
         <!-- Modern Breadcrumb -->
         <nav class="saas-breadcrumb" aria-label="breadcrumb">
             <a href="${pageContext.request.contextPath}/expert/dashboard">
@@ -527,7 +524,7 @@ body {
                     <c:when test="${course.status == 'DRAFT'}">
                         <button type="button"
                            class="btn btn-saas-outline-emerald"
-                           onclick="confirmPublishCourse('<c:out value="${course.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons')"
+                           onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons')"
                            title="Gửi duyệt khóa học">
                             <i class="bi bi-send-check"></i>Gửi duyệt
                         </button>
@@ -535,7 +532,7 @@ body {
                     <c:when test="${course.status == 'PENDING_REVIEW'}">
                         <button type="button"
                            class="btn btn-saas-outline-amber"
-                           onclick="confirmCancelPublishCourse('<c:out value="${course.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons')"
+                           onclick="confirmCancelPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons')"
                            title="Thu hồi yêu cầu xuất bản">
                             <i class="bi bi-arrow-counterclockwise"></i>Thu hồi yêu cầu
                         </button>
@@ -610,7 +607,7 @@ body {
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn-icon-action text-danger border-0 bg-transparent" 
-                                                onclick="confirmDeleteLesson('<c:out value="${l.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/delete-lesson?courseId=${course.id}&lessonId=${l.id}')" 
+                                                onclick="confirmDeleteLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/delete-lesson?courseId=${course.id}&lessonId=${l.id}')" 
                                                 title="Xóa bài học" aria-label="Xóa bài">
                                             <i class="bi bi-trash3"></i>
                                         </button>

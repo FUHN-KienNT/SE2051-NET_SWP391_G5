@@ -101,6 +101,7 @@
         color: #1e293b;
         outline: none;
         -moz-appearance: textfield;
+        appearance: textfield;
     }
     .points-editor-pill input.points-inline-input::-webkit-outer-spin-button,
     .points-editor-pill input.points-inline-input::-webkit-inner-spin-button {

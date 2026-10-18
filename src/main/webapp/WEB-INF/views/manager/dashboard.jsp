@@ -35,12 +35,6 @@ body {
     color: var(--saas-text-body);
 }
 
-.saas-container {
-    max-width: 100%;
-    padding-left: 20px;
-    padding-right: 20px;
-    margin: 0 auto;
-}
 
 /* Page Header */
 .saas-header {
@@ -289,7 +283,7 @@ body {
 </style>
 
 <main class="main-content py-4">
-    <div class="saas-container">
+    <div class="container">
         <!-- Header -->
         <div class="saas-header">
             <div>
@@ -440,7 +434,7 @@ body {
                                                 <td>
                                                     <div class="d-flex align-items-center gap-2" style="min-width: 100px;">
                                                         <div class="saas-progress-track flex-grow-1">
-                                                            <div class="saas-progress-fill bg-success" style="width: ${reg.progressPercentage}%;"></div>
+                                                            <div class="saas-progress-fill bg-success" data-progress="${reg.progressPercentage}"></div>
                                                         </div>
                                                         <span class="small fw-semibold text-muted" style="font-size: 11px;">${reg.progressPercentage}%</span>
                                                     </div>
@@ -529,5 +523,20 @@ body {
         </div>
     </div>
 </main>
+
+<script>
+    (function() {
+        function initProgress() {
+            document.querySelectorAll('.saas-progress-fill[data-progress]').forEach(function(el) {
+                el.style.width = (el.getAttribute('data-progress') || '0') + '%';
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initProgress);
+        } else {
+            initProgress();
+        }
+    })();
+</script>
 
 <jsp:include page="../common/footer.jsp" />

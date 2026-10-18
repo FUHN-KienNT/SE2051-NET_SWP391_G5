@@ -35,12 +35,6 @@ body {
     color: var(--saas-text-body);
 }
 
-.saas-container {
-    max-width: 100%;
-    padding-left: 20px;
-    padding-right: 20px;
-    margin: 0 auto;
-}
 
 .saas-header {
     display: flex;
@@ -258,7 +252,7 @@ body {
 </style>
 
 <main class="main-content py-4">
-    <div class="saas-container px-3 px-md-4">
+    <div class="container">
         <!-- Header -->
         <div class="saas-header">
             <div>

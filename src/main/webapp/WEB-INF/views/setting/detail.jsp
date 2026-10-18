@@ -28,10 +28,6 @@ body {
     color: var(--saas-text-body);
 }
 
-.saas-container {
-    max-width: 860px;
-    margin: 0 auto;
-}
 
 .saas-card {
     background: var(--saas-card-bg);
@@ -106,7 +102,7 @@ body {
 </style>
 
 <main class="main-content py-4">
-    <div class="saas-container px-3">
+    <div class="container">
         <!-- Breadcrumb -->
         <nav class="mb-4">
             <ol class="breadcrumb small mb-0">
@@ -123,7 +119,9 @@ body {
             </div>
         </c:if>
 
-        <div class="saas-card">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <div class="saas-card">
             <div class="d-flex align-items-center gap-3 pb-3 mb-4 border-bottom">
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width: 44px; height: 44px; font-size: 1.25rem;">
                     <i class="bi bi-sliders"></i>
@@ -199,6 +197,8 @@ body {
                     </button>
                 </div>
             </form>
+                </div>
+            </div>
         </div>
     </div>
 </main>

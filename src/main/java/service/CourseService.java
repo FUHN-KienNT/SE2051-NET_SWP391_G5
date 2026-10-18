@@ -484,7 +484,7 @@ public class CourseService {
         checkCourseOwnership(courseId, currentUser);
 
         try (Connection con = DbConnection.getConnection()) {
-            Course course = courseDao.findById(con, courseId)
+            courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
 
             courseDao.updateArchiveStatus(con, courseId, CourseStatus.PUBLISHED, null, null);
@@ -503,7 +503,7 @@ public class CourseService {
         checkCourseOwnership(courseId, currentUser);
 
         try (Connection con = DbConnection.getConnection()) {
-            Course course = courseDao.findById(con, courseId)
+            courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
 
             courseDao.updateArchiveStatus(con, courseId, CourseStatus.PUBLISHED, null, null);

@@ -584,7 +584,7 @@
                                                                                             class="d-inline-flex align-items-center gap-1">
                                                                                             <button type="button"
                                                                                                 class="btn btn-sm btn-outline-secondary py-1 px-2 rounded-3"
-                                                                                                onclick="openEditQuizModal('${q.id}', '${m.id}', '${fn:escapeXml(q.title)}', '${q.passScore}', '${q.timeLimitMinutes != null ? q.timeLimitMinutes : ''}', '${q.orderIndex}')"
+                                                                                                onclick="openEditQuizModal('${q.id}', '${m.id}', '${fn:escapeXml(q.title)}', '${q.passScore}', '${q.timeLimitMinutes}', '${q.orderIndex}')"
                                                                                                 data-bs-toggle="modal"
                                                                                                 data-bs-target="#quizModal"
                                                                                                 title="Sửa thông tin">

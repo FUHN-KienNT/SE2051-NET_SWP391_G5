@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Expert Studio - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
@@ -34,10 +35,6 @@ body {
     color: var(--saas-text-body);
 }
 
-.saas-container {
-    max-width: 1280px;
-    margin: 0 auto;
-}
 
 /* Page Header */
 .saas-header {
@@ -781,7 +778,7 @@ body {
 </style>
 
 <main class="main-content py-4">
-    <div class="container saas-container">
+    <div class="container">
         <!-- Top bar -->
         <div class="saas-header">
             <div>
@@ -980,8 +977,8 @@ body {
                                 <c:forEach var="c" items="${courses}">
                                     <tr class="course-row" 
                                         data-status="${c.status}" 
-                                        data-title="<c:out value="${c.title}" />" 
-                                        data-category="<c:out value="${c.categoryName != null ? c.categoryName : ''}" />">
+                                        data-title="${fn:escapeXml(c.title)}" 
+                                        data-category="${fn:escapeXml(c.categoryName != null ? c.categoryName : '')}">
                                         <td>
                                             <div class="course-info-wrap">
                                                 <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="course-thumb-box">
@@ -1073,7 +1070,7 @@ body {
                                                                 <li>
                                                                     <a class="saas-dropdown-item text-success fw-semibold"
                                                                        href="javascript:void(0)"
-                                                                       onclick="confirmPublishCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/request-publish?courseId=${c.id}')">
+                                                                       onclick="confirmPublishCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/request-publish?courseId=${c.id}')">
                                                                         <i class="bi bi-send-check text-success"></i>Gửi duyệt xuất bản
                                                                     </a>
                                                                 </li>
@@ -1083,7 +1080,7 @@ body {
                                                                 <li>
                                                                     <a class="saas-dropdown-item text-warning fw-semibold"
                                                                        href="javascript:void(0)"
-                                                                       onclick="confirmCancelPublishCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${c.id}')">
+                                                                       onclick="confirmCancelPublishCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${c.id}')">
                                                                         <i class="bi bi-arrow-counterclockwise text-warning"></i>Thu hồi yêu cầu duyệt
                                                                     </a>
                                                                 </li>
@@ -1095,13 +1092,13 @@ body {
                                                                         <li>
                                                                             <a class="saas-dropdown-item text-danger fw-semibold"
                                                                                href="javascript:void(0)"
-                                                                               onclick="confirmCancelArchive('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/cancel-archive?id=${c.id}')">
+                                                                               onclick="confirmCancelArchive('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/cancel-archive?id=${c.id}')">
                                                                                 <i class="bi bi-x-circle text-danger"></i>Hủy lịch lưu trữ
                                                                             </a>
                                                                         </li>
                                                                         <li>
                                                                             <button type="button" class="saas-dropdown-item w-100 border-0 bg-transparent text-start text-warning fw-semibold"
-                                                                                    onclick="openArchiveModal(${c.id}, '<c:out value="${c.title}" escapeXml="true" />')">
+                                                                                    onclick="openArchiveModal('${c.id}', '${fn:escapeXml(c.title)}')">
                                                                                 <i class="bi bi-calendar-event text-warning"></i>Đổi lịch lưu trữ
                                                                             </button>
                                                                         </li>
@@ -1109,7 +1106,7 @@ body {
                                                                     <c:otherwise>
                                                                         <li>
                                                                             <button type="button" class="saas-dropdown-item w-100 border-0 bg-transparent text-start text-warning fw-semibold"
-                                                                                    onclick="openArchiveModal(${c.id}, '<c:out value="${c.title}" escapeXml="true" />')">
+                                                                                    onclick="openArchiveModal('${c.id}', '${fn:escapeXml(c.title)}')">
                                                                                 <i class="bi bi-archive text-warning"></i>Lưu trữ / Ẩn khóa học
                                                                             </button>
                                                                         </li>
@@ -1121,7 +1118,7 @@ body {
                                                                 <li>
                                                                     <a class="saas-dropdown-item text-success fw-semibold"
                                                                        href="javascript:void(0)"
-                                                                       onclick="confirmUnarchiveCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/unarchive-course?id=${c.id}')">
+                                                                       onclick="confirmUnarchiveCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/unarchive-course?id=${c.id}')">
                                                                         <i class="bi bi-arrow-counterclockwise text-success"></i>Mở lại khóa học (Unarchive)
                                                                     </a>
                                                                 </li>
@@ -1134,7 +1131,7 @@ body {
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <button type="button" class="saas-dropdown-item w-100 border-0 bg-transparent text-start" onclick="openEditCourseModal(${c.id})">
+                                                            <button type="button" class="saas-dropdown-item w-100 border-0 bg-transparent text-start" onclick="openEditCourseModal('${c.id}')">
                                                                 <i class="bi bi-gear text-secondary"></i>Chỉnh sửa thông tin
                                                             </button>
                                                         </li>
@@ -1148,7 +1145,7 @@ body {
                                                                 <li><hr class="dropdown-divider my-1"></li>
                                                                 <li>
                                                                     <a class="saas-dropdown-item text-danger" href="javascript:void(0)"
-                                                                       onclick="confirmDeleteCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
+                                                                       onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
                                                                         <i class="bi bi-trash3 text-danger"></i>Xóa vĩnh viễn (Nháp)
                                                                     </a>
                                                                 </li>
@@ -1232,7 +1229,7 @@ body {
                                         <c:forEach var="cat" items="${categories}" varStatus="status">
                                             <div class="saas-combobox-item ${status.first ? 'selected' : ''}"
                                                  data-value="${cat.id}"
-                                                 data-label="<c:out value="${cat.name}"/>"
+                                                 data-label="${fn:escapeXml(cat.name)}"
                                                  role="option">
                                                 <span class="item-text"><c:out value="${cat.name}"/></span>
                                                 <i class="bi bi-check2 item-check"></i>
@@ -1354,7 +1351,7 @@ body {
                                         <c:forEach var="cat" items="${categories}">
                                             <div class="saas-combobox-item"
                                                  data-value="${cat.id}"
-                                                 data-label="<c:out value="${cat.name}"/>"
+                                                 data-label="${fn:escapeXml(cat.name)}"
                                                  role="option">
                                                 <span class="item-text"><c:out value="${cat.name}"/></span>
                                                 <i class="bi bi-check2 item-check"></i>
