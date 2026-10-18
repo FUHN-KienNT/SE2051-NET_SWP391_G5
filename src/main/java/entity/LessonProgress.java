@@ -9,16 +9,22 @@ public class LessonProgress {
     private Long lessonId;
     private LessonProgressStatus status;
     private OffsetDateTime completedAt;
+    private String userNote;
 
     public LessonProgress() {
     }
 
     public LessonProgress(Long id, Long registrationId, Long lessonId, LessonProgressStatus status, OffsetDateTime completedAt) {
+        this(id, registrationId, lessonId, status, completedAt, null);
+    }
+
+    public LessonProgress(Long id, Long registrationId, Long lessonId, LessonProgressStatus status, OffsetDateTime completedAt, String userNote) {
         this.id = id;
         this.registrationId = registrationId;
         this.lessonId = lessonId;
         this.status = status;
         this.completedAt = completedAt;
+        this.userNote = userNote;
     }
 
     public Long getId() {
@@ -59,5 +65,13 @@ public class LessonProgress {
 
     public void setCompletedAt(OffsetDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public String getUserNote() {
+        return userNote;
+    }
+
+    public void setUserNote(String userNote) {
+        this.userNote = userNote;
     }
 }

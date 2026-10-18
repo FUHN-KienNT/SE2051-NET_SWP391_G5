@@ -2,6 +2,8 @@ package dto;
 
 import entity.enums.CourseStatus;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +20,8 @@ public class CourseDto {
     private String managerName;
     private String expertName;
     private List<ModuleDto> modules = new ArrayList<>();
+    private OffsetDateTime archiveAt;
+    private String archiveNotice;
 
     public CourseDto() {
     }
@@ -185,5 +189,44 @@ public class CourseDto {
             }
         }
         return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60";
+    }
+
+    public OffsetDateTime getArchiveAt() {
+        return archiveAt;
+    }
+
+    public void setArchiveAt(OffsetDateTime archiveAt) {
+        this.archiveAt = archiveAt;
+    }
+
+    public String getArchiveNotice() {
+        return archiveNotice;
+    }
+
+    public void setArchiveNotice(String archiveNotice) {
+        this.archiveNotice = archiveNotice;
+    }
+
+    public boolean isArchiveScheduled() {
+        return status == CourseStatus.PUBLISHED 
+            && archiveAt != null 
+            && archiveAt.isAfter(OffsetDateTime.now());
+    }
+
+    public boolean isArchived() {
+        return status == CourseStatus.ARCHIVED 
+            || (archiveAt != null && !archiveAt.isAfter(OffsetDateTime.now()));
+    }
+
+    public long getDaysUntilArchive() {
+        if (archiveAt == null) return 0;
+        java.time.Duration diff = java.time.Duration.between(OffsetDateTime.now(), archiveAt);
+        long days = diff.toDays();
+        return Math.max(0, days);
+    }
+
+    public String getFormattedArchiveAt() {
+        if (archiveAt == null) return "";
+        return archiveAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 }

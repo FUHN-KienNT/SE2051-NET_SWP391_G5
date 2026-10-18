@@ -17,6 +17,8 @@ public class Course {
     private Long expertId;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private OffsetDateTime archiveAt;
+    private String archiveNotice;
 
     public Course() {
     }
@@ -35,6 +37,15 @@ public class Course {
         this.expertId = expertId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public Course(Long id, String title, Long categoryId, SettingType categoryType, String description,
+                  BigDecimal price, CourseStatus status, Long managerId, Long expertId,
+                  OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                  OffsetDateTime archiveAt, String archiveNotice) {
+        this(id, title, categoryId, categoryType, description, price, status, managerId, expertId, createdAt, updatedAt);
+        this.archiveAt = archiveAt;
+        this.archiveNotice = archiveNotice;
     }
 
     public Long getId() {
@@ -123,5 +134,21 @@ public class Course {
 
     public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public OffsetDateTime getArchiveAt() {
+        return archiveAt;
+    }
+
+    public void setArchiveAt(OffsetDateTime archiveAt) {
+        this.archiveAt = archiveAt;
+    }
+
+    public String getArchiveNotice() {
+        return archiveNotice;
+    }
+
+    public void setArchiveNotice(String archiveNotice) {
+        this.archiveNotice = archiveNotice;
     }
 }

@@ -229,8 +229,8 @@ body {
 }
 .saas-table th {
     background: #f8fafc;
-    padding: 12px 20px;
-    font-size: 0.75rem;
+    padding: 12px 16px;
+    font-size: 0.775rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -239,7 +239,7 @@ body {
     white-space: nowrap;
 }
 .saas-table td {
-    padding: 16px 20px;
+    padding: 16px 16px;
     border-bottom: 1px solid var(--saas-border-subtle);
     vertical-align: middle;
     background: #ffffff;
@@ -252,22 +252,29 @@ body {
     border-bottom: none;
 }
 
+@media (min-width: 992px) {
+    .table-responsive {
+        overflow-x: visible !important;
+    }
+}
+
 /* Course Identity Column */
 .course-info-wrap {
     display: flex;
     align-items: center;
     gap: 16px;
-    min-width: 320px;
+    min-width: 0;
 }
 .course-thumb-box {
-    width: 80px;
-    height: 50px;
+    width: 96px;
+    height: 60px;
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
     background: #0f172a;
     border: 1px solid #e2e8f0;
     position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .course-thumb-img {
     width: 100%;
@@ -279,12 +286,13 @@ body {
     transform: scale(1.05);
 }
 .course-title-text {
-    font-size: 0.9375rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--saas-text-heading);
     text-decoration: none;
     line-height: 1.4;
     display: block;
+    word-break: break-word;
     transition: color 0.15s ease;
 }
 .course-title-text:hover {
@@ -304,16 +312,16 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     white-space: nowrap;
 }
 .badge-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
 }
 .saas-badge-published {
@@ -349,9 +357,9 @@ body {
     background: #f1f5f9;
     color: #334155;
     border: 1px solid #e2e8f0;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    padding: 3px 8px;
+    padding: 3px 9px;
     border-radius: 6px;
     display: inline-block;
 }
@@ -436,8 +444,8 @@ body {
 }
 
 .btn-icon-action {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
@@ -447,11 +455,29 @@ body {
     color: #64748b;
     transition: all 0.15s ease;
     cursor: pointer;
+    font-size: 0.95rem;
 }
 .btn-icon-action:hover {
     background: #f1f5f9;
     color: #0f172a;
     border-color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+    .saas-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .saas-tabs {
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        justify-content: flex-start;
+    }
+    .saas-search-box {
+        width: 100%;
+        min-width: unset;
+    }
 }
 
 /* Dropdown Menu (shadcn style) */
@@ -492,17 +518,21 @@ body {
     border-radius: 16px;
     border: 1px solid var(--saas-border);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
+    overflow: visible !important;
 }
 .modal-header.saas-modal-header {
     background: #ffffff;
     border-bottom: 1px solid var(--saas-border);
     padding: 20px 24px;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
 }
 .modal-footer.saas-modal-footer {
     background: #f8fafc;
     border-top: 1px solid var(--saas-border);
     padding: 16px 24px;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
 .saas-form-label {
     font-size: 0.8125rem;
@@ -521,6 +551,205 @@ body {
     border-color: var(--saas-accent);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
+
+/* Modern SaaS Searchable Select (Combobox) */
+.saas-combobox {
+    position: relative;
+    width: 100%;
+}
+.saas-combobox-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.875rem;
+    color: var(--saas-text-heading);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    user-select: none;
+}
+.saas-combobox-trigger:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+.saas-combobox.open .saas-combobox-trigger,
+.saas-combobox-trigger:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: var(--saas-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.saas-combobox-label {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 8px;
+    font-weight: 500;
+}
+.saas-combobox-arrow {
+    font-size: 0.75rem;
+    color: #64748b;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+}
+.saas-combobox.open .saas-combobox-arrow {
+    transform: rotate(180deg);
+    color: var(--saas-accent);
+}
+.saas-combobox-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--saas-border);
+    border-radius: 12px;
+    box-shadow: 0 14px 34px -4px rgba(15, 23, 42, 0.16), 0 6px 12px -2px rgba(15, 23, 42, 0.08);
+    z-index: 1065;
+    display: none;
+    overflow: hidden;
+}
+.saas-combobox.open .saas-combobox-dropdown {
+    display: block;
+    animation: saasComboboxFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes saasComboboxFade {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.saas-combobox-search-wrap {
+    position: relative;
+    padding: 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--saas-border-subtle);
+}
+.saas-combobox-search {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 7px 30px 7px 32px;
+    font-size: 0.8125rem;
+    background: #ffffff;
+    outline: none;
+    color: var(--saas-text-heading);
+    transition: all 0.15s ease;
+}
+.saas-combobox-search:focus {
+    border-color: var(--saas-accent);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+.saas-combobox-search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #94a3b8;
+    pointer-events: none;
+}
+.saas-combobox-search-clear {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+.saas-combobox-search-clear:hover {
+    color: #475569;
+}
+.saas-combobox-list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 6px;
+}
+.saas-combobox-list::-webkit-scrollbar {
+    width: 5px;
+}
+.saas-combobox-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.saas-combobox-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+    margin-bottom: 1px;
+}
+.saas-combobox-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.saas-combobox-item.selected {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+.saas-combobox-item .item-check {
+    color: #2563eb;
+    font-size: 1rem;
+    display: none;
+}
+.saas-combobox-item.selected .item-check {
+    display: inline-block;
+}
+.saas-combobox-empty {
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: #94a3b8;
+}
+.saas-combobox-footer {
+    border-top: 1px solid var(--saas-border-subtle);
+    padding: 6px;
+    background: #fafbfc;
+}
+.saas-combobox-footer .add-new-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #2563eb;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    text-align: left;
+}
+.saas-combobox-footer .add-new-btn:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
 .saas-youtube-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -557,9 +786,9 @@ body {
         <div class="saas-header">
             <div>
                 <h1 class="saas-title">
-                    <i class="bi bi-mortarboard text-primary"></i>Expert Studio
+                    <i class="bi bi-mortarboard-fill text-primary"></i>Expert Studio
                 </h1>
-                <p class="saas-subtitle">Quản lý và biên tập nội dung các khóa học do bạn phụ trách</p>
+                <p class="saas-subtitle">Quản lý và soạn nội dung các khóa học của bạn</p>
             </div>
             <div>
                 <button type="button" class="btn btn-saas-primary px-3 py-2" data-bs-toggle="modal" data-bs-target="#newCourseModal">
@@ -576,7 +805,7 @@ body {
                     <i class="bi bi-check-circle-fill fs-5"></i>
                     <span>
                         <c:choose>
-                            <c:when test="${displaySuccess == 'created'}">Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.</c:when>
+                            <c:when test="${displaySuccess == 'created'}">Tạo khóa học thành công! Hãy bắt đầu soạn bài học cho khóa học này.</c:when>
                             <c:when test="${displaySuccess == 'deleted'}">Đã xóa khóa học thành công!</c:when>
                             <c:otherwise><c:out value="${displaySuccess}" escapeXml="true" /></c:otherwise>
                         </c:choose>
@@ -601,6 +830,7 @@ body {
         <c:set var="publishedCount" value="0" />
         <c:set var="pendingCount" value="0" />
         <c:set var="draftCount" value="0" />
+        <c:set var="archivedCount" value="0" />
         <c:set var="totalAllQuizzes" value="0" />
         <c:forEach var="c" items="${courses}">
             <c:choose>
@@ -609,6 +839,9 @@ body {
                 </c:when>
                 <c:when test="${c.status == 'PENDING_REVIEW'}">
                     <c:set var="pendingCount" value="${pendingCount + 1}" />
+                </c:when>
+                <c:when test="${c.status == 'ARCHIVED'}">
+                    <c:set var="archivedCount" value="${archivedCount + 1}" />
                 </c:when>
                 <c:otherwise>
                     <c:set var="draftCount" value="${draftCount + 1}" />
@@ -630,7 +863,7 @@ body {
                     <div>
                         <div class="saas-stat-value">${courses.size()}</div>
                         <div class="saas-stat-desc">
-                            <span>Toàn bộ chương trình phụ trách</span>
+                            <span>Tất cả khóa học của bạn</span>
                         </div>
                     </div>
                 </div>
@@ -646,7 +879,7 @@ body {
                     <div>
                         <div class="saas-stat-value">${publishedCount}</div>
                         <div class="saas-stat-desc text-success">
-                            <i class="bi bi-broadcast me-1"></i>Học viên đang học trực tuyến
+                            <i class="bi bi-broadcast me-1"></i>Học viên đang theo học
                         </div>
                     </div>
                 </div>
@@ -654,7 +887,7 @@ body {
             <div class="col-12 col-sm-6 col-lg-3">
                 <div class="saas-stat-card">
                     <div class="saas-stat-header">
-                        <span class="saas-stat-label">Chờ Admin duyệt</span>
+                        <span class="saas-stat-label">Chờ duyệt</span>
                         <div class="saas-stat-icon saas-icon-amber">
                             <i class="bi bi-hourglass-split"></i>
                         </div>
@@ -662,7 +895,7 @@ body {
                     <div>
                         <div class="saas-stat-value">${pendingCount}</div>
                         <div class="saas-stat-desc text-warning">
-                            <i class="bi bi-clock-history me-1"></i>Đang trong hàng đợi kiểm duyệt
+                            <i class="bi bi-clock-history me-1"></i>Đang chờ Quản lý duyệt
                         </div>
                     </div>
                 </div>
@@ -670,7 +903,7 @@ body {
             <div class="col-12 col-sm-6 col-lg-3">
                 <div class="saas-stat-card">
                     <div class="saas-stat-header">
-                        <span class="saas-stat-label">Bản nháp riêng tư</span>
+                        <span class="saas-stat-label">Bản nháp</span>
                         <div class="saas-stat-icon saas-icon-slate">
                             <i class="bi bi-file-earmark-text"></i>
                         </div>
@@ -678,7 +911,7 @@ body {
                     <div>
                         <div class="saas-stat-value">${draftCount}</div>
                         <div class="saas-stat-desc text-muted">
-                            <i class="bi bi-lock me-1"></i>Chỉ bạn có quyền xem &amp; sửa
+                            <i class="bi bi-lock me-1"></i>Chưa công khai (chỉ bạn thấy)
                         </div>
                     </div>
                 </div>
@@ -702,6 +935,9 @@ body {
                     <button type="button" class="saas-tab-btn" data-filter="DRAFT" onclick="filterCourses('DRAFT', this)">
                         Bản nháp <span class="saas-tab-badge">${draftCount}</span>
                     </button>
+                    <button type="button" class="saas-tab-btn" data-filter="ARCHIVED" onclick="filterCourses('ARCHIVED', this)">
+                        Lưu trữ <span class="saas-tab-badge">${archivedCount}</span>
+                    </button>
                 </div>
 
                 <div class="saas-search-box">
@@ -715,11 +951,11 @@ body {
                 <table class="saas-table align-middle" id="coursesTable">
                     <thead>
                         <tr>
-                            <th style="width: 44%;">Khóa học</th>
-                            <th style="width: 16%;">Danh mục &amp; Học phí</th>
-                            <th style="width: 15%;">Nội dung</th>
-                            <th style="width: 13%;">Trạng thái</th>
-                            <th style="width: 12%; text-align: right;">Thao tác</th>
+                            <th style="width: 38%;">Khóa học</th>
+                            <th style="width: 17%;">Danh mục &amp; Học phí</th>
+                            <th style="width: 16%;">Nội dung</th>
+                            <th style="width: 14%;">Trạng thái</th>
+                            <th style="width: 15%; text-align: right;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -732,7 +968,7 @@ body {
                                                 <i class="bi bi-journal-plus"></i>
                                             </div>
                                             <h6 class="fw-bold text-dark mb-1">Bạn chưa có khóa học nào</h6>
-                                            <p class="text-muted small mb-3">Tạo khóa học đầu tiên hoặc dán Playlist YouTube để bắt đầu xây dựng nội dung.</p>
+                                            <p class="text-muted small mb-3">Tạo khóa học đầu tiên để bắt đầu xây dựng nội dung.</p>
                                             <button type="button" class="btn btn-saas-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newCourseModal">
                                                 <i class="bi bi-plus-lg me-1"></i>Tạo Khóa học mới
                                             </button>
@@ -753,13 +989,13 @@ body {
                                                          onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
                                                 </a>
                                                 <div class="flex-grow-1 min-w-0">
-                                                    <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="course-title-text text-truncate d-block" title="${c.title}">
+                                                    <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="course-title-text" title="${c.title}">
                                                         ${c.title}
                                                     </a>
                                                     <div class="course-meta-sub">
                                                         <span>#${c.id}</span>
                                                         <span>&bull;</span>
-                                                        <span>${c.totalLessons} bài giảng</span>
+                                                        <span>${c.totalLessons} bài học</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -769,7 +1005,7 @@ body {
                                                 <span class="pill-neutral mb-1 d-inline-block">
                                                     ${c.categoryName != null ? c.categoryName : 'Khóa học'}
                                                 </span>
-                                                <div class="small text-muted fw-medium">
+                                                <div class="text-dark fw-semibold" style="font-size: 0.85rem;">
                                                     <c:choose>
                                                         <c:when test="${c.price <= 0}"><span class="text-success fw-semibold">Miễn phí</span></c:when>
                                                         <c:otherwise>${c.price} VNĐ</c:otherwise>
@@ -778,31 +1014,28 @@ body {
                                             </div>
                                         </td>
                                         <td>
-                                            <div>
-                                                <div class="fw-semibold text-dark small">
-                                                    <i class="bi bi-play-circle text-primary me-1"></i>${c.totalLessons} bài học
-                                                </div>
-                                                <span class="text-muted" style="font-size: 11px;">${c.modules.size()} chương học</span>
-                                                <div class="mt-1">
-                                                    <c:choose>
-                                                        <c:when test="${c.totalQuizzes > 0}">
-                                                            <span class="pill-quiz">
-                                                                <i class="bi bi-patch-question-fill text-warning"></i>${c.totalQuizzes} quiz
-                                                            </span>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <span class="pill-quiz empty">0 quiz</span>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </div>
+                                            <div class="fw-semibold text-dark" style="font-size: 0.875rem;">
+                                                <i class="bi bi-play-circle text-primary me-1"></i>${c.totalLessons} bài học
+                                            </div>
+                                            <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">
+                                                ${c.modules.size()} chương &bull; ${c.totalQuizzes} quiz
                                             </div>
                                         </td>
                                         <td>
                                             <c:choose>
                                                 <c:when test="${c.status == 'PUBLISHED'}">
-                                                    <span class="saas-badge saas-badge-published">
-                                                        <span class="badge-dot"></span>Đã công khai
-                                                    </span>
+                                                    <c:choose>
+                                                        <c:when test="${c.archiveScheduled}">
+                                                            <span class="saas-badge bg-warning bg-opacity-10 text-dark border border-warning" title="Sẽ lưu trữ vào ${c.formattedArchiveAt}">
+                                                                <i class="bi bi-clock-history text-warning me-1"></i>Sắp lưu trữ (${c.daysUntilArchive} ngày)
+                                                            </span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="saas-badge saas-badge-published">
+                                                                <span class="badge-dot"></span>Đã công khai
+                                                            </span>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </c:when>
                                                 <c:when test="${c.status == 'PENDING_REVIEW'}">
                                                     <span class="saas-badge saas-badge-pending" title="Đang chờ Quản lý duyệt xuất bản">
@@ -810,8 +1043,8 @@ body {
                                                     </span>
                                                 </c:when>
                                                 <c:when test="${c.status == 'ARCHIVED'}">
-                                                    <span class="saas-badge saas-badge-archived">
-                                                        <span class="badge-dot"></span>Lưu trữ
+                                                    <span class="saas-badge saas-badge-archived" title="Đã ngừng nhận học viên mới">
+                                                        <span class="badge-dot"></span>Đã lưu trữ
                                                     </span>
                                                 </c:when>
                                                 <c:otherwise>
@@ -823,49 +1056,78 @@ body {
                                         </td>
                                         <td class="text-end text-nowrap">
                                             <div class="d-inline-flex align-items-center justify-content-end gap-2">
-                                                <!-- Context-Aware Primary Action Button -->
-                                                <c:choose>
-                                                    <c:when test="${c.status == 'DRAFT'}">
-                                                        <a href="${pageContext.request.contextPath}/expert/request-publish?courseId=${c.id}"
-                                                           class="btn btn-saas-outline-emerald text-nowrap"
-                                                           onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu xuất bản khóa học &quot;${c.title}&quot; để Ban Quản Trị duyệt?');"
-                                                           title="Gửi yêu cầu xuất bản khóa học này">
-                                                            <i class="bi bi-send-check"></i>Gửi duyệt
-                                                        </a>
-                                                        <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
-                                                           class="btn btn-saas-primary text-nowrap"
-                                                           title="Quản lý chương và bài học">
-                                                            <i class="bi bi-pencil-square"></i>Soạn bài
-                                                        </a>
-                                                    </c:when>
-                                                    <c:when test="${c.status == 'PENDING_REVIEW'}">
-                                                        <a href="${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${c.id}"
-                                                           class="btn btn-saas-outline-amber text-nowrap"
-                                                           onclick="return confirm('Bạn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học &quot;${c.title}&quot;?');"
-                                                           title="Thu hồi yêu cầu xuất bản về bản nháp">
-                                                            <i class="bi bi-arrow-counterclockwise"></i>Thu hồi
-                                                        </a>
-                                                        <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
-                                                           class="btn btn-saas-primary text-nowrap"
-                                                           title="Xem và chỉnh sửa bài học">
-                                                            <i class="bi bi-journal-text"></i>Soạn bài
-                                                        </a>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
-                                                           class="btn btn-saas-primary text-nowrap"
-                                                           title="Quản lý chương và bài học">
-                                                            <i class="bi bi-journal-text"></i>Soạn bài
-                                                        </a>
-                                                    </c:otherwise>
-                                                </c:choose>
+                                                <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
+                                                   class="btn btn-saas-primary btn-sm text-nowrap"
+                                                   title="Quản lý chương và bài học">
+                                                    <i class="bi bi-pencil-square"></i>Soạn bài
+                                                </a>
 
                                                 <!-- Secondary Actions Menu (Sleek Dropdown) -->
                                                 <div class="dropdown">
-                                                    <button type="button" class="btn-icon-action" data-bs-toggle="dropdown" aria-expanded="false" title="Tùy chọn khác">
+                                                    <button type="button" class="btn-icon-action" data-bs-toggle="dropdown" aria-expanded="false" title="Tùy chọn khác" aria-label="Tùy chọn khác">
                                                         <i class="bi bi-three-dots"></i>
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end saas-dropdown-menu">
+                                                        <c:choose>
+                                                            <c:when test="${c.status == 'DRAFT'}">
+                                                                <li>
+                                                                    <a class="saas-dropdown-item text-success fw-semibold"
+                                                                       href="javascript:void(0)"
+                                                                       onclick="confirmPublishCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/request-publish?courseId=${c.id}')">
+                                                                        <i class="bi bi-send-check text-success"></i>Gửi duyệt xuất bản
+                                                                    </a>
+                                                                </li>
+                                                                <li><hr class="dropdown-divider my-1"></li>
+                                                            </c:when>
+                                                            <c:when test="${c.status == 'PENDING_REVIEW'}">
+                                                                <li>
+                                                                    <a class="saas-dropdown-item text-warning fw-semibold"
+                                                                       href="javascript:void(0)"
+                                                                       onclick="confirmCancelPublishCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${c.id}')">
+                                                                        <i class="bi bi-arrow-counterclockwise text-warning"></i>Thu hồi yêu cầu duyệt
+                                                                    </a>
+                                                                </li>
+                                                                <li><hr class="dropdown-divider my-1"></li>
+                                                            </c:when>
+                                                            <c:when test="${c.status == 'PUBLISHED'}">
+                                                                <c:choose>
+                                                                    <c:when test="${c.archiveScheduled}">
+                                                                        <li>
+                                                                            <a class="saas-dropdown-item text-danger fw-semibold"
+                                                                               href="javascript:void(0)"
+                                                                               onclick="confirmCancelArchive('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/cancel-archive?id=${c.id}')">
+                                                                                <i class="bi bi-x-circle text-danger"></i>Hủy lịch lưu trữ
+                                                                            </a>
+                                                                        </li>
+                                                                        <li>
+                                                                            <button type="button" class="saas-dropdown-item w-100 border-0 bg-transparent text-start text-warning fw-semibold"
+                                                                                    onclick="openArchiveModal(${c.id}, '<c:out value="${c.title}" escapeXml="true" />')">
+                                                                                <i class="bi bi-calendar-event text-warning"></i>Đổi lịch lưu trữ
+                                                                            </button>
+                                                                        </li>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <li>
+                                                                            <button type="button" class="saas-dropdown-item w-100 border-0 bg-transparent text-start text-warning fw-semibold"
+                                                                                    onclick="openArchiveModal(${c.id}, '<c:out value="${c.title}" escapeXml="true" />')">
+                                                                                <i class="bi bi-archive text-warning"></i>Lưu trữ / Ẩn khóa học
+                                                                            </button>
+                                                                        </li>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                                <li><hr class="dropdown-divider my-1"></li>
+                                                            </c:when>
+                                                            <c:when test="${c.status == 'ARCHIVED'}">
+                                                                <li>
+                                                                    <a class="saas-dropdown-item text-success fw-semibold"
+                                                                       href="javascript:void(0)"
+                                                                       onclick="confirmUnarchiveCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/unarchive-course?id=${c.id}')">
+                                                                        <i class="bi bi-arrow-counterclockwise text-success"></i>Mở lại khóa học (Unarchive)
+                                                                    </a>
+                                                                </li>
+                                                                <li><hr class="dropdown-divider my-1"></li>
+                                                            </c:when>
+                                                        </c:choose>
                                                         <li>
                                                             <a class="saas-dropdown-item" href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}">
                                                                 <i class="bi bi-patch-question text-warning"></i>Quản lý Quiz (${c.totalQuizzes})
@@ -881,15 +1143,25 @@ body {
                                                                 <i class="bi bi-box-arrow-up-right text-info"></i>Xem trước khóa học
                                                             </a>
                                                         </li>
-                                                        <c:if test="${c.status == 'DRAFT' || c.status == 'PENDING_REVIEW'}">
-                                                            <li><hr class="dropdown-divider my-1"></li>
-                                                            <li>
-                                                                <a class="saas-dropdown-item text-danger" href="${pageContext.request.contextPath}/expert/delete-course?id=${c.id}"
-                                                                   onclick="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn khóa học &quot;${c.title}&quot; này không?');">
-                                                                    <i class="bi bi-trash3 text-danger"></i>Xóa khóa học
-                                                                </a>
-                                                            </li>
-                                                        </c:if>
+                                                        <c:choose>
+                                                            <c:when test="${c.status == 'DRAFT'}">
+                                                                <li><hr class="dropdown-divider my-1"></li>
+                                                                <li>
+                                                                    <a class="saas-dropdown-item text-danger" href="javascript:void(0)"
+                                                                       onclick="confirmDeleteCourse('<c:out value="${c.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
+                                                                        <i class="bi bi-trash3 text-danger"></i>Xóa vĩnh viễn (Nháp)
+                                                                    </a>
+                                                                </li>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <li><hr class="dropdown-divider my-1"></li>
+                                                                <li>
+                                                                    <span class="dropdown-item-text text-muted py-1" style="font-size: 0.75rem;">
+                                                                        <i class="bi bi-shield-lock me-1"></i>Chỉ Admin có quyền xóa hoàn toàn
+                                                                    </span>
+                                                                </li>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -925,31 +1197,69 @@ body {
                         <h5 class="modal-title fw-bold text-dark mb-1" id="newCourseModalLabel">
                             <i class="bi bi-plus-circle text-primary me-2"></i>Tạo Khóa học mới
                         </h5>
-                        <p class="text-muted small mb-0">Khởi tạo chương trình đào tạo hoặc import tự động từ YouTube</p>
+                        <p class="text-muted small mb-0">Nhập thông tin khóa học hoặc dán link YouTube để tự động tạo bài học</p>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="saas-form-label">Tên khóa học <span class="text-danger">*</span></label>
                         <input type="text" name="title" id="newCourseTitle" class="form-control saas-form-control"
                             placeholder="Ví dụ: Khóa học Lập trình Web Fullstack..." required oninput="this.dataset.autofilled = 'false'">
-                        <div class="form-text small text-muted">Nếu bạn dán link Playlist YouTube bên dưới, tên khóa học sẽ được tự động điền theo tên Playlist.</div>
+                        <div class="form-text small text-muted">Nếu dán link Playlist YouTube bên dưới, tên khóa học sẽ tự động được điền theo tên playlist.</div>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-7">
-                            <label class="saas-form-label">Danh mục đào tạo</label>
-                            <select name="categoryId" class="form-select saas-form-control"
-                                onchange="toggleCustomCategory(this, 'newCourseCustomCatDiv')">
-                                <c:forEach var="cat" items="${categories}">
-                                    <option value="${cat.id}">${cat.name}</option>
-                                </c:forEach>
-                                <option value="__NEW__" class="fw-bold text-primary">+ Nhập danh mục mới...</option>
-                            </select>
+                            <label class="saas-form-label">Danh mục</label>
+                            <div class="saas-combobox" id="newCourseCategoryCombobox">
+                                <input type="hidden" name="categoryId" id="newCourseCategoryId" value="${not empty categories ? categories[0].id : ''}">
+                                <button type="button" class="saas-combobox-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="saas-combobox-label">
+                                        <i class="bi bi-tag text-muted me-2"></i>
+                                        <span class="selected-text">${not empty categories ? categories[0].name : 'Chọn danh mục...'}</span>
+                                    </span>
+                                    <i class="bi bi-chevron-down saas-combobox-arrow"></i>
+                                </button>
+                                <div class="saas-combobox-dropdown" role="listbox">
+                                    <div class="saas-combobox-search-wrap">
+                                        <i class="bi bi-search saas-combobox-search-icon"></i>
+                                        <input type="text" class="saas-combobox-search" placeholder="Tìm kiếm danh mục..." autocomplete="off">
+                                        <button type="button" class="saas-combobox-search-clear d-none" aria-label="Xóa tìm kiếm">
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        </button>
+                                    </div>
+                                    <div class="saas-combobox-list">
+                                        <c:forEach var="cat" items="${categories}" varStatus="status">
+                                            <div class="saas-combobox-item ${status.first ? 'selected' : ''}"
+                                                 data-value="${cat.id}"
+                                                 data-label="<c:out value="${cat.name}"/>"
+                                                 role="option">
+                                                <span class="item-text"><c:out value="${cat.name}"/></span>
+                                                <i class="bi bi-check2 item-check"></i>
+                                            </div>
+                                        </c:forEach>
+                                        <div class="saas-combobox-empty d-none">
+                                            <i class="bi bi-search text-muted mb-1 d-block fs-6"></i>
+                                            Không tìm thấy danh mục phù hợp
+                                        </div>
+                                    </div>
+                                    <div class="saas-combobox-footer">
+                                        <button type="button" class="add-new-btn">
+                                            <i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục mới...
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <div id="newCourseCustomCatDiv" class="mt-2" style="display: none;">
-                                <input type="text" name="customCategory"
-                                    class="form-control form-control-sm border-primary"
-                                    placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                                <div class="position-relative">
+                                    <input type="text" name="customCategory"
+                                        class="form-control form-control-sm saas-form-control border-primary pe-4"
+                                        placeholder="✨ Nhập tên danh mục mới...">
+                                    <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
+                                        onclick="cancelCustomCategory('newCourseCategoryCombobox', 'newCourseCustomCatDiv')" title="Hủy nhập danh mục mới">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-5">
@@ -959,38 +1269,32 @@ body {
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="saas-form-label">Mô tả tóm tắt khóa học</label>
-                        <textarea name="description" rows="2" class="form-control saas-form-control"
-                            placeholder="Mục tiêu đầu ra, đối tượng phù hợp, kiến thức đạt được..."></textarea>
+                        <label class="saas-form-label">Mô tả tóm tắt</label>
+                        <textarea name="description" id="newCourseDescription" rows="4" class="form-control saas-form-control"
+                            style="min-height: 105px; resize: vertical; line-height: 1.6;"
+                            placeholder="Mô tả ngắn gọn về khóa học..." oninput="this.dataset.autofilled = 'false'; autoResizeTextarea(this);"></textarea>
                     </div>
 
                     <!-- YouTube Import Card -->
                     <div class="saas-youtube-card mb-2">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="saas-form-label mb-0 text-dark">
-                                <i class="bi bi-youtube text-danger me-1"></i>Nhập Playlist / Loạt Video YouTube
+                                <i class="bi bi-youtube text-danger me-1"></i>Nhập Playlist hoặc danh sách link YouTube
                             </span>
                             <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 11px;">Tùy chọn</span>
                         </div>
                         <textarea name="batchVideoText" id="newCourseBatchText" rows="3"
                             class="form-control font-monospace small bg-white saas-form-control"
-                            placeholder="Dán link playlist (https://www.youtube.com/playlist?list=...) hoặc danh sách link video..."
+                            placeholder="Dán link playlist (https://www.youtube.com/playlist?list=...) hoặc danh sách link video (mỗi dòng 1 link)..."
                             oninput="previewCourseBatchVideos()"></textarea>
                         
                         <div id="newCourseBatchFeedback" class="mt-2 small d-none"></div>
-                        <div id="newCourseBatchModuleDiv" class="mt-2 p-2 bg-white rounded border border-primary-subtle d-none">
-                            <label class="saas-form-label text-primary mb-1">
-                                <i class="bi bi-folder-plus me-1"></i>Tên chương học chứa các video này <span class="text-muted fw-normal">(Tùy chọn)</span>
-                            </label>
-                            <input type="text" name="batchModuleTitle" id="newCourseBatchModuleTitle" class="form-control form-control-sm" placeholder="Ví dụ: Chương 1: Giới thiệu (để trống nếu không chia chương)...">
-                            <div class="form-text small text-muted">Nếu để trống, các bài học sẽ tự động được đưa vào danh sách bài học chung.</div>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer saas-modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
                     <button type="submit" class="btn btn-saas-primary">
-                        <i class="bi bi-check-lg me-1"></i>Tạo khóa học &amp; Soạn bài
+                        <i class="bi bi-check-lg me-1"></i>Tạo khóa học
                     </button>
                 </div>
             </form>
@@ -1029,17 +1333,55 @@ body {
                         <div class="row g-3 mb-3">
                             <div class="col-md-7">
                                 <label class="saas-form-label">Danh mục</label>
-                                <select name="categoryId" id="editCourseCategory" class="form-select saas-form-control"
-                                    onchange="toggleCustomCategory(this, 'editCourseCustomCatDiv')">
-                                    <c:forEach var="cat" items="${categories}">
-                                        <option value="${cat.id}">${cat.name}</option>
-                                    </c:forEach>
-                                    <option value="__NEW__" class="fw-bold text-primary">+ Nhập danh mục mới...</option>
-                                </select>
-                                <div id="editCourseCustomCatDiv" class="mt-2" style="display: none;">
-                                    <input type="text" name="customCategory" class="form-control form-control-sm border-primary"
-                                        placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                            <div class="saas-combobox" id="editCourseCategoryCombobox">
+                                <input type="hidden" name="categoryId" id="editCourseCategory" value="">
+                                <button type="button" class="saas-combobox-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="saas-combobox-label">
+                                        <i class="bi bi-tag text-muted me-2"></i>
+                                        <span class="selected-text">Chọn danh mục...</span>
+                                    </span>
+                                    <i class="bi bi-chevron-down saas-combobox-arrow"></i>
+                                </button>
+                                <div class="saas-combobox-dropdown" role="listbox">
+                                    <div class="saas-combobox-search-wrap">
+                                        <i class="bi bi-search saas-combobox-search-icon"></i>
+                                        <input type="text" class="saas-combobox-search" placeholder="Tìm kiếm danh mục..." autocomplete="off">
+                                        <button type="button" class="saas-combobox-search-clear d-none" aria-label="Xóa tìm kiếm">
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        </button>
+                                    </div>
+                                    <div class="saas-combobox-list">
+                                        <c:forEach var="cat" items="${categories}">
+                                            <div class="saas-combobox-item"
+                                                 data-value="${cat.id}"
+                                                 data-label="<c:out value="${cat.name}"/>"
+                                                 role="option">
+                                                <span class="item-text"><c:out value="${cat.name}"/></span>
+                                                <i class="bi bi-check2 item-check"></i>
+                                            </div>
+                                        </c:forEach>
+                                        <div class="saas-combobox-empty d-none">
+                                            <i class="bi bi-search text-muted mb-1 d-block fs-6"></i>
+                                            Không tìm thấy danh mục phù hợp
+                                        </div>
+                                    </div>
+                                    <div class="saas-combobox-footer">
+                                        <button type="button" class="add-new-btn">
+                                            <i class="bi bi-plus-circle text-primary me-2"></i>+ Nhập danh mục mới...
+                                        </button>
+                                    </div>
                                 </div>
+                            </div>
+                            <div id="editCourseCustomCatDiv" class="mt-2" style="display: none;">
+                                <div class="position-relative">
+                                    <input type="text" name="customCategory" class="form-control form-control-sm saas-form-control border-primary pe-4"
+                                        placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                                    <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
+                                        onclick="cancelCustomCategory('editCourseCategoryCombobox', 'editCourseCustomCatDiv')" title="Hủy nhập danh mục mới">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
                             </div>
                             <div class="col-md-5">
                                 <label class="saas-form-label">Học phí (VNĐ)</label>
@@ -1048,7 +1390,8 @@ body {
                         </div>
                         <div class="mb-3">
                             <label class="saas-form-label">Mô tả tóm tắt</label>
-                            <textarea name="description" id="editCourseDescription" rows="3" class="form-control saas-form-control"></textarea>
+                            <textarea name="description" id="editCourseDescription" rows="4" class="form-control saas-form-control"
+                                style="min-height: 105px; resize: vertical; line-height: 1.6;" oninput="autoResizeTextarea(this);"></textarea>
                         </div>
                     </div>
                 </div>
@@ -1068,7 +1411,68 @@ body {
     </div>
 </div>
 
+<!-- Archive Course Modal -->
+<div class="modal fade" id="archiveCourseModal" tabindex="-1" aria-labelledby="archiveCourseModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content saas-modal">
+            <form action="${pageContext.request.contextPath}/expert/archive-course" method="POST">
+                <input type="hidden" name="courseId" id="archiveCourseId">
+                <div class="modal-header saas-modal-header bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1" id="archiveCourseModalTitle">
+                            <i class="bi bi-archive-fill text-warning me-2"></i>Lưu trữ / Ẩn khóa học
+                        </h5>
+                        <p class="text-muted small mb-0">Ngừng nhận học viên mới nhưng bảo lưu quyền học tập cho học viên cũ</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 px-3 small mb-3">
+                        <i class="bi bi-shield-check me-1"></i><strong>Quyền lợi học viên:</strong> Sinh viên đã mua khóa học vẫn có thể truy cập lại và học tập bình thường. Khóa học sẽ được ẩn đi đối với những ai chưa mua.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="saas-form-label fw-bold">Khóa học thực hiện:</label>
+                        <div class="p-2 bg-light rounded border text-truncate fw-semibold text-dark" id="archiveCourseTitleDisplay">...</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="saas-form-label fw-bold">Thời gian thông báo trước khi chính thức ẩn:</label>
+                        <select name="noticeDays" id="archiveNoticeDays" class="form-select saas-form-control">
+                            <option value="3" selected>Thông báo trước 3 ngày (Khuyên dùng)</option>
+                            <option value="5">Thông báo trước 5 ngày</option>
+                            <option value="7">Thông báo trước 7 ngày</option>
+                            <option value="0">Ẩn ngay lập tức (Không chờ thông báo)</option>
+                        </select>
+                        <div class="form-text small text-muted">
+                            Trong thời gian thông báo, banner cảnh báo sẽ hiển thị trên trang khóa học để nhắc nhở học viên mới quan tâm trước khi khóa học chính thức chuyển sang chế độ lưu trữ.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="saas-form-label fw-bold">Nội dung thông báo hiển thị cho học viên:</label>
+                        <textarea name="archiveNotice" id="archiveNoticeText" rows="3" class="form-control saas-form-control"
+                            placeholder="Nhập lời nhắn gửi đến học viên..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer saas-modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold">
+                        <i class="bi bi-archive-fill me-1"></i>Xác nhận lưu trữ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+    function autoResizeTextarea(el) {
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = Math.max(105, el.scrollHeight + 4) + 'px';
+    }
+
     // =========================================================================
     // CLIENT-SIDE FILTER & INSTANT SEARCH
     // =========================================================================
@@ -1152,14 +1556,34 @@ body {
                 document.getElementById('editCourseId').value = data.id;
                 document.getElementById('editCourseTitle').value = data.title || '';
                 if (data.categoryId) {
-                    document.getElementById('editCourseCategory').value = data.categoryId;
+                    setComboboxValue('editCourseCategoryCombobox', data.categoryId, data.categoryName);
+                } else if (data.categoryName) {
+                    setComboboxValue('editCourseCategoryCombobox', '__NEW__', data.categoryName);
+                    const customDiv = document.getElementById('editCourseCustomCatDiv');
+                    if (customDiv) {
+                        customDiv.style.display = 'block';
+                        const inp = customDiv.querySelector('input');
+                        if (inp) inp.value = data.categoryName;
+                    }
                 }
                 document.getElementById('editCoursePrice').value = data.price != null ? data.price : 0;
-                document.getElementById('editCourseDescription').value = data.description || '';
+                const editDescEl = document.getElementById('editCourseDescription');
+                editDescEl.value = data.description || '';
+                autoResizeTextarea(editDescEl);
 
                 document.getElementById('editCourseLoading').style.display = 'none';
                 document.getElementById('editCourseFormFields').style.display = 'block';
                 document.getElementById('editCourseSubmitBtn').disabled = false;
+
+                // Quy tắc: Chỉ khóa học ở trạng thái DRAFT mới cho phép Expert xóa
+                const delBtn = document.getElementById('editCourseDeleteBtn');
+                if (delBtn) {
+                    if (data.status === 'DRAFT') {
+                        delBtn.style.display = 'inline-block';
+                    } else {
+                        delBtn.style.display = 'none';
+                    }
+                }
             })
             .catch(err => {
                 alert('Lỗi khi truy vấn khóa học từ CSDL: ' + err.message);
@@ -1167,25 +1591,266 @@ body {
             });
     }
 
-    function toggleCustomCategory(selectEl, targetDivId) {
-        const div = document.getElementById(targetDivId);
-        if (!div) return;
-        if (selectEl.value === '__NEW__') {
-            div.style.display = 'block';
-            const inp = div.querySelector('input');
-            if (inp) {
-                inp.focus();
-                inp.required = true;
+    function openArchiveModal(courseId, courseTitle) {
+        document.getElementById('archiveCourseId').value = courseId;
+        document.getElementById('archiveCourseTitleDisplay').textContent = courseTitle;
+        document.getElementById('archiveNoticeText').value = 'Khóa học này sẽ chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ. Học viên đã đăng ký vẫn được học tập trọn đời bình thường.';
+        const modalEl = document.getElementById('archiveCourseModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    // =========================================================================
+    // SAAS SEARCHABLE SELECT (COMBOBOX) CONTROLLER
+    // =========================================================================
+    function removeVietnameseDiacritics(str) {
+        if (!str) return '';
+        return str.normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "")
+                  .replace(/đ/g, "d").replace(/Đ/g, "D")
+                  .toLowerCase()
+                  .trim();
+    }
+
+    function initSearchableSelect(comboboxId, customDivId) {
+        const box = document.getElementById(comboboxId);
+        if (!box) return;
+
+        const trigger = box.querySelector('.saas-combobox-trigger');
+        const labelSpan = box.querySelector('.selected-text');
+        const hiddenInput = box.querySelector('input[type="hidden"]');
+        const searchInput = box.querySelector('.saas-combobox-search');
+        const searchClear = box.querySelector('.saas-combobox-search-clear');
+        const items = box.querySelectorAll('.saas-combobox-list .saas-combobox-item');
+        const emptyBox = box.querySelector('.saas-combobox-empty');
+        const addNewBtn = box.querySelector('.add-new-btn');
+        const customDiv = document.getElementById(customDivId);
+        const customInput = customDiv ? customDiv.querySelector('input') : null;
+
+        function openDropdown() {
+            document.querySelectorAll('.saas-combobox.open').forEach(cb => {
+                if (cb !== box) cb.classList.remove('open');
+            });
+            box.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+            if (searchInput) {
+                searchInput.value = '';
+                filterItems('');
+                setTimeout(() => searchInput.focus(), 50);
             }
-        } else {
-            div.style.display = 'none';
-            const inp = div.querySelector('input');
+        }
+
+        function closeDropdown() {
+            box.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleDropdown() {
+            if (box.classList.contains('open')) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        }
+
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDropdown();
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!box.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        box.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDropdown();
+                trigger.focus();
+            }
+        });
+
+        function filterItems(query) {
+            const cleanQuery = removeVietnameseDiacritics(query);
+            let matchCount = 0;
+
+            if (searchClear) {
+                if (query.trim()) {
+                    searchClear.classList.remove('d-none');
+                } else {
+                    searchClear.classList.add('d-none');
+                }
+            }
+
+            items.forEach(it => {
+                const label = it.getAttribute('data-label') || it.textContent;
+                const cleanLabel = removeVietnameseDiacritics(label);
+                if (!cleanQuery || cleanLabel.includes(cleanQuery)) {
+                    it.classList.remove('d-none');
+                    matchCount++;
+                } else {
+                    it.classList.add('d-none');
+                }
+            });
+
+            if (emptyBox) {
+                if (matchCount === 0) {
+                    emptyBox.classList.remove('d-none');
+                } else {
+                    emptyBox.classList.add('d-none');
+                }
+            }
+
+            if (addNewBtn) {
+                if (query.trim()) {
+                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục "' + escapeHtml(query.trim()) + '"...';
+                    addNewBtn.dataset.customText = query.trim();
+                } else {
+                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục mới...';
+                    delete addNewBtn.dataset.customText;
+                }
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                filterItems(this.value);
+            });
+            searchInput.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchInput.value = '';
+                filterItems('');
+                searchInput.focus();
+            });
+        }
+
+        items.forEach(it => {
+            it.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                const label = this.getAttribute('data-label') || this.querySelector('.item-text').textContent;
+
+                items.forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+
+                hiddenInput.value = val;
+                labelSpan.textContent = label;
+
+                if (customDiv) {
+                    customDiv.style.display = 'none';
+                    if (customInput) {
+                        customInput.required = false;
+                        customInput.value = '';
+                    }
+                }
+
+                closeDropdown();
+                trigger.focus();
+            });
+        });
+
+        if (addNewBtn) {
+            addNewBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                hiddenInput.value = '__NEW__';
+                const customVal = addNewBtn.dataset.customText || '';
+                labelSpan.textContent = customVal ? ('Mới: ' + customVal) : '+ Danh mục mới';
+
+                items.forEach(i => i.classList.remove('selected'));
+
+                if (customDiv) {
+                    customDiv.style.display = 'block';
+                    if (customInput) {
+                        customInput.required = true;
+                        if (customVal) customInput.value = customVal;
+                        setTimeout(() => customInput.focus(), 50);
+                    }
+                }
+
+                closeDropdown();
+            });
+        }
+
+        if (customInput) {
+            customInput.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    labelSpan.textContent = 'Mới: ' + this.value.trim();
+                } else {
+                    labelSpan.textContent = '+ Danh mục mới';
+                }
+            });
+        }
+    }
+
+    function setComboboxValue(comboboxId, value, fallbackName) {
+        const box = document.getElementById(comboboxId);
+        if (!box) return;
+
+        const hiddenInput = box.querySelector('input[type="hidden"]');
+        const labelSpan = box.querySelector('.selected-text');
+        const items = box.querySelectorAll('.saas-combobox-list .saas-combobox-item');
+
+        let matched = false;
+        items.forEach(it => {
+            if (it.getAttribute('data-value') == value) {
+                it.classList.add('selected');
+                labelSpan.textContent = it.getAttribute('data-label') || it.textContent.trim();
+                hiddenInput.value = value;
+                matched = true;
+            } else {
+                it.classList.remove('selected');
+            }
+        });
+
+        if (!matched && fallbackName) {
+            hiddenInput.value = value || '__NEW__';
+            labelSpan.textContent = fallbackName;
+        }
+    }
+
+    function cancelCustomCategory(comboboxId, customDivId) {
+        const box = document.getElementById(comboboxId);
+        const customDiv = document.getElementById(customDivId);
+        if (customDiv) {
+            customDiv.style.display = 'none';
+            const inp = customDiv.querySelector('input');
             if (inp) {
                 inp.required = false;
                 inp.value = '';
             }
         }
+        if (box) {
+            const firstItem = box.querySelector('.saas-combobox-list .saas-combobox-item');
+            if (firstItem) {
+                const val = firstItem.getAttribute('data-value');
+                const label = firstItem.getAttribute('data-label') || firstItem.textContent.trim();
+                setComboboxValue(comboboxId, val, label);
+            }
+        }
     }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, "&amp;")
+                   .replace(/</g, "&lt;")
+                   .replace(/>/g, "&gt;")
+                   .replace(/"/g, "&quot;")
+                   .replace(/'/g, "&#039;");
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initSearchableSelect('newCourseCategoryCombobox', 'newCourseCustomCatDiv');
+        initSearchableSelect('editCourseCategoryCombobox', 'editCourseCustomCatDiv');
+    });
 
     // =========================================================================
     // YOUTUBE PLAYLIST BATCH AUTO-DETECT & PREVIEW
@@ -1194,13 +1859,9 @@ body {
     function previewCourseBatchVideos() {
         const text = document.getElementById('newCourseBatchText').value;
         const feedback = document.getElementById('newCourseBatchFeedback');
-        const moduleDiv = document.getElementById('newCourseBatchModuleDiv');
-        const moduleTitleInp = document.getElementById('newCourseBatchModuleTitle');
         if (!text || !text.trim()) {
             feedback.className = 'mt-2 small d-none';
             feedback.innerHTML = '';
-            if (moduleDiv) moduleDiv.classList.add('d-none');
-            if (moduleTitleInp) moduleTitleInp.required = false;
             return;
         }
 
@@ -1230,20 +1891,28 @@ body {
                             titleInp.dataset.autofilled = 'true';
                         }
                     }
-                    feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
-                    feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + '</span>';
-                    if (moduleDiv) moduleDiv.classList.remove('d-none');
-                    if (moduleTitleInp) {
-                        moduleTitleInp.required = false;
-                        if (!moduleTitleInp.value) {
-                            moduleTitleInp.placeholder = plTitle ? plTitle : ("Nhập tên chương học cho " + list.length + " bài này (hoặc để trống)...");
+
+                    // Tự động gán danh mục nếu phát hiện (chọn ngầm định)
+                    if (data.suggestedCategoryId && data.suggestedCategoryName) {
+                        setComboboxValue('newCourseCategoryCombobox', data.suggestedCategoryId, data.suggestedCategoryName);
+                    }
+
+                    // Tự động điền mô tả tóm tắt nếu AI sinh thành công
+                    if (data.suggestedDescription) {
+                        const descInp = document.getElementById('newCourseDescription');
+                        if (descInp && (!descInp.value.trim() || descInp.dataset.autofilled === 'true')) {
+                            let cleanDesc = data.suggestedDescription.replace(/\\"/g, '"').replace(/^"+|"+$/g, '').trim();
+                            descInp.value = cleanDesc;
+                            descInp.dataset.autofilled = 'true';
+                            autoResizeTextarea(descInp);
                         }
                     }
+
+                    feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
+                    feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + '</span>';
                 } else {
                     feedback.className = 'mt-2 small text-muted';
                     feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Chưa nhận diện được video YouTube hợp lệ.';
-                    if (moduleDiv) moduleDiv.classList.add('d-none');
-                    if (moduleTitleInp) moduleTitleInp.required = false;
                 }
             })
             .catch(err => {
@@ -1252,12 +1921,144 @@ body {
         }, 500);
     }
 
+    function generateAiDescription(titleInputId, descInputId, categoryComboboxId, btnEl) {
+        const titleInp = document.getElementById(titleInputId);
+        const descInp = document.getElementById(descInputId);
+        if (!titleInp || !titleInp.value.trim()) {
+            alert('Vui lòng nhập tên khóa học trước khi yêu cầu AI viết mô tả!');
+            titleInp.focus();
+            return;
+        }
+
+        let catName = '';
+        if (categoryComboboxId) {
+            const box = document.getElementById(categoryComboboxId);
+            if (box) {
+                const label = box.querySelector('.selected-text');
+                if (label) catName = label.textContent.trim();
+            }
+        }
+
+        const originalBtnHtml = btnEl ? btnEl.innerHTML : '';
+        if (btnEl) {
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Đang viết...';
+        }
+
+        const params = new URLSearchParams();
+        params.append('title', titleInp.value.trim());
+        if (catName && catName !== 'Chọn danh mục...') {
+            params.append('categoryName', catName);
+        }
+
+        fetch('${pageContext.request.contextPath}/expert/generate-ai-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data && data.description) {
+                descInp.value = data.description;
+                descInp.dataset.autofilled = 'false';
+                descInp.style.transition = 'all 0.3s ease';
+                descInp.style.backgroundColor = 'rgba(37, 99, 235, 0.08)';
+                setTimeout(() => {
+                    descInp.style.backgroundColor = '';
+                }, 800);
+            } else {
+                alert('Không thể tạo mô tả lúc này. Vui lòng kiểm tra lại tên khóa học hoặc thử lại sau!');
+            }
+        })
+        .catch(err => {
+            alert('Lỗi kết nối khi gọi AI: ' + err.message);
+        })
+        .finally(() => {
+            if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.innerHTML = originalBtnHtml;
+            }
+        });
+    }
+
     function deleteEditingCourse() {
         const id = document.getElementById('editCourseId').value;
         const title = document.getElementById('editCourseTitle').value;
-        if (confirm('Bạn có chắc chắn muốn xóa vĩnh viễn khóa học "' + title + '" (cùng toàn bộ bài học bên trong) không?')) {
-            window.location.href = '${pageContext.request.contextPath}/expert/delete-course?id=' + encodeURIComponent(id);
-        }
+        showConfirmModal({
+            title: 'Xác nhận xóa khóa học nháp',
+            html: 'Bạn có chắc chắn muốn xóa vĩnh viễn khóa học nháp "<strong>' + (title || '') + '</strong>" (cùng toàn bộ bài học bên trong)?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Thao tác này sẽ xóa vĩnh viễn khỏi hệ thống và không thể khôi phục.</span>',
+            type: 'danger',
+            icon: 'bi bi-trash3-fill',
+            confirmText: 'Xóa vĩnh viễn',
+            confirmIcon: 'bi bi-trash3 me-1',
+            confirmBtnClass: 'btn-danger',
+            confirmUrl: '${pageContext.request.contextPath}/expert/delete-course?id=' + encodeURIComponent(id)
+        });
+    }
+
+    function confirmPublishCourse(title, url) {
+        showConfirmModal({
+            title: 'Gửi yêu cầu xuất bản',
+            html: 'Bạn có chắc chắn muốn gửi yêu cầu duyệt khóa học "<strong>' + (title || '') + '</strong>" để Quản lý kiểm tra và công khai khóa học?',
+            type: 'success',
+            icon: 'bi bi-send-check-fill',
+            confirmText: 'Gửi duyệt ngay',
+            confirmIcon: 'bi bi-send-check me-1',
+            confirmBtnClass: 'btn-success',
+            confirmUrl: url
+        });
+    }
+
+    function confirmCancelPublishCourse(title, url) {
+        showConfirmModal({
+            title: 'Thu hồi yêu cầu xuất bản',
+            html: 'Bạn có muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?',
+            type: 'warning',
+            icon: 'bi bi-arrow-counterclockwise',
+            confirmText: 'Thu hồi yêu cầu',
+            confirmIcon: 'bi bi-arrow-counterclockwise me-1',
+            confirmBtnClass: 'btn-warning text-dark',
+            confirmUrl: url
+        });
+    }
+
+    function confirmCancelArchive(title, url) {
+        showConfirmModal({
+            title: 'Hủy lịch lưu trữ',
+            html: 'Bạn có chắc chắn muốn hủy lịch lưu trữ và tiếp tục giữ khóa học "<strong>' + (title || '') + '</strong>" công khai bình thường?',
+            type: 'primary',
+            icon: 'bi bi-calendar-x-fill',
+            confirmText: 'Hủy lịch lưu trữ',
+            confirmIcon: 'bi bi-calendar-x me-1',
+            confirmBtnClass: 'btn-primary',
+            confirmUrl: url
+        });
+    }
+
+    function confirmUnarchiveCourse(title, url) {
+        showConfirmModal({
+            title: 'Mở lại khóa học (Unarchive)',
+            html: 'Khóa học "<strong>' + (title || '') + '</strong>" sẽ được công khai trở lại trên danh mục và cho phép học viên mới tiếp tục đăng ký.',
+            type: 'success',
+            icon: 'bi bi-arrow-counterclockwise',
+            confirmText: 'Công khai trở lại',
+            confirmIcon: 'bi bi-check-circle me-1',
+            confirmBtnClass: 'btn-success',
+            confirmUrl: url
+        });
+    }
+
+    function confirmDeleteCourse(title, url) {
+        showConfirmModal({
+            title: 'Xác nhận xóa khóa học nháp',
+            html: 'Bạn có chắc chắn muốn xóa vĩnh viễn khóa học nháp "<strong>' + (title || '') + '</strong>"?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Toàn bộ nội dung bài học bên trong sẽ bị xóa vĩnh viễn.</span>',
+            type: 'danger',
+            icon: 'bi bi-trash3-fill',
+            confirmText: 'Xóa vĩnh viễn',
+            confirmIcon: 'bi bi-trash3 me-1',
+            confirmBtnClass: 'btn-danger',
+            confirmUrl: url
+        });
     }
 </script>
 

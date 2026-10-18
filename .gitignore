@@ -18,6 +18,7 @@ target/
 nbproject/private/
 nb-configuration.xml
 .agent
+.agents/
 
 # Logs
 *.log
@@ -29,6 +30,7 @@ doc/
 # Sensitive credentials (fill in locally, never commit)
 src/main/resources/google-oauth.properties
 src/main/resources/mail.properties
+src/main/resources/ai.properties
 
 # Python
 __pycache__/

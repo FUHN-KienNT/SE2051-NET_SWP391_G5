@@ -1,14 +1,16 @@
--- Seed dynamic & diverse course categories into settings
+-- Seed concise & general course categories into settings
 INSERT INTO settings (type, name, value, priority, status, description)
 VALUES 
-('COURSE_CATEGORY', 'Lập trình Di động (Mobile App)', 'MOBILE_DEV', 7, 'ACTIVE', 'Phát triển ứng dụng di động Flutter, React Native, iOS, Android'),
-('COURSE_CATEGORY', 'An ninh Mạng & Bảo mật (Cybersecurity)', 'CYBER_SECURITY', 8, 'ACTIVE', 'Bảo mật hệ thống, an toàn thông tin, kiểm thử xâm nhập'),
-('COURSE_CATEGORY', 'DevOps & Điện toán Đám mây (Cloud)', 'DEVOPS_CLOUD', 9, 'ACTIVE', 'AWS, Azure, Docker, Kubernetes, CI/CD Pipelines'),
-('COURSE_CATEGORY', 'Thiết kế Đồ họa & UI/UX', 'DESIGN_UIUX', 10, 'ACTIVE', 'Figma, Adobe Photoshop, Illustrator, UI/UX Design'),
-('COURSE_CATEGORY', 'Marketing Kỹ thuật số (Digital Marketing)', 'DIGITAL_MARKETING', 11, 'ACTIVE', 'SEO, SEM, Social Media Marketing, Content Marketing'),
-('COURSE_CATEGORY', 'Kinh doanh & Quản trị Doanh nghiệp', 'BUSINESS_MGMT', 12, 'ACTIVE', 'Khởi nghiệp, quản trị vận hành, lãnh đạo doanh nghiệp'),
-('COURSE_CATEGORY', 'Ngoại ngữ & Luyện thi', 'LANGUAGES', 13, 'ACTIVE', 'Tiếng Anh giao tiếp, luyện thi IELTS, TOEIC, Tiếng Nhật, Hàn'),
-('COURSE_CATEGORY', 'Tài chính & Đầu tư Cá nhân', 'FINANCE_INVEST', 14, 'ACTIVE', 'Quản lý tài chính cá nhân, đầu tư chứng khoán'),
-('COURSE_CATEGORY', 'Nhiếp ảnh & Sản xuất Video', 'PHOTO_VIDEO', 15, 'ACTIVE', 'Quay dựng phim, biên tập video CapCut, Premiere, nhiếp ảnh'),
-('COURSE_CATEGORY', 'Âm nhạc & Nghệ thuật', 'MUSIC_ART', 16, 'ACTIVE', 'Thanh nhạc, piano, guitar, hội họa')
+('COURSE_CATEGORY', 'Lập trình', 'PROGRAMMING', 1, 'ACTIVE', 'Khoá học lập trình, thuật toán, phát triển phần mềm'),
+('COURSE_CATEGORY', 'Khoa học Dữ liệu & AI', 'DATA_AI', 2, 'ACTIVE', 'Trí tuệ nhân tạo, phân tích dữ liệu, Machine Learning'),
+('COURSE_CATEGORY', 'Thiết kế', 'DESIGN', 3, 'ACTIVE', 'Thiết kế đồ họa, UI/UX, mỹ thuật số'),
+('COURSE_CATEGORY', 'Kinh doanh', 'BUSINESS', 4, 'ACTIVE', 'Quản trị kinh doanh, khởi nghiệp, lãnh đạo doanh nghiệp'),
+('COURSE_CATEGORY', 'Marketing', 'MARKETING', 5, 'ACTIVE', 'Marketing số, truyền thông, tiếp thị và thương hiệu'),
+('COURSE_CATEGORY', 'Ngoại ngữ', 'LANGUAGES', 6, 'ACTIVE', 'Tiếng Anh giao tiếp, TOEIC, IELTS, Tiếng Nhật, Hàn, Hoa'),
+('COURSE_CATEGORY', 'Kỹ năng mềm', 'SOFT_SKILLS', 7, 'ACTIVE', 'Kỹ năng giao tiếp, làm việc nhóm, tư duy phản biện'),
+('COURSE_CATEGORY', 'Tài chính', 'FINANCE', 8, 'ACTIVE', 'Quản lý tài chính cá nhân, đầu tư'),
+('COURSE_CATEGORY', 'Nghệ thuật & Sáng tạo', 'ART_CREATIVE', 9, 'ACTIVE', 'Nhiếp ảnh, quay dựng video, âm nhạc, hội họa'),
+('COURSE_CATEGORY', 'Nhân tướng học', 'PHYSIOGNOMY', 10, 'ACTIVE', 'Kiến thức nhân tướng học, diện mạo và nhân trắc học ứng dụng'),
+('COURSE_CATEGORY', 'Tử Vi & Phong Thủy', 'TU_VI', 11, 'ACTIVE', 'Nghiên cứu lá số Tử Vi, âm dương ngũ hành và giải đoán vận hạn'),
+('COURSE_CATEGORY', 'Chiêm tinh học', 'ASTROLOGY', 12, 'ACTIVE', 'Khám phá bí mật 12 cung hoàng đạo và chiêm tinh học ứng dụng')
 ON CONFLICT (type, name) DO NOTHING;

@@ -232,7 +232,8 @@ public class AdminCourseServlet extends HttpServlet {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
             try {
-                courseService.deleteCourse(Long.parseLong(idStr.trim()));
+                UserDto currentUser = SessionUtil.getCurrentUser(req);
+                courseService.deleteCourse(Long.parseLong(idStr.trim()), currentUser);
                 resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?deleted=true");
                 return;
             } catch (Exception e) {

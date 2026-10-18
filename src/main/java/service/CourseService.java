@@ -33,6 +33,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import util.DbConnection;
+import util.GeminiAiUtil;
 import util.ValidationUtil;
 
 public class CourseService {
@@ -68,6 +69,10 @@ public class CourseService {
      * Lấy danh sách các danh mục khóa học đang ACTIVE từ bảng settings trong CSDL.
      */
     public List<SettingDto> getActiveCategories() {
+        return fetchActiveCategories();
+    }
+
+    public static List<SettingDto> fetchActiveCategories() {
         try (Connection con = DbConnection.getConnection()) {
             SettingDao settingDao = new SettingDao();
             List<entity.Setting> list = settingDao.findByType(con, SettingType.COURSE_CATEGORY);
@@ -131,6 +136,8 @@ public class CourseService {
             dto.setStatus(course.getStatus());
             dto.setManagerId(course.getManagerId());
             dto.setExpertId(course.getExpertId());
+            dto.setArchiveAt(course.getArchiveAt());
+            dto.setArchiveNotice(course.getArchiveNotice());
             if (course.getCategoryId() != null) {
                 SettingDao sDao = new SettingDao();
                 sDao.findById(con, course.getCategoryId()).ifPresent(s -> dto.setCategoryName(s.getName()));
@@ -176,6 +183,8 @@ public class CourseService {
             dto.setStatus(course.getStatus());
             dto.setManagerId(course.getManagerId());
             dto.setExpertId(course.getExpertId());
+            dto.setArchiveAt(course.getArchiveAt());
+            dto.setArchiveNotice(course.getArchiveNotice());
 
             List<Module> modules = moduleDao.findByCourseId(con, course.getId());
             for (Module m : modules) {
@@ -320,6 +329,10 @@ public class CourseService {
                         course.setManagerId(dto.getManagerId());
                     if (dto.getExpertId() != null)
                         course.setExpertId(dto.getExpertId());
+                    if (dto.getArchiveAt() != null)
+                        course.setArchiveAt(dto.getArchiveAt());
+                    if (dto.getArchiveNotice() != null)
+                        course.setArchiveNotice(dto.getArchiveNotice());
                     courseDao.update(con, course);
                     id = course.getId();
                 } else {
@@ -332,6 +345,8 @@ public class CourseService {
                     course.setStatus(dto.getStatus() != null ? dto.getStatus() : CourseStatus.DRAFT);
                     course.setManagerId(dto.getManagerId());
                     course.setExpertId(dto.getExpertId());
+                    course.setArchiveAt(dto.getArchiveAt());
+                    course.setArchiveNotice(dto.getArchiveNotice());
                     id = courseDao.insert(con, course);
                 }
                 con.commit();
@@ -403,6 +418,10 @@ public class CourseService {
         }
     }
 
+    public String generateCourseDescription(String title, String categoryName) {
+        return GeminiAiUtil.generateDescription(title, categoryName);
+    }
+
     public void updateCourseStatus(long courseId, CourseStatus status) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
@@ -414,11 +433,122 @@ public class CourseService {
         }
     }
 
-    public void deleteCourse(long courseId) {
+    /**
+     * Lên lịch hoặc thực hiện lưu trữ khóa học (Archive).
+     * - noticeDays == 0: Lưu trữ ngay lập tức, status = ARCHIVED, archive_at = now().
+     * - noticeDays > 0: Thông báo trước vài ngày, status = PUBLISHED, archive_at = now() + noticeDays.
+     */
+    public void scheduleArchiveCourse(long courseId, int noticeDays, String customNotice, UserDto currentUser) {
+        if (currentUser == null) {
+            throw new SecurityException("Vui lòng đăng nhập để thực hiện thao tác này.");
+        }
+        checkCourseOwnership(courseId, currentUser);
+
         try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
+
+            if (course.getStatus() == CourseStatus.DRAFT) {
+                throw new IllegalStateException("Khóa học ở trạng thái Nháp (Draft) không cần lưu trữ, bạn có thể xóa trực tiếp.");
+            }
+
+            OffsetDateTime targetArchiveTime;
+            CourseStatus targetStatus;
+            String notice = (customNotice != null && !customNotice.trim().isEmpty())
+                    ? customNotice.trim()
+                    : (noticeDays > 0
+                        ? ("Khóa học này sẽ chính thức ngừng tuyển sinh mới và chuyển sang chế độ Lưu trữ sau " + noticeDays + " ngày.")
+                        : "Khóa học này đã được chuyển sang chế độ Lưu trữ (ngừng tuyển sinh mới).");
+
+            if (noticeDays <= 0) {
+                targetStatus = CourseStatus.ARCHIVED;
+                targetArchiveTime = OffsetDateTime.now();
+            } else {
+                targetStatus = CourseStatus.PUBLISHED;
+                targetArchiveTime = OffsetDateTime.now().plusDays(noticeDays);
+            }
+
+            courseDao.updateArchiveStatus(con, courseId, targetStatus, targetArchiveTime, notice);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lưu trữ khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Khôi phục / Hủy lưu trữ (Unarchive) khóa học: Đưa trở lại trạng thái PUBLISHED và xóa thông báo lưu trữ.
+     */
+    public void unarchiveCourse(long courseId, UserDto currentUser) {
+        if (currentUser == null) {
+            throw new SecurityException("Vui lòng đăng nhập.");
+        }
+        checkCourseOwnership(courseId, currentUser);
+
+        try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
+
+            courseDao.updateArchiveStatus(con, courseId, CourseStatus.PUBLISHED, null, null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khôi phục khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Hủy lịch lưu trữ khóa học (khi đang trong thời gian thông báo trước vài ngày).
+     */
+    public void cancelArchiveSchedule(long courseId, UserDto currentUser) {
+        if (currentUser == null) {
+            throw new SecurityException("Vui lòng đăng nhập.");
+        }
+        checkCourseOwnership(courseId, currentUser);
+
+        try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
+
+            courseDao.updateArchiveStatus(con, courseId, CourseStatus.PUBLISHED, null, null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi hủy lịch lưu trữ khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public void deleteCourse(long courseId) {
+        deleteCourse(courseId, null);
+    }
+
+    /**
+     * Xóa vĩnh viễn khóa học:
+     * - Expert: CHỈ có thể xóa hoàn toàn nếu khóa học ở trạng thái DRAFT và chưa có học viên nào đăng ký.
+     * - Khóa học đã xuất bản (PUBLISHED) hoặc đã lưu trữ (ARCHIVED) hoặc đã có học viên: CHỈ Admin mới có quyền xóa hoàn toàn khỏi CSDL.
+     */
+    public void deleteCourse(long courseId, UserDto currentUser) {
+        try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học cần xóa ID: " + courseId));
+
+            if (currentUser != null) {
+                String role = currentUser.getRoleName();
+                boolean isAdmin = "ADMIN".equalsIgnoreCase(role) || (currentUser.getRoleId() != null && currentUser.getRoleId() == 5L);
+
+                if (!isAdmin) {
+                    // Kiểm tra quyền sở hữu của Expert / Manager
+                    checkCourseOwnership(courseId, currentUser);
+
+                    // Quy tắc: Nếu đã public hoặc có sinh viên học, Expert chỉ được archive, không được xóa vĩnh viễn
+                    if (course.getStatus() != CourseStatus.DRAFT) {
+                        throw new IllegalStateException("Chuyên gia chỉ có thể xóa hoàn toàn khóa học khi ở trạng thái Nháp (Draft). Khóa học đã xuất bản hoặc đã có sinh viên chỉ có thể Lưu trữ (Archive) hoặc do Quản trị viên (Admin) xóa khỏi hệ thống.");
+                    }
+
+                    List<Registration> regs = registrationDao.findByCourseId(con, courseId);
+                    if (regs != null && !regs.isEmpty()) {
+                        throw new IllegalStateException("Khóa học đã có học viên đăng ký, chỉ Quản trị viên (Admin) mới có quyền xóa hoàn toàn khỏi cơ sở dữ liệu.");
+                    }
+                }
+            }
+
             con.setAutoCommit(false);
             try {
-                // Xóa đăng ký học phụ thuộc nếu có
+                // Xóa đăng ký học phụ thuộc nếu có (Admin thực hiện)
                 try (java.sql.PreparedStatement ps = con.prepareStatement("DELETE FROM registrations WHERE course_id = ?")) {
                     ps.setLong(1, courseId);
                     ps.executeUpdate();
@@ -531,6 +661,13 @@ public class CourseService {
                 dto.setModuleId(getOrCreateDefaultModuleId(dto.getCourseId()));
             } else {
                 throw new IllegalArgumentException("Vui lòng chọn khóa học hoặc chương học hợp lệ.");
+            }
+        }
+        if ((dto.getTitle() == null || dto.getTitle().trim().isEmpty() || "Bài mới".equalsIgnoreCase(dto.getTitle().trim()))
+                && dto.getVideoUrl() != null && !dto.getVideoUrl().trim().isEmpty()) {
+            String fetchedTitle = fetchYoutubeVideoTitle(dto.getVideoUrl());
+            if (fetchedTitle != null && !fetchedTitle.trim().isEmpty()) {
+                dto.setTitle(fetchedTitle);
             }
         }
         ValidationUtil.requireText(dto.getTitle(), "Tiêu đề bài học");
@@ -700,6 +837,9 @@ public class CourseService {
     public static class BatchParseResult {
         private String playlistTitle;
         private List<LessonDto> lessons = new ArrayList<>();
+        private Long suggestedCategoryId;
+        private String suggestedCategoryName;
+        private String suggestedDescription;
 
         public BatchParseResult() {}
 
@@ -712,6 +852,12 @@ public class CourseService {
         public void setPlaylistTitle(String playlistTitle) { this.playlistTitle = playlistTitle; }
         public List<LessonDto> getLessons() { return lessons; }
         public void setLessons(List<LessonDto> lessons) { this.lessons = lessons; }
+        public Long getSuggestedCategoryId() { return suggestedCategoryId; }
+        public void setSuggestedCategoryId(Long suggestedCategoryId) { this.suggestedCategoryId = suggestedCategoryId; }
+        public String getSuggestedCategoryName() { return suggestedCategoryName; }
+        public void setSuggestedCategoryName(String suggestedCategoryName) { this.suggestedCategoryName = suggestedCategoryName; }
+        public String getSuggestedDescription() { return suggestedDescription; }
+        public void setSuggestedDescription(String suggestedDescription) { this.suggestedDescription = suggestedDescription; }
     }
 
     public static class YoutubePlaylistData {
@@ -811,7 +957,12 @@ public class CourseService {
                 if (!cleanLine.isEmpty() && cleanLine.length() > 2) {
                     title = cleanLine;
                 } else {
-                    title = "Bài " + seq + ": Video bài giảng";
+                    String fetched = fetchYoutubeVideoTitle(videoId);
+                    if (fetched != null && !fetched.trim().isEmpty()) {
+                        title = fetched;
+                    } else {
+                        title = "Bài " + seq + ": Video bài giảng";
+                    }
                 }
 
                 LessonDto dto = new LessonDto();
@@ -822,7 +973,175 @@ public class CourseService {
             }
         }
         result.setLessons(list);
+        autoDetectCategory(result, text);
         return result;
+    }
+
+    /**
+     * Tự động nhận diện danh mục phù hợp dựa trên tiêu đề Playlist và danh sách tiêu đề bài học.
+     */
+    public static void autoDetectCategory(BatchParseResult result) {
+        autoDetectCategory(result, null);
+    }
+
+    public static void autoDetectCategory(BatchParseResult result, String rawInputText) {
+        if (result == null) return;
+
+        // 1. [AI CLASSIFICATION]: Thử nhận diện ngữ nghĩa thông minh qua Google Gemini 2.5 Flash Lite
+        if (GeminiAiUtil.isAvailable()) {
+            List<SettingDto> activeCategories = fetchActiveCategories();
+            String title = result.getPlaylistTitle();
+            if (title == null || title.isEmpty()) {
+                if (result.getLessons() != null && !result.getLessons().isEmpty()) {
+                    title = result.getLessons().get(0).getTitle();
+                } else if (rawInputText != null && !rawInputText.trim().isEmpty()) {
+                    title = rawInputText.split("\\r?\\n")[0];
+                }
+            }
+
+            StringBuilder ctxBuilder = new StringBuilder();
+            if (result.getLessons() != null) {
+                int count = 0;
+                for (LessonDto l : result.getLessons()) {
+                    if (l.getTitle() != null) {
+                        ctxBuilder.append(l.getTitle()).append("; ");
+                        if (++count >= 10) break; // Lấy tối đa 10 bài đầu để tối ưu token
+                    }
+                }
+            }
+            if (rawInputText != null && !rawInputText.trim().isEmpty()) {
+                ctxBuilder.append(rawInputText);
+            }
+
+            GeminiAiUtil.CategoryResult aiResult = GeminiAiUtil.classifyCourse(title, ctxBuilder.toString(), activeCategories);
+            if (aiResult != null && aiResult.getCategoryId() != null) {
+                result.setSuggestedCategoryId(aiResult.getCategoryId());
+                result.setSuggestedCategoryName(aiResult.getCategoryName());
+                result.setSuggestedDescription(aiResult.getSuggestedDescription());
+                return; // Phân loại AI thành công!
+            }
+        }
+
+        // 2. [FALLBACK HEURISTIC]: Chốt chặn tự phục hồi nếu AI gặp lỗi mạng, quota hoặc offline
+        StringBuilder textBuilder = new StringBuilder();
+        if (result.getPlaylistTitle() != null) {
+            // Nhân đôi trọng số của tiêu đề playlist
+            textBuilder.append(result.getPlaylistTitle()).append(" ")
+                       .append(result.getPlaylistTitle()).append(" ")
+                       .append(result.getPlaylistTitle()).append(" ");
+        }
+        if (result.getLessons() != null) {
+            for (LessonDto l : result.getLessons()) {
+                if (l.getTitle() != null) {
+                    textBuilder.append(l.getTitle()).append(" ");
+                }
+            }
+        }
+        if (rawInputText != null && !rawInputText.trim().isEmpty()) {
+            textBuilder.append(rawInputText).append(" ");
+        }
+
+        String raw = textBuilder.toString().toLowerCase();
+        String normalized = removeDiacritics(raw);
+
+        // 1. Lập trình (ID: 6)
+        int progScore = countMatches(normalized, 
+            "lap trinh", "code", "coding", "developer", "programming", "java", "python", "javascript", "react", 
+            "vue", "angular", "node", "nodejs", "html", "css", "frontend", "backend", "fullstack", "web", "app", 
+            "flutter", "android", "ios", "swift", "spring", "django", "laravel", "php", "sql", "c++", "c#", 
+            ".net", "thuat toan", "cau truc du lieu", "oop", "api", "git", "docker", "devops", "cloud", "security");
+
+        // 2. Khoa học Dữ liệu & AI (ID: 7)
+        int dataAiScore = countMatches(normalized, 
+            "data", "ai", "du lieu", "tri tue nhan tao", "machine learning", "deep learning", 
+            "khoa hoc du lieu", "phan tich du lieu", "pandas", "numpy", "tensorflow", "pytorch", 
+            "power bi", "tableau", "nlp", "llm", "chatgpt", "prompt", "neural network", "big data");
+
+        // 3. Thiết kế (ID: 18)
+        int designScore = countMatches(normalized, 
+            "thiet ke", "design", "photoshop", "illustrator", "figma", "ui", "ux", "do hoa", 
+            "graphic", "canva", "indesign", "typography", "banner", "logo", "poster", "blend", "lightroom");
+
+        // 4. Kinh doanh (ID: 20)
+        int businessScore = countMatches(normalized, 
+            "kinh doanh", "business", "khoi nghiep", "startup", "quan tri", "van hanh", 
+            "doanh nghiep", "ban hang", "sales", "ceo", "thuong mai", "lanh dao", "chien luoc");
+
+        // 5. Marketing (ID: 19)
+        int marketingScore = countMatches(normalized, 
+            "marketing", "seo", "ads", "quang cao", "truyen thong", "facebook ads", "google ads", 
+            "tiktok ads", "content", "tiep thi", "digital marketing", "copywriting");
+
+        // 6. Ngoại ngữ (ID: 21)
+        int languageScore = countMatches(normalized, 
+            "tieng anh", "english", "ielts", "toeic", "tieng nhat", "tieng han", "tieng trung", 
+            "tieng hoa", "ngoai ngu", "ngu phap", "tu vung", "phat am", "listening", "speaking", "giao tiep");
+
+        // 7. Kỹ năng mềm (ID: 8)
+        int softSkillScore = countMatches(normalized, 
+            "ky nang", "thuyet trinh", "lam viec nhom", "quan ly thoi gian", 
+            "tu duy", "soft skill", "tu tin", "dam phan", "thuyet phuc");
+
+        // 8. Tài chính (ID: 22)
+        int financeScore = countMatches(normalized, 
+            "tai chinh", "dau tu", "chung khoan", "co phieu", "crypto", "bitcoin", "tien te", 
+            "bat dong san", "tiet kiem", "finance", "quan ly tai chinh", "kinh te");
+
+        // 9. Nghệ thuật & Sáng tạo (ID: 23)
+        int artScore = countMatches(normalized, 
+            "nhiep anh", "chup anh", "video", "quay phim", "capcut", "premiere", "after effects", 
+            "dung phim", "am nhac", "guitar", "piano", "thanh nhac", "hat", "ve", "hoi hoa");
+
+        // 10. Tử Vi & Phong Thủy (ID: 13)
+        int tuViScore = countMatches(normalized, 
+            "tu vi", "phong thuy", "bat tu", "kinh dich", "ngu hanh", "am duong", "la so", "huyen hoc");
+
+        // 11. Nhân tướng học (ID: 12)
+        int physScore = countMatches(normalized, 
+            "nhan tuong", "dien mao", "nhan trac", "tuong so", "xem tuong", "ngu quan", "khuon mat", "chi tay");
+
+        // 12. Chiêm tinh học (ID: 14)
+        int astroScore = countMatches(normalized, 
+            "chiem tinh", "cung hoang dao", "astrology", "ban do sao", "12 cung", "zodiac", "horoscope");
+
+        int max = 0;
+        long bestId = 6L;
+        String bestName = "Lập trình";
+
+        int[] scores = {progScore, dataAiScore, designScore, businessScore, marketingScore, languageScore, softSkillScore, financeScore, artScore, tuViScore, physScore, astroScore};
+        long[] ids = {6L, 7L, 18L, 20L, 19L, 21L, 8L, 22L, 23L, 13L, 12L, 14L};
+        String[] names = {"Lập trình", "Khoa học Dữ liệu & AI", "Thiết kế", "Kinh doanh", "Marketing", "Ngoại ngữ", "Kỹ năng mềm", "Tài chính", "Nghệ thuật & Sáng tạo", "Tử Vi & Phong Thủy", "Nhân tướng học", "Chiêm tinh học"};
+
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] > max) {
+                max = scores[i];
+                bestId = ids[i];
+                bestName = names[i];
+            }
+        }
+
+        if (max > 0) {
+            result.setSuggestedCategoryId(bestId);
+            result.setSuggestedCategoryName(bestName);
+        }
+    }
+
+    private static int countMatches(String text, String... keywords) {
+        int count = 0;
+        for (String kw : keywords) {
+            if (text.contains(kw)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static String removeDiacritics(String str) {
+        if (str == null) return "";
+        return java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace("đ", "d").replace("Đ", "D")
+                .toLowerCase();
     }
 
     public static List<LessonDto> parseBatchVideoText(String text) {
@@ -948,16 +1267,76 @@ public class CourseService {
         return fetchYoutubePlaylistData(playlistId).getLessons();
     }
 
-    private static String extractVideoIdFromUrl(String url) {
+    public static String extractVideoIdFromUrl(String url) {
         if (url == null) return null;
-        if (url.contains("/embed/")) {
-            return url.substring(url.lastIndexOf("/embed/") + 7);
-        }
+        url = url.trim();
         java.util.regex.Pattern ytIdPattern = java.util.regex.Pattern.compile(
-                "(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
+                "(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|shorts\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
         java.util.regex.Matcher m = ytIdPattern.matcher(url);
         if (m.find()) {
             return m.group(1) != null ? m.group(1) : m.group(2);
+        }
+        return null;
+    }
+
+    /**
+     * Tự động lấy tiêu đề của video YouTube thông qua oEmbed API hoặc cào trang watch.
+     * Hỗ trợ định dạng link watch, shorts, embed, youtu.be hoặc ID 11 ký tự.
+     */
+    public static String fetchYoutubeVideoTitle(String videoUrlOrId) {
+        if (videoUrlOrId == null || videoUrlOrId.trim().isEmpty()) {
+            return null;
+        }
+        String videoId = extractVideoIdFromUrl(videoUrlOrId);
+        if (videoId == null) {
+            return null;
+        }
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(6))
+                    .followRedirects(java.net.http.HttpClient.Redirect.ALWAYS)
+                    .build();
+
+            // 1. YouTube oEmbed API (nhanh, nhẹ và chuẩn xác)
+            String oembedUrl = "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=" + videoId + "&format=json";
+            java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(oembedUrl))
+                    .timeout(java.time.Duration.ofSeconds(6))
+                    .header("User-Agent", "Mozilla/5.0")
+                    .build();
+
+            java.net.http.HttpResponse<String> resp = client.send(req, java.net.http.HttpResponse.BodyHandlers.ofString(java.nio.charset.StandardCharsets.UTF_8));
+            if (resp.statusCode() == 200) {
+                String json = resp.body();
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"title\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+                if (m.find()) {
+                    String title = unescapeUnicode(m.group(1));
+                    return unescapeHtml(title);
+                }
+            }
+
+            // 2. Fallback sang cào trang watch trực tiếp
+            String watchUrl = "https://www.youtube.com/watch?v=" + videoId;
+            java.net.http.HttpRequest watchReq = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(watchUrl))
+                    .timeout(java.time.Duration.ofSeconds(8))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+                    .header("Accept-Language", "vi,en-US;q=0.9,en;q=0.8")
+                    .build();
+            java.net.http.HttpResponse<String> watchResp = client.send(watchReq, java.net.http.HttpResponse.BodyHandlers.ofString(java.nio.charset.StandardCharsets.UTF_8));
+            if (watchResp.statusCode() == 200) {
+                String html = watchResp.body();
+                java.util.regex.Matcher mOg = java.util.regex.Pattern.compile("<meta property=\"og:title\" content=\"([^\"]+)\"").matcher(html);
+                if (mOg.find()) {
+                    return unescapeHtml(unescapeUnicode(mOg.group(1)));
+                }
+                java.util.regex.Matcher mTitle = java.util.regex.Pattern.compile("<title>([^<]+?)(?:\\s*-\\s*YouTube)?</title>").matcher(html);
+                if (mTitle.find()) {
+                    return unescapeHtml(unescapeUnicode(mTitle.group(1).trim()));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Không thể lấy tiêu đề video YouTube " + videoId + ": " + e.getMessage());
         }
         return null;
     }
@@ -999,6 +1378,7 @@ public class CourseService {
                     for (LessonProgress lp : progresses) {
                         if (lp.getLessonId().equals(l.getId())) {
                             l.setProgressStatus(lp.getStatus());
+                            l.setUserNote(lp.getUserNote());
                             break;
                         }
                     }
@@ -1007,6 +1387,31 @@ public class CourseService {
             return courseDto;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải nội dung học tập: " + e.getMessage(), e);
+        }
+    }
+
+    public void saveLessonNote(long registrationId, long userId, long lessonId, String note) {
+        try (Connection con = DbConnection.getConnection()) {
+            Registration registration = registrationDao.findById(con, registrationId)
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Không tìm thấy đơn đăng ký ID: " + registrationId));
+            if (!Long.valueOf(userId).equals(registration.getUserId())) {
+                throw new SecurityException("Bạn không có quyền cập nhật ghi chú của đơn đăng ký này.");
+            }
+            if (registration.getStatus() != RegistrationStatus.ACTIVE
+                    && registration.getStatus() != RegistrationStatus.COMPLETED) {
+                throw new IllegalStateException("Đơn đăng ký chưa được kích hoạt hoặc đã bị hủy.");
+            }
+            Lesson lesson = lessonDao.findById(con, lessonId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học ID: " + lessonId));
+            Module module = moduleDao.findById(con, lesson.getModuleId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương học của bài học."));
+            if (!registration.getCourseId().equals(module.getCourseId())) {
+                throw new SecurityException("Bài học không thuộc khóa học đã đăng ký.");
+            }
+            lessonProgressDao.saveUserNote(con, registrationId, lessonId, note);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lưu ghi chú bài học: " + e.getMessage(), e);
         }
     }
 
@@ -1073,6 +1478,8 @@ public class CourseService {
         dto.setStatus(course.getStatus());
         dto.setManagerId(course.getManagerId());
         dto.setExpertId(course.getExpertId());
+        dto.setArchiveAt(course.getArchiveAt());
+        dto.setArchiveNotice(course.getArchiveNotice());
 
         try (Connection con = DbConnection.getConnection()) {
             if (course.getCategoryId() != null) {

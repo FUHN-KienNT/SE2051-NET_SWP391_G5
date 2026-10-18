@@ -12,6 +12,7 @@ public class LessonDto {
     private int orderIndex;
     private LessonProgressStatus progressStatus;
     private Long courseId;
+    private String userNote;
 
     public LessonDto() {
     }
@@ -125,5 +126,13 @@ public class LessonDto {
             }
         }
         return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&auto=format&fit=crop&q=60";
+    }
+
+    public String getUserNote() {
+        return userNote;
+    }
+
+    public void setUserNote(String userNote) {
+        this.userNote = userNote;
     }
 }

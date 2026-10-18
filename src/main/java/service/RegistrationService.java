@@ -6,6 +6,7 @@ import dao.RegistrationDao;
 import dto.RegistrationDto;
 import entity.Course;
 import entity.Registration;
+import entity.enums.CourseStatus;
 import entity.enums.PaymentMethod;
 import entity.enums.PaymentStatus;
 import entity.enums.RegistrationStatus;
@@ -49,6 +50,13 @@ public class RegistrationService {
                     if (reg.getStatus() == RegistrationStatus.PENDING) {
                         return mapRegistration(reg);
                     }
+                }
+
+                // Nếu chưa có đơn đăng ký, kiểm tra xem khóa học đã lưu trữ (ngừng tuyển sinh) hay chưa
+                boolean isArchived = course.getStatus() == CourseStatus.ARCHIVED
+                        || (course.getArchiveAt() != null && !course.getArchiveAt().isAfter(OffsetDateTime.now()));
+                if (isArchived) {
+                    throw new IllegalStateException("Khóa học này đã được chuyển sang chế độ Lưu trữ (ngừng nhận học viên mới). Bạn không thể đăng ký mới.");
                 }
 
                 Registration reg = initializePayment(course);

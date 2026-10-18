@@ -4,527 +4,767 @@
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
 
-<main class="main-content py-5">
-    <div class="container">
-        <!-- Breadcrumb -->
-        <nav class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/expert/dashboard">Expert Dashboard</a></li>
-                <li class="breadcrumb-item active">${course.title}</li>
-                <li class="breadcrumb-item active">Danh sách Bài học (Lesson List)</li>
-            </ol>
+<style>
+/* ==========================================================================
+   MODERN SAAS DESIGN SYSTEM (Cohesive with Expert Dashboard)
+   ========================================================================== */
+:root {
+    --saas-bg: #f8fafc;
+    --saas-card-bg: #ffffff;
+    --saas-border: #e2e8f0;
+    --saas-border-subtle: #f1f5f9;
+    --saas-text-heading: #0f172a;
+    --saas-text-body: #334155;
+    --saas-text-muted: #64748b;
+    --saas-primary: #0f172a;
+    --saas-primary-hover: #1e293b;
+    --saas-accent: #2563eb;
+    --saas-accent-hover: #1d4ed8;
+    --saas-radius-sm: 6px;
+    --saas-radius-md: 10px;
+    --saas-radius-lg: 14px;
+    --saas-radius-xl: 18px;
+    --saas-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --saas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+}
+
+body {
+    background-color: var(--saas-bg);
+    color: var(--saas-text-body);
+}
+
+.saas-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* Breadcrumbs */
+.saas-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: var(--saas-text-muted);
+    margin-bottom: 16px;
+}
+.saas-breadcrumb a {
+    color: var(--saas-text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.saas-breadcrumb a:hover {
+    color: var(--saas-text-heading);
+}
+.saas-breadcrumb .separator {
+    color: #cbd5e1;
+    font-size: 0.75rem;
+}
+.saas-breadcrumb .current {
+    color: var(--saas-text-heading);
+    font-weight: 500;
+}
+
+/* Page Header */
+.saas-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.saas-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--saas-text-heading);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.saas-subtitle {
+    font-size: 0.875rem;
+    color: var(--saas-text-muted);
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+/* Status Badges */
+.saas-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+.saas-badge-published {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+.saas-badge-published .badge-dot { background: #10b981; }
+
+.saas-badge-pending {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+.saas-badge-pending .badge-dot { background: #f59e0b; }
+
+.saas-badge-draft {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+.saas-badge-draft .badge-dot { background: #64748b; }
+
+/* Buttons */
+.btn-saas-primary {
+    background: #0f172a;
+    color: #ffffff;
+    border: 1px solid #0f172a;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    box-shadow: var(--saas-shadow-xs);
+}
+.btn-saas-primary:hover {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #1e293b;
+}
+
+.btn-saas-outline {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid var(--saas-border);
+    font-weight: 500;
+    font-size: 0.8125rem;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    box-shadow: var(--saas-shadow-xs);
+}
+.btn-saas-outline:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+.btn-saas-outline-emerald {
+    background: #ffffff;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+.btn-saas-outline-emerald:hover {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #6ee7b7;
+}
+
+.btn-saas-outline-amber {
+    background: #ffffff;
+    color: #d97706;
+    border: 1px solid #fde68a;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+.btn-saas-outline-amber:hover {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fcd34d;
+}
+
+.btn-icon-action {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--saas-border);
+    background: #ffffff;
+    color: #64748b;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+.btn-icon-action:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+/* Module Cards */
+.saas-module-card {
+    background: var(--saas-card-bg);
+    border: 1px solid var(--saas-border);
+    border-radius: var(--saas-radius-lg);
+    box-shadow: var(--saas-shadow-sm);
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: border-color 0.15s ease;
+}
+.saas-module-card:hover {
+    border-color: #cbd5e1;
+}
+.saas-module-header {
+    background: #ffffff;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--saas-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.saas-module-header:hover {
+    background-color: #f8fafc;
+}
+.saas-module-header.collapsed {
+    border-bottom-color: transparent;
+}
+.module-chevron {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 0.95rem;
+    color: #64748b;
+    display: inline-block;
+}
+.saas-module-header.collapsed .module-chevron {
+    transform: rotate(-90deg);
+}
+.saas-module-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--saas-text-heading);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Lesson Items */
+.saas-lesson-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--saas-border-subtle);
+    background: #ffffff;
+    transition: background-color 0.15s ease;
+    gap: 16px;
+}
+.saas-lesson-item:last-child {
+    border-bottom: none;
+}
+.saas-lesson-item:hover {
+    background-color: #f8fafc;
+}
+.lesson-thumb-box {
+    width: 84px;
+    height: 52px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #0f172a;
+    border: 1px solid var(--saas-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.lesson-thumb-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Pills & Tags */
+.pill-neutral {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.pill-video {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.pill-doc {
+    background: #f0fdfa;
+    color: #0f766e;
+    border: 1px solid #ccfbf1;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Modals (shadcn inspired) */
+.modal-content.saas-modal {
+    border-radius: 16px;
+    border: 1px solid var(--saas-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+.modal-header.saas-modal-header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--saas-border);
+    padding: 20px 24px;
+}
+.modal-footer.saas-modal-footer {
+    background: #f8fafc;
+    border-top: 1px solid var(--saas-border);
+    padding: 16px 24px;
+}
+.saas-form-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+.saas-form-control {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    padding: 9px 12px;
+    transition: all 0.15s ease;
+}
+.saas-form-control:focus {
+    border-color: var(--saas-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Alerts */
+.saas-alert {
+    border-radius: var(--saas-radius-md);
+    padding: 14px 18px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    box-shadow: var(--saas-shadow-xs);
+}
+.saas-alert-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+.saas-alert-danger {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+/* Pagination styling */
+.pagination .page-link {
+    color: var(--saas-text-secondary);
+    border: 1px solid var(--saas-border);
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 6px;
+    background: #ffffff;
+    transition: all 0.15s ease;
+}
+.pagination .page-link:hover {
+    color: var(--saas-accent);
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+}
+.pagination .page-item.active .page-link {
+    background-color: var(--saas-accent);
+    border-color: var(--saas-accent);
+    color: #ffffff;
+    font-weight: 600;
+}
+.pagination .page-item.disabled .page-link {
+    color: var(--saas-text-muted);
+    background-color: transparent;
+    border-color: var(--saas-border-subtle);
+    opacity: 0.6;
+}
+</style>
+
+<main class="main-content py-4">
+    <div class="container saas-container">
+        <!-- Modern Breadcrumb -->
+        <nav class="saas-breadcrumb" aria-label="breadcrumb">
+            <a href="${pageContext.request.contextPath}/expert/dashboard">
+                <i class="bi bi-mortarboard-fill me-1 text-primary"></i>Expert Studio
+            </a>
+            <span class="separator">/</span>
+            <span class="current">${course.title}</span>
+            <span class="separator">/</span>
+            <span>Danh sách bài học</span>
         </nav>
 
+        <!-- Flash alerts -->
         <c:set var="displaySuccess" value="${not empty successMessage ? successMessage : param.success}" />
         <c:if test="${not empty displaySuccess}">
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <c:choose>
-                    <c:when test="${displaySuccess == 'batch_saved'}">
-                        Đã nhập và khởi tạo thành công <strong><c:out value="${not empty param.count ? param.count : 'toàn bộ'}" /> bài học</strong> từ danh sách video YouTube!
-                    </c:when>
-                    <c:when test="${displaySuccess == 'created'}">
-                        Đã tạo khóa học thành công!
-                    </c:when>
-                    <c:when test="${displaySuccess == 'true'}">
-                        Đã lưu thông tin bài học thành công!
-                    </c:when>
-                    <c:otherwise>
-                        <c:out value="${displaySuccess}" escapeXml="true" />
-                    </c:otherwise>
-                </c:choose>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="saas-alert saas-alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <span>
+                        <c:choose>
+                            <c:when test="${displaySuccess == 'batch_saved'}">
+                                Đã nhập thành công <strong><c:out value="${not empty param.count ? param.count : 'toàn bộ'}" /> bài học</strong> từ YouTube!
+                            </c:when>
+                            <c:when test="${displaySuccess == 'created'}">
+                                Tạo khóa học thành công!
+                            </c:when>
+                            <c:when test="${displaySuccess == 'true'}">
+                                Đã lưu thông tin bài học thành công!
+                            </c:when>
+                            <c:otherwise>
+                                <c:out value="${displaySuccess}" escapeXml="true" />
+                            </c:otherwise>
+                        </c:choose>
+                    </span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
             </div>
         </c:if>
 
         <c:set var="displayError" value="${not empty errorMessage ? errorMessage : param.error}" />
         <c:if test="${not empty displayError}">
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i><c:out value="${displayError}" escapeXml="true" />
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="saas-alert saas-alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    <span><c:out value="${displayError}" escapeXml="true" /></span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
             </div>
         </c:if>
 
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <!-- Top Header & Primary Actions -->
+        <div class="saas-header">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <h3 class="fw-bold mb-0"><i class="bi bi-journal-bookmark me-2"></i>Chương trình học: ${course.title}</h3>
+                    <h1 class="saas-title">
+                        <i class="bi bi-journal-bookmark text-primary"></i>${course.title}
+                    </h1>
                     <c:choose>
                         <c:when test="${course.status == 'PUBLISHED'}">
-                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                <i class="bi bi-check-circle-fill me-1"></i>Đã công khai
+                            <span class="saas-badge saas-badge-published">
+                                <span class="badge-dot"></span>Đã công khai
                             </span>
                         </c:when>
                         <c:when test="${course.status == 'PENDING_REVIEW'}">
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1">
-                                <i class="bi bi-hourglass-split me-1"></i>Đang chờ Admin duyệt
+                            <span class="saas-badge saas-badge-pending">
+                                <span class="badge-dot"></span>Chờ duyệt
                             </span>
                         </c:when>
                         <c:otherwise>
-                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
-                                <i class="bi bi-pencil-square me-1"></i>Bản nháp (DRAFT)
+                            <span class="saas-badge saas-badge-draft">
+                                <span class="badge-dot"></span>Bản nháp
                             </span>
                         </c:otherwise>
                     </c:choose>
                 </div>
-                <p class="text-muted small mb-0">Quản lý các chương học (Modules) và các bài giảng (Lessons) - Màn hình II.4.1</p>
+                <p class="saas-subtitle">Quản lý danh sách các bài giảng trong khóa học này</p>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-primary fw-semibold shadow-sm">
-                    <i class="bi bi-plus-lg me-1"></i>Thêm Bài học
-                </a>
+
+            <!-- Action Toolbar -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
                 <c:choose>
                     <c:when test="${course.status == 'DRAFT'}">
-                        <a href="${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons"
-                           class="btn btn-success fw-semibold shadow-sm"
-                           onclick="return confirm('Bạn có chắc chắn muốn gửi duyệt xuất bản khóa học &quot;${course.title}&quot; để Ban Quản Trị duyệt?');">
-                            <i class="bi bi-send-check me-1"></i>Gửi duyệt xuất bản
-                        </a>
+                        <button type="button"
+                           class="btn btn-saas-outline-emerald"
+                           onclick="confirmPublishCourse('<c:out value="${course.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons')"
+                           title="Gửi duyệt khóa học">
+                            <i class="bi bi-send-check"></i>Gửi duyệt
+                        </button>
                     </c:when>
                     <c:when test="${course.status == 'PENDING_REVIEW'}">
-                        <a href="${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons"
-                           class="btn btn-outline-warning fw-semibold shadow-sm"
-                           onclick="return confirm('Bạn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học &quot;${course.title}&quot;?');">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>Thu hồi yêu cầu
-                        </a>
+                        <button type="button"
+                           class="btn btn-saas-outline-amber"
+                           onclick="confirmCancelPublishCourse('<c:out value="${course.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons')"
+                           title="Thu hồi yêu cầu xuất bản">
+                            <i class="bi bi-arrow-counterclockwise"></i>Thu hồi yêu cầu
+                        </button>
                     </c:when>
                 </c:choose>
-                <button type="button" class="btn btn-danger fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
-                    <i class="bi bi-youtube me-1"></i>Nhập Playlist / Hàng loạt Video
-                </button>
-                <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-toggle="modal" data-bs-target="#newModuleModal">
-                    <i class="bi bi-folder-plus me-1"></i>Thêm Chương mới
-                </button>
+                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-saas-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm bài học
+                </a>
             </div>
         </div>
 
+        <!-- Lessons List (Fully Flattened & Extracted) -->
         <c:choose>
-            <c:when test="${empty course.modules}">
-                <div class="card p-5 text-center border-0 shadow-sm rounded-3">
-                    <i class="bi bi-journal-plus fs-1 text-primary mb-3"></i>
-                    <h5>Khóa học này chưa có nội dung bài học!</h5>
-                    <p class="text-muted small">Bạn có thể thêm từng bài học trực tiếp (không bắt buộc phải chia chương), nhập Playlist YouTube hàng loạt hoặc tạo các chương để phân loại.</p>
-                    <div class="d-flex justify-content-center flex-wrap gap-2 mt-2">
-                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-primary fw-semibold">
-                            <i class="bi bi-plus-lg me-1"></i>Thêm Bài học mới
+            <c:when test="${empty course.modules || course.totalLessons == 0}">
+                <div class="saas-module-card p-5 text-center">
+                    <div class="saas-stat-icon saas-icon-blue mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; border-radius: 12px; background: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-play-btn"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Khóa học này chưa có bài học nào</h5>
+                    <p class="text-muted small mb-4" style="max-width: 500px; margin-left: auto; margin-right: auto;">
+                        Bắt đầu xây dựng nội dung cho khóa học bằng cách thêm bài học đầu tiên.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-saas-primary">
+                            <i class="bi bi-plus-lg me-1"></i>Thêm bài học mới
                         </a>
-                        <button type="button" class="btn btn-danger fw-semibold" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal">
-                            <i class="bi bi-youtube me-1"></i>Nhập hàng loạt video YouTube
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newModuleModal">
-                            <i class="bi bi-folder-plus me-1"></i>Tạo Chương học (Tùy chọn)
-                        </button>
                     </div>
                 </div>
             </c:when>
             <c:otherwise>
-                <div class="row g-4">
-                    <c:forEach var="m" items="${course.modules}">
-                        <div class="col-12">
-                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <c:choose>
-                                            <c:when test="${course.modules.size() == 1 && (m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung')}">
-                                                <span class="badge bg-secondary-subtle text-secondary border"><i class="bi bi-list-ul me-1"></i>Bài học chung</span>
-                                                <h5 class="fw-bold mb-0">${m.title}</h5>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge bg-primary">Chương ${m.orderIndex}</span>
-                                                <h5 class="fw-bold mb-0">${m.title}</h5>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-primary">
-                                            <i class="bi bi-plus-lg me-1"></i>Thêm Bài học
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#batchImportLessonsModal" onclick="selectBatchModule('${m.id}')">
-                                            <i class="bi bi-youtube me-1"></i>Nhập loạt video vào chương này
-                                        </button>
-                                        <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}#module-${m.id}" class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-patch-question me-1"></i>Quản lý Quiz
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                data-id="${m.id}"
-                                                data-title="<c:out value="${m.title}" />"
-                                                data-order="${m.orderIndex}"
-                                                onclick="openEditModuleModal(this)" title="Sửa tên chương">
-                                            <i class="bi bi-pencil me-1"></i>Sửa tên chương
-                                        </button>
-                                        <a href="${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa chương &quot;<c:out value="${m.title}" />&quot; và tất cả bài học bên trong không?');" title="Xóa chương này">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="card-body p-0">
-                                    <c:choose>
-                                        <c:when test="${empty m.lessons}">
-                                            <div class="p-4 text-center text-muted small">Chưa có bài học nào trong chương này.</div>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <ul class="list-group list-group-flush">
-                                                <c:forEach var="l" items="${m.lessons}">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                                        <div class="d-flex align-items-center gap-3">
-                                                            <img src="${l.thumbnailUrl}" class="rounded shadow-sm flex-shrink-0" style="width: 60px; height: 36px; object-fit: cover;" alt="${l.title}"
-                                                                 onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
-                                                            <div>
-                                                                <span class="badge bg-light text-dark border me-1">Bài ${l.orderIndex}</span>
-                                                                <strong class="text-dark">${l.title}</strong>
-                                                                <div class="small text-muted mt-1">
-                                                                    <c:if test="${not empty l.videoUrl}">
-                                                                        <span class="badge bg-danger-subtle text-danger border me-1"><i class="bi bi-youtube me-1"></i>Video</span>
-                                                                    </c:if>
-                                                                    <c:if test="${not empty l.documentUrl}">
-                                                                        <span class="badge bg-info-subtle text-info border"><i class="bi bi-file-earmark me-1"></i>Tài liệu</span>
-                                                                    </c:if>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}&lessonId=${l.id}" class="btn btn-sm btn-outline-primary me-1">
-                                                                <i class="bi bi-pencil"></i> Sửa bài
-                                                            </a>
-                                                            <a href="${pageContext.request.contextPath}/expert/delete-lesson?courseId=${course.id}&lessonId=${l.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa bài học này?');">
-                                                                <i class="bi bi-trash"></i>
-                                                            </a>
-                                                        </div>
-                                                    </li>
-                                                </c:forEach>
-                                            </ul>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
+                <div class="saas-module-card" id="lessonsCard">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="pill-neutral fw-semibold">
+                                <i class="bi bi-collection-play me-1 text-primary"></i>${course.totalLessons} bài học
+                            </span>
+                            <span class="text-muted small">Danh sách toàn bộ bài giảng</span>
                         </div>
-                    </c:forEach>
+                        <div>
+                            <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}" class="btn btn-saas-outline btn-sm" title="Quản lý bài Quiz cho khóa học">
+                                <i class="bi bi-patch-question text-warning me-1"></i>Quản lý Quiz
+                            </a>
+                        </div>
+                    </div>
+                    <div id="lessonsContainer">
+                        <c:set var="lessonIndex" value="1" />
+                        <c:forEach var="m" items="${course.modules}">
+                            <c:forEach var="l" items="${m.lessons}">
+                                <div class="saas-lesson-item">
+                                    <div class="d-flex align-items-center gap-3 min-w-0">
+                                        <div class="lesson-thumb-box">
+                                            <img src="${l.thumbnailUrl}" alt="${l.title}"
+                                                 onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                <span class="pill-neutral" style="font-size: 11px;">Bài ${lessonIndex}</span>
+                                                <c:if test="${not empty l.videoUrl}">
+                                                    <span class="pill-video"><i class="bi bi-youtube"></i>Video</span>
+                                                </c:if>
+                                                <c:if test="${not empty l.documentUrl}">
+                                                    <span class="pill-doc"><i class="bi bi-file-earmark-text"></i>Tài liệu</span>
+                                                </c:if>
+                                            </div>
+                                            <div class="fw-semibold text-dark text-truncate" style="font-size: 0.95rem;" title="${l.title}">
+                                                ${l.title}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}&lessonId=${l.id}" class="btn-icon-action" title="Chỉnh sửa bài học" aria-label="Sửa bài">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn-icon-action text-danger border-0 bg-transparent" 
+                                                onclick="confirmDeleteLesson('<c:out value="${l.title}" escapeXml="true" />', '${pageContext.request.contextPath}/expert/delete-lesson?courseId=${course.id}&lessonId=${l.id}')" 
+                                                title="Xóa bài học" aria-label="Xóa bài">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <c:set var="lessonIndex" value="${lessonIndex + 1}" />
+                            </c:forEach>
+                        </c:forEach>
+                    </div>
+
+                    <!-- Pagination Bar (8 lessons per page) -->
+                    <c:if test="${course.totalLessons > 8}">
+                        <div id="lessonPagination" class="p-3 bg-light border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <span class="text-muted small" id="paginationInfo"></span>
+                            <nav aria-label="Phân trang bài học">
+                                <ul class="pagination pagination-sm mb-0 gap-1" id="paginationList"></ul>
+                            </nav>
+                        </div>
+                    </c:if>
                 </div>
             </c:otherwise>
         </c:choose>
     </div>
 </main>
 
-<!-- Modal Batch Import Lessons from YouTube Playlist / Multiple URLs -->
-<div class="modal fade" id="batchImportLessonsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <form action="${pageContext.request.contextPath}/expert/batch-save-lessons" method="POST">
-                <input type="hidden" name="courseId" value="${course.id}">
-                <div class="modal-header bg-danger text-white border-0 py-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-white text-danger p-2"><i class="bi bi-youtube fs-5"></i></span>
-                        <div>
-                            <h5 class="modal-title fw-bold mb-0">Nhập hàng loạt Video / Playlist YouTube</h5>
-                            <small class="text-white-50">Tạo nhiều bài giảng cùng lúc chỉ bằng cách dán danh sách link</small>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Thêm vào Chương học: <span class="text-muted fw-normal">(Tùy chọn)</span></label>
-                        <select name="moduleId" id="batchTargetModule" class="form-select" onchange="toggleBatchModuleChoice(this)">
-                            <option value="" ${empty course.modules ? 'selected' : ''}>-- Bài học chung (Không chia chương) --</option>
-                            <c:forEach var="m" items="${course.modules}">
-                                <option value="${m.id}">
-                                    <c:choose>
-                                        <c:when test="${m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung'}">
-                                            ${m.title}
-                                        </c:when>
-                                        <c:otherwise>
-                                            Chương ${m.orderIndex}: ${m.title}
-                                        </c:otherwise>
-                                    </c:choose>
-                                </option>
-                            </c:forEach>
-                            <option value="__NEW__">+ Tạo Chương học mới...</option>
-                        </select>
-                        <div id="batchNewModuleInputDiv" class="mt-2 d-none">
-                            <label class="form-label small fw-semibold text-primary">Tên chương học mới <span class="text-muted fw-normal">(Tùy chọn)</span></label>
-                            <input type="text" name="newModuleTitle" id="batchNewModuleTitle" class="form-control form-control-sm border-primary" placeholder="Nhập tên chương học (để trống nếu không chia chương)">
-                            <div class="form-text small text-muted">Nếu để trống, hệ thống sẽ tự động xếp vào danh sách bài học chung.</div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="form-label small fw-semibold mb-0">Danh sách liên kết YouTube (Mỗi dòng một video hoặc kèm tiêu đề):</label>
-                            <button type="button" class="btn btn-link btn-sm text-decoration-none p-0" onclick="insertBatchSample()">
-                                <i class="bi bi-file-text me-1"></i>Chèn danh sách mẫu
-                            </button>
-                        </div>
-                        <textarea name="batchText" id="batchInputText" rows="6" class="form-control font-monospace small" placeholder="Dán danh sách các link video YouTube ở đây (mỗi dòng 1 link). Ví dụ:&#10;https://www.youtube.com/watch?v=WVPVpNDKUwM - Buổi 1: Giới thiệu căn bản&#10;https://www.youtube.com/watch?v=gJS-1C78Jy0 - Buổi 2: Hướng dẫn chi tiết&#10;https://youtu.be/SMaG-tqSzFM - Buổi 3: Thực hành và đúc kết" oninput="previewBatchVideos()"></textarea>
-                    </div>
-
-                    <!-- Live Parsed Video List Preview -->
-                    <div id="batchPreviewBox" class="border rounded-3 p-3 bg-light d-none">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong class="small text-dark"><i class="bi bi-check2-circle text-success me-1"></i>Đã nhận diện: <span id="batchCountBadge" class="badge bg-success">0 video</span></strong>
-                            <small class="text-muted">Các bài học sẽ được tạo tuần tự với link chuẩn Embed</small>
-                        </div>
-                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm table-bordered bg-white mb-0 align-middle">
-                                <thead class="table-light small">
-                                    <tr>
-                                        <th style="width: 40px;">#</th>
-                                        <th style="width: 80px;">Thumbnail</th>
-                                        <th>Tiêu đề bài học nhận diện</th>
-                                        <th style="width: 130px;">Video ID</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="batchPreviewTableBody" class="small"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0 py-3">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-danger fw-semibold px-4">
-                        <i class="bi bi-cloud-arrow-up-fill me-1"></i>Tạo toàn bộ bài học
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Add Module -->
-<div class="modal fade" id="newModuleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="${pageContext.request.contextPath}/expert/save-module" method="POST">
-                <input type="hidden" name="courseId" value="${course.id}">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Thêm Chương học mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Tên chương <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" required placeholder="Ví dụ: Giới thiệu căn bản...">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Thứ tự chương</label>
-                        <input type="number" name="orderIndex" class="form-control" value="${course.modules.size() + 1}" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary fw-semibold">Lưu chương</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Edit Module -->
-<div class="modal fade" id="editModuleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
-            <form action="${pageContext.request.contextPath}/expert/save-module" method="POST">
-                <input type="hidden" name="courseId" value="${course.id}">
-                <input type="hidden" name="id" id="editModuleId">
-                <div class="modal-header bg-light py-3">
-                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>Chỉnh sửa Chương học</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Tên chương <span class="text-danger">*</span></label>
-                        <input type="text" name="title" id="editModuleTitle" class="form-control" required placeholder="Nhập tên chương học...">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Thứ tự chương</label>
-                        <input type="number" name="orderIndex" id="editModuleOrder" class="form-control" required min="1">
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0 py-3">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary fw-semibold px-4"><i class="bi bi-check2 me-1"></i>Lưu thay đổi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-    function openEditModuleModal(arg1, arg2, arg3) {
-        let id, title, order;
-        if (typeof arg1 === 'object' && arg1 !== null) {
-            id = arg1.getAttribute('data-id');
-            title = arg1.getAttribute('data-title');
-            order = arg1.getAttribute('data-order');
-        } else {
-            id = arg1;
-            title = arg2;
-            order = arg3;
-        }
-        document.getElementById('editModuleId').value = id || '';
-        document.getElementById('editModuleTitle').value = title || '';
-        document.getElementById('editModuleOrder').value = order || '1';
-        const modal = new bootstrap.Modal(document.getElementById('editModuleModal'));
-        modal.show();
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const pageSize = 8;
+        const container = document.getElementById('lessonsContainer');
+        if (!container) return;
 
-    function toggleBatchModuleChoice(sel) {
-        const div = document.getElementById('batchNewModuleInputDiv');
-        const inp = document.getElementById('batchNewModuleTitle');
-        if (!div || !inp) return;
-        if (sel.value === '__NEW__') {
-            div.classList.remove('d-none');
-            inp.required = false;
-            inp.focus();
-        } else {
-            div.classList.add('d-none');
-            inp.required = false;
-            inp.value = '';
-        }
-    }
+        const items = Array.from(container.querySelectorAll('.saas-lesson-item'));
+        const totalItems = items.length;
+        if (totalItems <= pageSize) return;
 
-    function selectBatchModule(modId) {
-        const sel = document.getElementById('batchTargetModule');
-        if (sel) {
-            sel.value = modId;
-            toggleBatchModuleChoice(sel);
-        }
-    }
+        const totalPages = Math.ceil(totalItems / pageSize);
+        
+        // Get initial page from URL query ?page=X
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentPage = parseInt(urlParams.get('page')) || 1;
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
 
-    function insertBatchSample() {
-        const sample = "https://www.youtube.com/watch?v=WVPVpNDKUwM - Bài 1: Tổng quan và Phương pháp học tập\n" +
-                       "https://www.youtube.com/watch?v=gJS-1C78Jy0 - Bài 2: Phân tích chi tiết và Cấu trúc cốt lõi\n" +
-                       "https://www.youtube.com/watch?v=SMaG-tqSzFM - Bài 3: Thực hành và Bài tập áp dụng thực tế";
-        document.getElementById('batchInputText').value = sample;
-        previewBatchVideos();
-    }
+        function goToPage(page) {
+            currentPage = Math.max(1, Math.min(page, totalPages));
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = startIdx + pageSize;
 
-    function extractYtId(str) {
-        if (!str) return null;
-        const reg = /(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$/;
-        const m = str.match(reg);
-        return m ? (m[1] || m[2]) : null;
-    }
-
-    // =========================================================================
-    // [TÍNH NĂNG] XEM TRƯỚC BÀI HỌC TỪ YOUTUBE PLAYLIST & DANH SÁCH VIDEO
-    // Tag tìm kiếm: #YOUTUBE_PLAYLIST_IMPORT #BATCH_PREVIEW
-    // =========================================================================
-    let previewTimer = null;
-
-    function renderLocalPreview(text, box, tbody, countBadge) {
-        const lines = text.split('\n');
-        let count = 0;
-        let html = '';
-
-        lines.forEach(function(line, idx) {
-            line = line.trim();
-            if (!line) return;
-
-            let videoId = null;
-            const words = line.split(/\s+/);
-            for (let i = 0; i < words.length; i++) {
-                const id = extractYtId(words[i]);
-                if (id) {
-                    videoId = id;
-                    break;
+            items.forEach((item, idx) => {
+                if (idx >= startIdx && idx < endIdx) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
                 }
+            });
+
+            // Update info text
+            const infoEl = document.getElementById('paginationInfo');
+            if (infoEl) {
+                const currentStart = startIdx + 1;
+                const currentEnd = Math.min(endIdx, totalItems);
+                infoEl.innerHTML = 'Hiển thị <strong>' + currentStart + ' - ' + currentEnd + '</strong> trên tổng số <strong>' + totalItems + '</strong> bài học';
             }
 
-            if (videoId) {
-                count++;
-                let title = line.replace(/https?:\/\/[^\s]+/g, '')
-                                .replace(/^[0-9]+[\.\:\-]\s*/, '')
-                                .replace(/^[\-\–\—\|\:\.]+\s*/, '')
-                                .replace(/\s*[\-\–\—\|\:]+$/, '')
-                                .trim();
-                if (!title || title.length < 2) {
-                    title = "Bài " + count + ": Video bài giảng";
-                }
+            // Render pagination buttons
+            const paginationList = document.getElementById('paginationList');
+            if (paginationList) {
+                let html = '';
 
-                html += '<tr>' +
-                    '<td>' + count + '</td>' +
-                    '<td><img src="https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg" class="rounded" style="width: 50px; height: 30px; object-fit: cover;"></td>' +
-                    '<td class="fw-semibold text-dark">' + title + '</td>' +
-                    '<td><code>' + videoId + '</code></td>' +
-                '</tr>';
-            }
-        });
+                // Prev Button
+                html += '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '">';
+                html += '<button type="button" class="page-link shadow-none" ' + (currentPage === 1 ? 'disabled' : 'onclick="window.lessonGoToPage(' + (currentPage - 1) + ')"') + ' aria-label="Trang trước">';
+                html += '<i class="bi bi-chevron-left me-1"></i>Trước';
+                html += '</button></li>';
 
-        if (count > 0) {
-            tbody.innerHTML = html;
-            countBadge.className = 'badge bg-success';
-            countBadge.textContent = count + " video";
-            box.classList.remove('d-none');
-        } else {
-            box.classList.add('d-none');
-            tbody.innerHTML = '';
-        }
-    }
-
-    function previewBatchVideos() {
-        const text = document.getElementById('batchInputText').value;
-        const box = document.getElementById('batchPreviewBox');
-        const tbody = document.getElementById('batchPreviewTableBody');
-        const countBadge = document.getElementById('batchCountBadge');
-
-        if (!text || !text.trim()) {
-            box.classList.add('d-none');
-            tbody.innerHTML = '';
-            return;
-        }
-
-        clearTimeout(previewTimer);
-
-        // Nếu phát hiện có chứa tham số danh sách phát (Playlist: 'list=' hoặc 'playlist?')
-        if (/[?&]list=|playlist\?list=|PL[a-zA-Z0-9_-]{16,}/.test(text)) {
-            box.classList.remove('d-none');
-            countBadge.className = 'badge bg-warning text-dark';
-            countBadge.innerHTML = '<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span>Đang tải Playlist...';
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">' +
-                '<div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>' +
-                'Đang tự động bóc tách toàn bộ danh sách bài học từ Playlist YouTube... Vui lòng chờ vài giây.' +
-                '</td></tr>';
-
-            previewTimer = setTimeout(function() {
-                const params = new URLSearchParams();
-                params.append('batchText', text);
-                fetch('${pageContext.request.contextPath}/expert/preview-batch-videos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params.toString()
-                })
-                .then(r => r.json())
-                .then(data => {
-                    const list = Array.isArray(data) ? data : (data.videos || []);
-                    if (list && list.length > 0) {
-                        let html = '';
-                        list.forEach((item, idx) => {
-                            html += '<tr>' +
-                                '<td>' + (idx + 1) + '</td>' +
-                                '<td><img src="https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg" class="rounded" style="width: 50px; height: 30px; object-fit: cover;"></td>' +
-                                '<td class="fw-semibold text-dark">' + item.title + '</td>' +
-                                '<td><code>' + item.videoId + '</code></td>' +
-                            '</tr>';
-                        });
-                        tbody.innerHTML = html;
-                        countBadge.className = 'badge bg-success';
-                        countBadge.textContent = list.length + " video" + (data.playlistTitle ? " (" + data.playlistTitle + ")" : " (Playlist)");
-                        const modTitleInp = document.getElementById('batchNewModuleTitle');
-                        if (modTitleInp && data.playlistTitle && !modTitleInp.value) {
-                            modTitleInp.placeholder = data.playlistTitle;
+                // Page Number Buttons
+                for (let i = 1; i <= totalPages; i++) {
+                    if (totalPages > 7) {
+                        if (i !== 1 && i !== totalPages && Math.abs(i - currentPage) > 1) {
+                            if (i === 2 || i === totalPages - 1) {
+                                html += '<li class="page-item disabled"><span class="page-link border-0 text-muted px-1">...</span></li>';
+                            }
+                            continue;
                         }
-                    } else {
-                        renderLocalPreview(text, box, tbody, countBadge);
                     }
-                })
-                .catch(err => {
-                    renderLocalPreview(text, box, tbody, countBadge);
-                });
-            }, 600);
-            return;
+                    html += '<li class="page-item ' + (i === currentPage ? 'active' : '') + '">';
+                    html += '<button type="button" class="page-link shadow-none" onclick="window.lessonGoToPage(' + i + ')">' + i + '</button>';
+                    html += '</li>';
+                }
+
+                // Next Button
+                html += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '">';
+                html += '<button type="button" class="page-link shadow-none" ' + (currentPage === totalPages ? 'disabled' : 'onclick="window.lessonGoToPage(' + (currentPage + 1) + ')"') + ' aria-label="Trang sau">';
+                html += 'Sau<i class="bi bi-chevron-right ms-1"></i>';
+                html += '</button></li>';
+
+                paginationList.innerHTML = html;
+            }
+
+            // Sync URL without full page reload
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('page', currentPage);
+            window.history.replaceState({ page: currentPage }, '', newUrl.toString());
         }
 
-        renderLocalPreview(text, box, tbody, countBadge);
+        window.lessonGoToPage = function(page) {
+            goToPage(page);
+            const card = document.getElementById('lessonsCard');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
+        // Initialize first render
+        goToPage(currentPage);
+    });
+
+    function confirmDeleteLesson(title, url) {
+        showConfirmModal({
+            title: 'Xác nhận xóa bài học',
+            html: 'Bạn có chắc chắn muốn xóa bài học "<strong>' + (title || '') + '</strong>"?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Thao tác này sẽ xóa vĩnh viễn bài học khỏi khóa học và không thể hoàn tác.</span>',
+            type: 'danger',
+            icon: 'bi bi-trash3-fill',
+            confirmText: 'Xóa bài học',
+            confirmIcon: 'bi bi-trash3 me-1',
+            confirmBtnClass: 'btn-danger',
+            confirmUrl: url
+        });
+    }
+
+    function confirmPublishCourse(title, url) {
+        showConfirmModal({
+            title: 'Gửi yêu cầu xuất bản',
+            html: 'Bạn có chắc chắn muốn gửi yêu cầu duyệt khóa học "<strong>' + (title || '') + '</strong>" để Quản lý kiểm tra và công khai khóa học?',
+            type: 'success',
+            icon: 'bi bi-send-check-fill',
+            confirmText: 'Gửi duyệt ngay',
+            confirmIcon: 'bi bi-send-check me-1',
+            confirmBtnClass: 'btn-success',
+            confirmUrl: url
+        });
+    }
+
+    function confirmCancelPublishCourse(title, url) {
+        showConfirmModal({
+            title: 'Thu hồi yêu cầu xuất bản',
+            html: 'Bạn có muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?',
+            type: 'warning',
+            icon: 'bi bi-arrow-counterclockwise',
+            confirmText: 'Thu hồi yêu cầu',
+            confirmIcon: 'bi bi-arrow-counterclockwise me-1',
+            confirmBtnClass: 'btn-warning text-dark',
+            confirmUrl: url
+        });
     }
 </script>
 

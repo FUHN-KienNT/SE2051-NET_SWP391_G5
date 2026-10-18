@@ -6,6 +6,39 @@
 
 <main class="main-content py-5">
     <div class="container">
+        <!-- Notice Before Archiving Banner -->
+        <c:if test="${course.archiveScheduled}">
+            <div class="alert alert-warning border border-warning shadow-sm rounded-3 mb-4 py-3 px-4 d-flex align-items-center gap-3">
+                <i class="bi bi-exclamation-triangle-fill fs-2 text-warning flex-shrink-0"></i>
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold mb-1 text-dark">Thông báo: Khóa học sắp chuyển sang chế độ Lưu trữ</h5>
+                    <p class="mb-0 small text-dark">
+                        Khóa học này dự kiến sẽ chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ vào ngày <strong>${course.formattedArchiveAt}</strong> (còn <strong>${course.daysUntilArchive}</strong> ngày).
+                        <c:if test="${not empty course.archiveNotice}">
+                            <br><span class="fw-semibold">Lời nhắn từ Chuyên gia:</span> "${course.archiveNotice}"
+                        </c:if>
+                        <br><em class="text-muted">* Lưu ý: Sinh viên đăng ký trước thời hạn này vẫn được toàn quyền sở hữu và học tập trọn đời.</em>
+                    </p>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${course.archived}">
+            <div class="alert alert-secondary border shadow-sm rounded-3 mb-4 py-3 px-4 d-flex align-items-center gap-3">
+                <i class="bi bi-archive-fill fs-2 text-secondary flex-shrink-0"></i>
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold mb-1 text-dark">Khóa học này đã được Lưu trữ</h5>
+                    <p class="mb-0 small text-muted">
+                        Khóa học hiện đã ngừng nhận học viên mới. 
+                        <c:if test="${not empty course.archiveNotice}">
+                            <span><strong>Thông báo:</strong> "${course.archiveNotice}"</span><br>
+                        </c:if>
+                        Học viên đã mua trước đây vẫn được đảm bảo toàn bộ quyền truy cập và học tập bình thường.
+                    </p>
+                </div>
+            </div>
+        </c:if>
+
         <div class="row g-4">
             <!-- Course Info -->
             <div class="col-lg-8">
@@ -124,7 +157,31 @@
                     </div>
 
                     <c:choose>
-                        <%-- A. GUEST hoặc STUDENT: Được quyền đăng ký học --%>
+                        <%-- 1. Đã sở hữu khóa học (Học viên đã mua trước đây) --%>
+                        <c:when test="${hasCourseAccess && userRegistrationId != null}">
+                            <div class="alert alert-success py-2 px-3 small mb-3 text-center">
+                                <i class="bi bi-check-circle-fill me-1"></i>Bạn đã sở hữu khóa học này!
+                            </div>
+                            <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${userRegistrationId}" class="btn btn-success btn-lg w-100 fw-semibold mb-3 shadow-sm">
+                                <i class="bi bi-play-circle-fill me-1"></i>Vào học ngay
+                            </a>
+                            <div class="small text-muted">
+                                <div class="d-flex align-items-center mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Quyền học tập trọn đời được bảo lưu</div>
+                                <div class="d-flex align-items-center mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Tiếp tục bài học dở dang và làm bài tập</div>
+                            </div>
+                        </c:when>
+
+                        <%-- 2. Khóa học đã lưu trữ (ngừng nhận học viên mới) --%>
+                        <c:when test="${course.archived}">
+                            <button class="btn btn-secondary btn-lg w-100 fw-semibold mb-3" disabled>
+                                <i class="bi bi-slash-circle me-1"></i>Đã ngừng nhận học viên
+                            </button>
+                            <div class="alert alert-secondary py-2 px-3 small mb-0 text-center text-muted">
+                                Khóa học này hiện đã lưu trữ và không còn nhận học viên mới.
+                            </div>
+                        </c:when>
+
+                        <%-- 3. GUEST hoặc STUDENT chưa mua: Được quyền đăng ký học --%>
                         <c:when test="${sessionScope.CURRENT_USER == null || sessionScope.CURRENT_USER.roleName == 'STUDENT'}">
                             <a href="${pageContext.request.contextPath}/registrations/checkout?courseId=${course.id}" class="btn btn-primary btn-lg w-100 fw-semibold mb-3">
                                 <i class="bi bi-lightning-charge-fill me-1"></i>Đăng ký học ngay

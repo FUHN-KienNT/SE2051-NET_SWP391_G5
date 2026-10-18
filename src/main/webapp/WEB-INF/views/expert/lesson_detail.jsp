@@ -4,6 +4,37 @@
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
 
+<!-- Quill WYSIWYG Editor CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+
+<style>
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        border-color: #dee2e6;
+        background-color: #f8f9fa;
+        padding: 8px 12px;
+    }
+    .ql-container.ql-snow {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-color: #dee2e6;
+        font-family: inherit;
+        font-size: 15px;
+        background-color: #ffffff;
+    }
+    .ql-editor {
+        min-height: 200px;
+        max-height: 480px;
+        overflow-y: auto;
+        line-height: 1.7;
+    }
+    .ql-editor.ql-blank::before {
+        color: #adb5bd;
+        font-style: normal;
+    }
+</style>
+
 <main class="main-content py-5">
     <div class="container">
         <!-- Breadcrumb -->
@@ -22,9 +53,9 @@
                         <div>
                             <h4 class="fw-bold mb-1">
                                 <i class="bi bi-pencil-square text-primary me-2"></i>
-                                ${lesson != null ? 'Chỉnh sửa bài học' : 'Thêm bài học mới (Lesson Editor)'}
+                                ${lesson != null ? 'Chỉnh sửa bài học' : 'Thêm bài học mới'}
                             </h4>
-                            <p class="text-muted small mb-0">Nhập tiêu đề, tài liệu học tập và đường dẫn video bài giảng (Màn hình II.4.1)</p>
+                            <p class="text-muted small mb-0">Nhập tiêu đề, tài liệu học tập và đường dẫn video bài giảng</p>
                         </div>
                         <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-arrow-left me-1"></i>Quay lại
@@ -48,65 +79,31 @@
                             <input type="hidden" name="id" id="lessonId" value="${lesson.id}">
                         </c:if>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Thuộc Chương học (Module) <span class="text-muted fw-normal">(Tùy chọn)</span></label>
-                            <select name="moduleId" id="lessonModuleId" class="form-select">
-                                <option value="" ${empty selectedModuleId && (lesson == null || empty lesson.moduleId) ? 'selected' : ''}>
-                                    -- Bài học chung (Không chia chương) --
-                                </option>
-                                <c:forEach var="m" items="${course.modules}">
-                                    <option value="${m.id}" ${(m.id == selectedModuleId || (lesson != null && m.id == lesson.moduleId)) ? 'selected' : ''}>
-                                        <c:choose>
-                                            <c:when test="${m.title eq 'Danh sách bài học' || m.title eq 'Bài học chung'}">
-                                                ${m.title}
-                                            </c:when>
-                                            <c:otherwise>
-                                                Chương ${m.orderIndex}: ${m.title}
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </option>
-                                </c:forEach>
-                            </select>
-                            <div class="form-text small text-muted">Nếu khóa học không chia theo từng chương, bạn có thể chọn "Bài học chung (Không chia chương)".</div>
-                        </div>
+                        <input type="hidden" name="moduleId" id="lessonModuleId" value="${selectedModuleId != null ? selectedModuleId : (lesson != null ? lesson.moduleId : '')}">
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-9">
-                                <label class="form-label small fw-semibold">Tiêu đề bài học <span class="text-danger">*</span></label>
-                                <input type="text" name="title" id="lessonTitle" class="form-control" value="${lesson != null ? lesson.title : ''}" required placeholder="Ví dụ: Giới thiệu cú pháp Java cơ bản">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold">Thứ tự hiển thị</label>
-                                <input type="number" name="orderIndex" id="lessonOrderIndex" class="form-control" value="${lesson != null ? lesson.orderIndex : 1}" required>
-                            </div>
+
+                        <input type="hidden" name="orderIndex" id="lessonOrderIndex" value="${lesson != null ? lesson.orderIndex : (course.totalLessons + 1)}">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Tiêu đề bài học <span class="text-danger">*</span></label>
+                            <input type="text" name="title" id="lessonTitle" class="form-control" value="${lesson != null ? lesson.title : ''}" required placeholder="Ví dụ: Giới thiệu cú pháp Java cơ bản">
+                            <div id="titleFetchFeedback" class="mt-1 small" style="display: none;"></div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-youtube text-danger me-1"></i>URL Video bài giảng (YouTube Embed hoặc MP4)</span>
-                                <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#youtubePickerModal">
-                                    <i class="bi bi-search me-1"></i>Mini YouTube Search &amp; Picker
-                                </button>
-                            </label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-semibold mb-0"><i class="bi bi-youtube text-danger me-1"></i>URL Video bài giảng (YouTube hoặc MP4)</label>
+                                <span class="text-muted small" style="font-size: 11px;"><i class="bi bi-lightning-charge text-warning me-1"></i>Tự động điền tiêu đề khi nhập link</span>
+                            </div>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-link-45deg"></i></span>
-                                <input type="url" id="lessonVideoUrl" name="videoUrl" class="form-control" value="${lesson != null ? lesson.videoUrl : ''}" placeholder="https://www.youtube.com/embed/... hoặc https://www.youtube.com/watch?v=...">
-                                <button class="btn btn-outline-secondary" type="button" id="btnPreviewVideo" onclick="updateVideoPreview()">
-                                    <i class="bi bi-play-circle me-1"></i>Xem thử
-                                </button>
+                                <input type="url" id="lessonVideoUrl" name="videoUrl" class="form-control" value="${lesson != null ? lesson.videoUrl : ''}" placeholder="Dán link YouTube (vd: https://www.youtube.com/watch?v=... hoặc https://www.youtube.com/shorts/...)" oninput="handleVideoUrlChange()" onpaste="setTimeout(handleVideoUrlChange, 50)">
                             </div>
-                            <div class="form-text small">Bạn có thể dán link YouTube bất kỳ hoặc bấm nút <strong>Mini YouTube Search</strong> ở trên để tìm và chọn video nhanh.</div>
                             
-                            <!-- Live Video Preview Box -->
-                            <div id="videoPreviewContainer" class="mt-3 p-3 bg-light rounded-3 border ${not empty lesson.videoUrl ? '' : 'd-none'}">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="small fw-bold text-dark"><i class="bi bi-camera-video-fill text-danger me-1"></i>Video đang chọn:</span>
-                                    <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="clearVideoUrl()">
-                                        <i class="bi bi-x-circle me-1"></i>Xóa video
-                                    </button>
-                                </div>
-                                <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm bg-black" style="max-height: 260px;">
-                                    <iframe id="videoPreviewIframe" src="${lesson != null ? lesson.videoUrl : ''}" allowfullscreen></iframe>
+                            <!-- Video Player (Fit 100% full width, No gap) -->
+                            <div id="videoContainer" class="mt-2.5 text-center ${not empty lesson.videoUrl ? '' : 'd-none'}">
+                                <div id="videoWrapper" class="w-100 rounded-3 overflow-hidden shadow-sm bg-black mx-auto" style="aspect-ratio: 16 / 9; transition: max-width 0.25s ease;">
+                                    <iframe id="videoPreviewIframe" class="w-100 h-100" src="${lesson != null ? lesson.videoUrl : ''}" allowfullscreen style="border: 0; display: block;"></iframe>
                                 </div>
                             </div>
                         </div>
@@ -116,9 +113,25 @@
                             <input type="url" name="documentUrl" id="lessonDocumentUrl" class="form-control" value="${lesson != null ? lesson.documentUrl : ''}" placeholder="https://drive.google.com/...">
                         </div>
 
+                        <!-- WYSIWYG Rich Text Content Editor -->
                         <div class="mb-4">
-                            <label class="form-label small fw-semibold">Nội dung chi tiết bài học / Ghi chú lý thuyết</label>
-                            <textarea name="content" id="lessonContent" rows="6" class="form-control" placeholder="Nhập nội dung bài học, hướng dẫn thực hành hoặc ghi chú quan trọng...">${lesson != null ? lesson.content : ''}</textarea>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-semibold mb-0">Nội dung chi tiết bài học / Ghi chú lý thuyết</label>
+                                <span class="badge bg-primary-subtle text-primary border small" style="font-size: 11px;">
+                                    <i class="bi bi-pencil-square me-1"></i>Trình soạn thảo trực quan (WYSIWYG)
+                                </span>
+                            </div>
+
+                            <!-- Hidden input to submit with the form -->
+                            <textarea name="content" id="lessonContent" class="d-none">${lesson != null ? lesson.content : ''}</textarea>
+
+                            <!-- Quill Editor Container -->
+                            <div id="quillEditor">${lesson != null ? lesson.content : ''}</div>
+
+                            <div class="form-text small d-flex justify-content-between align-items-center mt-1">
+                                <span>Soạn thảo trực quan tức thì: Hỗ trợ phím tắt <code>Ctrl+B</code> (In đậm), <code>Ctrl+I</code> (In nghiêng), <code>Ctrl+U</code> (Gạch chân).</span>
+                                <span class="text-muted" id="contentCharCount">0 ký tự</span>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
@@ -126,14 +139,7 @@
                                 <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}" class="btn btn-light btn-sm">
                                     <i class="bi bi-arrow-left me-1"></i>Hủy bỏ
                                 </a>
-                                <!-- Auto-Save 5-minute Status Badge -->
-                                <div id="autoSaveIndicator" class="small text-muted d-inline-flex align-items-center">
-                                    <span class="spinner-grow spinner-grow-sm text-success me-1" style="width: 7px; height: 7px;" role="status"></span>
-                                    <span id="autoSaveStatusText">Tự động lưu nháp sau mỗi 5 phút</span>
-                                </div>
-                                <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 text-primary small" onclick="manualSaveDraft()" title="Lưu nháp ngay vào bộ nhớ máy">
-                                    <i class="bi bi-cloud-arrow-up me-1"></i>Lưu nháp ngay
-                                </button>
+                                <span id="autoSaveStatusText" class="small text-muted"></span>
                             </div>
                             <button type="submit" class="btn btn-primary fw-semibold px-4 shadow-sm" id="btnSubmitLesson">
                                 <i class="bi bi-save me-1"></i>Lưu bài học
@@ -146,104 +152,34 @@
     </div>
 </main>
 
-<!-- Mini YouTube Search & Picker Modal -->
-<div class="modal fade" id="youtubePickerModal" tabindex="-1" aria-labelledby="youtubePickerLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header bg-dark text-white border-0 py-3">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-danger p-2"><i class="bi bi-youtube fs-5"></i></span>
-                    <div>
-                        <h5 class="modal-title fw-bold mb-0" id="youtubePickerLabel">Mini YouTube Search &amp; Video Picker</h5>
-                        <small class="text-white-50">Tìm kiếm video trực tiếp từ YouTube và chèn vào bài học nhanh chóng</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <!-- Search Input Bar -->
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold text-muted">Từ khóa tìm kiếm YouTube:</label>
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="ytSearchKeyword" class="form-control border-start-0" placeholder="Nhập tên bài học, chủ đề..." value="${course.title}">
-                        <button class="btn btn-danger px-4 fw-semibold" type="button" onclick="performYoutubeSearch()">
-                            <i class="bi bi-search me-1"></i>Tìm kiếm
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Quick Suggestion Badges -->
-                <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-                    <span class="small text-muted fw-semibold me-1"><i class="bi bi-lightbulb text-warning"></i> Gợi ý:</span>
-                    <button type="button" class="badge bg-light text-dark border p-2 text-decoration-none btn-suggest" onclick="setSearchKeyword('${course.title}')">
-                        ${course.title}
-                    </button>
-                    <button type="button" class="badge bg-light text-dark border p-2 text-decoration-none btn-suggest" onclick="setSearchKeyword('Nhân tướng học')">
-                        Nhân tướng học
-                    </button>
-                    <button type="button" class="badge bg-light text-dark border p-2 text-decoration-none btn-suggest" onclick="setSearchKeyword('Tử vi')">
-                        Tử vi
-                    </button>
-                    <button type="button" class="badge bg-light text-dark border p-2 text-decoration-none btn-suggest" onclick="setSearchKeyword('12 Cung Hoàng Đạo')">
-                        12 Cung Hoàng Đạo
-                    </button>
-                </div>
-
-                <div class="row g-3">
-                    <!-- YouTube Interactive Embedded Player / Search Player -->
-                    <div class="col-lg-8">
-                        <div class="card border bg-black text-white h-100 overflow-hidden shadow-sm">
-                            <div class="card-header bg-dark text-white-50 small py-2 d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-play-btn me-1"></i>Trình xem trước YouTube</span>
-                                <span id="ytPlayerStatus" class="badge bg-danger">Sẵn sàng</span>
-                            </div>
-                            <div class="ratio ratio-16x9 bg-black">
-                                <iframe id="ytMiniPlayerFrame" src="https://www.youtube.com/embed?listType=search&list=${course.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Direct Video Link / Selected Video Box -->
-                    <div class="col-lg-4">
-                        <div class="card border bg-light h-100 p-3 d-flex flex-column">
-                            <h6 class="fw-bold mb-2 small text-dark"><i class="bi bi-check2-square text-success me-1"></i>Xác nhận Video được chọn</h6>
-                            
-                            <div class="mb-2">
-                                <label class="small text-muted fw-semibold">Dán Link / Mã Video:</label>
-                                <input type="text" id="ytDirectInput" class="form-control form-control-sm" placeholder="URL hoặc Video ID (vd: WVPVpNDKUwM)" oninput="handleDirectInput()">
-                            </div>
-
-                            <div id="ytSelectedPreview" class="text-center p-2 bg-white rounded border my-2 flex-grow-1 d-flex flex-column justify-content-center align-items-center">
-                                <img id="ytSelectedThumb" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300" class="img-fluid rounded mb-2 shadow-sm" style="max-height: 90px; object-fit: cover;" alt="Preview">
-                                <div id="ytSelectedIdText" class="small fw-semibold text-truncate w-100 text-dark">Chưa chọn video cụ thể</div>
-                                <span class="badge bg-secondary-subtle text-secondary border mt-1" id="ytVideoTypeBadge">Tự động phát hiện</span>
-                            </div>
-
-                            <div class="mt-auto pt-2">
-                                <button type="button" class="btn btn-success w-100 fw-bold py-2 shadow-sm" onclick="applySelectedYoutubeVideo()">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Dùng video này
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="alert alert-info py-2 px-3 small mt-3 mb-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-info-circle-fill fs-5 text-info"></i>
-                    <div>
-                        <strong>Mẹo:</strong> Bạn có thể tìm kiếm chủ đề trực tiếp trên thanh tìm kiếm hoặc dán bất kỳ link xem YouTube nào (vd: <code>youtube.com/watch?v=...</code>, <code>youtu.be/...</code>), hệ thống sẽ tự động chuẩn hóa sang định dạng chuẩn <code>embed</code> cho học viên.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer bg-light py-2">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Quill WYSIWYG Editor JS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 
 <script>
+    let quill = null;
+    let isUserTypingTitleManually = ${lesson != null && not empty lesson.title ? 'true' : 'false'};
+    let lastFetchedVideoId = null;
+    let isFetchingTitle = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const titleInp = document.getElementById('lessonTitle');
+        if (titleInp) {
+            titleInp.addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    isUserTypingTitleManually = true;
+                } else {
+                    isUserTypingTitleManually = false;
+                }
+            });
+        }
+        
+        // Initial check if video URL is present and title is empty
+        const videoInp = document.getElementById('lessonVideoUrl');
+        if (videoInp && videoInp.value.trim() && titleInp && !titleInp.value.trim()) {
+            handleVideoUrlChange();
+        }
+    });
+
     function extractYoutubeId(url) {
         if (!url) return null;
         url = url.trim();
@@ -252,104 +188,223 @@
             return url;
         }
         // Match embed, watch?v=, youtu.be/, shorts/
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
         const match = url.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    function setSearchKeyword(kw) {
-        document.getElementById('ytSearchKeyword').value = kw;
-        performYoutubeSearch();
-    }
-
-    function performYoutubeSearch() {
-        const kw = document.getElementById('ytSearchKeyword').value.trim();
-        if (!kw) return;
-        
-        // If user typed or pasted a full YouTube URL into search box, extract ID directly
-        const possibleId = extractYoutubeId(kw);
-        if (possibleId) {
-            setSelectedVideoId(possibleId);
-            return;
-        }
-
-        const encoded = encodeURIComponent(kw);
-        const playerFrame = document.getElementById('ytMiniPlayerFrame');
-        playerFrame.src = "https://www.youtube.com/embed?listType=search&list=" + encoded;
-        document.getElementById('ytPlayerStatus').textContent = "Đang tìm kiếm...";
-        document.getElementById('ytPlayerStatus').className = "badge bg-warning text-dark";
-    }
-
-    function handleDirectInput() {
-        const val = document.getElementById('ytDirectInput').value.trim();
-        const id = extractYoutubeId(val);
-        if (id) {
-            setSelectedVideoId(id);
-        }
-    }
-
-    function setSelectedVideoId(id) {
-        document.getElementById('ytDirectInput').value = id;
-        document.getElementById('ytMiniPlayerFrame').src = "https://www.youtube.com/embed/" + id;
-        document.getElementById('ytSelectedThumb').src = "https://img.youtube.com/vi/" + id + "/hqdefault.jpg";
-        document.getElementById('ytSelectedIdText').textContent = "Video ID: " + id;
-        document.getElementById('ytVideoTypeBadge').textContent = "Đã nhận diện chuẩn";
-        document.getElementById('ytVideoTypeBadge').className = "badge bg-success-subtle text-success border";
-        document.getElementById('ytPlayerStatus').textContent = "Đã tải: " + id;
-        document.getElementById('ytPlayerStatus').className = "badge bg-success";
-    }
-
-    function applySelectedYoutubeVideo() {
-        let val = document.getElementById('ytDirectInput').value.trim();
-        let id = extractYoutubeId(val);
-        
-        if (!id) {
-            const kw = document.getElementById('ytSearchKeyword').value.trim();
-            id = extractYoutubeId(kw);
-        }
-
-        if (!id) {
-            alert("Vui lòng nhập hoặc dán link / mã video YouTube hợp lệ trước khi áp dụng.");
-            return;
-        }
-
-        const embedUrl = "https://www.youtube.com/embed/" + id;
-        document.getElementById('lessonVideoUrl').value = embedUrl;
+    function handleVideoUrlChange() {
         updateVideoPreview();
+        const inputEl = document.getElementById('lessonVideoUrl');
+        if (!inputEl) return;
+        const url = inputEl.value.trim();
+        const ytId = extractYoutubeId(url);
 
-        // Close modal
-        const modalEl = document.getElementById('youtubePickerModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) {
-            modal.hide();
+        const titleInput = document.getElementById('lessonTitle');
+        const isTitleEmpty = !titleInput || !titleInput.value || titleInput.value.trim() === '';
+
+        // Tự động lấy tiêu đề nếu bài học mới hoặc tiêu đề đang để trống / chưa được người dùng tự gõ
+        if (ytId && (isTitleEmpty || !isUserTypingTitleManually)) {
+            if (ytId !== lastFetchedVideoId) {
+                fetchAndApplyVideoTitle(false);
+            }
         }
+    }
+
+    async function fetchAndApplyVideoTitle(isManualClick = false) {
+        const inputEl = document.getElementById('lessonVideoUrl');
+        const titleInput = document.getElementById('lessonTitle');
+        const feedbackEl = document.getElementById('titleFetchFeedback');
+        if (!inputEl || !titleInput) return;
+
+        const url = inputEl.value.trim();
+        if (!url) {
+            if (isManualClick && feedbackEl) {
+                feedbackEl.style.display = 'block';
+                feedbackEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Vui lòng nhập đường dẫn video trước!</span>';
+                setTimeout(() => { feedbackEl.style.display = 'none'; }, 3000);
+            }
+            return;
+        }
+
+        const ytId = extractYoutubeId(url);
+        if (isFetchingTitle) return;
+        isFetchingTitle = true;
+
+        if (feedbackEl) {
+            feedbackEl.style.display = 'block';
+            feedbackEl.innerHTML = '<span class="text-primary"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Đang tự động lấy tiêu đề video...</span>';
+        }
+
+        let videoTitle = null;
+
+        // 1. Nếu là YouTube, thử gọi trực tiếp YouTube oEmbed từ Client
+        if (ytId) {
+            try {
+                const oembedUrl = 'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=' + ytId + '&format=json';
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const resp = await fetch(oembedUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.title) {
+                        videoTitle = data.title;
+                        lastFetchedVideoId = ytId;
+                    }
+                }
+            } catch (err) {
+                console.log('Client oEmbed fallback:', err);
+            }
+        }
+
+        // 2. Fallback sang Backend API Courson: /expert/get-video-title
+        if (!videoTitle) {
+            try {
+                const backendUrl = '${pageContext.request.contextPath}/expert/get-video-title?url=' + encodeURIComponent(url);
+                const resp = await fetch(backendUrl);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.success && data.title) {
+                        videoTitle = data.title;
+                        if (ytId) lastFetchedVideoId = ytId;
+                    }
+                }
+            } catch (err) {
+                console.warn('Backend get-video-title error:', err);
+            }
+        }
+
+        // 3. Fallback cho file MP4 trực tiếp: lấy tên file làm tiêu đề
+        if (!videoTitle && (url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.webm'))) {
+            try {
+                const pathname = new URL(url).pathname;
+                let filename = pathname.substring(pathname.lastIndexOf('/') + 1);
+                filename = filename.replace(/\.(mp4|webm)$/i, '').replace(/[-_]+/g, ' ').trim();
+                if (filename.length > 0) {
+                    videoTitle = filename.charAt(0).toUpperCase() + filename.slice(1);
+                }
+            } catch (e) {}
+        }
+
+        isFetchingTitle = false;
+
+        if (videoTitle) {
+            titleInput.value = videoTitle;
+            isUserTypingTitleManually = false;
+            if (feedbackEl) {
+                feedbackEl.style.display = 'block';
+                feedbackEl.innerHTML = '<span class="text-success fw-medium"><i class="bi bi-check-circle-fill me-1"></i>Đã tự động đặt tiêu đề theo video: <strong>' + escapeHtml(videoTitle) + '</strong></span>';
+                setTimeout(() => {
+                    feedbackEl.style.display = 'none';
+                }, 5000);
+            }
+        } else {
+            if (feedbackEl) {
+                if (isManualClick) {
+                    feedbackEl.style.display = 'block';
+                    feedbackEl.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Không thể tự động nhận diện tiêu đề từ video này. Vui lòng nhập tiêu đề bằng tay.</span>';
+                } else {
+                    feedbackEl.style.display = 'none';
+                }
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function updateVideoPreview() {
-        const inputVal = document.getElementById('lessonVideoUrl').value.trim();
-        const container = document.getElementById('videoPreviewContainer');
+        const inputEl = document.getElementById('lessonVideoUrl');
+        if (!inputEl) return;
+        const inputVal = inputEl.value.trim();
+        const container = document.getElementById('videoContainer');
+        const wrapper = document.getElementById('videoWrapper');
         const iframe = document.getElementById('videoPreviewIframe');
 
         if (!inputVal) {
-            container.classList.add('d-none');
-            iframe.src = "";
+            if (container) container.classList.add('d-none');
+            if (iframe) iframe.src = "";
             return;
         }
 
+        const isShorts = /\/shorts\//i.test(inputVal);
         const id = extractYoutubeId(inputVal);
         let finalUrl = inputVal;
         if (id) {
             finalUrl = "https://www.youtube.com/embed/" + id;
-            document.getElementById('lessonVideoUrl').value = finalUrl;
+            inputEl.value = finalUrl;
         }
 
-        iframe.src = finalUrl;
-        container.classList.remove('d-none');
+        if (iframe) iframe.src = finalUrl;
+        if (wrapper) {
+            if (isShorts) {
+                wrapper.style.maxWidth = '340px';
+                wrapper.style.aspectRatio = '9 / 16';
+            } else {
+                wrapper.style.maxWidth = '100%';
+                wrapper.style.aspectRatio = '16 / 9';
+            }
+        }
+        if (container) container.classList.remove('d-none');
     }
 
-    function clearVideoUrl() {
-        document.getElementById('lessonVideoUrl').value = "";
-        updateVideoPreview();
+    // =========================================================================
+    // QUILL WYSIWYG RICH TEXT EDITOR LOGIC
+    // =========================================================================
+    function getEditorContent() {
+        if (quill) {
+            const text = quill.getText().trim();
+            // Nếu không có ký tự thực tế nào, coi như rỗng
+            return text.length === 0 ? '' : quill.root.innerHTML;
+        }
+        const el = document.getElementById('lessonContent');
+        return el ? el.value : '';
+    }
+
+    function initQuillEditor() {
+        const editorContainer = document.getElementById('quillEditor');
+        if (!editorContainer) return;
+
+        const toolbarOptions = [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['blockquote', 'code-block'],
+            [{ 'align': [] }],
+            ['link', 'clean']
+        ];
+
+        quill = new Quill('#quillEditor', {
+            theme: 'snow',
+            placeholder: 'Nhập nội dung bài học hoặc ghi chú lý thuyết tại đây...',
+            modules: {
+                toolbar: toolbarOptions
+            }
+        });
+
+        quill.on('text-change', function() {
+            updateCharCount();
+            const hiddenEl = document.getElementById('lessonContent');
+            if (hiddenEl) {
+                hiddenEl.value = getEditorContent();
+            }
+        });
+
+        updateCharCount();
+    }
+
+    function updateCharCount() {
+        const counter = document.getElementById('contentCharCount');
+        if (counter && quill) {
+            const text = quill.getText().trim();
+            counter.textContent = text.length.toLocaleString('vi-VN') + ' ký tự';
+        }
     }
 
     // =========================================================================
@@ -375,7 +430,7 @@
             orderIndex: document.getElementById('lessonOrderIndex') ? document.getElementById('lessonOrderIndex').value : '1',
             videoUrl: document.getElementById('lessonVideoUrl') ? document.getElementById('lessonVideoUrl').value : '',
             documentUrl: document.getElementById('lessonDocumentUrl') ? document.getElementById('lessonDocumentUrl').value : '',
-            content: document.getElementById('lessonContent') ? document.getElementById('lessonContent').value : ''
+            content: getEditorContent()
         };
     }
 
@@ -444,13 +499,15 @@
             isSavingDraft = false;
             const timeDisplay = (data && data.savedAt) ? data.savedAt : nowStr;
             if (statusEl) {
-                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã lưu nháp lúc ' + timeDisplay + '</span>';
+                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã tự động lưu nháp (' + timeDisplay + ')</span>';
+                setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 4000);
             }
         })
         .catch(err => {
             isSavingDraft = false;
             if (statusEl) {
-                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã lưu nháp máy khách lúc ' + nowStr + '</span>';
+                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã tự động lưu nháp (' + nowStr + ')</span>';
+                setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 4000);
             }
         });
     }
@@ -529,8 +586,12 @@
             if (el) el.value = cachedDraft.documentUrl;
         }
         if (cachedDraft.content !== undefined) {
+            if (quill) {
+                quill.root.innerHTML = cachedDraft.content || '';
+            }
             const el = document.getElementById('lessonContent');
-            if (el) el.value = cachedDraft.content;
+            if (el) el.value = cachedDraft.content || '';
+            updateCharCount();
         }
 
         const container = document.getElementById('draftRecoveryAlertContainer');
@@ -588,16 +649,13 @@
 
     // Khởi tạo các sự kiện khi DOM sẵn sàng
     document.addEventListener('DOMContentLoaded', function() {
+        initQuillEditor();
         initialFormData = getFormData();
 
-        // Khởi tạo video preview nếu đã có URL
+        // Khởi tạo video nếu đã có sẵn URL
         const curVal = document.getElementById('lessonVideoUrl') ? document.getElementById('lessonVideoUrl').value.trim() : '';
         if (curVal) {
             updateVideoPreview();
-            const id = extractYoutubeId(curVal);
-            if (id) {
-                setSelectedVideoId(id);
-            }
         }
 
         // Kiểm tra xem có bản nháp chưa lưu không
@@ -608,10 +666,14 @@
             saveDraft(false);
         }, AUTO_SAVE_INTERVAL_MS);
 
-        // Bắt sự kiện nộp biểu mẫu: dọn dẹp nháp
+        // Bắt sự kiện nộp biểu mẫu: đồng bộ nội dung từ Quill và dọn dẹp nháp
         const formEl = document.getElementById('lessonForm');
         if (formEl) {
             formEl.addEventListener('submit', function() {
+                const hiddenEl = document.getElementById('lessonContent');
+                if (hiddenEl) {
+                    hiddenEl.value = getEditorContent();
+                }
                 isSubmitting = true;
                 try {
                     localStorage.removeItem(DRAFT_KEY);

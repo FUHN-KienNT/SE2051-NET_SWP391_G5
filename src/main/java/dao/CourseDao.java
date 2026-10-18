@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class CourseDao {
-    private static final String SQL_FIND_ALL = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses ORDER BY id DESC";
-    private static final String SQL_FIND_BY_ID = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE id = ?";
-    private static final String SQL_FIND_BY_MANAGER_OR_EXPERT = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE manager_id = ? OR expert_id = ? ORDER BY id DESC";
-    private static final String SQL_INSERT = "INSERT INTO courses (title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
-    private static final String SQL_UPDATE = "UPDATE courses SET title = ?, category_id = ?, category_type = ?, description = ?, price = ?, status = ?, manager_id = ?, expert_id = ?, updated_at = ? WHERE id = ?";
+    private static final String SQL_FIND_ALL = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses ORDER BY id DESC";
+    private static final String SQL_FIND_BY_ID = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE id = ?";
+    private static final String SQL_FIND_BY_MANAGER_OR_EXPERT = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE manager_id = ? OR expert_id = ? ORDER BY id DESC";
+    private static final String SQL_INSERT = "INSERT INTO courses (title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_UPDATE = "UPDATE courses SET title = ?, category_id = ?, category_type = ?, description = ?, price = ?, status = ?, manager_id = ?, expert_id = ?, updated_at = ?, archive_at = ?, archive_notice = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM courses WHERE id = ?";
 
     public List<Course> findAll(Connection con) throws SQLException {
@@ -33,7 +33,7 @@ public class CourseDao {
     }
 
     public List<Course> searchPublished(Connection con, String keyword, Long categoryId) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE status = 'PUBLISHED'");
+        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE status = 'PUBLISHED' AND (archive_at IS NULL OR archive_at > NOW())");
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -63,7 +63,7 @@ public class CourseDao {
     }
 
     public List<Course> searchAdmin(Connection con, String keyword, Long categoryId, Long managerId, String status) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at FROM courses WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -142,6 +142,8 @@ public class CourseDao {
             OffsetDateTime now = OffsetDateTime.now();
             ps.setObject(9, entity.getCreatedAt() != null ? entity.getCreatedAt() : now);
             ps.setObject(10, entity.getUpdatedAt() != null ? entity.getUpdatedAt() : now);
+            ps.setObject(11, entity.getArchiveAt());
+            ps.setString(12, entity.getArchiveNotice());
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -168,7 +170,20 @@ public class CourseDao {
             if (entity.getExpertId() != null) ps.setLong(8, entity.getExpertId());
             else ps.setNull(8, java.sql.Types.BIGINT);
             ps.setObject(9, OffsetDateTime.now());
-            ps.setLong(10, entity.getId());
+            ps.setObject(10, entity.getArchiveAt());
+            ps.setString(11, entity.getArchiveNotice());
+            ps.setLong(12, entity.getId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateArchiveStatus(Connection con, long courseId, CourseStatus status, OffsetDateTime archiveAt, String archiveNotice) throws SQLException {
+        String sql = "UPDATE courses SET status = ?, archive_at = ?, archive_notice = ?, updated_at = NOW() WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, status.getDbValue());
+            ps.setObject(2, archiveAt);
+            ps.setString(3, archiveNotice);
+            ps.setLong(4, courseId);
             return ps.executeUpdate() > 0;
         }
     }
@@ -196,6 +211,8 @@ public class CourseDao {
         c.setExpertId(rs.wasNull() ? null : eId);
         c.setCreatedAt(rs.getObject("created_at", OffsetDateTime.class));
         c.setUpdatedAt(rs.getObject("updated_at", OffsetDateTime.class));
+        c.setArchiveAt(rs.getObject("archive_at", OffsetDateTime.class));
+        c.setArchiveNotice(rs.getString("archive_notice"));
         return c;
     }
 }

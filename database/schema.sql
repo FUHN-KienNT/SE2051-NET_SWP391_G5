@@ -99,8 +99,10 @@ CREATE TABLE courses (
     status        varchar(20)   NOT NULL DEFAULT 'DRAFT',
     manager_id    bigint        NOT NULL,
     expert_id     bigint,
-    created_at    timestamptz   NOT NULL DEFAULT now(),
-    updated_at    timestamptz   NOT NULL DEFAULT now(),
+    created_at     timestamptz   NOT NULL DEFAULT now(),
+    updated_at     timestamptz   NOT NULL DEFAULT now(),
+    archive_at     timestamptz,
+    archive_notice text,
     CONSTRAINT chk_courses_category_type CHECK (category_type = 'COURSE_CATEGORY'),
     CONSTRAINT fk_courses_category FOREIGN KEY (category_id, category_type) REFERENCES settings (id, type),
     CONSTRAINT fk_courses_manager  FOREIGN KEY (manager_id) REFERENCES users (id),
@@ -257,6 +259,7 @@ CREATE TABLE lesson_progress (
     lesson_id       bigint      NOT NULL,
     status          varchar(20) NOT NULL DEFAULT 'NOT_STARTED',
     completed_at    timestamptz,
+    user_note       text,
     CONSTRAINT fk_lesson_progress_registration FOREIGN KEY (registration_id) REFERENCES registrations (id) ON DELETE CASCADE,
     CONSTRAINT fk_lesson_progress_lesson       FOREIGN KEY (lesson_id)       REFERENCES lessons (id) ON DELETE CASCADE,
     CONSTRAINT uq_lesson_progress_registration_lesson UNIQUE (registration_id, lesson_id),
@@ -316,12 +319,12 @@ ON CONFLICT (type, name) DO NOTHING;
 
 -- 2. Course Categories (SettingType = COURSE_CATEGORY)
 INSERT INTO settings (id, type, name, value, priority, status, description) VALUES
-    (6, 'COURSE_CATEGORY', 'Lập trình Web', 'WEB_DEV', 1, 'ACTIVE', 'Khóa học phát triển Web Frontend và Backend'),
+    (6, 'COURSE_CATEGORY', 'Lập trình', 'PROGRAMMING', 1, 'ACTIVE', 'Khoá học lập trình, thuật toán, phát triển phần mềm'),
     (7, 'COURSE_CATEGORY', 'Khoa học Dữ liệu & AI', 'DATA_AI', 2, 'ACTIVE', 'Khóa học về Trí tuệ nhân tạo và Phân tích dữ liệu'),
     (8, 'COURSE_CATEGORY', 'Kỹ năng mềm', 'SOFT_SKILLS', 3, 'ACTIVE', 'Kỹ năng giao tiếp, làm việc nhóm và quản lý thời gian'),
-    (9, 'COURSE_CATEGORY', 'Nhân tướng học & Nhân trắc học', 'PHYSIOGNOMY', 4, 'ACTIVE', 'Kiến thức nhân tướng học, diện mạo và nhân trắc học ứng dụng'),
+    (9, 'COURSE_CATEGORY', 'Nhân tướng học', 'PHYSIOGNOMY', 4, 'ACTIVE', 'Kiến thức nhân tướng học, diện mạo và nhân trắc học ứng dụng'),
     (10, 'COURSE_CATEGORY', 'Tử Vi & Phong Thủy', 'TU_VI', 5, 'ACTIVE', 'Nghiên cứu lá số Tử Vi, âm dương ngũ hành và giải đoán vận hạn'),
-    (11, 'COURSE_CATEGORY', 'Chiêm Tinh & Cung Hoàng Đạo', 'ASTROLOGY', 6, 'ACTIVE', 'Khám phá bí mật 12 cung hoàng đạo và chiêm tinh học ứng dụng')
+    (11, 'COURSE_CATEGORY', 'Chiêm tinh học', 'ASTROLOGY', 6, 'ACTIVE', 'Khám phá bí mật 12 cung hoàng đạo và chiêm tinh học ứng dụng')
 ON CONFLICT (type, name) DO NOTHING;
 
 -- Cập nhật sequence của bảng settings lên giá trị tiếp theo

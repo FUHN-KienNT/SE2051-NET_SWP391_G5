@@ -125,11 +125,26 @@ public class LessonServlet extends HttpServlet {
             case "preview-batch-videos":
                 previewBatchVideos(req, resp);
                 break;
+            case "generate-ai-description":
+                generateAiDescription(req, resp);
+                break;
             case "request-publish":
                 requestPublish(req, resp);
                 break;
             case "cancel-request-publish":
                 cancelRequestPublish(req, resp);
+                break;
+            case "archive-course":
+                archiveCourse(req, resp);
+                break;
+            case "unarchive-course":
+                unarchiveCourse(req, resp);
+                break;
+            case "cancel-archive":
+                cancelArchive(req, resp);
+                break;
+            case "get-video-title":
+                getVideoTitle(req, resp);
                 break;
             default:
                 showExpertDashboard(req, resp);
@@ -228,6 +243,30 @@ public class LessonServlet extends HttpServlet {
     }
 
     /**
+     * API trả về tiêu đề của Video (YouTube) dưới dạng JSON:
+     * GET /expert/get-video-title?url=...
+     */
+    private void getVideoTitle(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String url = req.getParameter("url");
+        if (url == null || url.trim().isEmpty()) {
+            resp.getWriter().write("{\"success\":false,\"message\":\"URL không hợp lệ\"}");
+            return;
+        }
+
+        String title = CourseService.fetchYoutubeVideoTitle(url);
+        if (title != null && !title.trim().isEmpty()) {
+            StringBuilder json = new StringBuilder();
+            json.append("{\"success\":true,");
+            json.append("\"title\":\"").append(escapeJson(title)).append("\"");
+            json.append("}");
+            resp.getWriter().write(json.toString());
+        } else {
+            resp.getWriter().write("{\"success\":false,\"message\":\"Không tìm thấy tiêu đề video\"}");
+        }
+    }
+
+    /**
      * [Tự động lưu nháp sau mỗi 5 phút - Backup Session]:
      * Nhận yêu cầu tự động lưu bản nháp từ màn hình soạn thảo bài học,
      * lưu trữ tạm thời trong Session để bảo toàn dữ liệu tránh mất mát bài khi chưa kịp ấn lưu.
@@ -307,6 +346,19 @@ public class LessonServlet extends HttpServlet {
         } else {
             sb.append("null");
         }
+        sb.append(",\"suggestedCategoryId\":").append(result.getSuggestedCategoryId() != null ? result.getSuggestedCategoryId() : "null");
+        sb.append(",\"suggestedCategoryName\":");
+        if (result.getSuggestedCategoryName() != null && !result.getSuggestedCategoryName().isEmpty()) {
+            sb.append("\"").append(escapeJson(result.getSuggestedCategoryName())).append("\"");
+        } else {
+            sb.append("null");
+        }
+        sb.append(",\"suggestedDescription\":");
+        if (result.getSuggestedDescription() != null && !result.getSuggestedDescription().isEmpty()) {
+            sb.append("\"").append(escapeJson(result.getSuggestedDescription())).append("\"");
+        } else {
+            sb.append("null");
+        }
         sb.append(",\"videos\":[");
         List<LessonDto> lessons = result.getLessons();
         for (int i = 0; i < lessons.size(); i++) {
@@ -324,6 +376,28 @@ public class LessonServlet extends HttpServlet {
               .append("}");
         }
         sb.append("]}");
+        resp.getWriter().write(sb.toString());
+    }
+
+    /**
+     * Tự động sinh mô tả khóa học bằng Google Gemini AI:
+     * - Nhận tham số title và categoryName.
+     * - Trả về JSON: {"description": "..."}
+     */
+    private void generateAiDescription(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String title = req.getParameter("title");
+        String categoryName = req.getParameter("categoryName");
+        String desc = courseService.generateCourseDescription(title, categoryName);
+
+        resp.setContentType("application/json;charset=UTF-8");
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("\"description\":");
+        if (desc != null && !desc.trim().isEmpty()) {
+            sb.append("\"").append(escapeJson(desc)).append("\"");
+        } else {
+            sb.append("null");
+        }
+        sb.append("}");
         resp.getWriter().write(sb.toString());
     }
 
@@ -387,6 +461,8 @@ public class LessonServlet extends HttpServlet {
             dto.setCategoryId(courseService.getOrCreateCategory(customCategory));
         } else if (catIdStr != null && !catIdStr.trim().isEmpty() && !"__NEW__".equalsIgnoreCase(catIdStr.trim())) {
             dto.setCategoryId(Long.parseLong(catIdStr.trim()));
+        } else if (batchResult != null && batchResult.getSuggestedCategoryId() != null) {
+            dto.setCategoryId(batchResult.getSuggestedCategoryId());
         } else {
             dto.setCategoryId(6L);
         }
@@ -459,8 +535,8 @@ public class LessonServlet extends HttpServlet {
 
     /**
      * Xóa Khóa học:
-     * - [IDOR Defense]: Chỉ cho phép xóa nếu user sở hữu khóa học hoặc là Admin.
-     * - Quay trở lại trang Expert Dashboard kèm thông báo xóa thành công.
+     * - [Quy tắc bảo mật]: Chuyên gia CHỈ có thể xóa hoàn toàn khóa học nếu đang ở trạng thái Nháp (DRAFT).
+     * - Nếu khóa học đã xuất bản hoặc có học viên thì chỉ có Admin mới có quyền xóa.
      */
     private void deleteCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
@@ -472,10 +548,90 @@ public class LessonServlet extends HttpServlet {
         if (idStr != null) {
             try {
                 long courseId = Long.parseLong(idStr.trim());
-                // [IDOR Defense]: Kiểm tra quyền sở hữu
-                courseService.checkCourseOwnership(courseId, currentUser);
-                courseService.deleteCourse(courseId);
-                SessionUtil.setFlashSuccess(req, "Đã xóa khóa học thành công!");
+                courseService.deleteCourse(courseId, currentUser);
+                SessionUtil.setFlashSuccess(req, "Đã xóa vĩnh viễn khóa học nháp thành công!");
+            } catch (Exception e) {
+                SessionUtil.setFlashError(req, e.getMessage());
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+    }
+
+    /**
+     * Lưu trữ / Lên lịch lưu trữ khóa học (Archive):
+     * - Áp dụng cho khóa học đã xuất bản (PUBLISHED).
+     * - Cho phép hẹn giờ thông báo trước vài ngày hoặc lưu trữ ngay.
+     */
+    private void archiveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String idStr = req.getParameter("courseId");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            idStr = req.getParameter("id");
+        }
+        if (idStr != null) {
+            try {
+                long courseId = Long.parseLong(idStr.trim());
+                int noticeDays = 3;
+                String noticeDaysStr = req.getParameter("noticeDays");
+                if (noticeDaysStr != null && !noticeDaysStr.trim().isEmpty()) {
+                    noticeDays = Integer.parseInt(noticeDaysStr.trim());
+                }
+                String customNotice = req.getParameter("archiveNotice");
+
+                courseService.scheduleArchiveCourse(courseId, noticeDays, customNotice, currentUser);
+                if (noticeDays > 0) {
+                    SessionUtil.setFlashSuccess(req, "Đã lên lịch lưu trữ khóa học thành công! Thông báo sẽ hiển thị trên trang khóa học trong " + noticeDays + " ngày tới.");
+                } else {
+                    SessionUtil.setFlashSuccess(req, "Đã chuyển khóa học sang chế độ Lưu trữ! Khóa học đã được ẩn khỏi danh mục chung.");
+                }
+            } catch (Exception e) {
+                SessionUtil.setFlashError(req, e.getMessage());
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+    }
+
+    /**
+     * Mở lại khóa học (Unarchive) đưa về PUBLISHED.
+     */
+    private void unarchiveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String idStr = req.getParameter("id");
+        if (idStr != null && !idStr.trim().isEmpty()) {
+            try {
+                long courseId = Long.parseLong(idStr.trim());
+                courseService.unarchiveCourse(courseId, currentUser);
+                SessionUtil.setFlashSuccess(req, "Đã khôi phục khóa học thành công! Khóa học đã hiển thị trở lại cho học viên mới.");
+            } catch (Exception e) {
+                SessionUtil.setFlashError(req, e.getMessage());
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+    }
+
+    /**
+     * Hủy lịch lưu trữ khóa học đang hẹn giờ.
+     */
+    private void cancelArchive(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String idStr = req.getParameter("id");
+        if (idStr != null && !idStr.trim().isEmpty()) {
+            try {
+                long courseId = Long.parseLong(idStr.trim());
+                courseService.cancelArchiveSchedule(courseId, currentUser);
+                SessionUtil.setFlashSuccess(req, "Đã hủy lịch lưu trữ khóa học thành công!");
             } catch (Exception e) {
                 SessionUtil.setFlashError(req, e.getMessage());
             }
@@ -643,8 +799,8 @@ public class LessonServlet extends HttpServlet {
             // [IDOR Defense]: Kiểm tra quyền sở hữu khóa học
             courseService.checkCourseOwnership(courseId, currentUser);
 
-            // [Tối ưu hiệu năng]: Chỉ lấy thông tin khóa học và danh sách modules gọn nhẹ
-            CourseDto course = courseService.getCourseSummaryWithModules(courseId);
+            // Lấy thông tin khóa học đầy đủ kèm danh sách bài học để tính chính xác totalLessons cho thứ tự bài mới
+            CourseDto course = courseService.getCourseDetail(courseId);
             req.setAttribute("course", course);
 
             // Kiểm tra xem là chế độ Chỉnh sửa hay Tạo mới
@@ -714,9 +870,18 @@ public class LessonServlet extends HttpServlet {
                 dto.setModuleId(courseService.getOrCreateDefaultModuleId(courseId));
             }
 
-            dto.setTitle(req.getParameter("title"));
+            String title = req.getParameter("title");
+            String videoUrl = req.getParameter("videoUrl");
+            if ((title == null || title.trim().isEmpty() || "Bài mới".equalsIgnoreCase(title.trim()))
+                    && videoUrl != null && !videoUrl.trim().isEmpty()) {
+                String fetchedTitle = CourseService.fetchYoutubeVideoTitle(videoUrl);
+                if (fetchedTitle != null && !fetchedTitle.trim().isEmpty()) {
+                    title = fetchedTitle;
+                }
+            }
+            dto.setTitle(title);
             dto.setContent(req.getParameter("content"));
-            dto.setVideoUrl(req.getParameter("videoUrl"));
+            dto.setVideoUrl(videoUrl);
             dto.setDocumentUrl(req.getParameter("documentUrl"));
             String orderStr = req.getParameter("orderIndex");
             dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
