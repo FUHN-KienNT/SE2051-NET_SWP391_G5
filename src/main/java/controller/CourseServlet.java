@@ -104,11 +104,12 @@ public class CourseServlet extends HttpServlet {
 
             UserDto currentUser = SessionUtil.getCurrentUser(req);
             boolean hasAccess = false;
+            boolean isPrivileged = false;
             Long userRegId = null;
 
             if (currentUser != null) {
                 String role = currentUser.getRoleName();
-                boolean isPrivileged = "ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role)
+                isPrivileged = "ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role)
                         || (course.getExpertId() != null && course.getExpertId().equals(currentUser.getId()));
                 if (isPrivileged) {
                     hasAccess = true;
@@ -125,6 +126,16 @@ public class CourseServlet extends HttpServlet {
                         }
                     }
                 }
+            }
+
+            // Quy tắc: Khóa học DRAFT hoặc PENDING_REVIEW chỉ người quản lý / giảng viên mới được xem Preview
+            if (course.getStatus() == entity.enums.CourseStatus.DRAFT || course.getStatus() == entity.enums.CourseStatus.PENDING_REVIEW) {
+                if (!isPrivileged) {
+                    SessionUtil.setFlashError(req, "Khóa học này đang ở trạng thái Nháp hoặc chờ duyệt và chưa được công bố công khai.");
+                    resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+                    return;
+                }
+                req.setAttribute("isPreviewDraft", true);
             }
 
             // Quy tắc: Ai chưa mua sẽ không nhìn thấy khóa học khi đã ẩn (Archived)
@@ -162,6 +173,10 @@ public class CourseServlet extends HttpServlet {
             } catch (SecurityException e) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
                 return;
+            } catch (IllegalStateException e) {
+                SessionUtil.setFlashError(req, e.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/registrations/my");
+                return;
             }
             req.setAttribute("course", course);
             req.setAttribute("registrationId", regId);
@@ -174,6 +189,13 @@ public class CourseServlet extends HttpServlet {
                         currentLessonIdStr = String.valueOf(m.getLessons().get(0).getId());
                         break;
                     }
+                }
+            }
+            if (currentLessonIdStr != null && !currentLessonIdStr.trim().isEmpty()) {
+                try {
+                    long currentLid = Long.parseLong(currentLessonIdStr.trim());
+                    courseService.touchLessonProgress(regId, currentUser.getId(), currentLid);
+                } catch (NumberFormatException ignored) {
                 }
             }
             req.setAttribute("currentLessonId", currentLessonIdStr);

@@ -1368,6 +1368,15 @@ public class CourseService {
             Course course = courseDao.findById(con, reg.getCourseId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học tương ứng."));
 
+            // Không cho phép học viên thường truy cập bài học nếu khóa học đang ở trạng thái DRAFT hoặc PENDING_REVIEW
+            if (course.getStatus() == CourseStatus.DRAFT || course.getStatus() == CourseStatus.PENDING_REVIEW) {
+                boolean isPrivileged = (course.getExpertId() != null && course.getExpertId().equals(userId))
+                        || (course.getManagerId() != null && course.getManagerId().equals(userId));
+                if (!isPrivileged) {
+                    throw new IllegalStateException("Khóa học này đang ở trạng thái Nháp (tạm thời chưa mở học hoặc đang cập nhật nội dung). Vui lòng quay lại sau.");
+                }
+            }
+
             CourseDto courseDto = buildCourseTree(course);
 
             // Populate progress for each lesson
@@ -1387,6 +1396,24 @@ public class CourseService {
             return courseDto;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải nội dung học tập: " + e.getMessage(), e);
+        }
+    }
+
+    public void touchLessonProgress(long registrationId, long userId, long lessonId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Registration reg = registrationDao.findById(con, registrationId).orElse(null);
+            if (reg == null || !Long.valueOf(userId).equals(reg.getUserId())) {
+                return;
+            }
+            if (reg.getStatus() != RegistrationStatus.ACTIVE && reg.getStatus() != RegistrationStatus.COMPLETED) {
+                return;
+            }
+            Course course = courseDao.findById(con, reg.getCourseId()).orElse(null);
+            if (course == null || course.getStatus() == CourseStatus.DRAFT) {
+                return;
+            }
+            lessonProgressDao.touchLesson(con, registrationId, lessonId);
+        } catch (Exception ignored) {
         }
     }
 

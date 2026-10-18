@@ -2,6 +2,7 @@ package controller;
 
 import dao.CourseDao;
 import dao.RegistrationDao;
+import dto.RecentLearningDto;
 import dto.RegistrationDto;
 import dto.UserDto;
 import entity.enums.PaymentStatus;
@@ -12,8 +13,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import service.RegistrationService;
 import util.SessionUtil;
 
@@ -136,8 +140,64 @@ public class RegistrationServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
+        String flashError = SessionUtil.popFlashError(req);
+        if (flashError != null) {
+            req.setAttribute("errorMessage", flashError);
+        }
+        String flashSuccess = SessionUtil.popFlashSuccess(req);
+        if (flashSuccess != null) {
+            req.setAttribute("successMessage", flashSuccess);
+        }
+
         List<RegistrationDto> list = registrationService.getByUser(currentUser.getId());
+
+        int totalCourses = list.size();
+        int inProgressCourses = 0;
+        int completedCourses = 0;
+        int pendingCourses = 0;
+        int totalCompletedLessons = 0;
+        BigDecimal sumProgress = BigDecimal.ZERO;
+        Set<String> categories = new LinkedHashSet<>();
+
+        for (RegistrationDto r : list) {
+            if (r.getCategoryName() != null && !r.getCategoryName().trim().isEmpty()) {
+                categories.add(r.getCategoryName().trim());
+            }
+            if (r.getCourseStatus() == entity.enums.CourseStatus.DRAFT) {
+                // Khóa học đang tạm khóa bảo trì / soạn nháp
+            } else if (r.getStatus() == RegistrationStatus.PENDING) {
+                pendingCourses++;
+            } else if (r.getStatus() == RegistrationStatus.COMPLETED || (r.getTotalLessons() > 0 && r.getCompletedLessons() >= r.getTotalLessons())) {
+                completedCourses++;
+            } else if (r.getStatus() == RegistrationStatus.ACTIVE) {
+                inProgressCourses++;
+            }
+
+            if (r.getCompletedLessons() > 0) {
+                totalCompletedLessons += r.getCompletedLessons();
+            }
+            if (r.getProgressPercentage() != null) {
+                sumProgress = sumProgress.add(r.getProgressPercentage());
+            }
+        }
+
+        BigDecimal avgProgress = BigDecimal.ZERO;
+        if (totalCourses > 0) {
+            avgProgress = sumProgress.divide(BigDecimal.valueOf(totalCourses), 1, java.math.RoundingMode.HALF_UP);
+        }
+
+        RecentLearningDto recentLearning = registrationService.getRecentLearning(currentUser.getId());
+
         req.setAttribute("registrations", list);
+        req.setAttribute("recentLearning", recentLearning);
+        req.setAttribute("totalCourses", totalCourses);
+        req.setAttribute("inProgressCourses", inProgressCourses);
+        req.setAttribute("completedCourses", completedCourses);
+        req.setAttribute("pendingCourses", pendingCourses);
+        req.setAttribute("avgProgress", avgProgress);
+        req.setAttribute("totalCompletedLessons", totalCompletedLessons);
+        req.setAttribute("categories", categories);
+
         req.getRequestDispatcher("/WEB-INF/views/registration/my.jsp").forward(req, resp);
     }
 
@@ -160,12 +220,18 @@ public class RegistrationServlet extends HttpServlet {
         String courseIdStr = req.getParameter("courseId");
         if (courseIdStr != null) {
             long courseId = Long.parseLong(courseIdStr);
-            RegistrationDto reg = registrationService.enroll(currentUser.getId(), courseId);
-            if (reg.getStatus() == RegistrationStatus.ACTIVE) {
-                resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + reg.getId());
-                return;
-            } else {
-                resp.sendRedirect(req.getContextPath() + "/registrations/my?pendingId=" + reg.getId());
+            try {
+                RegistrationDto reg = registrationService.enroll(currentUser.getId(), courseId);
+                if (reg.getStatus() == RegistrationStatus.ACTIVE) {
+                    resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + reg.getId());
+                    return;
+                } else {
+                    resp.sendRedirect(req.getContextPath() + "/registrations/my?pendingId=" + reg.getId());
+                    return;
+                }
+            } catch (IllegalStateException | IllegalArgumentException e) {
+                SessionUtil.setFlashError(req, e.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/courses/catalog");
                 return;
             }
         }

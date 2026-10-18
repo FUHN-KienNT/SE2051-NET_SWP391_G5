@@ -3,6 +3,7 @@ package service;
 import dao.CourseDao;
 import dao.LessonProgressDao;
 import dao.RegistrationDao;
+import dto.RecentLearningDto;
 import dto.RegistrationDto;
 import entity.Course;
 import entity.Registration;
@@ -41,6 +42,14 @@ public class RegistrationService {
                 }
                 Course course = courseOpt.get();
 
+                // Không cho phép đăng ký hoặc tiếp tục đăng ký khóa học đang ở trạng thái Nháp hoặc Chờ duyệt
+                if (course.getStatus() == CourseStatus.DRAFT) {
+                    throw new IllegalStateException("Khóa học này đang ở trạng thái Nháp (chưa được xuất bản). Bạn không thể đăng ký.");
+                }
+                if (course.getStatus() == CourseStatus.PENDING_REVIEW) {
+                    throw new IllegalStateException("Khóa học này đang chờ phê duyệt. Bạn không thể đăng ký.");
+                }
+
                 Optional<Registration> existingOpt = registrationDao.findByUserAndCourse(con, userId, courseId);
                 if (existingOpt.isPresent()) {
                     Registration reg = existingOpt.get();
@@ -78,15 +87,209 @@ public class RegistrationService {
     }
 
     public List<RegistrationDto> getByUser(long userId) {
-        try (Connection con = DbConnection.getConnection()) {
-            List<Registration> list = registrationDao.findByUserId(con, userId);
-            List<RegistrationDto> dtoList = new ArrayList<>();
-            for (Registration r : list) {
-                dtoList.add(mapRegistration(r));
+        return getEnrichedByUser(userId);
+    }
+
+    public List<RegistrationDto> getEnrichedByUser(long userId) {
+        String sql = "SELECT "
+                + "  r.id AS reg_id, r.user_id, u.full_name AS user_name, r.course_id, "
+                + "  c.title AS course_title, c.category_id, s.name AS category_name, exp.full_name AS expert_name, "
+                + "  r.registration_date, r.progress_percentage, r.status AS reg_status, "
+                + "  r.payment_method, r.payment_code, r.payment_amount, r.payment_status, r.paid_at, "
+                + "  c.status AS course_status, c.archive_at, c.archive_notice, "
+                + "  (SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = c.id) AS total_lessons, "
+                + "  (SELECT COUNT(1) FROM lesson_progress lp WHERE lp.registration_id = r.id AND lp.status = 'COMPLETED') AS completed_lessons, "
+                + "  last_lp.lesson_id AS last_lesson_id, last_l.title AS last_lesson_title, last_lp.updated_at AS last_studied_at "
+                + "FROM registrations r "
+                + "JOIN users u ON r.user_id = u.id "
+                + "JOIN courses c ON r.course_id = c.id "
+                + "LEFT JOIN settings s ON c.category_id = s.id "
+                + "LEFT JOIN users exp ON c.expert_id = exp.id "
+                + "LEFT JOIN LATERAL ( "
+                + "  SELECT lp.lesson_id, COALESCE(lp.updated_at, lp.completed_at) AS updated_at "
+                + "  FROM lesson_progress lp "
+                + "  WHERE lp.registration_id = r.id "
+                + "  ORDER BY COALESCE(lp.updated_at, lp.completed_at) DESC NULLS LAST "
+                + "  LIMIT 1 "
+                + ") last_lp ON true "
+                + "LEFT JOIN lessons last_l ON last_lp.lesson_id = last_l.id "
+                + "WHERE r.user_id = ? "
+                + "ORDER BY r.id DESC";
+
+        try (Connection con = DbConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<RegistrationDto> list = new ArrayList<>();
+                while (rs.next()) {
+                    RegistrationDto dto = new RegistrationDto();
+                    dto.setId(rs.getLong("reg_id"));
+                    dto.setUserId(rs.getLong("user_id"));
+                    dto.setUserName(rs.getString("user_name"));
+                    dto.setCourseId(rs.getLong("course_id"));
+                    dto.setCourseTitle(rs.getString("course_title"));
+
+                    long catId = rs.getLong("category_id");
+                    if (!rs.wasNull()) dto.setCategoryId(catId);
+                    dto.setCategoryName(rs.getString("category_name"));
+                    dto.setExpertName(rs.getString("expert_name"));
+
+                    dto.setRegistrationDate(rs.getObject("registration_date", OffsetDateTime.class));
+                    dto.setProgressPercentage(rs.getBigDecimal("progress_percentage"));
+                    dto.setStatus(RegistrationStatus.fromDb(rs.getString("reg_status")));
+                    dto.setPaymentMethod(PaymentMethod.fromDb(rs.getString("payment_method")));
+                    dto.setPaymentCode(rs.getString("payment_code"));
+                    dto.setPaymentAmount(rs.getBigDecimal("payment_amount"));
+                    dto.setPaymentStatus(PaymentStatus.fromDb(rs.getString("payment_status")));
+                    dto.setPaidAt(rs.getObject("paid_at", OffsetDateTime.class));
+
+                    CourseStatus cStatus = CourseStatus.fromDb(rs.getString("course_status"));
+                    dto.setCourseStatus(cStatus);
+                    OffsetDateTime archiveAt = rs.getObject("archive_at", OffsetDateTime.class);
+                    boolean isArchived = cStatus == CourseStatus.ARCHIVED
+                            || (archiveAt != null && !archiveAt.isAfter(OffsetDateTime.now()));
+                    dto.setArchived(isArchived);
+                    dto.setArchiveNotice(rs.getString("archive_notice"));
+
+                    int total = rs.getInt("total_lessons");
+                    int completed = rs.getInt("completed_lessons");
+                    dto.setTotalLessons(total);
+                    dto.setCompletedLessons(completed);
+
+                    // Recalculate dynamic progress if lesson count changed
+                    if (total > 0 && completed > 0) {
+                        dto.setProgressPercentage(BigDecimal.valueOf(completed * 100.0 / total).setScale(1, java.math.RoundingMode.HALF_UP));
+                    }
+
+                    long lastLid = rs.getLong("last_lesson_id");
+                    if (!rs.wasNull()) dto.setLastLessonId(lastLid);
+                    dto.setLastLessonTitle(rs.getString("last_lesson_title"));
+                    dto.setLastStudiedAt(rs.getObject("last_studied_at", OffsetDateTime.class));
+
+                    list.add(dto);
+                }
+                return list;
             }
-            return dtoList;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy danh sách đăng ký của học viên: " + e.getMessage(), e);
+        }
+    }
+
+    public RecentLearningDto getRecentLearning(long userId) {
+        String sqlRecent = "SELECT "
+                + "  r.id AS reg_id, r.course_id, c.title AS course_title, s.name AS category_name, "
+                + "  l.id AS lesson_id, l.title AS lesson_title, l.video_url, lp.status AS lp_status, "
+                + "  r.progress_percentage, "
+                + "  (SELECT COUNT(1) FROM lessons l2 JOIN modules m2 ON l2.module_id = m2.id WHERE m2.course_id = c.id) AS total_lessons, "
+                + "  (SELECT COUNT(1) FROM lesson_progress lp2 WHERE lp2.registration_id = r.id AND lp2.status = 'COMPLETED') AS completed_lessons, "
+                + "  COALESCE(lp.updated_at, lp.completed_at) AS last_studied_at "
+                + "FROM lesson_progress lp "
+                + "JOIN registrations r ON lp.registration_id = r.id "
+                + "JOIN courses c ON r.course_id = c.id "
+                + "LEFT JOIN settings s ON c.category_id = s.id "
+                + "JOIN lessons l ON lp.lesson_id = l.id "
+                + "WHERE r.user_id = ? AND r.status IN ('ACTIVE', 'COMPLETED') AND c.status != 'DRAFT' "
+                + "ORDER BY COALESCE(lp.updated_at, lp.completed_at) DESC NULLS LAST "
+                + "LIMIT 1";
+
+        try (Connection con = DbConnection.getConnection()) {
+            try (PreparedStatement ps = con.prepareStatement(sqlRecent)) {
+                ps.setLong(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        long regId = rs.getLong("reg_id");
+                        long courseId = rs.getLong("course_id");
+                        String courseTitle = rs.getString("course_title");
+                        String catName = rs.getString("category_name");
+                        long lessonId = rs.getLong("lesson_id");
+                        String lessonTitle = rs.getString("lesson_title");
+                        String videoUrl = rs.getString("video_url");
+                        String lpStatus = rs.getString("lp_status");
+                        BigDecimal progress = rs.getBigDecimal("progress_percentage");
+                        int totalLessons = rs.getInt("total_lessons");
+                        int completedLessons = rs.getInt("completed_lessons");
+                        OffsetDateTime lastStudiedAt = rs.getObject("last_studied_at", OffsetDateTime.class);
+
+                        if ("COMPLETED".equalsIgnoreCase(lpStatus)) {
+                            String sqlNext = "SELECT l.id, l.title, l.video_url "
+                                    + "FROM lessons l "
+                                    + "JOIN modules m ON l.module_id = m.id "
+                                    + "LEFT JOIN lesson_progress lp ON lp.lesson_id = l.id AND lp.registration_id = ? "
+                                    + "WHERE m.course_id = ? AND (lp.status IS NULL OR lp.status != 'COMPLETED') "
+                                    + "ORDER BY m.order_index ASC, l.order_index ASC "
+                                    + "LIMIT 1";
+                            try (PreparedStatement psNext = con.prepareStatement(sqlNext)) {
+                                psNext.setLong(1, regId);
+                                psNext.setLong(2, courseId);
+                                try (ResultSet rsNext = psNext.executeQuery()) {
+                                    if (rsNext.next()) {
+                                        lessonId = rsNext.getLong("id");
+                                        lessonTitle = rsNext.getString("title");
+                                        videoUrl = rsNext.getString("video_url");
+                                    }
+                                }
+                            }
+                        }
+
+                        if (totalLessons > 0 && completedLessons > 0) {
+                            progress = BigDecimal.valueOf(completedLessons * 100.0 / totalLessons)
+                                    .setScale(1, java.math.RoundingMode.HALF_UP);
+                        }
+
+                        return new RecentLearningDto(regId, courseId, courseTitle, catName,
+                                lessonId, lessonTitle, videoUrl, progress, completedLessons, totalLessons, lastStudiedAt);
+                    }
+                }
+            }
+
+            // Fallback: If no lesson_progress recorded yet, pick the first lesson of the latest active registration
+            String sqlFallback = "SELECT "
+                    + "  r.id AS reg_id, r.course_id, c.title AS course_title, s.name AS category_name, "
+                    + "  l.id AS lesson_id, l.title AS lesson_title, l.video_url, "
+                    + "  r.progress_percentage, "
+                    + "  (SELECT COUNT(1) FROM lessons l2 JOIN modules m2 ON l2.module_id = m2.id WHERE m2.course_id = c.id) AS total_lessons, "
+                    + "  (SELECT COUNT(1) FROM lesson_progress lp2 WHERE lp2.registration_id = r.id AND lp2.status = 'COMPLETED') AS completed_lessons, "
+                    + "  r.registration_date AS last_studied_at "
+                    + "FROM registrations r "
+                    + "JOIN courses c ON r.course_id = c.id "
+                    + "LEFT JOIN settings s ON c.category_id = s.id "
+                    + "LEFT JOIN LATERAL ( "
+                    + "  SELECT l3.id, l3.title, l3.video_url "
+                    + "  FROM lessons l3 "
+                    + "  JOIN modules m3 ON l3.module_id = m3.id "
+                    + "  WHERE m3.course_id = c.id "
+                    + "  ORDER BY m3.order_index ASC, l3.order_index ASC "
+                    + "  LIMIT 1 "
+                    + ") l ON true "
+                    + "WHERE r.user_id = ? AND r.status IN ('ACTIVE', 'COMPLETED') AND c.status != 'DRAFT' "
+                    + "ORDER BY r.id DESC "
+                    + "LIMIT 1";
+
+            try (PreparedStatement psFb = con.prepareStatement(sqlFallback)) {
+                psFb.setLong(1, userId);
+                try (ResultSet rsFb = psFb.executeQuery()) {
+                    if (rsFb.next()) {
+                        long regId = rsFb.getLong("reg_id");
+                        long courseId = rsFb.getLong("course_id");
+                        String courseTitle = rsFb.getString("course_title");
+                        String catName = rsFb.getString("category_name");
+                        long lessonId = rsFb.getLong("lesson_id");
+                        String lessonTitle = rsFb.getString("lesson_title");
+                        String videoUrl = rsFb.getString("video_url");
+                        BigDecimal progress = rsFb.getBigDecimal("progress_percentage");
+                        int totalLessons = rsFb.getInt("total_lessons");
+                        int completedLessons = rsFb.getInt("completed_lessons");
+                        OffsetDateTime lastStudiedAt = rsFb.getObject("last_studied_at", OffsetDateTime.class);
+
+                        return new RecentLearningDto(regId, courseId, courseTitle, catName,
+                                lessonId, lessonTitle, videoUrl, progress, completedLessons, totalLessons, lastStudiedAt);
+                    }
+                }
+            }
+
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy bài học gần nhất: " + e.getMessage(), e);
         }
     }
 

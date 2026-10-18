@@ -1,5 +1,6 @@
 package dto;
 
+import entity.enums.CourseStatus;
 import entity.enums.PaymentMethod;
 import entity.enums.PaymentStatus;
 import entity.enums.RegistrationStatus;
@@ -20,6 +21,17 @@ public class RegistrationDto {
     private BigDecimal paymentAmount;
     private PaymentStatus paymentStatus;
     private OffsetDateTime paidAt;
+    private Long categoryId;
+    private String categoryName;
+    private String expertName;
+    private int totalLessons;
+    private int completedLessons;
+    private boolean archived;
+    private String archiveNotice;
+    private Long lastLessonId;
+    private String lastLessonTitle;
+    private OffsetDateTime lastStudiedAt;
+    private CourseStatus courseStatus;
 
     public RegistrationDto() {
     }
@@ -145,6 +157,94 @@ public class RegistrationDto {
 
     public void setPaidAt(OffsetDateTime paidAt) {
         this.paidAt = paidAt;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public String getExpertName() {
+        return expertName;
+    }
+
+    public void setExpertName(String expertName) {
+        this.expertName = expertName;
+    }
+
+    public int getTotalLessons() {
+        return totalLessons;
+    }
+
+    public void setTotalLessons(int totalLessons) {
+        this.totalLessons = totalLessons;
+    }
+
+    public int getCompletedLessons() {
+        return completedLessons;
+    }
+
+    public void setCompletedLessons(int completedLessons) {
+        this.completedLessons = completedLessons;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
+
+    public String getArchiveNotice() {
+        return archiveNotice;
+    }
+
+    public void setArchiveNotice(String archiveNotice) {
+        this.archiveNotice = archiveNotice;
+    }
+
+    public Long getLastLessonId() {
+        return lastLessonId;
+    }
+
+    public void setLastLessonId(Long lastLessonId) {
+        this.lastLessonId = lastLessonId;
+    }
+
+    public String getLastLessonTitle() {
+        return lastLessonTitle;
+    }
+
+    public void setLastLessonTitle(String lastLessonTitle) {
+        this.lastLessonTitle = lastLessonTitle;
+    }
+
+    public OffsetDateTime getLastStudiedAt() {
+        return lastStudiedAt;
+    }
+
+    public void setLastStudiedAt(OffsetDateTime lastStudiedAt) {
+        this.lastStudiedAt = lastStudiedAt;
+    }
+
+    public CourseStatus getCourseStatus() {
+        return courseStatus;
+    }
+
+    public void setCourseStatus(CourseStatus courseStatus) {
+        this.courseStatus = courseStatus;
     }
 
     public String getThumbnailUrl() {

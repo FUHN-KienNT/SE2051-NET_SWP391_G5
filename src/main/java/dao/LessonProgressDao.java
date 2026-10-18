@@ -16,12 +16,15 @@ import java.util.Optional;
 public class LessonProgressDao {
     private static final String SQL_FIND_BY_REG = "SELECT id, registration_id, lesson_id, status, completed_at, user_note FROM lesson_progress WHERE registration_id = ?";
     private static final String SQL_FIND_BY_REG_AND_LESSON = "SELECT id, registration_id, lesson_id, status, completed_at, user_note FROM lesson_progress WHERE registration_id = ? AND lesson_id = ?";
-    private static final String SQL_UPSERT = "INSERT INTO lesson_progress (registration_id, lesson_id, status, completed_at, user_note) VALUES (?, ?, ?, ?, ?) "
+    private static final String SQL_UPSERT = "INSERT INTO lesson_progress (registration_id, lesson_id, status, completed_at, user_note, updated_at) VALUES (?, ?, ?, ?, ?, NOW()) "
             + "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET status = EXCLUDED.status, completed_at = EXCLUDED.completed_at, "
-            + "user_note = COALESCE(EXCLUDED.user_note, lesson_progress.user_note) RETURNING id";
-    private static final String SQL_SAVE_USER_NOTE = "INSERT INTO lesson_progress (registration_id, lesson_id, status, user_note) "
-            + "VALUES (?, ?, 'IN_PROGRESS', ?) "
-            + "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET user_note = EXCLUDED.user_note";
+            + "user_note = COALESCE(EXCLUDED.user_note, lesson_progress.user_note), updated_at = NOW() RETURNING id";
+    private static final String SQL_SAVE_USER_NOTE = "INSERT INTO lesson_progress (registration_id, lesson_id, status, user_note, updated_at) "
+            + "VALUES (?, ?, 'IN_PROGRESS', ?, NOW()) "
+            + "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET user_note = EXCLUDED.user_note, updated_at = NOW()";
+    private static final String SQL_TOUCH_LESSON = "INSERT INTO lesson_progress (registration_id, lesson_id, status, updated_at) "
+            + "VALUES (?, ?, 'IN_PROGRESS', NOW()) "
+            + "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET updated_at = NOW()";
     private static final String SQL_CALCULATE_PROGRESS = "SELECT "
             + "  (SELECT COUNT(1) FROM lesson_progress lp WHERE lp.registration_id = r.id AND lp.status = 'COMPLETED') AS completed_count, "
             + "  (SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = r.course_id) AS total_count "
@@ -76,6 +79,14 @@ public class LessonProgressDao {
             ps.setLong(1, registrationId);
             ps.setLong(2, lessonId);
             ps.setString(3, note);
+            ps.executeUpdate();
+        }
+    }
+
+    public void touchLesson(Connection con, long registrationId, long lessonId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_TOUCH_LESSON)) {
+            ps.setLong(1, registrationId);
+            ps.setLong(2, lessonId);
             ps.executeUpdate();
         }
     }
