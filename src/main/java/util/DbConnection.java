@@ -18,15 +18,21 @@ public final class DbConnection {
                 if (is != null) {
                     Properties prop = new Properties();
                     prop.load(is);
-                    if (prop.containsKey("db.url")) URL = prop.getProperty("db.url");
-                    if (prop.containsKey("db.user")) USER = prop.getProperty("db.user");
-                    if (prop.containsKey("db.password")) PASSWORD = prop.getProperty("db.password");
+                    if (prop.containsKey("db.url"))
+                        URL = prop.getProperty("db.url");
+                    if (prop.containsKey("db.user"))
+                        USER = prop.getProperty("db.user");
+                    if (prop.containsKey("db.password"))
+                        PASSWORD = prop.getProperty("db.password");
                 }
             } catch (Exception ignored) {
             }
-            if (System.getenv("DB_URL") != null) URL = System.getenv("DB_URL");
-            if (System.getenv("DB_USER") != null) USER = System.getenv("DB_USER");
-            if (System.getenv("DB_PASSWORD") != null) PASSWORD = System.getenv("DB_PASSWORD");
+            if (System.getenv("DB_URL") != null)
+                URL = System.getenv("DB_URL");
+            if (System.getenv("DB_USER") != null)
+                USER = System.getenv("DB_USER");
+            if (System.getenv("DB_PASSWORD") != null)
+                PASSWORD = System.getenv("DB_PASSWORD");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("PostgreSQL JDBC Driver not found", e);
         }

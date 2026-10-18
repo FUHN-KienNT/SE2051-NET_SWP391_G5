@@ -90,6 +90,7 @@ public class QuizService {
             dto.setPassScore(quiz.getPassScore());
             dto.setTimeLimitMinutes(quiz.getTimeLimitMinutes());
             dto.setOrderIndex(quiz.getOrderIndex());
+            dto.setAttemptCount(quizDao.countAttempts(con, quizId));
 
             List<QuizQuestion> assignments = quizDao.findAssignments(con, quizId);
             if (!assignments.isEmpty()) {
@@ -196,6 +197,11 @@ public class QuizService {
 
     public void deleteQuiz(long quizId) {
         try (Connection con = DbConnection.getConnection()) {
+            int attempts = quizDao.countAttempts(con, quizId);
+            if (attempts > 0) {
+                throw new IllegalStateException("Không thể xóa bài kiểm tra vì đã có " + attempts
+                        + " lượt làm bài của học viên. Để bảo toàn lịch sử học tập và kết quả của học viên, bài thi này không thể xóa.");
+            }
             boolean deleted = quizDao.delete(con, quizId);
             if (!deleted) {
                 throw new IllegalArgumentException("Không tìm thấy bài thi cần xóa.");
@@ -269,17 +275,21 @@ public class QuizService {
 
             // Load và nhóm quizzes theo module (giống pattern cũ)
             List<Quiz> quizzes = quizDao.findByCourseId(con, courseId);
+            Map<Long, Integer> attemptCounts = quizDao.findAttemptCountsByCourse(con, courseId);
             Map<Long, List<QuizDto>> quizzesByModuleId = new HashMap<>();
             for (Quiz q : quizzes) {
                 QuizDto qDto = new QuizDto(
                         q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
                         q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>()
                 );
+                qDto.setAttemptCount(attemptCounts.getOrDefault(q.getId(), 0));
                 quizzesByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
             }
 
             // Load và nhóm questions theo module (cùng connection, cùng pattern với quizzes)
             List<Question> allQuestions = questionDao.findByCourseId(con, courseId);
+            Map<Long, Integer> answerCounts = questionDao.findAnswerCountsByCourse(con, courseId);
+            Map<Long, Integer> assignmentCounts = questionDao.findAssignmentCountsByCourse(con, courseId);
             Map<Long, List<QuestionDto>> questionsByModuleId = new HashMap<>();
             if (!allQuestions.isEmpty()) {
                 List<Long> qIds = allQuestions.stream().map(Question::getId).collect(Collectors.toList());
@@ -291,6 +301,8 @@ public class QuizService {
                     qDto.setQuestionText(q.getQuestionText());
                     qDto.setQuestionType(q.getQuestionType());
                     qDto.setDefaultPoints(q.getDefaultPoints());
+                    qDto.setAnswerCount(answerCounts.getOrDefault(q.getId(), 0));
+                    qDto.setAssignmentCount(assignmentCounts.getOrDefault(q.getId(), 0));
                     List<AnswerOption> options = optionsMap.getOrDefault(q.getId(), Collections.emptyList());
                     for (AnswerOption opt : options) {
                         qDto.getOptions().add(new AnswerOptionDto(
@@ -389,6 +401,15 @@ public class QuizService {
 
     public void deleteQuestion(long questionId) {
         try (Connection con = DbConnection.getConnection()) {
+            int answers = questionDao.countAnswers(con, questionId);
+            if (answers > 0) {
+                throw new IllegalStateException("Không thể xóa câu hỏi này vì đã có " + answers
+                        + " bài làm của học viên liên kết với câu hỏi này trong lịch sử thi.");
+            }
+            int assignments = questionDao.countAssignments(con, questionId);
+            if (assignments > 0) {
+                throw new IllegalStateException("Không thể xóa câu hỏi vì đang được sử dụng trong bài kiểm tra. Vui lòng gỡ câu hỏi khỏi bài kiểm tra trước.");
+            }
             boolean deleted = questionDao.delete(con, questionId);
             if (!deleted) {
                 throw new IllegalArgumentException("Không tìm thấy câu hỏi cần xóa.");
@@ -401,6 +422,11 @@ public class QuizService {
     public void assignQuestion(long quizId, long questionId, BigDecimal points, int order) {
         ensureSameModule(quizId, questionId);
         try (Connection con = DbConnection.getConnection()) {
+            int attempts = quizDao.countAttempts(con, quizId);
+            if (attempts > 0) {
+                throw new IllegalStateException("Không thể thêm câu hỏi hoặc thay đổi cấu trúc của bài kiểm tra đã có học viên làm bài.");
+            }
+
             Quiz quiz = quizDao.findById(con, quizId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi."));
 
@@ -438,6 +464,10 @@ public class QuizService {
 
     public void removeQuestion(long quizId, long questionId) {
         try (Connection con = DbConnection.getConnection()) {
+            int attempts = quizDao.countAttempts(con, quizId);
+            if (attempts > 0) {
+                throw new IllegalStateException("Không thể gỡ câu hỏi khỏi bài kiểm tra vì đã có học viên làm bài thi này. Việc gỡ câu hỏi sẽ làm sai lệch cấu trúc điểm của bài thi cũ.");
+            }
             quizDao.deleteAssignment(con, quizId, questionId);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi loại bỏ câu hỏi khỏi bài thi: " + e.getMessage(), e);
@@ -446,6 +476,10 @@ public class QuizService {
 
     public void reorderQuestions(long quizId, List<Long> orderedIds) {
         try (Connection con = DbConnection.getConnection()) {
+            int attempts = quizDao.countAttempts(con, quizId);
+            if (attempts > 0) {
+                throw new IllegalStateException("Không thể thay đổi thứ tự câu hỏi của bài kiểm tra đã có học viên làm bài.");
+            }
             List<QuizQuestion> items = new ArrayList<>();
             for (int i = 0; i < orderedIds.size(); i++) {
                 QuizQuestion qq = new QuizQuestion();

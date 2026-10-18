@@ -9,7 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class QuizDao {
@@ -127,6 +129,35 @@ public class QuizDao {
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
         }
+    }
+
+    public int countAttempts(Connection con, long quizId) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM quiz_attempts WHERE quiz_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, quizId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public Map<Long, Integer> findAttemptCountsByCourse(Connection con, long courseId) throws SQLException {
+        String sql = "SELECT qa.quiz_id, COUNT(1) AS cnt "
+                + "FROM quiz_attempts qa "
+                + "JOIN quizzes q ON qa.quiz_id = q.id "
+                + "JOIN modules m ON q.module_id = m.id "
+                + "WHERE m.course_id = ? "
+                + "GROUP BY qa.quiz_id";
+        Map<Long, Integer> map = new HashMap<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getLong("quiz_id"), rs.getInt("cnt"));
+                }
+            }
+        }
+        return map;
     }
 
     public List<QuizQuestion> findAssignments(Connection con, long quizId) throws SQLException {

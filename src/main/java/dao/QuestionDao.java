@@ -101,6 +101,64 @@ public class QuestionDao {
         }
     }
 
+    public int countAnswers(Connection con, long questionId) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM quiz_answers WHERE question_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, questionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public int countAssignments(Connection con, long questionId) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM quiz_questions WHERE question_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, questionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public Map<Long, Integer> findAnswerCountsByCourse(Connection con, long courseId) throws SQLException {
+        String sql = "SELECT qa.question_id, COUNT(1) AS cnt "
+                + "FROM quiz_answers qa "
+                + "JOIN questions q ON qa.question_id = q.id "
+                + "JOIN modules m ON q.module_id = m.id "
+                + "WHERE m.course_id = ? "
+                + "GROUP BY qa.question_id";
+        Map<Long, Integer> map = new HashMap<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getLong("question_id"), rs.getInt("cnt"));
+                }
+            }
+        }
+        return map;
+    }
+
+    public Map<Long, Integer> findAssignmentCountsByCourse(Connection con, long courseId) throws SQLException {
+        String sql = "SELECT qq.question_id, COUNT(1) AS cnt "
+                + "FROM quiz_questions qq "
+                + "JOIN questions q ON qq.question_id = q.id "
+                + "JOIN modules m ON q.module_id = m.id "
+                + "WHERE m.course_id = ? "
+                + "GROUP BY qq.question_id";
+        Map<Long, Integer> map = new HashMap<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getLong("question_id"), rs.getInt("cnt"));
+                }
+            }
+        }
+        return map;
+    }
+
     public List<AnswerOption> findOptions(Connection con, long questionId) throws SQLException {
         List<AnswerOption> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_OPTIONS)) {

@@ -42,9 +42,11 @@ public class RegistrationService {
                 }
                 Course course = courseOpt.get();
 
-                // Không cho phép đăng ký hoặc tiếp tục đăng ký khóa học đang ở trạng thái Nháp hoặc Chờ duyệt
+                // Không cho phép đăng ký hoặc tiếp tục đăng ký khóa học đang ở trạng thái Nháp
+                // hoặc Chờ duyệt
                 if (course.getStatus() == CourseStatus.DRAFT) {
-                    throw new IllegalStateException("Khóa học này đang ở trạng thái Nháp (chưa được xuất bản). Bạn không thể đăng ký.");
+                    throw new IllegalStateException(
+                            "Khóa học này đang ở trạng thái Nháp (chưa được xuất bản). Bạn không thể đăng ký.");
                 }
                 if (course.getStatus() == CourseStatus.PENDING_REVIEW) {
                     throw new IllegalStateException("Khóa học này đang chờ phê duyệt. Bạn không thể đăng ký.");
@@ -53,7 +55,8 @@ public class RegistrationService {
                 Optional<Registration> existingOpt = registrationDao.findByUserAndCourse(con, userId, courseId);
                 if (existingOpt.isPresent()) {
                     Registration reg = existingOpt.get();
-                    if (reg.getStatus() == RegistrationStatus.ACTIVE || reg.getStatus() == RegistrationStatus.COMPLETED) {
+                    if (reg.getStatus() == RegistrationStatus.ACTIVE
+                            || reg.getStatus() == RegistrationStatus.COMPLETED) {
                         return mapRegistration(reg);
                     }
                     if (reg.getStatus() == RegistrationStatus.PENDING) {
@@ -61,11 +64,13 @@ public class RegistrationService {
                     }
                 }
 
-                // Nếu chưa có đơn đăng ký, kiểm tra xem khóa học đã lưu trữ (ngừng tuyển sinh) hay chưa
+                // Nếu chưa có đơn đăng ký, kiểm tra xem khóa học đã lưu trữ (ngừng tuyển sinh)
+                // hay chưa
                 boolean isArchived = course.getStatus() == CourseStatus.ARCHIVED
                         || (course.getArchiveAt() != null && !course.getArchiveAt().isAfter(OffsetDateTime.now()));
                 if (isArchived) {
-                    throw new IllegalStateException("Khóa học này đã được chuyển sang chế độ Lưu trữ (ngừng nhận học viên mới). Bạn không thể đăng ký mới.");
+                    throw new IllegalStateException(
+                            "Khóa học này đã được chuyển sang chế độ Lưu trữ (ngừng nhận học viên mới). Bạn không thể đăng ký mới.");
                 }
 
                 Registration reg = initializePayment(course);
@@ -117,7 +122,7 @@ public class RegistrationService {
                 + "ORDER BY r.id DESC";
 
         try (Connection con = DbConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 List<RegistrationDto> list = new ArrayList<>();
@@ -130,7 +135,8 @@ public class RegistrationService {
                     dto.setCourseTitle(rs.getString("course_title"));
 
                     long catId = rs.getLong("category_id");
-                    if (!rs.wasNull()) dto.setCategoryId(catId);
+                    if (!rs.wasNull())
+                        dto.setCategoryId(catId);
                     dto.setCategoryName(rs.getString("category_name"));
                     dto.setExpertName(rs.getString("expert_name"));
 
@@ -158,11 +164,13 @@ public class RegistrationService {
 
                     // Recalculate dynamic progress if lesson count changed
                     if (total > 0 && completed > 0) {
-                        dto.setProgressPercentage(BigDecimal.valueOf(completed * 100.0 / total).setScale(1, java.math.RoundingMode.HALF_UP));
+                        dto.setProgressPercentage(BigDecimal.valueOf(completed * 100.0 / total).setScale(1,
+                                java.math.RoundingMode.HALF_UP));
                     }
 
                     long lastLid = rs.getLong("last_lesson_id");
-                    if (!rs.wasNull()) dto.setLastLessonId(lastLid);
+                    if (!rs.wasNull())
+                        dto.setLastLessonId(lastLid);
                     dto.setLastLessonTitle(rs.getString("last_lesson_title"));
                     dto.setLastStudiedAt(rs.getObject("last_studied_at", OffsetDateTime.class));
 
@@ -237,12 +245,14 @@ public class RegistrationService {
                         }
 
                         return new RecentLearningDto(regId, courseId, courseTitle, catName,
-                                lessonId, lessonTitle, videoUrl, progress, completedLessons, totalLessons, lastStudiedAt);
+                                lessonId, lessonTitle, videoUrl, progress, completedLessons, totalLessons,
+                                lastStudiedAt);
                     }
                 }
             }
 
-            // Fallback: If no lesson_progress recorded yet, pick the first lesson of the latest active registration
+            // Fallback: If no lesson_progress recorded yet, pick the first lesson of the
+            // latest active registration
             String sqlFallback = "SELECT "
                     + "  r.id AS reg_id, r.course_id, c.title AS course_title, s.name AS category_name, "
                     + "  l.id AS lesson_id, l.title AS lesson_title, l.video_url, "
@@ -282,7 +292,8 @@ public class RegistrationService {
                         OffsetDateTime lastStudiedAt = rsFb.getObject("last_studied_at", OffsetDateTime.class);
 
                         return new RecentLearningDto(regId, courseId, courseTitle, catName,
-                                lessonId, lessonTitle, videoUrl, progress, completedLessons, totalLessons, lastStudiedAt);
+                                lessonId, lessonTitle, videoUrl, progress, completedLessons, totalLessons,
+                                lastStudiedAt);
                     }
                 }
             }
@@ -347,8 +358,10 @@ public class RegistrationService {
                 validatePaymentTransition(reg.getPaymentStatus(), status);
 
                 reg.setPaymentStatus(status);
-                if (code != null) reg.setPaymentCode(code);
-                if (paidAt != null) reg.setPaidAt(paidAt);
+                if (code != null)
+                    reg.setPaymentCode(code);
+                if (paidAt != null)
+                    reg.setPaidAt(paidAt);
 
                 if (status == PaymentStatus.SUCCESS || status == PaymentStatus.FREE) {
                     reg.setStatus(RegistrationStatus.ACTIVE);
@@ -398,7 +411,8 @@ public class RegistrationService {
     public boolean hasCourseAccess(long userId, long courseId) {
         try (Connection con = DbConnection.getConnection()) {
             Optional<Registration> regOpt = registrationDao.findByUserAndCourse(con, userId, courseId);
-            return regOpt.isPresent() && (regOpt.get().getStatus() == RegistrationStatus.ACTIVE || regOpt.get().getStatus() == RegistrationStatus.COMPLETED);
+            return regOpt.isPresent() && (regOpt.get().getStatus() == RegistrationStatus.ACTIVE
+                    || regOpt.get().getStatus() == RegistrationStatus.COMPLETED);
         } catch (SQLException e) {
             return false;
         }
@@ -431,7 +445,8 @@ public class RegistrationService {
     }
 
     private RegistrationDto mapRegistration(Registration entity) {
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         RegistrationDto dto = new RegistrationDto();
         dto.setId(entity.getId());
         dto.setUserId(entity.getUserId());
@@ -449,13 +464,15 @@ public class RegistrationService {
             try (PreparedStatement ps = con.prepareStatement("SELECT full_name FROM users WHERE id = ?")) {
                 ps.setLong(1, entity.getUserId());
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) dto.setUserName(rs.getString("full_name"));
+                    if (rs.next())
+                        dto.setUserName(rs.getString("full_name"));
                 }
             }
             try (PreparedStatement ps = con.prepareStatement("SELECT title FROM courses WHERE id = ?")) {
                 ps.setLong(1, entity.getCourseId());
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) dto.setCourseTitle(rs.getString("title"));
+                    if (rs.next())
+                        dto.setCourseTitle(rs.getString("title"));
                 }
             }
         } catch (SQLException ignored) {

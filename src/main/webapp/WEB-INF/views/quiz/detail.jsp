@@ -8,258 +8,586 @@
 <jsp:include page="../common/navbar.jsp" />
 
 <style>
-    /* Quiz Detail Modern Styles */
-    .kpi-card {
-        border-radius: 0.75rem;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .kpi-card:hover {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    .kpi-icon-box {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-    }
+/* ==========================================================================
+   MODERN SAAS DESIGN SYSTEM (Synchronized with Expert Studio & Lesson List)
+   ========================================================================== */
+:root {
+    --saas-bg: #f8fafc;
+    --saas-card-bg: #ffffff;
+    --saas-border: #e2e8f0;
+    --saas-border-subtle: #f1f5f9;
+    --saas-text-heading: #0f172a;
+    --saas-text-body: #334155;
+    --saas-text-muted: #64748b;
+    --saas-primary: #0f172a;
+    --saas-primary-hover: #1e293b;
+    --saas-accent: #2563eb;
+    --saas-accent-hover: #1d4ed8;
+    --saas-radius-sm: 6px;
+    --saas-radius-md: 10px;
+    --saas-radius-lg: 14px;
+    --saas-radius-xl: 18px;
+    --saas-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --saas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+}
 
-    .sticky-config-sidebar {
-        position: sticky;
-        top: 1.5rem;
-        z-index: 10;
-    }
+body {
+    background-color: var(--saas-bg);
+    color: var(--saas-text-body);
+}
 
-    .preset-pill {
-        cursor: pointer;
-        font-size: 0.75rem;
-        padding: 0.2rem 0.55rem;
-        border-radius: 20px;
-        border: 1px solid #cbd5e1;
-        background-color: #f8fafc;
-        color: #475569;
-        transition: all 0.15s ease;
-        user-select: none;
-    }
-    .preset-pill:hover {
-        background-color: var(--cf-orange-light, #FFF5EB);
-        border-color: var(--primary-color, #F38020);
-        color: var(--primary-color, #F38020);
-    }
+/* Breadcrumbs */
+.saas-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: var(--saas-text-muted);
+    margin-bottom: 16px;
+}
+.saas-breadcrumb a {
+    color: var(--saas-text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.saas-breadcrumb a:hover {
+    color: var(--saas-text-heading);
+}
+.saas-breadcrumb .separator {
+    color: #cbd5e1;
+    font-size: 0.75rem;
+}
+.saas-breadcrumb .current {
+    color: var(--saas-text-heading);
+    font-weight: 500;
+}
 
-    .question-item-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 0.85rem;
-        background: #ffffff;
-        transition: all 0.2s ease;
-    }
-    .question-item-card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.06);
-    }
+/* Page Header */
+.saas-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.saas-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--saas-text-heading);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.saas-subtitle {
+    font-size: 0.875rem;
+    color: var(--saas-text-muted);
+    margin-top: 4px;
+    margin-bottom: 0;
+}
 
-    /* Modern Points Editor Pill */
-    .points-editor-pill {
-        display: inline-flex;
-        align-items: center;
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 9999px;
-        padding: 2px 4px 2px 10px;
-        gap: 4px;
-        transition: all 0.2s ease;
-        height: 30px;
-    }
-    .points-editor-pill:hover {
-        background: #ffffff;
-        border-color: #94a3b8;
-    }
-    .points-editor-pill:focus-within {
-        background: #ffffff;
-        border-color: #f59e0b;
-        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
-    }
-    .points-editor-pill .points-icon {
-        color: #d97706;
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-    }
-    .points-editor-pill input.points-inline-input {
-        width: 44px;
-        height: 22px;
-        padding: 0;
-        border: none;
-        background: transparent;
-        font-weight: 700;
-        font-size: 0.85rem;
-        text-align: center;
-        color: #1e293b;
-        outline: none;
-        -moz-appearance: textfield;
-        appearance: textfield;
-    }
-    .points-editor-pill input.points-inline-input::-webkit-outer-spin-button,
-    .points-editor-pill input.points-inline-input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    .points-editor-pill .points-unit {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #64748b;
-        margin-right: 2px;
-    }
-    .points-editor-pill .btn-save-point {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        border: none;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        background: #e2e8f0;
-        color: #64748b;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .points-editor-pill .btn-save-point:hover {
-        background: #10b981;
-        color: #ffffff;
-        transform: scale(1.1);
-    }
-    .points-editor-pill .btn-save-point.is-dirty {
-        background: #10b981 !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
-        animation: pulseSaveBtn 1.5s infinite;
-    }
-    @keyframes pulseSaveBtn {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.15); }
-    }
+/* Stat Cards */
+.saas-stat-card {
+    background: var(--saas-card-bg);
+    border: 1px solid var(--saas-border);
+    border-radius: var(--saas-radius-lg);
+    padding: 20px;
+    box-shadow: var(--saas-shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.saas-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--saas-shadow-md);
+    border-color: #cbd5e1;
+}
+.saas-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+.saas-stat-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--saas-text-muted);
+}
+.saas-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--saas-radius-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+}
+.saas-icon-blue { background: #eff6ff; color: #2563eb; }
+.saas-icon-emerald { background: #ecfdf5; color: #059669; }
+.saas-icon-amber { background: #fffbeb; color: #d97706; }
+.saas-icon-slate { background: #f1f5f9; color: #475569; }
 
-    .option-card {
-        border-radius: 0.6rem;
-        padding: 0.65rem 0.85rem;
-        border: 1px solid #e2e8f0;
-        background-color: #f8fafc;
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.15s ease;
-    }
-    .option-card.is-correct {
-        background-color: #ecfdf5;
-        border-color: #a7f3d0;
-        color: #065f46;
-        font-weight: 500;
-    }
-    .option-letter-badge {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        font-weight: 700;
-        flex-shrink: 0;
-    }
+.saas-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--saas-text-heading);
+    line-height: 1;
+}
+.saas-stat-desc {
+    font-size: 0.8125rem;
+    color: var(--saas-text-muted);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
 
-    .bank-question-row {
-        border: 1px solid #e2e8f0;
-        border-radius: 0.75rem;
-        transition: background-color 0.15s ease, border-color 0.15s ease;
-    }
-    .bank-question-row:hover {
-        border-color: #cbd5e1;
-        background-color: #fafafa;
-    }
+/* SaaS Cards */
+.saas-card {
+    background: var(--saas-card-bg);
+    border: 1px solid var(--saas-border);
+    border-radius: var(--saas-radius-lg);
+    box-shadow: var(--saas-shadow-sm);
+    overflow: hidden;
+}
 
-    .search-filter-box {
-        background: #f8fafc;
-        border-radius: 0.75rem;
-        border: 1px solid #e2e8f0;
-        padding: 0.75rem 1rem;
-    }
+/* Sticky sidebar */
+.sticky-config-sidebar {
+    position: sticky;
+    top: 1.5rem;
+    z-index: 10;
+}
+
+/* Preset Pills */
+.preset-pill {
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    border: 1px solid var(--saas-border);
+    background-color: #ffffff;
+    color: var(--saas-text-body);
+    transition: all 0.15s ease;
+    user-select: none;
+}
+.preset-pill:hover {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: var(--saas-accent);
+}
+
+/* Question Item Card */
+.question-item-card {
+    border: 1px solid var(--saas-border);
+    border-radius: var(--saas-radius-lg);
+    background: #ffffff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.question-item-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: var(--saas-shadow-md);
+}
+
+/* Modern Points Editor Pill */
+.points-editor-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid var(--saas-border);
+    border-radius: 9999px;
+    padding: 2px 6px 2px 10px;
+    gap: 4px;
+    transition: all 0.15s ease;
+    height: 30px;
+}
+.points-editor-pill:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+.points-editor-pill:focus-within {
+    background: #ffffff;
+    border-color: var(--saas-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.points-editor-pill .points-icon {
+    color: #f59e0b;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+}
+.points-editor-pill input.points-inline-input {
+    width: 44px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-align: center;
+    color: var(--saas-text-heading);
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+.points-editor-pill input.points-inline-input::-webkit-outer-spin-button,
+.points-editor-pill input.points-inline-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.points-editor-pill .points-unit {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--saas-text-muted);
+    margin-right: 2px;
+}
+.points-editor-pill .btn-save-point {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    background: #e2e8f0;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.points-editor-pill .btn-save-point:hover {
+    background: #059669;
+    color: #ffffff;
+    transform: scale(1.1);
+}
+.points-editor-pill .btn-save-point.is-dirty {
+    background: #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+    animation: pulseSaveBtn 1.5s infinite;
+}
+@keyframes pulseSaveBtn {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+/* Option Cards */
+.option-card {
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 1px solid var(--saas-border);
+    background-color: #f8fafc;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+}
+.option-card.is-correct {
+    background-color: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+    font-weight: 500;
+}
+.option-letter-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Bank questions list */
+.bank-question-row {
+    border: 1px solid var(--saas-border);
+    border-radius: var(--saas-radius-md);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.bank-question-row:hover {
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+}
+.search-filter-box {
+    background: #f8fafc;
+    border-radius: var(--saas-radius-md);
+    border: 1px solid var(--saas-border);
+    padding: 12px 16px;
+}
+
+/* Buttons */
+.btn-saas-primary {
+    background: #0f172a;
+    color: #ffffff;
+    border: 1px solid #0f172a;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    box-shadow: var(--saas-shadow-xs);
+    cursor: pointer;
+}
+.btn-saas-primary:hover {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #1e293b;
+}
+
+.btn-saas-outline {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid var(--saas-border);
+    font-weight: 500;
+    font-size: 0.8125rem;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    box-shadow: var(--saas-shadow-xs);
+    cursor: pointer;
+}
+.btn-saas-outline:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+.btn-saas-outline-emerald {
+    background: #ffffff;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.btn-saas-outline-emerald:hover {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #6ee7b7;
+}
+
+.btn-icon-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--saas-border);
+    background: #ffffff;
+    color: #64748b;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    font-size: 0.875rem;
+    text-decoration: none;
+}
+.btn-icon-action:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+.btn-icon-action.text-danger:hover {
+    background: #fef2f2;
+    color: #dc2626 !important;
+    border-color: #fecaca;
+}
+
+/* Status Badges */
+.saas-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+.saas-badge-published {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+.saas-badge-published .badge-dot { background: #10b981; }
+
+.saas-badge-pending {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+.saas-badge-pending .badge-dot { background: #f59e0b; }
+
+.saas-badge-draft {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+.saas-badge-draft .badge-dot { background: #64748b; }
+
+.saas-badge-blue {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+.saas-badge-blue .badge-dot { background: #2563eb; }
+
+/* Modals */
+.modal-content.saas-modal {
+    border-radius: 16px;
+    border: 1px solid var(--saas-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+.modal-header.saas-modal-header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--saas-border);
+    padding: 18px 24px;
+}
+.modal-footer.saas-modal-footer {
+    background: #f8fafc;
+    border-top: 1px solid var(--saas-border);
+    padding: 14px 24px;
+}
+.saas-form-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+.saas-form-control {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    transition: all 0.15s ease;
+}
+.saas-form-control:focus {
+    border-color: var(--saas-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Alerts */
+.saas-alert {
+    border-radius: var(--saas-radius-md);
+    padding: 14px 18px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    box-shadow: var(--saas-shadow-xs);
+}
+.saas-alert-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+.saas-alert-danger {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
 </style>
 
-<main class="main-content py-4 py-lg-5">
+<main class="main-content py-4">
     <div class="container">
 
-        <!-- Breadcrumb Navigation Tinh gọn -->
-        <nav class="mb-3" aria-label="breadcrumb">
-            <ol class="breadcrumb py-1 px-0 mb-0 small">
-                <li class="breadcrumb-item">
-                    <a href="${pageContext.request.contextPath}/expert/dashboard" class="text-decoration-none text-muted">
-                        Dashboard
-                    </a>
-                </li>
-                <c:if test="${not empty course}">
-                    <li class="breadcrumb-item">
-                        <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}" class="text-decoration-none text-muted">
-                            ${course.title}
-                        </a>
-                    </li>
-                </c:if>
-                <c:if test="${not empty currentModule}">
-                    <li class="breadcrumb-item text-muted">
-                        Chương ${currentModule.orderIndex}
-                    </li>
-                </c:if>
-                <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
-                    ${quiz.title}
-                </li>
-            </ol>
+        <!-- Modern SaaS Breadcrumb Navigation -->
+        <nav class="saas-breadcrumb" aria-label="breadcrumb">
+            <a href="${pageContext.request.contextPath}/expert/dashboard">
+                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+            <span class="separator">/</span>
+            <c:if test="${not empty course}">
+                <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}">
+                    ${course.title}
+                </a>
+                <span class="separator">/</span>
+            </c:if>
+            <c:if test="${not empty currentModule}">
+                <span class="text-muted">Chương ${currentModule.orderIndex}</span>
+                <span class="separator">/</span>
+            </c:if>
+            <span class="current">${quiz.title}</span>
         </nav>
 
         <!-- System Alerts -->
         <c:if test="${not empty param.success}">
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-check-circle-fill fs-5 text-success"></i>
-                <div class="flex-grow-1 small">
-                    <c:choose>
-                        <c:when test="${param.success == 'saved'}">Đã lưu và cập nhật cấu hình bài kiểm tra.</c:when>
-                        <c:when test="${param.success == 'assigned'}">Đã cập nhật câu hỏi / điểm số trong bài thi thành công.</c:when>
-                        <c:when test="${param.success == 'removed'}">Đã gỡ câu hỏi khỏi bài thi (câu hỏi vẫn nằm trong Ngân hàng).</c:when>
-                        <c:when test="${param.success == 'question_created_and_assigned'}">Đã tạo câu hỏi mới và tự động gán vào bài kiểm tra.</c:when>
-                        <c:otherwise>Thao tác đã được hoàn tất thành công.</c:otherwise>
-                    </c:choose>
+            <div class="saas-alert saas-alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <div>
+                        <c:choose>
+                            <c:when test="${param.success == 'saved'}">Đã lưu và cập nhật cấu hình bài kiểm tra.</c:when>
+                            <c:when test="${param.success == 'assigned'}">Đã cập nhật câu hỏi / điểm số trong bài thi thành công.</c:when>
+                            <c:when test="${param.success == 'removed'}">Đã gỡ câu hỏi khỏi bài thi (câu hỏi vẫn nằm trong Ngân hàng).</c:when>
+                            <c:when test="${param.success == 'question_created_and_assigned'}">Đã tạo câu hỏi mới và tự động gán vào bài kiểm tra.</c:when>
+                            <c:otherwise>Thao tác đã được hoàn tất thành công.</c:otherwise>
+                        </c:choose>
+                    </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </c:if>
 
         <c:if test="${not empty param.error}">
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-3 d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
-                <div class="flex-grow-1 small">
-                    <c:out value="${param.error}" />
+            <div class="saas-alert saas-alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    <div><c:out value="${param.error}" /></div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </c:if>
 
-        <!-- Header Top Bar Tối giản & Đồng bộ -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <!-- Header Top Bar -->
+        <div class="saas-header">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <c:if test="${not empty currentModule}">
                         <span class="badge bg-light text-dark border fw-semibold">Chương ${currentModule.orderIndex}</span>
                     </c:if>
-                    <h3 class="fw-bold mb-0 text-dark">
-                        <i class="bi bi-patch-question-fill text-primary me-2"></i><c:out value="${quiz.title}" />
-                    </h3>
+                    <h1 class="saas-title">
+                        <span class="saas-stat-icon saas-icon-blue" style="width: 36px; height: 36px; border-radius: 10px;">
+                            <i class="bi bi-patch-question-fill"></i>
+                        </span>
+                        <span><c:out value="${quiz.title}" /></span>
+                    </h1>
                 </div>
-                <p class="text-muted small mb-0">
+                <p class="saas-subtitle">
                     Quản lý cấu hình bài kiểm tra trắc nghiệm và danh sách câu hỏi
                 </p>
             </div>
@@ -268,26 +596,29 @@
                 <c:url var="backQuizListUrl" value="/quizzes/list">
                     <c:if test="${not empty courseId}"><c:param name="courseId" value="${courseId}"/></c:if>
                 </c:url>
-                <a href="${backQuizListUrl}" class="btn btn-outline-secondary btn-sm fw-semibold px-3 py-2 rounded-3">
+                <a href="${backQuizListUrl}" class="btn-saas-outline">
                     <i class="bi bi-arrow-left me-1"></i>Danh sách Quiz
                 </a>
             </div>
         </div>
 
-        <!-- 4 KPI Stat Cards Tinh gọn -->
+        <!-- 4 KPI Stat Cards (Cohesive with Expert Studio) -->
         <div class="row g-3 mb-4">
             <!-- 1. Total Questions -->
             <div class="col-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-muted small fw-medium">Số câu hỏi</span>
-                            <h4 class="fw-bold mb-0 text-dark mt-1">
-                                ${not empty quiz.questions ? fn:length(quiz.questions) : 0} <span class="fs-6 fw-normal text-muted">câu</span>
-                            </h4>
-                        </div>
-                        <div class="kpi-icon-box bg-primary-subtle text-primary">
+                <div class="saas-stat-card">
+                    <div class="saas-stat-header">
+                        <span class="saas-stat-label">Số câu hỏi</span>
+                        <div class="saas-stat-icon saas-icon-blue">
                             <i class="bi bi-question-diamond-fill"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="saas-stat-value">
+                            ${not empty quiz.questions ? fn:length(quiz.questions) : 0}
+                        </div>
+                        <div class="saas-stat-desc">
+                            <i class="bi bi-card-checklist text-primary"></i> Câu hỏi trong đề thi
                         </div>
                     </div>
                 </div>
@@ -295,16 +626,19 @@
 
             <!-- 2. Total Points -->
             <div class="col-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-muted small fw-medium">Tổng điểm</span>
-                            <h4 class="fw-bold mb-0 text-success mt-1">
-                                ${quiz.totalPoints} <span class="fs-6 fw-normal text-muted">điểm</span>
-                            </h4>
-                        </div>
-                        <div class="kpi-icon-box bg-success-subtle text-success">
+                <div class="saas-stat-card">
+                    <div class="saas-stat-header">
+                        <span class="saas-stat-label">Tổng điểm</span>
+                        <div class="saas-stat-icon saas-icon-emerald">
                             <i class="bi bi-award-fill"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="saas-stat-value text-success">
+                            ${quiz.totalPoints}
+                        </div>
+                        <div class="saas-stat-desc">
+                            <i class="bi bi-check-circle-fill text-success"></i> Thang điểm bài kiểm tra
                         </div>
                     </div>
                 </div>
@@ -312,16 +646,19 @@
 
             <!-- 3. Passing Score -->
             <div class="col-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-muted small fw-medium">Điểm qua môn</span>
-                            <h4 class="fw-bold mb-0 text-warning-emphasis mt-1">
-                                ${quiz.passScore}% <span class="fs-6 fw-normal text-muted">(${quiz.passingPoints} đ)</span>
-                            </h4>
-                        </div>
-                        <div class="kpi-icon-box bg-warning-subtle text-warning">
+                <div class="saas-stat-card">
+                    <div class="saas-stat-header">
+                        <span class="saas-stat-label">Điểm qua môn</span>
+                        <div class="saas-stat-icon saas-icon-amber">
                             <i class="bi bi-shield-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="saas-stat-value text-warning-emphasis">
+                            ${quiz.passScore}%
+                        </div>
+                        <div class="saas-stat-desc">
+                            <i class="bi bi-flag-fill text-warning"></i> Cần đạt tối thiểu (${quiz.passingPoints} đ)
                         </div>
                     </div>
                 </div>
@@ -329,23 +666,26 @@
 
             <!-- 4. Time Limit -->
             <div class="col-6 col-lg-3">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <span class="text-muted small fw-medium">Thời lượng</span>
-                            <h4 class="fw-bold mb-0 text-dark mt-1">
-                                <c:choose>
-                                    <c:when test="${not empty quiz.timeLimitMinutes && quiz.timeLimitMinutes > 0}">
-                                        ${quiz.timeLimitMinutes} <span class="fs-6 fw-normal text-muted">phút</span>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="fs-6 fw-semibold text-secondary">Tự do</span>
-                                    </c:otherwise>
-                                </c:choose>
-                            </h4>
-                        </div>
-                        <div class="kpi-icon-box bg-info-subtle text-info">
+                <div class="saas-stat-card">
+                    <div class="saas-stat-header">
+                        <span class="saas-stat-label">Thời lượng</span>
+                        <div class="saas-stat-icon saas-icon-slate">
                             <i class="bi bi-stopwatch-fill"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="saas-stat-value">
+                            <c:choose>
+                                <c:when test="${not empty quiz.timeLimitMinutes && quiz.timeLimitMinutes > 0}">
+                                    ${quiz.timeLimitMinutes} <span class="fs-6 fw-normal text-muted">phút</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="fs-5 fw-semibold text-secondary">Tự do</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div class="saas-stat-desc">
+                            <i class="bi bi-clock-history text-secondary"></i> Giới hạn làm bài
                         </div>
                     </div>
                 </div>
@@ -360,12 +700,12 @@
                 <div class="sticky-config-sidebar d-flex flex-column gap-4">
 
                     <!-- Form Card: Cấu hình bài thi -->
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="saas-card p-4">
                         <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
                             <div class="d-flex align-items-center gap-2">
-                                <div class="bg-primary-subtle text-primary p-2 rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                                    <i class="bi bi-sliders fs-5"></i>
-                                </div>
+                                <span class="saas-stat-icon saas-icon-blue" style="width: 32px; height: 32px; border-radius: 8px;">
+                                    <i class="bi bi-sliders"></i>
+                                </span>
                                 <h5 class="fw-bold mb-0 text-dark">Cấu hình bài thi</h5>
                             </div>
                             <span class="badge bg-light text-muted border">Chỉnh sửa</span>
@@ -380,23 +720,23 @@
 
                             <!-- Quiz Title -->
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary">
+                                <label class="saas-form-label">
                                     Tên bài thi <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" name="title" class="form-control rounded-3" value="${quiz.title}" required placeholder="Ví dụ: Quiz 1 - Khái niệm cơ bản...">
+                                <input type="text" name="title" class="form-control saas-form-control" value="${quiz.title}" required placeholder="Ví dụ: Quiz 1 - Khái niệm cơ bản...">
                             </div>
 
                             <!-- Pass Score with Quick Presets -->
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label small fw-semibold text-secondary mb-0">
+                                    <label class="saas-form-label mb-0">
                                         Tỉ lệ đạt tối thiểu (%) <span class="text-danger">*</span>
                                     </label>
                                     <span class="text-muted small" id="calculatedPassPointsText">${quiz.passingPoints} / ${quiz.totalPoints} đ</span>
                                 </div>
                                 <div class="input-group">
-                                    <input type="number" id="passScoreInput" name="passScore" class="form-control rounded-start-3" value="${quiz.passScore}" min="0" max="100" step="1" required>
-                                    <span class="input-group-text bg-light text-muted rounded-end-3 fw-bold">%</span>
+                                    <input type="number" id="passScoreInput" name="passScore" class="form-control saas-form-control rounded-start-3" value="${quiz.passScore}" min="0" max="100" step="1" required>
+                                    <span class="input-group-text bg-light text-muted fw-bold">%</span>
                                 </div>
                                 <!-- Preset Pills -->
                                 <div class="d-flex flex-wrap gap-1 mt-2">
@@ -413,12 +753,12 @@
 
                             <!-- Time Limit with Presets -->
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary">
+                                <label class="saas-form-label">
                                     Thời lượng thi (Phút)
                                 </label>
                                 <div class="input-group">
-                                    <input type="number" id="timeLimitInput" name="timeLimitMinutes" class="form-control rounded-start-3" value="${quiz.timeLimitMinutes}" min="0" placeholder="Để trống nếu không giới hạn">
-                                    <span class="input-group-text bg-light text-muted rounded-end-3">phút</span>
+                                    <input type="number" id="timeLimitInput" name="timeLimitMinutes" class="form-control saas-form-control rounded-start-3" value="${quiz.timeLimitMinutes}" min="0" placeholder="Để trống nếu không giới hạn">
+                                    <span class="input-group-text bg-light text-muted">phút</span>
                                 </div>
                                 <!-- Preset Pills -->
                                 <div class="d-flex flex-wrap gap-1 mt-2">
@@ -435,20 +775,20 @@
 
                             <!-- Order Index -->
                             <div class="mb-4">
-                                <label class="form-label small fw-semibold text-secondary">
+                                <label class="saas-form-label">
                                     Thứ tự hiển thị trong chương <span class="text-danger">*</span>
                                 </label>
-                                <input type="number" name="orderIndex" class="form-control rounded-3" value="${quiz.orderIndex}" min="1" required>
+                                <input type="number" name="orderIndex" class="form-control saas-form-control" value="${quiz.orderIndex}" min="1" required>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 fw-semibold rounded-3 py-2 shadow-sm">
+                            <button type="submit" class="btn-saas-primary w-100 justify-content-center py-2.5">
                                 <i class="bi bi-check-lg me-1"></i>Lưu thay đổi cấu hình
                             </button>
                         </form>
                     </div>
 
                     <!-- Meta Information & Secondary Actions -->
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="saas-card p-4">
                         <h6 class="fw-bold mb-3 text-secondary text-uppercase small d-flex align-items-center gap-2">
                             <i class="bi bi-info-circle-fill text-primary"></i>Thông tin liên kết
                         </h6>
@@ -476,8 +816,8 @@
                             </c:if>
                             <div class="d-flex justify-content-between align-items-center py-1">
                                 <span class="text-muted">Ngân hàng của chương:</span>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">
-                                    ${not empty bankQuestions ? fn:length(bankQuestions) : 0} câu hỏi có sẵn
+                                <span class="saas-badge saas-badge-blue">
+                                    <span class="badge-dot"></span>${not empty bankQuestions ? fn:length(bankQuestions) : 0} câu hỏi có sẵn
                                 </span>
                             </div>
                         </div>
@@ -489,13 +829,24 @@
                                 </c:if>
                                 <c:param name="tab" value="questions"/>
                             </c:url>
-                            <a href="${courseQuestionsUrl}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-3 py-2 text-start">
+                            <a href="${courseQuestionsUrl}" class="btn-saas-outline justify-content-start py-2">
                                 <i class="bi bi-database me-2 text-primary"></i>Xem Ngân hàng câu hỏi
                             </a>
 
-                            <button type="button" class="btn btn-outline-danger btn-sm fw-semibold rounded-3 py-2 text-start" data-bs-toggle="modal" data-bs-target="#deleteQuizModal">
-                                <i class="bi bi-trash3 me-2"></i>Xóa bài thi này
-                            </button>
+                            <c:choose>
+                                <c:when test="${quiz.attemptCount > 0}">
+                                    <button type="button" class="btn-saas-outline text-muted justify-content-start py-2"
+                                        title="Đã có ${quiz.attemptCount} lượt làm bài của học viên"
+                                        onclick="alert('Không thể xóa bài kiểm tra vì đã có ${quiz.attemptCount} lượt làm bài của học viên. Hệ thống cần bảo toàn dữ liệu điểm số và tiến độ học tập!');">
+                                        <i class="bi bi-lock-fill me-2 text-warning"></i>Không thể xóa (${quiz.attemptCount} lượt thi)
+                                    </button>
+                                </c:when>
+                                <c:otherwise>
+                                    <button type="button" class="btn-saas-outline text-danger justify-content-start py-2" data-bs-toggle="modal" data-bs-target="#deleteQuizModal">
+                                        <i class="bi bi-trash3 me-2"></i>Xóa bài thi này
+                                    </button>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
 
@@ -504,10 +855,10 @@
 
             <!-- RIGHT COLUMN: Quiz Questions Management (col-lg-8) -->
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="saas-card">
 
                     <!-- Right Column Header -->
-                    <div class="card-header bg-white py-3 px-4 border-bottom">
+                    <div class="bg-white py-3 px-4 border-bottom">
                         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
                             <div>
                                 <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
@@ -515,24 +866,45 @@
                                     Danh sách câu hỏi trong bài thi
                                 </h5>
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">
-                                        <i class="bi bi-patch-question me-1"></i><span id="renderedQuestionsCount">${not empty quiz.questions ? fn:length(quiz.questions) : 0}</span> câu hỏi
+                                    <span class="saas-badge saas-badge-blue">
+                                        <span class="badge-dot"></span><span id="renderedQuestionsCount">${not empty quiz.questions ? fn:length(quiz.questions) : 0}</span> câu hỏi
                                     </span>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
-                                        <i class="bi bi-star-fill text-warning me-1"></i>Tổng: ${quiz.totalPoints} điểm
+                                    <span class="saas-badge saas-badge-published">
+                                        <span class="badge-dot"></span>Tổng: ${quiz.totalPoints} điểm
                                     </span>
                                 </div>
                             </div>
 
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary fw-semibold px-3 py-1.5 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
-                                    <i class="bi bi-bank me-1"></i>Từ Ngân hàng
-                                </button>
-                                <button type="button" class="btn btn-sm btn-primary fw-semibold px-3 py-1.5 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
-                                    <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
-                                </button>
+                                <c:choose>
+                                    <c:when test="${quiz.attemptCount > 0}">
+                                        <button type="button" class="btn-saas-outline text-muted" onclick="alert('Bài kiểm tra đã có ${quiz.attemptCount} lượt làm bài của học viên. Cấu trúc đề thi đã được khóa.');" title="Bài thi đã bị khóa vì có lượt làm bài">
+                                            <i class="bi bi-bank me-1"></i>Từ Ngân hàng
+                                        </button>
+                                        <button type="button" class="btn-saas-outline text-muted" onclick="alert('Bài kiểm tra đã có ${quiz.attemptCount} lượt làm bài của học viên. Cấu trúc đề thi đã được khóa.');" title="Bài thi đã bị khóa vì có lượt làm bài">
+                                            <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
+                                        </button>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <button type="button" class="btn-saas-outline" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
+                                            <i class="bi bi-bank me-1"></i>Từ Ngân hàng
+                                        </button>
+                                        <button type="button" class="btn-saas-primary" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
+                                            <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
+                                        </button>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
+
+                        <c:if test="${quiz.attemptCount > 0}">
+                            <div class="alert alert-warning py-2 px-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-shield-lock-fill fs-5 text-warning flex-shrink-0"></i>
+                                <div>
+                                    Bài thi này đã có <strong>${quiz.attemptCount}</strong> lượt làm bài của học viên. Cấu trúc câu hỏi và thang điểm đã được khóa bảo vệ để bảo toàn dữ liệu lịch sử thi.
+                                </div>
+                            </div>
+                        </c:if>
 
                         <!-- Live Search & Filter Bar for Assigned Questions -->
                         <c:if test="${not empty quiz.questions}">
@@ -561,23 +933,23 @@
                     </div>
 
                     <!-- Questions List Body -->
-                    <div class="card-body p-4">
+                    <div class="p-4">
                         <c:choose>
                             <c:when test="${empty quiz.questions}">
                                 <!-- Empty state -->
                                 <div class="text-center py-5 px-3">
-                                    <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px;">
-                                        <i class="bi bi-patch-question display-6"></i>
+                                    <div class="bg-light text-muted rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                                        <i class="bi bi-patch-question fs-2"></i>
                                     </div>
                                     <h5 class="fw-bold text-dark mb-1">Chưa có câu hỏi nào trong bài thi này</h5>
                                     <p class="text-muted small mb-4 mx-auto" style="max-width: 460px;">
                                         Bài thi chưa thể cho học viên làm nếu chưa có câu hỏi. Bạn có thể chọn các câu hỏi có sẵn từ ngân hàng của chương hoặc tạo câu hỏi mới ngay bây giờ.
                                     </p>
                                     <div class="d-flex justify-content-center flex-wrap gap-2">
-                                        <button type="button" class="btn btn-primary fw-semibold px-3 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
+                                        <button type="button" class="btn-saas-outline" data-bs-toggle="modal" data-bs-target="#pickFromBankModal">
                                             <i class="bi bi-bank me-1"></i>Chọn từ Ngân hàng câu hỏi
                                         </button>
-                                        <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
+                                        <button type="button" class="btn-saas-primary" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
                                             <i class="bi bi-plus-circle me-1"></i>Tạo câu hỏi mới
                                         </button>
                                     </div>
@@ -615,80 +987,102 @@
                                                     <!-- Question Type Badge -->
                                                     <c:choose>
                                                         <c:when test="${qq.questionType == 'SINGLE_CHOICE'}">
-                                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5 fw-semibold" style="font-size: 0.8rem;">
-                                                                <i class="bi bi-ui-radios me-1"></i>1 Đáp án
+                                                            <span class="saas-badge saas-badge-blue">
+                                                                <span class="badge-dot"></span>1 Đáp án
                                                             </span>
                                                         </c:when>
                                                         <c:when test="${qq.questionType == 'MULTI_CHOICE'}">
-                                                            <span class="badge px-2.5 py-1.5 fw-semibold" style="font-size: 0.8rem; background-color: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff !important;">
-                                                                <i class="bi bi-ui-checks me-1"></i>Nhiều đáp án
+                                                            <span class="saas-badge saas-badge-pending">
+                                                                <span class="badge-dot"></span>Nhiều đáp án
                                                             </span>
                                                         </c:when>
                                                         <c:when test="${qq.questionType == 'TRUE_FALSE'}">
-                                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2.5 py-1.5 fw-semibold" style="font-size: 0.8rem;">
-                                                                <i class="bi bi-toggle-on me-1"></i>Đúng / Sai
+                                                            <span class="saas-badge saas-badge-draft">
+                                                                <span class="badge-dot"></span>Đúng / Sai
                                                             </span>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1.5 fw-semibold" style="font-size: 0.8rem;">
+                                                            <span class="saas-badge saas-badge-draft">
                                                                 ${qq.questionType}
                                                             </span>
                                                         </c:otherwise>
                                                     </c:choose>
 
-                                                    <!-- Inline Points Edit Form -->
-                                                    <form action="${pageContext.request.contextPath}/quizzes/assign-question" method="POST" class="d-inline-flex align-items-center m-0">
-                                                        <input type="hidden" name="quizId" value="${quiz.id}">
-                                                        <input type="hidden" name="questionId" value="${qq.id}">
-                                                        <c:if test="${not empty courseId}">
-                                                            <input type="hidden" name="courseId" value="${courseId}">
-                                                        </c:if>
-                                                        <input type="hidden" name="order" value="${qq.quizOrderIndex != null ? qq.quizOrderIndex : 0}">
-                                                        <div class="points-editor-pill" title="Điểm số trong bài thi (nhấp để sửa, bấm ✓ hoặc Enter để lưu)">
-                                                            <span class="points-icon"><i class="bi bi-award-fill"></i></span>
-                                                            <input type="number" step="0.5" min="0.5" name="points" 
-                                                                   value="${not empty qq.assignedPoints ? qq.assignedPoints : (not empty qq.points ? qq.points : (not empty qq.defaultPoints ? qq.defaultPoints : 1))}" 
-                                                                   class="points-inline-input" 
-                                                                   title="Sửa điểm trực tiếp (Enter hoặc bấm ✓ để lưu)" required>
-                                                            <span class="points-unit">đ</span>
-                                                            <button type="submit" class="btn-save-point" title="Lưu điểm">
-                                                                <i class="bi bi-check-lg fw-bold"></i>
-                                                            </button>
-                                                        </div>
-                                                    </form>
+                                                    <c:choose>
+                                                        <c:when test="${quiz.attemptCount > 0}">
+                                                            <div class="points-editor-pill bg-light border" title="Điểm số đã được cố định vì đã có học viên làm bài">
+                                                                <span class="points-icon text-muted"><i class="bi bi-lock-fill"></i></span>
+                                                                <span class="px-2 fw-semibold text-secondary">${not empty qq.assignedPoints ? qq.assignedPoints : (not empty qq.points ? qq.points : (not empty qq.defaultPoints ? qq.defaultPoints : 1))}</span>
+                                                                <span class="points-unit">đ</span>
+                                                            </div>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <!-- Inline Points Edit Form -->
+                                                            <form action="${pageContext.request.contextPath}/quizzes/assign-question" method="POST" class="d-inline-flex align-items-center m-0">
+                                                                <input type="hidden" name="quizId" value="${quiz.id}">
+                                                                <input type="hidden" name="questionId" value="${qq.id}">
+                                                                <c:if test="${not empty courseId}">
+                                                                    <input type="hidden" name="courseId" value="${courseId}">
+                                                                </c:if>
+                                                                <input type="hidden" name="order" value="${qq.quizOrderIndex != null ? qq.quizOrderIndex : 0}">
+                                                                <div class="points-editor-pill" title="Điểm số trong bài thi (nhấp để sửa, bấm ✓ hoặc Enter để lưu)">
+                                                                    <span class="points-icon"><i class="bi bi-award-fill"></i></span>
+                                                                    <input type="number" step="0.5" min="0.5" name="points" 
+                                                                           value="${not empty qq.assignedPoints ? qq.assignedPoints : (not empty qq.points ? qq.points : (not empty qq.defaultPoints ? qq.defaultPoints : 1))}" 
+                                                                           class="points-inline-input" 
+                                                                           title="Sửa điểm trực tiếp (Enter hoặc bấm ✓ để lưu)" required>
+                                                                    <span class="points-unit">đ</span>
+                                                                    <button type="submit" class="btn-save-point" title="Lưu điểm">
+                                                                        <i class="bi bi-check-lg fw-bold"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </div>
 
                                                 <!-- Action Buttons: Edit Question & Remove -->
                                                 <div class="d-flex align-items-center gap-1.5">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-1 px-3 fw-semibold"
+                                                    <button type="button" class="btn-icon-action"
                                                             onclick="openEditQuestionDetailModal(this)"
                                                             title="Sửa nội dung câu hỏi">
-                                                        <i class="bi bi-pencil-square me-1"></i>Sửa
+                                                        <i class="bi bi-pencil-square"></i>
                                                     </button>
 
-                                                    <c:url var="removeUrl" value="/quizzes/remove-question">
-                                                        <c:param name="quizId" value="${quiz.id}"/>
-                                                        <c:param name="questionId" value="${qq.id}"/>
-                                                        <c:if test="${not empty courseId}">
-                                                            <c:param name="courseId" value="${courseId}"/>
-                                                        </c:if>
-                                                    </c:url>
-                                                    <a href="${removeUrl}" class="btn btn-sm btn-outline-danger rounded-pill py-1 px-2.5 fw-semibold" 
-                                                       onclick="return confirm('Bạn có chắc muốn gỡ câu hỏi này khỏi bài thi? (Câu hỏi vẫn được giữ nguyên an toàn trong Ngân hàng câu hỏi)');"
-                                                       title="Gỡ khỏi bài thi">
-                                                        <i class="bi bi-trash3 me-1"></i>Gỡ
-                                                    </a>
+                                                    <c:choose>
+                                                        <c:when test="${quiz.attemptCount > 0}">
+                                                            <button type="button" class="btn-icon-action text-muted"
+                                                                title="Đã có ${quiz.attemptCount} lượt làm bài của học viên (không thể gỡ câu hỏi)"
+                                                                onclick="alert('Không thể gỡ câu hỏi vì đã có ${quiz.attemptCount} lượt học viên làm bài thi này. Việc gỡ câu hỏi sẽ làm sai lệch thang điểm bài thi cũ!');">
+                                                                <i class="bi bi-lock-fill text-warning"></i>
+                                                            </button>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:url var="removeUrl" value="/quizzes/remove-question">
+                                                                <c:param name="quizId" value="${quiz.id}"/>
+                                                                <c:param name="questionId" value="${qq.id}"/>
+                                                                <c:if test="${not empty courseId}">
+                                                                    <c:param name="courseId" value="${courseId}"/>
+                                                                </c:if>
+                                                            </c:url>
+                                                            <a href="${removeUrl}" class="btn-icon-action text-danger" 
+                                                               onclick="return confirm('Bạn có chắc muốn gỡ câu hỏi này khỏi bài thi? (Câu hỏi vẫn được giữ nguyên an toàn trong Ngân hàng câu hỏi)');"
+                                                               title="Gỡ khỏi bài thi">
+                                                                <i class="bi bi-trash3"></i>
+                                                            </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </div>
                                             </div>
 
                                             <!-- Question Title / Content -->
-                                            <div class="fw-semibold text-dark mb-3 fs-6 lh-base">
+                                            <div class="fw-medium text-dark mb-3 fs-6 lh-base">
                                                 <c:out value="${qq.questionText}" />
                                             </div>
 
                                             <!-- Question Options Grid -->
                                             <c:if test="${not empty qq.options}">
-                                                <div class="row g-2 pt-2 border-top">
+                                                <div class="row g-2 pt-3 border-top">
                                                     <c:forEach var="opt" items="${qq.options}" varStatus="optStatus">
                                                         <c:set var="letter" value="${optStatus.index == 0 ? 'A' : (optStatus.index == 1 ? 'B' : (optStatus.index == 2 ? 'C' : (optStatus.index == 3 ? 'D' : optStatus.index + 1)))}" />
                                                         <div class="col-md-6">
@@ -717,7 +1111,7 @@
                                         <i class="bi bi-funnel text-muted fs-2 d-block mb-2"></i>
                                         <h6 class="fw-bold text-dark mb-1">Không tìm thấy câu hỏi phù hợp với bộ lọc</h6>
                                         <p class="text-muted small mb-2">Hãy thử tìm từ khóa khác hoặc thiết lập lại bộ lọc.</p>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearQuizQuestionSearch()">
+                                        <button type="button" class="btn-saas-outline" onclick="clearQuizQuestionSearch()">
                                             <i class="bi bi-arrow-clockwise me-1"></i>Đặt lại tìm kiếm
                                         </button>
                                     </div>
@@ -738,8 +1132,8 @@
 <!-- ======================================================= -->
 <div class="modal fade" id="pickFromBankModal" tabindex="-1" aria-labelledby="pickFromBankModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header py-3 px-4 border-bottom bg-light">
+        <div class="modal-content saas-modal">
+            <div class="modal-header saas-modal-header">
                 <div>
                     <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="pickFromBankModalLabel">
                         <span class="text-primary"><i class="bi bi-bank"></i></span>
@@ -761,7 +1155,7 @@
                             <p class="text-muted small mb-3">
                                 Chưa có câu hỏi nào được tạo trong ngân hàng câu hỏi của chương học này.
                             </p>
-                            <button type="button" class="btn btn-primary btn-sm fw-semibold rounded-3 px-3 py-2" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
+                            <button type="button" class="btn-saas-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#newQuestionModal">
                                 <i class="bi bi-plus-lg me-1"></i>Tạo câu hỏi mới ngay
                             </button>
                         </div>
@@ -802,7 +1196,7 @@
                                             <span class="badge bg-light text-dark border">
                                                 #${bStatus.index + 1}
                                             </span>
-                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                            <span class="saas-badge saas-badge-blue">
                                                 <c:choose>
                                                     <c:when test="${bq.questionType == 'SINGLE_CHOICE'}">1 Đáp án</c:when>
                                                     <c:when test="${bq.questionType == 'MULTI_CHOICE'}">Nhiều đáp án</c:when>
@@ -810,8 +1204,8 @@
                                                     <c:otherwise>${bq.questionType}</c:otherwise>
                                                 </c:choose>
                                             </span>
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                                Điểm chuẩn: ${bq.defaultPoints} đ
+                                            <span class="saas-badge saas-badge-published">
+                                                <span class="badge-dot"></span>Điểm chuẩn: ${bq.defaultPoints} đ
                                             </span>
                                         </div>
 
@@ -819,7 +1213,7 @@
                                         <div>
                                             <c:choose>
                                                 <c:when test="${isAlreadyAssigned}">
-                                                    <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1.5">
+                                                    <span class="saas-badge saas-badge-draft">
                                                         <i class="bi bi-check2-all me-1"></i>Đã trong bài thi
                                                     </span>
                                                 </c:when>
@@ -831,7 +1225,7 @@
                                                         <c:if test="${not empty courseId}">
                                                             <input type="hidden" name="courseId" value="${courseId}">
                                                         </c:if>
-                                                        <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2.5 py-1 rounded-3 shadow-sm">
+                                                        <button type="submit" class="btn-saas-primary py-1 px-2.5">
                                                             <i class="bi bi-plus-lg me-1"></i>Thêm vào Quiz
                                                         </button>
                                                     </form>
@@ -840,7 +1234,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="fw-semibold text-dark mb-2 small lh-base">
+                                    <div class="fw-medium text-dark mb-2 small lh-base">
                                         <c:out value="${bq.questionText}" />
                                     </div>
 
@@ -867,8 +1261,8 @@
                 </c:choose>
             </div>
 
-            <div class="modal-footer py-2.5 px-4 bg-light border-top">
-                <button type="button" class="btn btn-secondary btn-sm fw-semibold rounded-3" data-bs-dismiss="modal">Đóng</button>
+            <div class="modal-footer saas-modal-footer">
+                <button type="button" class="btn-saas-outline" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
@@ -879,7 +1273,7 @@
 <!-- ======================================================= -->
 <div class="modal fade" id="newQuestionModal" tabindex="-1" aria-labelledby="newQuestionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content saas-modal">
             <form action="${pageContext.request.contextPath}/quizzes/save-question" method="POST" id="newQuestionForm">
                 <input type="hidden" name="moduleId" value="${quiz.moduleId}">
                 <input type="hidden" name="quizId" value="${quiz.id}">
@@ -887,7 +1281,7 @@
                     <input type="hidden" name="courseId" value="${courseId}">
                 </c:if>
 
-                <div class="modal-header py-3 px-4 bg-light border-bottom">
+                <div class="modal-header saas-modal-header">
                     <div>
                         <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="newQuestionModalLabel">
                             <span class="text-success"><i class="bi bi-patch-plus-fill"></i></span>
@@ -901,35 +1295,35 @@
                 <div class="modal-body p-4">
                     <!-- Question Text -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">
+                        <label class="saas-form-label">
                             Nội dung câu hỏi <span class="text-danger">*</span>
                         </label>
-                        <textarea name="questionText" rows="3" class="form-control rounded-3" required placeholder="Nhập nội dung câu hỏi trắc nghiệm ở đây..."></textarea>
+                        <textarea name="questionText" rows="3" class="form-control saas-form-control" required placeholder="Nhập nội dung câu hỏi trắc nghiệm ở đây..."></textarea>
                     </div>
 
                     <!-- Type and Points -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Loại câu hỏi</label>
-                            <select name="questionType" id="newQuestionTypeSelect" class="form-select rounded-3" onchange="handleQuestionTypeChange(this.value)">
+                            <label class="saas-form-label">Loại câu hỏi</label>
+                            <select name="questionType" id="newQuestionTypeSelect" class="form-select saas-form-control" onchange="handleQuestionTypeChange(this.value)">
                                 <option value="SINGLE_CHOICE" selected>Trắc nghiệm 1 đáp án (Single Choice)</option>
                                 <option value="TRUE_FALSE">Đúng / Sai (True / False)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">
+                            <label class="saas-form-label">
                                 Điểm số của câu hỏi <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <input type="number" step="0.5" min="0.5" name="defaultPoints" id="newQuestionPointsInput" value="1.0" class="form-control rounded-start-3" required>
-                                <span class="input-group-text bg-light text-muted rounded-end-3">điểm</span>
+                                <input type="number" step="0.5" min="0.5" name="defaultPoints" id="newQuestionPointsInput" value="1.0" class="form-control saas-form-control rounded-start-3" required>
+                                <span class="input-group-text bg-light text-muted">điểm</span>
                             </div>
                             <div class="form-text small text-muted">Điểm số phải lớn hơn 0 (ví dụ: 1.0, 2.0).</div>
                         </div>
                     </div>
 
                     <!-- Options Area -->
-                    <label class="form-label small fw-semibold text-primary mb-2 d-flex align-items-center gap-1">
+                    <label class="saas-form-label text-primary mb-2 d-flex align-items-center gap-1">
                         <i class="bi bi-ui-radios"></i>
                         <span>Các phương án trả lời (Tích chọn radio vào đáp án đúng):</span>
                     </label>
@@ -973,9 +1367,9 @@
                     </div>
                 </div>
 
-                <div class="modal-footer py-2.5 px-4 bg-light border-top">
-                    <button type="button" class="btn btn-secondary btn-sm fw-semibold rounded-3" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary btn-sm fw-semibold rounded-3 px-3 shadow-sm">
+                <div class="modal-footer saas-modal-footer">
+                    <button type="button" class="btn-saas-outline" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn-saas-primary">
                         <i class="bi bi-save me-1"></i>Tạo câu hỏi và gán vào bài thi
                     </button>
                 </div>
@@ -984,15 +1378,14 @@
     </div>
 </div>
 
-
 <!-- ======================================================= -->
 <!-- MODAL 4: XÁC NHẬN XÓA BÀI THI                            -->
 <!-- ======================================================= -->
 <div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content saas-modal">
             <div class="modal-body text-center p-4">
-                <div class="bg-danger-subtle text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 1.75rem;">
+                <div class="bg-danger-subtle text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 52px; height: 52px; font-size: 1.35rem;">
                     <i class="bi bi-trash3-fill"></i>
                 </div>
                 <h5 class="fw-bold text-dark mb-1">Xác nhận xóa bài thi?</h5>
@@ -1000,7 +1393,7 @@
                     Thao tác này sẽ xóa bài thi <strong>"${quiz.title}"</strong>. Các câu hỏi trong ngân hàng vẫn được giữ nguyên an toàn.
                 </p>
                 <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-secondary btn-sm fw-semibold rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-saas-outline" data-bs-dismiss="modal">Hủy</button>
                     <c:url var="deleteQuizUrl" value="/quizzes/delete">
                         <c:param name="id" value="${quiz.id}"/>
                         <c:if test="${not empty courseId}">
@@ -1024,7 +1417,7 @@
 <!-- ======================================================= -->
 <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content saas-modal">
             <form action="${pageContext.request.contextPath}/quizzes/save-question" method="POST" id="editQuestionForm">
                 <input type="hidden" name="id" id="editQId" value="">
                 <input type="hidden" name="moduleId" value="${quiz.moduleId}">
@@ -1033,10 +1426,10 @@
                     <input type="hidden" name="courseId" value="${courseId}">
                 </c:if>
 
-                <div class="modal-header py-3 px-4 bg-light border-bottom">
+                <div class="modal-header saas-modal-header">
                     <div>
                         <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="editQuestionModalLabel">
-                            <span class="text-warning"><i class="bi bi-pencil-square"></i></span>
+                            <span class="text-primary"><i class="bi bi-pencil-square"></i></span>
                             Chỉnh sửa câu hỏi
                         </h5>
                         <small class="text-muted">Thay đổi sẽ cập nhật câu hỏi trong ngân hàng và đồng bộ với bài thi này.</small>
@@ -1047,35 +1440,35 @@
                 <div class="modal-body p-4">
                     <!-- Question Text -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">
+                        <label class="saas-form-label">
                             Nội dung câu hỏi <span class="text-danger">*</span>
                         </label>
-                        <textarea name="questionText" id="editQText" rows="3" class="form-control rounded-3" required placeholder="Nhập nội dung câu hỏi..."></textarea>
+                        <textarea name="questionText" id="editQText" rows="3" class="form-control saas-form-control" required placeholder="Nhập nội dung câu hỏi..."></textarea>
                     </div>
 
                     <!-- Type and Points -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Loại câu hỏi</label>
-                            <select name="questionType" id="editQType" class="form-select rounded-3" onchange="handleEditQTypeChange(this.value)">
+                            <label class="saas-form-label">Loại câu hỏi</label>
+                            <select name="questionType" id="editQType" class="form-select saas-form-control" onchange="handleEditQTypeChange(this.value)">
                                 <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án (Single Choice)</option>
                                 <option value="TRUE_FALSE">Đúng / Sai (True / False)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">
+                            <label class="saas-form-label">
                                 Điểm mặc định <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <input type="number" step="0.5" min="0.5" name="defaultPoints" id="editQPoints" value="1.0" class="form-control rounded-start-3" required>
-                                <span class="input-group-text bg-light text-muted rounded-end-3">điểm</span>
+                                <input type="number" step="0.5" min="0.5" name="defaultPoints" id="editQPoints" value="1.0" class="form-control saas-form-control rounded-start-3" required>
+                                <span class="input-group-text bg-light text-muted">điểm</span>
                             </div>
                             <div class="form-text small text-muted">Điểm cưỡng bức sẽ được giữ nguyên trong bài thi này.</div>
                         </div>
                     </div>
 
                     <!-- Options -->
-                    <label class="form-label small fw-semibold text-warning mb-2 d-flex align-items-center gap-1">
+                    <label class="saas-form-label text-primary mb-2 d-flex align-items-center gap-1">
                         <i class="bi bi-ui-radios"></i>
                         <span>Các phương án trả lời (Tích chọn radio vào đáp án đúng):</span>
                     </label>
@@ -1086,7 +1479,7 @@
                             <div class="input-group-text bg-white border-end-0">
                                 <input class="form-check-input mt-0" type="radio" name="correctOption" value="0" checked title="Chọn làm đáp án đúng">
                             </div>
-                            <span class="input-group-text bg-light fw-bold text-warning border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">A</span>
+                            <span class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">A</span>
                             <input type="text" name="optionText" id="editOptTextA" class="form-control border-start-0" placeholder="Đáp án A..." required>
                         </div>
 
@@ -1095,7 +1488,7 @@
                             <div class="input-group-text bg-white border-end-0">
                                 <input class="form-check-input mt-0" type="radio" name="correctOption" value="1" title="Chọn làm đáp án đúng">
                             </div>
-                            <span class="input-group-text bg-light fw-bold text-warning border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">B</span>
+                            <span class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">B</span>
                             <input type="text" name="optionText" id="editOptTextB" class="form-control border-start-0" placeholder="Đáp án B..." required>
                         </div>
 
@@ -1104,7 +1497,7 @@
                             <div class="input-group-text bg-white border-end-0">
                                 <input class="form-check-input mt-0" type="radio" name="correctOption" value="2" title="Chọn làm đáp án đúng">
                             </div>
-                            <span class="input-group-text bg-light fw-bold text-warning border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">C</span>
+                            <span class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">C</span>
                             <input type="text" name="optionText" id="editOptTextC" class="form-control border-start-0" placeholder="Đáp án C (tùy chọn)...">
                         </div>
 
@@ -1113,15 +1506,15 @@
                             <div class="input-group-text bg-white border-end-0">
                                 <input class="form-check-input mt-0" type="radio" name="correctOption" value="3" title="Chọn làm đáp án đúng">
                             </div>
-                            <span class="input-group-text bg-light fw-bold text-warning border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">D</span>
+                            <span class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0" style="min-width: 40px; justify-content: center;">D</span>
                             <input type="text" name="optionText" id="editOptTextD" class="form-control border-start-0" placeholder="Đáp án D (tùy chọn)...">
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-footer py-2.5 px-4 bg-light border-top">
-                    <button type="button" class="btn btn-secondary btn-sm fw-semibold rounded-3" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-warning btn-sm fw-semibold rounded-3 px-3 shadow-sm text-dark">
+                <div class="modal-footer saas-modal-footer">
+                    <button type="button" class="btn-saas-outline" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn-saas-primary">
                         <i class="bi bi-save me-1"></i>Lưu thay đổi câu hỏi
                     </button>
                 </div>

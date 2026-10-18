@@ -43,7 +43,8 @@ public class LessonProgressDao {
         return list;
     }
 
-    public Optional<LessonProgress> findByRegistrationAndLesson(Connection con, long registrationId, long lessonId) throws SQLException {
+    public Optional<LessonProgress> findByRegistrationAndLesson(Connection con, long registrationId, long lessonId)
+            throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_REG_AND_LESSON)) {
             ps.setLong(1, registrationId);
             ps.setLong(2, lessonId);

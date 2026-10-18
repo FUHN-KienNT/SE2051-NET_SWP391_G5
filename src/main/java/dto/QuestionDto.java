@@ -14,6 +14,8 @@ public class QuestionDto {
     private BigDecimal defaultPoints;
     private BigDecimal assignedPoints;
     private Integer quizOrderIndex;
+    private int answerCount = 0;
+    private int assignmentCount = 0;
     private List<AnswerOptionDto> options = new ArrayList<>();
 
     public QuestionDto() {
@@ -110,5 +112,25 @@ public class QuestionDto {
 
     public void setPoints(BigDecimal points) {
         this.assignedPoints = points;
+    }
+
+    public int getAnswerCount() {
+        return answerCount;
+    }
+
+    public void setAnswerCount(int answerCount) {
+        this.answerCount = answerCount;
+    }
+
+    public int getAssignmentCount() {
+        return assignmentCount;
+    }
+
+    public void setAssignmentCount(int assignmentCount) {
+        this.assignmentCount = assignmentCount;
+    }
+
+    public boolean isDeletable() {
+        return answerCount == 0 && assignmentCount == 0;
     }
 }

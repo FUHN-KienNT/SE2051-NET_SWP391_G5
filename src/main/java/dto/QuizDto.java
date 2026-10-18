@@ -11,6 +11,7 @@ public class QuizDto {
     private BigDecimal passScore;
     private Integer timeLimitMinutes;
     private int orderIndex;
+    private int attemptCount = 0;
     private List<QuestionDto> questions = new ArrayList<>();
 
     public QuizDto() {
@@ -107,5 +108,17 @@ public class QuizDto {
             return BigDecimal.ZERO;
         }
         return total.multiply(passScore).divide(BigDecimal.valueOf(100), 1, java.math.RoundingMode.HALF_UP);
+    }
+
+    public int getAttemptCount() {
+        return attemptCount;
+    }
+
+    public void setAttemptCount(int attemptCount) {
+        this.attemptCount = attemptCount;
+    }
+
+    public boolean isDeletable() {
+        return attemptCount == 0;
     }
 }

@@ -246,14 +246,25 @@ public class QuizServlet extends HttpServlet {
         String quizIdStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
-        if (quizIdStr != null) {
-            quizService.deleteQuiz(Long.parseLong(quizIdStr));
-        }
-        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-            resp.sendRedirect(
-                    req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&success=deleted");
-        } else {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&success=deleted");
+        try {
+            if (quizIdStr != null) {
+                quizService.deleteQuiz(Long.parseLong(quizIdStr));
+            }
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                resp.sendRedirect(
+                        req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&success=deleted");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&success=deleted");
+            }
+        } catch (Exception e) {
+            String redirectUrl = req.getContextPath() + "/quizzes/list?";
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                redirectUrl += "courseId=" + courseIdStr.trim();
+            } else {
+                redirectUrl += "moduleId=" + moduleIdStr;
+            }
+            resp.sendRedirect(redirectUrl + "&error="
+                    + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
@@ -313,16 +324,27 @@ public class QuizServlet extends HttpServlet {
         String qIdStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
-        if (qIdStr != null) {
-            quizService.deleteQuestion(Long.parseLong(qIdStr));
-        }
-        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim()
+        try {
+            if (qIdStr != null) {
+                quizService.deleteQuestion(Long.parseLong(qIdStr));
+            }
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim()
+                        + "&tab=questions&success=question_deleted");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr
                     + "&tab=questions&success=question_deleted");
-            return;
+        } catch (Exception e) {
+            String redirectUrl = req.getContextPath() + "/quizzes/list?";
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                redirectUrl += "courseId=" + courseIdStr.trim() + "&tab=questions";
+            } else {
+                redirectUrl += "moduleId=" + moduleIdStr + "&tab=questions";
+            }
+            resp.sendRedirect(redirectUrl + "&error="
+                    + java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
         }
-        resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr
-                + "&tab=questions&success=question_deleted");
     }
 
     private void assignQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {

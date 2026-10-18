@@ -14,11 +14,13 @@ public class LessonProgress {
     public LessonProgress() {
     }
 
-    public LessonProgress(Long id, Long registrationId, Long lessonId, LessonProgressStatus status, OffsetDateTime completedAt) {
+    public LessonProgress(Long id, Long registrationId, Long lessonId, LessonProgressStatus status,
+            OffsetDateTime completedAt) {
         this(id, registrationId, lessonId, status, completedAt, null);
     }
 
-    public LessonProgress(Long id, Long registrationId, Long lessonId, LessonProgressStatus status, OffsetDateTime completedAt, String userNote) {
+    public LessonProgress(Long id, Long registrationId, Long lessonId, LessonProgressStatus status,
+            OffsetDateTime completedAt, String userNote) {
         this.id = id;
         this.registrationId = registrationId;
         this.lessonId = lessonId;
