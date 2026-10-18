@@ -507,24 +507,20 @@
             </div>
 
             <div class="topic-pills-row">
-                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Web" class="topic-pill">
-                    Phát triển Web Fullstack
-                </a>
-                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=SQL" class="topic-pill">
-                    Cơ sở dữ liệu & Tối ưu hóa
-                </a>
-                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Java" class="topic-pill">
-                    Lập trình Cốt lõi
-                </a>
-                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Data" class="topic-pill">
-                    Trí tuệ nhân tạo & Data
-                </a>
-                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Cloud" class="topic-pill">
-                    DevOps & Điện toán Đám mây
-                </a>
-                <a href="${pageContext.request.contextPath}/courses/catalog?keyword=Mobile" class="topic-pill">
-                    Lập trình Mobile
-                </a>
+                <c:choose>
+                    <c:when test="${not empty categories}">
+                        <c:forEach var="cat" items="${categories}">
+                            <a href="${pageContext.request.contextPath}/courses/catalog?categoryId=${cat.id}" class="topic-pill">
+                                <c:out value="${cat.name}"/>
+                            </a>
+                        </c:forEach>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/courses/catalog" class="topic-pill">
+                            Tất cả chủ đề
+                        </a>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
     </section>

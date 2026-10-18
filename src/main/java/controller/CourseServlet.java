@@ -7,6 +7,7 @@ import dao.ModuleDao;
 import dao.RegistrationDao;
 import dto.CourseDto;
 import dto.ModuleDto;
+import dto.SettingDto;
 import dto.UserDto;
 import entity.enums.LessonProgressStatus;
 import jakarta.servlet.ServletException;
@@ -68,10 +69,19 @@ public class CourseServlet extends HttpServlet {
     private void showCatalog(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String keyword = req.getParameter("keyword");
         String categoryIdStr = req.getParameter("categoryId");
-        Long categoryId = (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) ? Long.parseLong(categoryIdStr)
-                : null;
+        Long categoryId = null;
+        if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
+            try {
+                categoryId = Long.parseLong(categoryIdStr.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
         List<CourseDto> list = courseService.searchPublished(keyword, categoryId);
+        List<SettingDto> categories = courseService.getActiveCategories();
         req.setAttribute("courses", list);
+        req.setAttribute("categories", categories);
+        req.setAttribute("keyword", keyword);
+        req.setAttribute("selectedCategoryId", categoryId);
         req.getRequestDispatcher("/WEB-INF/views/course/catalog.jsp").forward(req, resp);
     }
 

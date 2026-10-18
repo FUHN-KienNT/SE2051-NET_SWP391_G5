@@ -6,6 +6,7 @@ import dao.LessonProgressDao;
 import dao.ModuleDao;
 import dao.RegistrationDao;
 import dto.CourseDto;
+import dto.SettingDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,7 +40,9 @@ public class HomeServlet extends HttpServlet {
 
     private void showHome(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<CourseDto> courses = courseService.searchPublished(null, null);
+        List<SettingDto> categories = courseService.getActiveCategories();
         req.setAttribute("courses", courses);
+        req.setAttribute("categories", categories);
         forward("/WEB-INF/views/home/index.jsp", req, resp);
     }
 
@@ -49,8 +52,11 @@ public class HomeServlet extends HttpServlet {
         Long categoryId = (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) ? Long.parseLong(categoryIdStr) : null;
 
         List<CourseDto> results = courseService.searchPublished(keyword, categoryId);
+        List<SettingDto> categories = courseService.getActiveCategories();
         req.setAttribute("courses", results);
+        req.setAttribute("categories", categories);
         req.setAttribute("keyword", keyword);
+        req.setAttribute("selectedCategoryId", categoryId);
         forward("/WEB-INF/views/home/index.jsp", req, resp);
     }
 

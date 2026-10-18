@@ -13,13 +13,37 @@
             </div>
             <div class="col-md-4">
                 <form action="${pageContext.request.contextPath}/courses/catalog" method="GET">
+                    <c:if test="${not empty selectedCategoryId}">
+                        <input type="hidden" name="categoryId" value="${selectedCategoryId}">
+                    </c:if>
                     <div class="input-group">
-                        <input type="text" name="keyword" value="${param.keyword}" class="form-control" placeholder="Tìm theo tên khóa học...">
+                        <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="Tìm theo tên khóa học...">
                         <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                        <c:if test="${not empty keyword || not empty selectedCategoryId}">
+                            <a href="${pageContext.request.contextPath}/courses/catalog" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        </c:if>
                     </div>
                 </form>
             </div>
         </div>
+
+        <c:if test="${not empty categories}">
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a href="${pageContext.request.contextPath}/courses/catalog${not empty keyword ? '?keyword='.concat(keyword) : ''}" 
+                   class="btn btn-sm ${empty selectedCategoryId ? 'btn-primary' : 'btn-outline-secondary'} rounded-pill px-3">
+                    Tất cả
+                </a>
+                <c:forEach var="cat" items="${categories}">
+                    <c:set var="isActiveCat" value="${selectedCategoryId == cat.id}" />
+                    <a href="${pageContext.request.contextPath}/courses/catalog?categoryId=${cat.id}${not empty keyword ? '&keyword='.concat(keyword) : ''}" 
+                       class="btn btn-sm ${isActiveCat ? 'btn-primary' : 'btn-outline-secondary'} rounded-pill px-3">
+                        <c:out value="${cat.name}"/>
+                    </a>
+                </c:forEach>
+            </div>
+        </c:if>
 
         <c:choose>
             <c:when test="${empty courses}">

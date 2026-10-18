@@ -19,10 +19,12 @@ import entity.Module;
 import entity.Quiz;
 import entity.Registration;
 import entity.User;
+import dto.SettingDto;
 import dto.UserDto;
 import entity.enums.CourseStatus;
 import entity.enums.LessonProgressStatus;
 import entity.enums.RegistrationStatus;
+import entity.enums.SettingStatus;
 import entity.enums.SettingType;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -59,6 +61,33 @@ public class CourseService {
             return dtos;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tìm kiếm khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Lấy danh sách các danh mục khóa học đang ACTIVE từ bảng settings trong CSDL.
+     */
+    public List<SettingDto> getActiveCategories() {
+        try (Connection con = DbConnection.getConnection()) {
+            SettingDao settingDao = new SettingDao();
+            List<entity.Setting> list = settingDao.findByType(con, SettingType.COURSE_CATEGORY);
+            List<SettingDto> result = new ArrayList<>();
+            for (entity.Setting s : list) {
+                if (s.getStatus() == SettingStatus.ACTIVE) {
+                    SettingDto dto = new SettingDto();
+                    dto.setId(s.getId());
+                    dto.setType(s.getType());
+                    dto.setName(s.getName());
+                    dto.setValue(s.getValue());
+                    dto.setPriority(s.getPriority());
+                    dto.setStatus(s.getStatus());
+                    dto.setDescription(s.getDescription());
+                    result.add(dto);
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            return new ArrayList<>();
         }
     }
 
