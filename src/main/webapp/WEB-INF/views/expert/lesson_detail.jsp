@@ -81,14 +81,9 @@
 
                         <c:set var="curModId" value="${selectedModuleId != null ? selectedModuleId : (lesson != null ? lesson.moduleId : '')}" />
                         <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label small fw-semibold mb-0" for="lessonModuleId">
-                                    <i class="bi bi-folder2-open text-primary me-1"></i>Thuộc Chương học (Module) <span class="text-danger">*</span>
-                                </label>
-                                <span class="text-muted small" style="font-size: 11px;">
-                                    <i class="bi bi-arrow-left-right me-1"></i>Có thể chuyển bài sang chương khác tại đây
-                                </span>
-                            </div>
+                            <label class="form-label small fw-semibold mb-1" for="lessonModuleId">
+                                <i class="bi bi-folder2-open text-primary me-1"></i>Thuộc Chương học (Module) <span class="text-danger">*</span>
+                            </label>
                             <c:choose>
                                 <c:when test="${not empty course.modules}">
                                     <select name="moduleId" id="lessonModuleId" class="form-select saas-form-control" required onchange="handleModuleSelectChange(this.value)">

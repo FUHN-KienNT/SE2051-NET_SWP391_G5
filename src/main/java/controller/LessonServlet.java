@@ -114,9 +114,6 @@ public class LessonServlet extends HttpServlet {
             case "delete-lesson":
                 deleteLesson(req, resp);
                 break;
-            case "move-lesson":
-                moveLesson(req, resp);
-                break;
             case "save-module":
                 saveModule(req, resp);
                 break;
@@ -1038,42 +1035,6 @@ public class LessonServlet extends HttpServlet {
             SessionUtil.setFlashError(req, e.getMessage());
         }
         resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + (courseIdStr != null ? courseIdStr : ""));
-    }
-
-    /**
-     * Di chuyển bài học sang một Chương học khác:
-     * - [IDOR Defense]: Kiểm tra quyền sở hữu bài học và chương học đích.
-     */
-    private void moveLesson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        UserDto currentUser = SessionUtil.getCurrentUser(req);
-        if (currentUser == null) {
-            resp.sendRedirect(req.getContextPath() + "/auth/login");
-            return;
-        }
-
-        String courseIdStr = req.getParameter("courseId");
-        String lessonIdStr = req.getParameter("lessonId");
-        String targetModuleIdStr = req.getParameter("targetModuleId");
-
-        if (courseIdStr == null || lessonIdStr == null || targetModuleIdStr == null) {
-            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
-            return;
-        }
-
-        try {
-            long lessonId = Long.parseLong(lessonIdStr.trim());
-            long targetModuleId = Long.parseLong(targetModuleIdStr.trim());
-
-            // [IDOR Defense]: Kiểm tra quyền sở hữu bài học và chương học đích
-            courseService.checkLessonOwnership(lessonId, currentUser);
-            courseService.checkModuleOwnership(targetModuleId, currentUser);
-
-            courseService.moveLessonToModule(lessonId, targetModuleId);
-            SessionUtil.setFlashSuccess(req, "Đã di chuyển bài học sang chương mới thành công!");
-        } catch (Exception e) {
-            SessionUtil.setFlashError(req, "Lỗi di chuyển bài học: " + e.getMessage());
-        }
-        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
     }
 
     /**

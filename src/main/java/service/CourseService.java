@@ -788,42 +788,6 @@ public class CourseService {
         }
     }
 
-    /**
-     * Di chuyển một bài học sang một Module (Chương học) khác và tự động đánh số thứ tự tiếp nối:
-     */
-    public void moveLessonToModule(long lessonId, long targetModuleId) {
-        try (Connection con = DbConnection.getConnection()) {
-            con.setAutoCommit(false);
-            try {
-                Lesson l = lessonDao.findById(con, lessonId)
-                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học cần di chuyển."));
-
-                moduleDao.findById(con, targetModuleId)
-                        .orElseThrow(() -> new IllegalArgumentException("Chương học đích không tồn tại."));
-
-                if (l.getModuleId() == targetModuleId) {
-                    return; // Đã ở cùng module, không cần di chuyển
-                }
-
-                List<Lesson> targetLessons = lessonDao.findByModuleId(con, targetModuleId);
-                int nextOrder = targetLessons.size() + 1;
-
-                l.setModuleId(targetModuleId);
-                l.setOrderIndex(nextOrder);
-                lessonDao.update(con, l);
-
-                con.commit();
-            } catch (Exception ex) {
-                DbConnection.rollbackQuietly(con);
-                throw ex;
-            } finally {
-                con.setAutoCommit(true);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi di chuyển bài học: " + e.getMessage(), e);
-        }
-    }
-
     public int saveBatchLessons(long courseId, Long moduleId, List<LessonDto> lessons) {
         return saveBatchLessons(courseId, moduleId, null, lessons);
     }
