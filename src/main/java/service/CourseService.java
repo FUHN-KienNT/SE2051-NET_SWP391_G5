@@ -781,49 +781,92 @@ public class CourseService {
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
-                long targetModuleId;
                 if (moduleId != null && moduleId > 0) {
-                    targetModuleId = moduleId;
-                } else {
-                    List<Module> existingModules = moduleDao.findByCourseId(con, courseId);
-                    if (newModuleTitle != null && !newModuleTitle.trim().isEmpty()) {
-                        Module newModule = new Module();
-                        newModule.setCourseId(courseId);
-                        newModule.setTitle(newModuleTitle.trim());
-                        newModule.setOrderIndex(existingModules.size() + 1);
-                        targetModuleId = moduleDao.insert(con, newModule);
-                    } else if (!existingModules.isEmpty()) {
-                        // Thêm tiếp vào module hiện có
-                        targetModuleId = existingModules.get(existingModules.size() - 1).getId();
-                    } else {
-                        // Tự động tạo container bài học chung nếu khóa học chưa có chương nào
-                        Module defaultModule = new Module();
-                        defaultModule.setCourseId(courseId);
-                        defaultModule.setTitle("Danh sách bài học");
-                        defaultModule.setOrderIndex(1);
-                        targetModuleId = moduleDao.insert(con, defaultModule);
+                    long targetModuleId = moduleId;
+                    List<Lesson> currentLessons = lessonDao.findByModuleId(con, targetModuleId);
+                    int startOrder = currentLessons.size() + 1;
+                    int count = 0;
+                    for (LessonDto dto : lessons) {
+                        Lesson l = new Lesson();
+                        l.setModuleId(targetModuleId);
+                        l.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle().trim()
+                                : ("Bài " + (startOrder + count) + ": Bài giảng"));
+                        l.setContent(dto.getContent() != null ? dto.getContent() : "");
+                        l.setVideoUrl(dto.getVideoUrl());
+                        l.setDocumentUrl(dto.getDocumentUrl());
+                        l.setOrderIndex(startOrder + count);
+                        lessonDao.insert(con, l);
+                        count++;
                     }
+                    con.commit();
+                    return count;
+                } else if (newModuleTitle != null && !newModuleTitle.trim().isEmpty()) {
+                    List<Module> existingModules = moduleDao.findByCourseId(con, courseId);
+                    Module newModule = new Module();
+                    newModule.setCourseId(courseId);
+                    newModule.setTitle(newModuleTitle.trim());
+                    newModule.setOrderIndex(existingModules.size() + 1);
+                    long targetModuleId = moduleDao.insert(con, newModule);
+
+                    int count = 0;
+                    for (LessonDto dto : lessons) {
+                        Lesson l = new Lesson();
+                        l.setModuleId(targetModuleId);
+                        l.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle().trim()
+                                : ("Bài " + (count + 1) + ": Bài giảng"));
+                        l.setContent(dto.getContent() != null ? dto.getContent() : "");
+                        l.setVideoUrl(dto.getVideoUrl());
+                        l.setDocumentUrl(dto.getDocumentUrl());
+                        l.setOrderIndex(count + 1);
+                        lessonDao.insert(con, l);
+                        count++;
+                    }
+                    con.commit();
+                    return count;
+                } else {
+                    // [GEMINI AI & HEURISTIC MODULE GROUPING]:
+                    // Tự động phân tích danh sách tiêu đề bài học và chia thành các Chương học (Modules) hợp lý
+                    List<Module> existingModules = moduleDao.findByCourseId(con, courseId);
+                    Course c = courseDao.findById(con, courseId).orElse(null);
+                    String courseTitle = c != null ? c.getTitle() : "Khóa học";
+
+                    List<String> lessonTitles = new ArrayList<>();
+                    for (LessonDto dto : lessons) {
+                        lessonTitles.add(dto.getTitle() != null ? dto.getTitle() : "");
+                    }
+
+                    List<GeminiAiUtil.ModuleGroup> groups = GeminiAiUtil.groupLessonsIntoModules(courseTitle, lessonTitles);
+                    int currentModuleOrder = existingModules.size();
+                    int count = 0;
+
+                    for (GeminiAiUtil.ModuleGroup group : groups) {
+                        Module mod = new Module();
+                        mod.setCourseId(courseId);
+                        mod.setTitle(group.getModuleTitle());
+                        mod.setOrderIndex(++currentModuleOrder);
+                        long targetModuleId = moduleDao.insert(con, mod);
+
+                        int lessonInModuleOrder = 1;
+                        for (int idx : group.getLessonIndices()) {
+                            if (idx >= 1 && idx <= lessons.size()) {
+                                LessonDto dto = lessons.get(idx - 1);
+                                Lesson l = new Lesson();
+                                l.setModuleId(targetModuleId);
+                                l.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle().trim()
+                                        : ("Bài " + (count + 1) + ": Bài giảng"));
+                                l.setContent(dto.getContent() != null ? dto.getContent() : "");
+                                l.setVideoUrl(dto.getVideoUrl());
+                                l.setDocumentUrl(dto.getDocumentUrl());
+                                l.setOrderIndex(lessonInModuleOrder++);
+                                lessonDao.insert(con, l);
+                                count++;
+                            }
+                        }
+                    }
+
+                    con.commit();
+                    return count;
                 }
-
-                List<Lesson> currentLessons = lessonDao.findByModuleId(con, targetModuleId);
-                int startOrder = currentLessons.size() + 1;
-
-                int count = 0;
-                for (LessonDto dto : lessons) {
-                    Lesson l = new Lesson();
-                    l.setModuleId(targetModuleId);
-                    l.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle().trim()
-                            : ("Bài " + (startOrder + count) + ": Bài giảng"));
-                    l.setContent(dto.getContent() != null ? dto.getContent() : "");
-                    l.setVideoUrl(dto.getVideoUrl());
-                    l.setDocumentUrl(dto.getDocumentUrl());
-                    l.setOrderIndex(startOrder + count);
-                    lessonDao.insert(con, l);
-                    count++;
-                }
-
-                con.commit();
-                return count;
             } catch (Exception ex) {
                 DbConnection.rollbackQuietly(con);
                 throw ex;

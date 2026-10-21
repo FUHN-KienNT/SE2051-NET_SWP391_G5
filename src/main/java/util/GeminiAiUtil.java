@@ -8,6 +8,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -92,6 +93,24 @@ public final class GeminiAiUtil {
 
         public String getSuggestedDescription() {
             return suggestedDescription;
+        }
+    }
+
+    public static class ModuleGroup {
+        private final String moduleTitle;
+        private final List<Integer> lessonIndices;
+
+        public ModuleGroup(String moduleTitle, List<Integer> lessonIndices) {
+            this.moduleTitle = moduleTitle;
+            this.lessonIndices = lessonIndices != null ? lessonIndices : new ArrayList<>();
+        }
+
+        public String getModuleTitle() {
+            return moduleTitle;
+        }
+
+        public List<Integer> getLessonIndices() {
+            return lessonIndices;
         }
     }
 
@@ -222,6 +241,128 @@ public final class GeminiAiUtil {
             LOGGER.log(Level.WARNING, "Lỗi khi gọi Gemini AI sinh mô tả khóa học: {0}", e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Tự động đọc danh sách tiêu đề bài học và dùng Gemini AI để gom nhóm vào các Module (Chương học)
+     * hợp lý và khoa học theo đúng tiến trình sư phạm:
+     * @param courseTitle Tiêu đề khóa học
+     * @param lessonTitles Danh sách tiêu đề các bài học theo thứ tự 1..N
+     * @return Danh sách các ModuleGroup (chứa tên module và danh sách chỉ mục bài học 1-based)
+     */
+    public static List<ModuleGroup> groupLessonsIntoModules(String courseTitle, List<String> lessonTitles) {
+        if (lessonTitles == null || lessonTitles.isEmpty()) {
+            return new ArrayList<>();
+        }
+        int total = lessonTitles.size();
+        if (total <= 4) {
+            List<Integer> all = new ArrayList<>();
+            for (int i = 1; i <= total; i++) all.add(i);
+            List<ModuleGroup> single = new ArrayList<>();
+            single.add(new ModuleGroup("Chương 1: Tổng quan & Bài học", all));
+            return single;
+        }
+
+        if (isAvailable()) {
+            try {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Bạn là chuyên gia thiết kế chương trình học (Curriculum Designer).\n");
+                sb.append("Khóa học: \"").append(escapeJson(courseTitle != null ? courseTitle : "Khóa học")).append("\"\n");
+                sb.append("Danh sách ").append(total).append(" bài học theo đúng thứ tự:\n");
+                for (int i = 0; i < total; i++) {
+                    sb.append(i + 1).append(". ").append(escapeJson(lessonTitles.get(i))).append("\n");
+                }
+                sb.append("\nNhiệm vụ: Phân tích tiêu đề các bài học và gom nhóm các bài học theo đúng thứ tự thành các Chương học (Module) logic, khoa học (thông thường từ 2 đến 6 chương, mỗi chương có từ 3 đến 8 bài). Tuyệt đối không xáo trộn thứ tự bài học.\n");
+                sb.append("Tên mỗi chương bắt đầu bằng 'Chương X: <Tên chủ đề ngắn gọn, súc tích>'.\n");
+                sb.append("Chỉ trả về JSON thuần định dạng mảng (không markdown, không giải thích):\n");
+                sb.append("[\n  {\"moduleTitle\": \"Chương 1: ...\", \"lessonIndices\": [1, 2, 3]},\n  {\"moduleTitle\": \"Chương 2: ...\", \"lessonIndices\": [4, 5, 6]}\n]\n");
+                sb.append("Lưu ý: lessonIndices là mảng số thứ tự bài học từ 1 đến ").append(total).append(". Mọi bài học phải thuộc đúng 1 chương.");
+
+                String requestBody = "{"
+                        + "\"contents\":[{\"parts\":[{\"text\":\"" + escapeJson(sb.toString()) + "\"}]}],"
+                        + "\"generationConfig\":{\"responseMimeType\":\"application/json\",\"thinkingConfig\":{\"thinkingBudget\":0},\"temperature\":0.2}"
+                        + "}";
+
+                String[] candidateModels = MODEL.equals("gemini-2.5-flash-lite")
+                        ? new String[]{"gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-flash-latest"}
+                        : new String[]{MODEL, "gemini-2.5-flash-lite"};
+
+                for (String modelName : candidateModels) {
+                    String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + API_KEY;
+                    HttpRequest req = HttpRequest.newBuilder()
+                            .uri(URI.create(url))
+                            .header("Content-Type", "application/json")
+                            .timeout(Duration.ofSeconds(TIMEOUT_SECONDS + 2))
+                            .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
+                            .build();
+
+                    HttpResponse<String> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                    if (resp.statusCode() == 200) {
+                        String body = resp.body();
+                        Pattern pattern = Pattern.compile("\\{\\s*\"moduleTitle\"\\s*:\\s*\"(.*?)\"\\s*,\\s*\"lessonIndices\"\\s*:\\s*\\[([0-9,\\s]+)\\]\\s*\\}", Pattern.DOTALL);
+                        Matcher matcher = pattern.matcher(body);
+                        List<ModuleGroup> parsedGroups = new ArrayList<>();
+                        boolean[] covered = new boolean[total + 1];
+                        while (matcher.find()) {
+                            String modTitle = matcher.group(1).replace("\\\"", "\"").trim();
+                            String idxListStr = matcher.group(2);
+                            List<Integer> indices = new ArrayList<>();
+                            String[] parts = idxListStr.split(",");
+                            for (String p : parts) {
+                                try {
+                                    int idx = Integer.parseInt(p.trim());
+                                    if (idx >= 1 && idx <= total && !covered[idx]) {
+                                        indices.add(idx);
+                                        covered[idx] = true;
+                                    }
+                                } catch (NumberFormatException ignored) {}
+                            }
+                            if (!indices.isEmpty()) {
+                                parsedGroups.add(new ModuleGroup(modTitle, indices));
+                            }
+                        }
+
+                        List<Integer> missed = new ArrayList<>();
+                        for (int i = 1; i <= total; i++) {
+                            if (!covered[i]) missed.add(i);
+                        }
+                        if (!missed.isEmpty()) {
+                            if (!parsedGroups.isEmpty()) {
+                                parsedGroups.get(parsedGroups.size() - 1).getLessonIndices().addAll(missed);
+                            } else {
+                                parsedGroups.add(new ModuleGroup("Chương 1: Tổng quan & Bài học", missed));
+                            }
+                        }
+
+                        if (!parsedGroups.isEmpty()) {
+                            return parsedGroups;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Lỗi khi gọi Gemini AI gom nhóm module: {0}", e.getMessage());
+            }
+        }
+
+        // Graceful Fallback: tự động chia thành các module 4-6 bài học
+        int perModule = total <= 8 ? 4 : (total <= 15 ? 5 : 6);
+        List<ModuleGroup> fallback = new ArrayList<>();
+        int modIndex = 1;
+        for (int i = 1; i <= total; i += perModule) {
+            List<Integer> indices = new ArrayList<>();
+            for (int j = i; j < Math.min(i + perModule, total + 1); j++) {
+                indices.add(j);
+            }
+            String title;
+            if (modIndex == 1) title = "Chương 1: Khởi động & Nền tảng";
+            else if (modIndex == 2) title = "Chương 2: Kiến thức cốt lõi";
+            else if (modIndex == 3) title = "Chương 3: Thực hành & Nâng cao";
+            else if (modIndex == 4) title = "Chương 4: Xây dựng dự án thực tế";
+            else title = "Chương " + modIndex + ": Mở rộng & Hoàn thiện";
+            fallback.add(new ModuleGroup(title, indices));
+            modIndex++;
+        }
+        return fallback;
     }
 
     private static String extractField(String json, String field) {

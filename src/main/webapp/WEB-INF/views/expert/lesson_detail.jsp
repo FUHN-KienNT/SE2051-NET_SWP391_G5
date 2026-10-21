@@ -79,7 +79,32 @@
                             <input type="hidden" name="id" id="lessonId" value="${lesson.id}">
                         </c:if>
 
-                        <input type="hidden" name="moduleId" id="lessonModuleId" value="${selectedModuleId != null ? selectedModuleId : (lesson != null ? lesson.moduleId : '')}">
+                        <c:set var="curModId" value="${selectedModuleId != null ? selectedModuleId : (lesson != null ? lesson.moduleId : '')}" />
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-semibold mb-0" for="lessonModuleId">
+                                    <i class="bi bi-folder2-open text-primary me-1"></i>Thuộc Chương học (Module) <span class="text-danger">*</span>
+                                </label>
+                                <span class="text-muted small" style="font-size: 11px;">
+                                    <i class="bi bi-arrow-left-right me-1"></i>Chuyển bài sang chương khác tại đây
+                                </span>
+                            </div>
+                            <c:choose>
+                                <c:when test="${not empty course.modules}">
+                                    <select name="moduleId" id="lessonModuleId" class="form-select saas-form-control" required>
+                                        <c:forEach var="mod" items="${course.modules}">
+                                            <option value="${mod.id}" ${mod.id == curModId ? 'selected' : ''}>
+                                                Chương ${mod.orderIndex}: ${mod.title}
+                                            </option>
+                                        </c:forEach>
+                                    </select>
+                                </c:when>
+                                <c:otherwise>
+                                    <input type="hidden" name="moduleId" id="lessonModuleId" value="${curModId}">
+                                    <input type="text" class="form-control bg-light" value="Chương 1: Mặc định (Tự động khởi tạo khi lưu)" disabled>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
 
 
                         <input type="hidden" name="orderIndex" id="lessonOrderIndex" value="${lesson != null ? lesson.orderIndex : (course.totalLessons + 1)}">
