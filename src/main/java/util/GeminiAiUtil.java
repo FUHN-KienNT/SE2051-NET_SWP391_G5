@@ -244,6 +244,52 @@ public final class GeminiAiUtil {
     }
 
     /**
+     * Dùng Gemini AI để gợi ý tên Chương học (Module) phù hợp dựa vào tiêu đề khóa học và bài giảng:
+     */
+    public static String suggestModuleTitle(String courseTitle, String lessonTitle) {
+        if (!isAvailable() || (lessonTitle == null && courseTitle == null)) {
+            return "Chương 1: Khởi động & Giới thiệu";
+        }
+
+        try {
+            String prompt = "Bạn là chuyên gia sư phạm. Cho khóa học: \"" + escapeJson(courseTitle != null ? courseTitle : "") + "\""
+                    + ", bài học: \"" + escapeJson(lessonTitle != null ? lessonTitle : "") + "\".\\n"
+                    + "Hãy gợi ý 1 tên Chương học (Module) ngắn gọn, súc tích (tối đa 40 ký tự, ví dụ: 'Chương 1: Tổng quan & Cài đặt').\\n"
+                    + "Chỉ trả về JSON duy nhất: {\\\"moduleTitle\\\": \\\"Chương 1: ...\\\"} không kèm markdown.";
+
+            String requestBody = "{"
+                    + "\"contents\":[{\"parts\":[{\"text\":\"" + escapeJson(prompt) + "\"}]}]," 
+                    + "\"generationConfig\":{\"responseMimeType\":\"application/json\",\"thinkingConfig\":{\"thinkingBudget\":0},\"temperature\":0.2}"
+                    + "}";
+
+            String[] candidateModels = MODEL.equals("gemini-2.5-flash-lite")
+                    ? new String[]{"gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-flash-latest"}
+                    : new String[]{MODEL, "gemini-2.5-flash-lite"};
+
+            for (String modelName : candidateModels) {
+                String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + API_KEY;
+                HttpRequest req = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Content-Type", "application/json")
+                        .timeout(Duration.ofSeconds(TIMEOUT_SECONDS))
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
+                        .build();
+
+                HttpResponse<String> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                if (resp.statusCode() == 200) {
+                    String title = extractField(resp.body(), "moduleTitle");
+                    if (title != null && !title.trim().isEmpty()) {
+                        return title.trim();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Lỗi khi gọi Gemini AI gợi ý tên module: {0}", e.getMessage());
+        }
+        return "Chương 1: Khởi động & Giới thiệu";
+    }
+
+    /**
      * Tự động đọc danh sách tiêu đề bài học và dùng Gemini AI để gom nhóm vào các Module (Chương học)
      * hợp lý và khoa học theo đúng tiến trình sư phạm:
      * @param courseTitle Tiêu đề khóa học

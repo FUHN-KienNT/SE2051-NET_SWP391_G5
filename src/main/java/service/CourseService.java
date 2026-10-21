@@ -423,6 +423,87 @@ public class CourseService {
         return GeminiAiUtil.generateDescription(title, categoryName);
     }
 
+    public String suggestModuleTitle(String courseTitle, String lessonTitle) {
+        return GeminiAiUtil.suggestModuleTitle(courseTitle, lessonTitle);
+    }
+
+    public long createModuleForCourse(long courseId, String title) {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Module> existing = moduleDao.findByCourseId(con, courseId);
+            Module m = new Module();
+            m.setCourseId(courseId);
+            m.setTitle(title != null && !title.trim().isEmpty() ? title.trim() : ("Chương " + (existing.size() + 1)));
+            m.setOrderIndex(existing.size() + 1);
+            return moduleDao.insert(con, m);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tạo chương học mới: " + e.getMessage(), e);
+        }
+    }
+
+    public int autoGroupCourseModulesWithAi(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Course course = courseDao.findById(con, courseId)
+                        .orElseThrow(() -> new IllegalArgumentException("Khóa học không tồn tại."));
+
+                List<Module> oldModules = moduleDao.findByCourseId(con, courseId);
+                List<Lesson> allLessons = new ArrayList<>();
+                for (Module m : oldModules) {
+                    allLessons.addAll(lessonDao.findByModuleId(con, m.getId()));
+                }
+
+                if (allLessons.isEmpty()) {
+                    throw new IllegalArgumentException("Khóa học chưa có bài học nào để AI phân chia module.");
+                }
+
+                List<String> titles = new ArrayList<>();
+                for (Lesson l : allLessons) {
+                    titles.add(l.getTitle() != null ? l.getTitle() : "");
+                }
+
+                List<GeminiAiUtil.ModuleGroup> groups = GeminiAiUtil.groupLessonsIntoModules(course.getTitle(), titles);
+                if (groups == null || groups.isEmpty()) {
+                    throw new RuntimeException("AI không thể chia nhóm bài học lúc này.");
+                }
+
+                int modOrder = 0;
+                for (GeminiAiUtil.ModuleGroup group : groups) {
+                    Module mod = new Module();
+                    mod.setCourseId(courseId);
+                    mod.setTitle(group.getModuleTitle());
+                    mod.setOrderIndex(++modOrder);
+                    long newModId = moduleDao.insert(con, mod);
+
+                    int lessonOrder = 1;
+                    for (int idx : group.getLessonIndices()) {
+                        if (idx >= 1 && idx <= allLessons.size()) {
+                            Lesson l = allLessons.get(idx - 1);
+                            l.setModuleId(newModId);
+                            l.setOrderIndex(lessonOrder++);
+                            lessonDao.update(con, l);
+                        }
+                    }
+                }
+
+                // Xóa các module cũ sau khi bài học đã chuyển thành công
+                for (Module oldM : oldModules) {
+                    moduleDao.delete(con, oldM.getId());
+                }
+
+                con.commit();
+                return groups.size();
+            } catch (Exception e) {
+                DbConnection.rollbackQuietly(con);
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi phân chia module bằng AI: " + e.getMessage(), e);
+        }
+    }
+
     public void updateCourseStatus(long courseId, CourseStatus status) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)

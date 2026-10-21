@@ -86,26 +86,39 @@
                                     <i class="bi bi-folder2-open text-primary me-1"></i>Thuộc Chương học (Module) <span class="text-danger">*</span>
                                 </label>
                                 <span class="text-muted small" style="font-size: 11px;">
-                                    <i class="bi bi-arrow-left-right me-1"></i>Chuyển bài sang chương khác tại đây
+                                    <i class="bi bi-arrow-left-right me-1"></i>Có thể chuyển bài sang chương khác tại đây
                                 </span>
                             </div>
                             <c:choose>
                                 <c:when test="${not empty course.modules}">
-                                    <select name="moduleId" id="lessonModuleId" class="form-select saas-form-control" required>
+                                    <select name="moduleId" id="lessonModuleId" class="form-select saas-form-control" required onchange="handleModuleSelectChange(this.value)">
                                         <c:forEach var="mod" items="${course.modules}">
                                             <option value="${mod.id}" ${mod.id == curModId ? 'selected' : ''}>
                                                 Chương ${mod.orderIndex}: ${mod.title}
                                             </option>
                                         </c:forEach>
+                                        <option value="__NEW__" class="fw-bold text-primary">+ Tạo Chương học mới...</option>
                                     </select>
                                 </c:when>
                                 <c:otherwise>
-                                    <input type="hidden" name="moduleId" id="lessonModuleId" value="${curModId}">
-                                    <input type="text" class="form-control bg-light" value="Chương 1: Mặc định (Tự động khởi tạo khi lưu)" disabled>
+                                    <input type="hidden" name="moduleId" id="lessonModuleId" value="__NEW__">
                                 </c:otherwise>
                             </c:choose>
-                        </div>
 
+                            <!-- Nhập tên chương mới nếu chọn tạo chương mới hoặc khóa học chưa có chương nào -->
+                            <div id="newModuleInputGroup" class="mt-2 ${empty course.modules ? '' : 'd-none'}">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light small"><i class="bi bi-folder-plus text-primary"></i></span>
+                                    <input type="text" name="newModuleTitle" id="newModuleTitle" class="form-control"
+                                           placeholder="Nhập tên chương học mới..."
+                                           value="${empty course.modules ? 'Chương 1: Khởi động & Giới thiệu' : ''}">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="fetchAiModuleSuggestion()" title="AI gợi ý tên chương dựa theo bài học">
+                                        <i class="bi bi-stars text-warning me-1"></i>AI gợi ý tên chương
+                                    </button>
+                                </div>
+                                <div id="aiModuleFeedback" class="small mt-1 text-muted d-none"></div>
+                            </div>
+                        </div>
 
                         <input type="hidden" name="orderIndex" id="lessonOrderIndex" value="${lesson != null ? lesson.orderIndex : (course.totalLessons + 1)}">
 
@@ -802,6 +815,57 @@
             }
         });
     });
+
+    function handleModuleSelectChange(val) {
+        const group = document.getElementById('newModuleInputGroup');
+        const inp = document.getElementById('newModuleTitle');
+        if (!group || !inp) return;
+        if (val === '__NEW__') {
+            group.classList.remove('d-none');
+            inp.required = true;
+            inp.focus();
+        } else {
+            group.classList.add('d-none');
+            inp.required = false;
+            inp.value = '';
+        }
+    }
+
+    function fetchAiModuleSuggestion() {
+        const lessonTitle = document.getElementById('lessonTitle') ? document.getElementById('lessonTitle').value : '';
+        const courseId = document.getElementById('lessonCourseId') ? document.getElementById('lessonCourseId').value : '';
+        const fb = document.getElementById('aiModuleFeedback');
+        if (fb) {
+            fb.className = 'small mt-1 text-muted';
+            fb.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>AI đang phân tích bài học để gợi ý tên chương...';
+            fb.classList.remove('d-none');
+        }
+        const params = new URLSearchParams();
+        params.append('courseId', courseId);
+        params.append('lessonTitle', lessonTitle);
+        fetch('${pageContext.request.contextPath}/expert/suggest-module-title', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data && data.moduleTitle) {
+                const inp = document.getElementById('newModuleTitle');
+                if (inp) inp.value = data.moduleTitle;
+                if (fb) {
+                    fb.className = 'small mt-1 text-success';
+                    fb.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Đã gợi ý: <strong>' + data.moduleTitle + '</strong>';
+                }
+            } else if (fb) {
+                fb.className = 'small mt-1 text-muted';
+                fb.textContent = 'Chưa có gợi ý phù hợp.';
+            }
+        })
+        .catch(() => {
+            if (fb) fb.classList.add('d-none');
+        });
+    }
 </script>
 
 <jsp:include page="../common/footer.jsp" />
