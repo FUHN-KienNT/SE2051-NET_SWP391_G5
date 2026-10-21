@@ -482,6 +482,7 @@ public class LessonServlet extends HttpServlet {
             try {
                 // [IDOR Defense]: Kiểm tra quyền sở hữu khóa học trước khi sửa
                 courseService.checkCourseOwnership(courseId, currentUser);
+                courseService.checkCourseEditable(courseId);
                 dto.setId(courseId);
                 CourseDto existing = courseService.getCourseDetail(dto.getId());
                 dto.setStatus(existing.getStatus());
@@ -576,6 +577,7 @@ public class LessonServlet extends HttpServlet {
         try {
             // [IDOR Defense]: Kiểm tra quyền sở hữu
             courseService.checkCourseOwnership(courseId, currentUser);
+            courseService.checkCourseEditable(courseId);
             if (moduleId != null) {
                 courseService.checkModuleOwnership(moduleId, currentUser);
             }
@@ -905,6 +907,11 @@ public class LessonServlet extends HttpServlet {
 
             // Lấy thông tin khóa học đầy đủ kèm danh sách bài học để tính chính xác totalLessons cho thứ tự bài mới
             CourseDto course = courseService.getCourseDetail(courseId);
+            if (course != null && course.getStatus() == CourseStatus.PENDING_REVIEW) {
+                SessionUtil.setFlashError(req, "Khóa học đang ở trạng thái Chờ duyệt nên tạm khóa chỉnh sửa. Vui lòng thu hồi yêu cầu duyệt về Bản nháp nếu muốn tiếp tục sửa bài.");
+                resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId);
+                return;
+            }
             req.setAttribute("course", course);
 
             // Kiểm tra xem là chế độ Chỉnh sửa hay Tạo mới
@@ -960,6 +967,8 @@ public class LessonServlet extends HttpServlet {
 
             Long courseId = (courseIdStr != null && !courseIdStr.trim().isEmpty()) ? Long.parseLong(courseIdStr.trim()) : null;
             if (courseId != null) {
+                courseService.checkCourseOwnership(courseId, currentUser);
+                courseService.checkCourseEditable(courseId);
                 dto.setCourseId(courseId);
             }
 
@@ -1044,6 +1053,7 @@ public class LessonServlet extends HttpServlet {
                 long lessonId = Long.parseLong(lessonIdStr.trim());
                 // [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi cập nhật
                 courseService.checkLessonOwnership(lessonId, currentUser);
+                courseService.checkLessonEditable(lessonId);
                 courseService.toggleLessonActive(lessonId, false);
                 SessionUtil.setFlashSuccess(req, "Đã tạm ẩn bài học thành công!");
             }
@@ -1070,6 +1080,7 @@ public class LessonServlet extends HttpServlet {
             if (lessonIdStr != null) {
                 long lessonId = Long.parseLong(lessonIdStr.trim());
                 courseService.checkLessonOwnership(lessonId, currentUser);
+                courseService.checkLessonEditable(lessonId);
 
                 boolean targetActive;
                 if (activeStr != null && !activeStr.trim().isEmpty()) {
@@ -1116,6 +1127,7 @@ public class LessonServlet extends HttpServlet {
                 long cId = Long.parseLong(courseId.trim());
                 // [IDOR Defense]: Kiểm tra quyền sở hữu khóa học
                 courseService.checkCourseOwnership(cId, currentUser);
+                courseService.checkCourseEditable(cId);
                 dto.setCourseId(cId);
             }
             dto.setTitle(req.getParameter("title"));
@@ -1147,6 +1159,7 @@ public class LessonServlet extends HttpServlet {
                 long modId = Long.parseLong(moduleIdStr.trim());
                 // [IDOR Defense]: Kiểm tra quyền sở hữu chương học
                 courseService.checkModuleOwnership(modId, currentUser);
+                courseService.checkModuleEditable(modId);
                 courseService.deleteModule(modId);
                 SessionUtil.setFlashSuccess(req, "Đã xóa chương học thành công!");
             }

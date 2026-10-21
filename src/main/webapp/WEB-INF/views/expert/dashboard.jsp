@@ -1053,11 +1053,22 @@ body {
                                         </td>
                                         <td class="text-end text-nowrap">
                                             <div class="d-inline-flex align-items-center justify-content-end gap-2">
-                                                <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
-                                                   class="btn btn-saas-primary btn-sm text-nowrap"
-                                                   title="Quản lý chương và bài học">
-                                                    <i class="bi bi-pencil-square"></i>Soạn bài
-                                                </a>
+                                                <c:choose>
+                                                    <c:when test="${c.status == 'PENDING_REVIEW'}">
+                                                        <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
+                                                           class="btn btn-saas-outline-amber btn-sm text-nowrap"
+                                                           title="Khóa học đang chờ duyệt (nhấp để xem nội dung)">
+                                                            <i class="bi bi-clock-history me-1"></i>Xem (Chờ duyệt)
+                                                        </a>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
+                                                           class="btn btn-saas-primary btn-sm text-nowrap"
+                                                           title="Quản lý chương và bài học">
+                                                            <i class="bi bi-pencil-square me-1"></i>Soạn bài
+                                                        </a>
+                                                    </c:otherwise>
+                                                </c:choose>
 
                                                 <!-- Secondary Actions Menu (Sleek Dropdown) -->
                                                 <div class="dropdown">
@@ -2372,11 +2383,11 @@ body {
 
     function confirmCancelPublishCourse(title, url) {
         showConfirmModal({
-            title: 'Thu hồi yêu cầu xuất bản',
-            html: 'Bạn có muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?',
+            title: 'Thu hồi yêu cầu xuất bản (Chuyển về Bản nháp)',
+            html: 'Bạn có chắc chắn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?<br><span class="text-muted small mt-2 d-inline-block"><i class="bi bi-info-circle me-1"></i>Khóa học sẽ trở về trạng thái <strong>Bản nháp</strong> để bạn có thể thêm, sửa bài giảng và chương học.</span>',
             type: 'warning',
             icon: 'bi bi-arrow-counterclockwise',
-            confirmText: 'Thu hồi yêu cầu',
+            confirmText: 'Chuyển về Bản nháp',
             confirmIcon: 'bi bi-arrow-counterclockwise me-1',
             confirmBtnClass: 'btn-warning text-dark',
             confirmUrl: url

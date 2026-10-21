@@ -265,6 +265,43 @@ public class CourseService {
         }
     }
 
+    /**
+     * Kiểm tra trạng thái khóa học có cho phép chỉnh sửa hay không:
+     * - Khi ở trạng thái PENDING_REVIEW (Chờ duyệt), nội dung bị khóa tạm thời.
+     * - Người dùng phải thu hồi yêu cầu xuất bản về DRAFT (Bản nháp) mới được sửa tiếp.
+     */
+    public void checkCourseEditable(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Course c = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
+            if (c.getStatus() == CourseStatus.PENDING_REVIEW) {
+                throw new IllegalStateException("Khóa học đang ở trạng thái Chờ duyệt nên không thể chỉnh sửa. Vui lòng thu hồi yêu cầu xuất bản về Bản nháp để tiếp tục chỉnh sửa.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra trạng thái khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public void checkModuleEditable(long moduleId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Module m = moduleDao.findById(con, moduleId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương học ID: " + moduleId));
+            checkCourseEditable(m.getCourseId());
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra trạng thái chương học: " + e.getMessage(), e);
+        }
+    }
+
+    public void checkLessonEditable(long lessonId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Lesson l = lessonDao.findById(con, lessonId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học ID: " + lessonId));
+            checkModuleEditable(l.getModuleId());
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra trạng thái bài học: " + e.getMessage(), e);
+        }
+    }
+
     public List<CourseDto> getManagedCourses(long userId) {
         try (Connection con = DbConnection.getConnection()) {
             List<Course> list = courseDao.findByManagerOrExpert(con, userId);
@@ -606,6 +643,11 @@ public class CourseService {
         if (dto == null) {
             throw new IllegalArgumentException("Dữ liệu chương học không hợp lệ.");
         }
+        if (dto.getId() != null && dto.getId() > 0) {
+            checkModuleEditable(dto.getId());
+        } else if (dto.getCourseId() != null && dto.getCourseId() > 0) {
+            checkCourseEditable(dto.getCourseId());
+        }
         ValidationUtil.requireText(dto.getTitle(), "Tiêu đề chương");
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
@@ -649,6 +691,7 @@ public class CourseService {
     }
 
     public void deleteModule(long moduleId) {
+        checkModuleEditable(moduleId);
         try (Connection con = DbConnection.getConnection()) {
             boolean deleted = moduleDao.delete(con, moduleId);
             if (!deleted) {
@@ -688,6 +731,13 @@ public class CourseService {
     public long saveLesson(LessonDto dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Dữ liệu bài học không hợp lệ.");
+        }
+        if (dto.getId() != null && dto.getId() > 0) {
+            checkLessonEditable(dto.getId());
+        } else if (dto.getModuleId() != null && dto.getModuleId() > 0) {
+            checkModuleEditable(dto.getModuleId());
+        } else if (dto.getCourseId() != null && dto.getCourseId() > 0) {
+            checkCourseEditable(dto.getCourseId());
         }
         if (dto.getModuleId() == null || dto.getModuleId() <= 0) {
             if (dto.getCourseId() != null && dto.getCourseId() > 0) {
@@ -790,6 +840,7 @@ public class CourseService {
     }
 
     public void toggleLessonActive(long lessonId, boolean isActive) {
+        checkLessonEditable(lessonId);
         try (Connection con = DbConnection.getConnection()) {
             boolean updated = lessonDao.updateActiveStatus(con, lessonId, isActive);
             if (!updated) {
@@ -805,6 +856,7 @@ public class CourseService {
     }
 
     public int saveBatchLessons(long courseId, Long moduleId, String newModuleTitle, List<LessonDto> lessons) {
+        checkCourseEditable(courseId);
         if (lessons == null || lessons.isEmpty()) {
             return 0;
         }

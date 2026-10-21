@@ -490,6 +490,26 @@ body {
             </div>
         </c:if>
 
+        <c:if test="${course.status == 'PENDING_REVIEW'}">
+            <div class="alert alert-warning border border-warning shadow-sm rounded-3 py-3 px-4 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning bg-opacity-25 p-2 text-warning fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-dark">Khóa học đang ở trạng thái Chờ duyệt (Khóa chỉnh sửa)</h6>
+                        <p class="mb-0 text-muted small">
+                            Nội dung khóa học đã được gửi tới Ban Quản Trị và tạm khóa chỉnh sửa. Nếu bạn muốn tiếp tục sửa đổi hoặc bổ sung bài giảng, vui lòng chuyển khóa học về Bản nháp.
+                        </p>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-warning fw-semibold btn-sm text-dark px-3 shadow-sm"
+                        onclick="confirmCancelPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons')">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Thu hồi về Bản nháp để sửa
+                </button>
+            </div>
+        </c:if>
+
         <!-- Top Header & Primary Actions -->
         <div class="saas-header">
             <div>
@@ -531,19 +551,21 @@ body {
                     </c:when>
                     <c:when test="${course.status == 'PENDING_REVIEW'}">
                         <button type="button"
-                           class="btn btn-saas-outline-amber"
+                           class="btn btn-warning text-dark fw-semibold"
                            onclick="confirmCancelPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons')"
-                           title="Thu hồi yêu cầu xuất bản">
-                            <i class="bi bi-arrow-counterclockwise"></i>Thu hồi yêu cầu
+                           title="Thu hồi yêu cầu xuất bản về Bản nháp">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Thu hồi về Bản nháp để sửa
                         </button>
                     </c:when>
                 </c:choose>
                 <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}" class="btn btn-saas-outline" title="Quản lý Quiz cho khóa học">
                     <i class="bi bi-patch-question text-warning me-1"></i>Quản lý Quiz
                 </a>
-                <button type="button" class="btn btn-saas-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                    <i class="bi bi-folder-plus me-1"></i>Thêm Chương mới
-                </button>
+                <c:if test="${course.status != 'PENDING_REVIEW'}">
+                    <button type="button" class="btn btn-saas-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+                        <i class="bi bi-folder-plus me-1"></i>Thêm Chương mới
+                    </button>
+                </c:if>
             </div>
         </div>
 
@@ -558,11 +580,13 @@ body {
                     <p class="text-muted small mb-4" style="max-width: 500px; margin-left: auto; margin-right: auto;">
                         Bắt đầu xây dựng cấu trúc khóa học bằng cách thêm Chương học (Module) đầu tiên. Mỗi bài giảng sẽ được thêm vào bên trong chương học tương ứng.
                     </p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-saas-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                            <i class="bi bi-folder-plus me-1"></i>Thêm Chương đầu tiên
-                        </button>
-                    </div>
+                    <c:if test="${course.status != 'PENDING_REVIEW'}">
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-saas-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+                                <i class="bi bi-folder-plus me-1"></i>Thêm Chương đầu tiên
+                            </button>
+                        </div>
+                    </c:if>
                 </div>
             </c:when>
             <c:otherwise>
@@ -579,15 +603,24 @@ body {
                                 <span class="pill-neutral ms-1">${fn:length(m.lessons)} bài học</span>
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-shrink-0" onclick="event.stopPropagation();">
-                                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-saas-primary" title="Thêm bài học vào chương này">
-                                    <i class="bi bi-plus-lg me-1"></i>Thêm bài học
-                                </a>
-                                <button type="button" class="btn-icon-action" onclick="openEditModuleModal('${m.id}', '${fn:escapeXml(m.title)}', '${m.orderIndex}')" title="Đổi tên chương">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button type="button" class="btn-icon-action text-danger" onclick="confirmDeleteModule('${fn:escapeXml(m.title)}', '${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}')" title="Xóa chương này">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
+                                <c:choose>
+                                    <c:when test="${course.status == 'PENDING_REVIEW'}">
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-1.5 px-2" style="font-size: 11px;">
+                                            <i class="bi bi-lock-fill me-1"></i>Chờ duyệt (Đã khóa)
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-saas-primary" title="Thêm bài học vào chương này">
+                                            <i class="bi bi-plus-lg me-1"></i>Thêm bài học
+                                        </a>
+                                        <button type="button" class="btn-icon-action" onclick="openEditModuleModal('${m.id}', '${fn:escapeXml(m.title)}', '${m.orderIndex}')" title="Đổi tên chương">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn-icon-action text-danger" onclick="confirmDeleteModule('${fn:escapeXml(m.title)}', '${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=${m.id}')" title="Xóa chương này">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
 
@@ -597,9 +630,16 @@ body {
                                 <c:when test="${empty m.lessons}">
                                     <div class="p-4 text-center text-muted small bg-light">
                                         <i class="bi bi-inbox me-1"></i>Chương này chưa có bài học nào.
-                                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="ms-1 fw-semibold text-primary text-decoration-none">
-                                            + Bấm vào đây để thêm bài học vào chương này
-                                        </a>
+                                        <c:choose>
+                                            <c:when test="${course.status == 'PENDING_REVIEW'}">
+                                                <span class="ms-1 text-muted">(Khóa học đang chờ duyệt, vui lòng thu hồi về Bản nháp để thêm bài học)</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="ms-1 fw-semibold text-primary text-decoration-none">
+                                                    + Bấm vào đây để thêm bài học vào chương này
+                                                </a>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
                                 </c:when>
                                 <c:otherwise>
@@ -638,23 +678,32 @@ body {
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}&lessonId=${l.id}" class="btn-icon-action" title="Chỉnh sửa bài học" aria-label="Sửa bài">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
                                                 <c:choose>
-                                                    <c:when test="${l.active}">
-                                                        <button type="button" class="btn-icon-action text-warning border-0 bg-transparent"
-                                                                onclick="confirmToggleLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/toggle-lesson-status?courseId=${course.id}&lessonId=${l.id}&active=false', false)"
-                                                                title="Tạm ẩn bài học" aria-label="Ẩn bài học">
-                                                            <i class="bi bi-eye-slash"></i>
-                                                        </button>
+                                                    <c:when test="${course.status == 'PENDING_REVIEW'}">
+                                                        <span class="badge bg-light text-muted border py-1.5 px-2" style="font-size: 11px;" title="Khóa học đang chờ duyệt, chuyển về Bản nháp để chỉnh sửa">
+                                                            <i class="bi bi-lock me-1"></i>Đã khóa
+                                                        </span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <button type="button" class="btn-icon-action text-success border-0 bg-transparent"
-                                                                onclick="confirmToggleLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/toggle-lesson-status?courseId=${course.id}&lessonId=${l.id}&active=true', true)"
-                                                                title="Hiển thị lại bài học" aria-label="Hiện bài học">
-                                                            <i class="bi bi-eye"></i>
-                                                        </button>
+                                                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}&lessonId=${l.id}" class="btn-icon-action" title="Chỉnh sửa bài học" aria-label="Sửa bài">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <c:choose>
+                                                            <c:when test="${l.active}">
+                                                                <button type="button" class="btn-icon-action text-warning border-0 bg-transparent"
+                                                                        onclick="confirmToggleLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/toggle-lesson-status?courseId=${course.id}&lessonId=${l.id}&active=false', false)"
+                                                                        title="Tạm ẩn bài học" aria-label="Ẩn bài học">
+                                                                    <i class="bi bi-eye-slash"></i>
+                                                                </button>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <button type="button" class="btn-icon-action text-success border-0 bg-transparent"
+                                                                        onclick="confirmToggleLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/toggle-lesson-status?courseId=${course.id}&lessonId=${l.id}&active=true', true)"
+                                                                        title="Hiển thị lại bài học" aria-label="Hiện bài học">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </button>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </div>
@@ -795,11 +844,11 @@ body {
 
     function confirmCancelPublishCourse(title, url) {
         showConfirmModal({
-            title: 'Thu hồi yêu cầu xuất bản',
-            html: 'Bạn có muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?',
+            title: 'Thu hồi yêu cầu xuất bản (Chuyển về Bản nháp)',
+            html: 'Bạn có chắc chắn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?<br><span class="text-muted small mt-2 d-inline-block"><i class="bi bi-info-circle me-1"></i>Khóa học sẽ trở về trạng thái <strong>Bản nháp</strong> để bạn có thể thêm, sửa bài giảng và chương học.</span>',
             type: 'warning',
             icon: 'bi bi-arrow-counterclockwise',
-            confirmText: 'Thu hồi yêu cầu',
+            confirmText: 'Chuyển về Bản nháp',
             confirmIcon: 'bi bi-arrow-counterclockwise me-1',
             confirmBtnClass: 'btn-warning text-dark',
             confirmUrl: url
