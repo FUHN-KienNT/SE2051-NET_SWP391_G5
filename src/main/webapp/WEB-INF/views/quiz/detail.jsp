@@ -959,22 +959,22 @@ body {
                             <c:otherwise>
                                 <div class="d-flex flex-column gap-3" id="quizQuestionsContainer">
                                     <c:forEach var="qq" items="${quiz.questions}" varStatus="status">
-                                        <%-- Build inline options JSON for edit modal --%>
-                                        <c:set var="qqOptionsJson" value="[" />
-                                        <c:forEach var="opt" items="${qq.options}" varStatus="os">
-                                            <c:set var="esc" value="${fn:replace(opt.optionText, '\"', '&quot;')}" />
-                                            <c:set var="qqOptionsJson" value='${qqOptionsJson}{"text":"${esc}","correct":${opt.correct}}' />
-                                            <c:if test="${!os.last}"><c:set var="qqOptionsJson" value="${qqOptionsJson}," /></c:if>
-                                        </c:forEach>
-                                        <c:set var="qqOptionsJson" value="${qqOptionsJson}]" />
                                         <div class="question-item-card p-3 p-md-4"
                                              data-question-text="${fn:toLowerCase(fn:escapeXml(qq.questionText))}"
                                              data-question-type="${qq.questionType}"
                                              data-q-id="${qq.id}"
                                              data-q-text="${fn:escapeXml(qq.questionText)}"
                                              data-q-points="${not empty qq.defaultPoints ? qq.defaultPoints : 1}"
-                                             data-q-type="${qq.questionType}"
-                                             data-q-options='${qqOptionsJson}'>
+                                             data-q-type="${qq.questionType}">
+
+                                            <!-- Hidden Options Data for Edit Modal -->
+                                            <div class="d-none question-options-data">
+                                                <c:forEach var="opt" items="${qq.options}">
+                                                    <span class="q-opt-item"
+                                                          data-text="<c:out value='${opt.optionText}' />"
+                                                          data-correct="${opt.correct}"></span>
+                                                </c:forEach>
+                                            </div>
 
                                             <!-- Question Card Header -->
                                             <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
@@ -1724,8 +1724,6 @@ body {
         const qText   = card.getAttribute('data-q-text');
         const qPoints = card.getAttribute('data-q-points');
         const qType   = card.getAttribute('data-q-type');
-        let   options = [];
-        try { options = JSON.parse(card.getAttribute('data-q-options') || '[]'); } catch(e) {}
 
         // Fill hidden & fields
         document.getElementById('editQId').value     = qId;
@@ -1734,15 +1732,17 @@ body {
         const typeEl = document.getElementById('editQType');
         if (typeEl) typeEl.value = qType;
 
-        // Fill options A-D
+        // Fill options A-D from DOM
+        const optItems   = card.querySelectorAll('.q-opt-item');
         const optTextIds = ['editOptTextA', 'editOptTextB', 'editOptTextC', 'editOptTextD'];
         const radios     = document.querySelectorAll('#editQuestionForm input[name="correctOption"]');
         optTextIds.forEach((id, i) => {
             const el  = document.getElementById(id);
             if (!el) return;
-            const opt = options[i];
-            el.value  = opt ? opt.text : '';
-            if (radios[i]) radios[i].checked = opt ? opt.correct : (i === 0);
+            const optItem = optItems[i];
+            el.value  = optItem ? (optItem.getAttribute('data-text') || '') : '';
+            const isCorrect = optItem ? (optItem.getAttribute('data-correct') === 'true') : (i === 0);
+            if (radios[i]) radios[i].checked = isCorrect;
         });
 
         // Apply type-specific display

@@ -1126,24 +1126,23 @@ body {
                                                                         </thead>
                                                                         <tbody>
                                                                             <c:forEach var="q" items="${m.questions}">
-                                                                                <%-- Build options JSON for JS edit modal --%>
-                                                                                <c:set var="qOptionsJson" value="[" />
-                                                                                <c:forEach var="opt" items="${q.options}" varStatus="os">
-                                                                                    <c:set var="escaped" value="${fn:replace(opt.optionText, '\"', '&quot;')}" />
-                                                                                    <c:set var="qOptionsJson" value='${qOptionsJson}{"text":"${escaped}","correct":${opt.correct}}' />
-                                                                                    <c:if test="${!os.last}"><c:set var="qOptionsJson" value="${qOptionsJson}," /></c:if>
-                                                                                </c:forEach>
-                                                                                <c:set var="qOptionsJson" value="${qOptionsJson}]" />
                                                                                 <tr class="question-row"
                                                                                     data-module-id="${q.moduleId}"
                                                                                     data-type="${q.questionType}"
-                                                                                    data-text="${fn:toLowerCase(q.questionText)}"
+                                                                                    data-text="${fn:toLowerCase(fn:escapeXml(q.questionText))}"
                                                                                     data-q-id="${q.id}"
                                                                                     data-q-points="${q.defaultPoints}"
-                                                                                    data-q-text="${q.questionText}"
-                                                                                    data-q-options='${qOptionsJson}'>
+                                                                                    data-q-text="${fn:escapeXml(q.questionText)}">
                                                                                     <td class="text-center text-muted small fw-semibold">
                                                                                         #${q.id}
+                                                                                        <!-- Hidden Options Data for Edit Modal -->
+                                                                                        <div class="d-none question-options-data">
+                                                                                            <c:forEach var="opt" items="${q.options}">
+                                                                                                <span class="q-opt-item"
+                                                                                                      data-text="<c:out value='${opt.optionText}' />"
+                                                                                                      data-correct="${opt.correct}"></span>
+                                                                                            </c:forEach>
+                                                                                        </div>
                                                                                     </td>
                                                                                     <td>
                                                                                         <div class="fw-medium text-dark mb-1">
@@ -1977,13 +1976,11 @@ body {
                         const tr = btn.closest('tr.question-row');
                         if (!tr) return;
 
-                        const qId     = tr.getAttribute('data-q-id');
-                        const qText   = tr.getAttribute('data-q-text');
-                        const qPoints = tr.getAttribute('data-q-points');
-                        const qType   = tr.getAttribute('data-type');
+                        const qId      = tr.getAttribute('data-q-id');
+                        const qText    = tr.getAttribute('data-q-text');
+                        const qPoints  = tr.getAttribute('data-q-points');
+                        const qType    = tr.getAttribute('data-type');
                         const moduleId = tr.getAttribute('data-module-id');
-                        let   options  = [];
-                        try { options = JSON.parse(tr.getAttribute('data-q-options') || '[]'); } catch(e) {}
 
                         // Điền id, text, points, type, module
                         document.getElementById('modalQId').value = qId;
@@ -1994,15 +1991,17 @@ body {
                         const modSel = document.getElementById('modalQModuleSelect');
                         if (modSel && moduleId) modSel.value = moduleId;
 
-                        // Điền options A/B/C/D
-                        const optIds = ['modalQOptA','modalQOptB','modalQOptC','modalQOptD'];
-                        const radios = document.querySelectorAll('#bankQuestionForm input[name="correctOption"]');
+                        // Điền options A/B/C/D from DOM
+                        const optItems = tr.querySelectorAll('.q-opt-item');
+                        const optIds   = ['modalQOptA', 'modalQOptB', 'modalQOptC', 'modalQOptD'];
+                        const radios   = document.querySelectorAll('#bankQuestionForm input[name="correctOption"]');
                         optIds.forEach((id, i) => {
                             const el = document.getElementById(id);
                             if (!el) return;
-                            const opt = options[i];
-                            el.value = opt ? opt.text : '';
-                            if (radios[i]) radios[i].checked = opt ? opt.correct : (i === 0);
+                            const optItem = optItems[i];
+                            el.value = optItem ? (optItem.getAttribute('data-text') || '') : '';
+                            const isCorrect = optItem ? (optItem.getAttribute('data-correct') === 'true') : (i === 0);
+                            if (radios[i]) radios[i].checked = isCorrect;
                         });
 
                         // Áp dụng hiển thị theo loại câu hỏi
