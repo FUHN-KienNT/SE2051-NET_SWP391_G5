@@ -1124,6 +1124,13 @@ public class CourseService {
     public static void autoDetectCategory(BatchParseResult result, String rawInputText) {
         if (result == null) return;
 
+        // Chỉ phân loại khi ĐÃ nhận diện được Playlist hoặc có ít nhất 1 bài học thực tế!
+        boolean hasActualContent = (result.getPlaylistTitle() != null && !result.getPlaylistTitle().isEmpty())
+                || (result.getLessons() != null && !result.getLessons().isEmpty());
+        if (!hasActualContent) {
+            return;
+        }
+
         List<SettingDto> activeCategories = fetchActiveCategories();
         String title = result.getPlaylistTitle();
         if (title == null || title.isEmpty()) {

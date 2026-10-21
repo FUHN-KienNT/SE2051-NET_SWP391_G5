@@ -2186,6 +2186,13 @@ body {
     let courseBatchTimer = null;
     let courseBatchAbortController = null;
 
+    function hasYoutubeVideoOrPlaylist(text) {
+        if (!text || !text.trim()) return false;
+        const playlistRegex = /(?:[?&]list=|playlist\?list=)[a-zA-Z0-9_-]+|^PL[a-zA-Z0-9_-]{16,}/i;
+        const videoRegex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/)|youtube\.com\/live\/)[a-zA-Z0-9_-]{11}/i;
+        return playlistRegex.test(text) || videoRegex.test(text);
+    }
+
     function previewCourseBatchVideos() {
         const text = document.getElementById('newCourseBatchText').value;
         const feedback = document.getElementById('newCourseBatchFeedback');
@@ -2199,17 +2206,24 @@ body {
         // 2. Xóa bộ đếm chờ trước đó
         clearTimeout(courseBatchTimer);
 
-        // 3. Nếu ô nhập liệu bị xóa rỗng -> ẩn thông báo phân tích và dừng lại
+        // 3. Nếu rỗng -> ẩn feedback và dừng lại
         if (!text || !text.trim()) {
             feedback.className = 'mt-2 small d-none';
             feedback.innerHTML = '';
             return;
         }
 
+        // 4. KIỂM TRA ĐỊNH DẠNG: Chỉ gọi API nếu thực sự có link Playlist hoặc video YouTube!
+        if (!hasYoutubeVideoOrPlaylist(text)) {
+            feedback.className = 'mt-2 small text-muted';
+            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Hệ thống nhận diện link Playlist (có ?list=...) hoặc link video YouTube (watch?v=, youtu.be, shorts).';
+            return;
+        }
+
         feedback.className = 'mt-2 small text-muted';
         feedback.innerHTML = '<span class="spinner-border spinner-border-sm text-danger me-1"></span>Đang phân tích video / playlist YouTube...';
 
-        // 4. Chờ 300ms sau khi người dùng dừng nhập/dán thì mới gửi request mới
+        // 5. Chờ 300ms sau khi người dùng dừng nhập/dán thì mới gửi request mới
         courseBatchTimer = setTimeout(() => {
             courseBatchAbortController = new AbortController();
             const signal = courseBatchAbortController.signal;
