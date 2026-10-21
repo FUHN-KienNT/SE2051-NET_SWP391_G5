@@ -2184,26 +2184,43 @@ body {
     // YOUTUBE PLAYLIST BATCH AUTO-DETECT & PREVIEW
     // =========================================================================
     let courseBatchTimer = null;
+    let courseBatchAbortController = null;
+
     function previewCourseBatchVideos() {
         const text = document.getElementById('newCourseBatchText').value;
         const feedback = document.getElementById('newCourseBatchFeedback');
+
+        // 1. Hủy ngay request cũ đang bay dở dang nếu có
+        if (courseBatchAbortController) {
+            courseBatchAbortController.abort();
+            courseBatchAbortController = null;
+        }
+
+        // 2. Xóa bộ đếm chờ trước đó
+        clearTimeout(courseBatchTimer);
+
+        // 3. Nếu ô nhập liệu bị xóa rỗng -> ẩn thông báo phân tích và dừng lại
         if (!text || !text.trim()) {
             feedback.className = 'mt-2 small d-none';
             feedback.innerHTML = '';
             return;
         }
 
-        clearTimeout(courseBatchTimer);
         feedback.className = 'mt-2 small text-muted';
         feedback.innerHTML = '<span class="spinner-border spinner-border-sm text-danger me-1"></span>Đang phân tích video / playlist YouTube...';
 
+        // 4. Chờ 300ms sau khi người dùng dừng nhập/dán thì mới gửi request mới
         courseBatchTimer = setTimeout(() => {
+            courseBatchAbortController = new AbortController();
+            const signal = courseBatchAbortController.signal;
+
             const params = new URLSearchParams();
             params.append('batchText', text);
             fetch('${pageContext.request.contextPath}/expert/preview-batch-videos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString()
+                body: params.toString(),
+                signal: signal
             })
             .then(r => r.json())
             .then(data => {
@@ -2244,9 +2261,11 @@ body {
                 }
             })
             .catch(err => {
+                // Nếu bị abort do người dùng đổi link khác -> im lặng bỏ qua, không nhận dữ liệu cũ
+                if (err.name === 'AbortError') return;
                 feedback.className = 'mt-2 small d-none';
             });
-        }, 500);
+        }, 300);
     }
 
     function generateAiDescription(titleInputId, descInputId, categoryComboboxId, btnEl) {
