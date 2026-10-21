@@ -1024,7 +1024,7 @@ body {
                                                     <c:choose>
                                                         <c:when test="${c.archiveScheduled}">
                                                             <span class="saas-badge bg-warning bg-opacity-10 text-dark border border-warning" title="Sẽ lưu trữ vào ${c.formattedArchiveAt}">
-                                                                <i class="bi bi-clock-history text-warning me-1"></i>Sắp lưu trữ (${c.daysUntilArchive} ngày)
+                                                                <i class="bi bi-clock-history text-warning me-1"></i>Sắp lưu trữ (${c.timeRemainingUntilArchive})
                                                             </span>
                                                         </c:when>
                                                         <c:otherwise>
@@ -1410,51 +1410,163 @@ body {
 
 <!-- Archive Course Modal -->
 <div class="modal fade" id="archiveCourseModal" tabindex="-1" aria-labelledby="archiveCourseModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content saas-modal">
-            <form action="${pageContext.request.contextPath}/expert/archive-course" method="POST">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content saas-modal shadow-lg border-0">
+            <form action="${pageContext.request.contextPath}/expert/archive-course" method="POST" id="archiveCourseForm" onsubmit="return validateArchiveSubmit()">
                 <input type="hidden" name="courseId" id="archiveCourseId">
-                <div class="modal-header saas-modal-header bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25">
-                    <div>
-                        <h5 class="modal-title fw-bold text-dark mb-1" id="archiveCourseModalTitle">
-                            <i class="bi bi-archive-fill text-warning me-2"></i>Lưu trữ / Ẩn khóa học
-                        </h5>
-                        <p class="text-muted small mb-0">Ngừng nhận học viên mới nhưng bảo lưu quyền học tập cho học viên cũ</p>
+                <input type="hidden" name="archiveMode" id="archiveModeInput" value="DURATION">
+                <input type="hidden" name="noticeDays" id="archiveNoticeDaysHidden" value="3">
+
+                <div class="modal-header saas-modal-header bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25 px-4 py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-warning bg-opacity-25 p-2 text-warning d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="bi bi-archive-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-0" id="archiveCourseModalTitle">
+                                Lưu trữ / Lên lịch ẩn khóa học
+                            </h5>
+                            <p class="text-muted small mb-0">Thiết lập thời gian ngừng nhận học viên mới và tự động lưu trữ khóa học</p>
+                        </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
+
                 <div class="modal-body p-4">
-                    <div class="alert alert-info py-2 px-3 small mb-3">
-                        <i class="bi bi-shield-check me-1"></i><strong>Quyền lợi học viên:</strong> Sinh viên đã mua khóa học vẫn có thể truy cập lại và học tập bình thường. Khóa học sẽ được ẩn đi đối với những ai chưa mua.
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="saas-form-label fw-bold">Khóa học thực hiện:</label>
-                        <div class="p-2 bg-light rounded border text-truncate fw-semibold text-dark" id="archiveCourseTitleDisplay">...</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="saas-form-label fw-bold">Thời gian thông báo trước khi chính thức ẩn:</label>
-                        <select name="noticeDays" id="archiveNoticeDays" class="form-select saas-form-control">
-                            <option value="3" selected>Thông báo trước 3 ngày (Khuyên dùng)</option>
-                            <option value="5">Thông báo trước 5 ngày</option>
-                            <option value="7">Thông báo trước 7 ngày</option>
-                            <option value="0">Ẩn ngay lập tức (Không chờ thông báo)</option>
-                        </select>
-                        <div class="form-text small text-muted">
-                            Trong thời gian thông báo, banner cảnh báo sẽ hiển thị trên trang khóa học để nhắc nhở học viên mới quan tâm trước khi khóa học chính thức chuyển sang chế độ lưu trữ.
+                    <!-- Bảo lưu quyền lợi -->
+                    <div class="alert alert-info py-2.5 px-3 small mb-3 border-0 bg-info bg-opacity-10 text-dark d-flex align-items-start gap-2 rounded-3">
+                        <i class="bi bi-shield-check text-info fs-5 mt-n1 flex-shrink-0"></i>
+                        <div>
+                            <strong>Bảo lưu quyền lợi:</strong> Học viên đã mua khóa học vẫn tiếp tục được học tập trọn đời bình thường. Khóa học chỉ bị ẩn khỏi danh mục chung và ngừng bán cho học viên mới sau thời hạn được thiết lập.
                         </div>
                     </div>
 
+                    <!-- Khóa học thực hiện -->
                     <div class="mb-3">
-                        <label class="saas-form-label fw-bold">Nội dung thông báo hiển thị cho học viên:</label>
+                        <label class="saas-form-label fw-bold text-dark small text-uppercase">Khóa học áp dụng:</label>
+                        <div class="p-2.5 px-3 bg-light rounded-3 border text-truncate fw-semibold text-dark fs-6" id="archiveCourseTitleDisplay">...</div>
+                    </div>
+
+                    <!-- Timing Mode Selector Cards -->
+                    <div class="mb-3">
+                        <label class="saas-form-label fw-bold text-dark small text-uppercase mb-2">
+                            Thời gian chuyển sang chế độ Lưu trữ:
+                        </label>
+                        
+                        <div class="row g-2 mb-3">
+                            <!-- Mode 1: Duration -->
+                            <div class="col-md-5">
+                                <label class="archive-mode-card h-100 p-3 rounded-3 border border-warning bg-warning bg-opacity-10 shadow-sm d-flex flex-column position-relative transition-all" id="cardModeDuration" for="radioModeDuration" style="cursor: pointer;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <input type="radio" name="archiveTimingRadio" id="radioModeDuration" value="DURATION" checked onchange="switchArchiveMode('DURATION')" class="form-check-input mt-0 flex-shrink-0">
+                                        <strong class="text-dark small">Hẹn thời gian bất kỳ</strong>
+                                    </div>
+                                    <span class="text-muted small ms-4">Nhập số giờ, ngày, tuần, tháng tùy ý</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Mode 2: Specific Date -->
+                            <div class="col-md-4">
+                                <label class="archive-mode-card h-100 p-3 rounded-3 border d-flex flex-column position-relative transition-all" id="cardModeDate" for="radioModeDate" style="cursor: pointer;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <input type="radio" name="archiveTimingRadio" id="radioModeDate" value="SPECIFIC_DATE" onchange="switchArchiveMode('SPECIFIC_DATE')" class="form-check-input mt-0 flex-shrink-0">
+                                        <strong class="text-dark small">Chọn ngày giờ cụ thể</strong>
+                                    </div>
+                                    <span class="text-muted small ms-4">Chọn mốc thời gian trên lịch</span>
+                                </label>
+                            </div>
+
+                            <!-- Mode 3: Immediate -->
+                            <div class="col-md-3">
+                                <label class="archive-mode-card h-100 p-3 rounded-3 border d-flex flex-column position-relative transition-all" id="cardModeImmediate" for="radioModeImmediate" style="cursor: pointer;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <input type="radio" name="archiveTimingRadio" id="radioModeImmediate" value="IMMEDIATE" onchange="switchArchiveMode('IMMEDIATE')" class="form-check-input mt-0 flex-shrink-0">
+                                        <strong class="text-dark small">Ẩn ngay</strong>
+                                    </div>
+                                    <span class="text-muted small ms-4">Lưu trữ lập tức</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: DURATION INPUT -->
+                        <div id="sectionDuration" class="p-3 bg-light rounded-3 border mb-3">
+                            <label class="form-label small fw-semibold text-secondary mb-2">Nhập thời lượng bạn muốn thông báo trước khi ẩn:</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-hourglass-split"></i></span>
+                                <input type="number" name="durationValue" id="archiveDurationValue" class="form-control text-center fw-bold fs-5" min="1" max="9999" value="3" oninput="calculateArchivePreview()">
+                                <select name="durationUnit" id="archiveDurationUnit" class="form-select fw-semibold" style="max-width: 130px;" onchange="calculateArchivePreview()">
+                                    <option value="DAYS" selected>Ngày</option>
+                                    <option value="HOURS">Giờ</option>
+                                    <option value="WEEKS">Tuần</option>
+                                    <option value="MONTHS">Tháng</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Quick presets pills -->
+                            <div class="d-flex flex-wrap align-items-center gap-1 pt-1" id="durationPillsContainer">
+                                <span class="small text-muted me-1">Chọn nhanh:</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(1, 'DAYS')">1 ngày</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill font-monospace active" onclick="setQuickDuration(3, 'DAYS')">3 ngày</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(7, 'DAYS')">7 ngày</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(14, 'DAYS')">14 ngày</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(30, 'DAYS')">30 ngày (1 tháng)</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(60, 'DAYS')">60 ngày</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(90, 'DAYS')">90 ngày (3 tháng)</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(180, 'DAYS')">6 tháng</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill font-monospace" onclick="setQuickDuration(365, 'DAYS')">1 năm</button>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: SPECIFIC DATE INPUT -->
+                        <div id="sectionSpecificDate" class="p-3 bg-light rounded-3 border mb-3 d-none">
+                            <label class="form-label small fw-semibold text-secondary mb-2">Chọn thời điểm chính xác muốn khóa học tự động chuyển sang Lưu trữ:</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-calendar3"></i></span>
+                                <input type="datetime-local" name="specificArchiveDate" id="archiveSpecificDate" class="form-control fw-semibold" onchange="calculateArchivePreview()">
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center gap-1 pt-1">
+                                <span class="small text-muted me-1">Gợi ý mốc:</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" onclick="setSpecificPreset('TODAY_END')">Cuối ngày hôm nay (23:59)</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" onclick="setSpecificPreset('WEEK_END')">Chủ nhật tuần này (23:59)</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" onclick="setSpecificPreset('MONTH_END')">Ngày cuối tháng này (23:59)</button>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: IMMEDIATE NOTICE -->
+                        <div id="sectionImmediate" class="p-3 bg-warning bg-opacity-10 border border-warning border-opacity-50 rounded-3 mb-3 d-none">
+                            <div class="d-flex align-items-center gap-2 text-warning-emphasis fw-semibold">
+                                <i class="bi bi-lightning-charge-fill fs-5 text-warning"></i>
+                                <span>Khóa học sẽ lập tức chuyển sang trạng thái ARCHIVED và ẩn khỏi trang tìm kiếm/danh mục chung.</span>
+                            </div>
+                        </div>
+
+                        <!-- LIVE PREVIEW BOX -->
+                        <div class="p-3 rounded-3 border border-primary border-opacity-25 bg-primary bg-opacity-10 d-flex align-items-start gap-2.5" id="archiveLivePreviewBox">
+                            <i class="bi bi-clock-history text-primary fs-5 mt-n0.5 flex-shrink-0"></i>
+                            <div class="small w-100">
+                                <div class="text-secondary fw-medium">Dự kiến thời điểm lưu trữ:</div>
+                                <div class="fw-bold text-dark fs-6" id="archiveCalculatedTimeDisplay">...</div>
+                                <div class="text-muted mt-0.5" id="archivePreviewHelperText">Banner cảnh báo sẽ hiển thị để nhắc nhở học sinh mới trước khi chính thức ẩn khóa học.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ARCHIVE NOTICE TEXTAREA -->
+                    <div class="mb-2">
+                        <div class="d-flex align-items-center justify-content-between mb-1.5 flex-wrap gap-1">
+                            <label class="saas-form-label fw-bold text-dark small text-uppercase mb-0">Nội dung thông báo hiển thị cho học viên:</label>
+                            <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-primary" onclick="generateAutoNoticeMessage()">
+                                <i class="bi bi-magic me-1"></i>Tự động điền theo thời gian đã chọn
+                            </button>
+                        </div>
                         <textarea name="archiveNotice" id="archiveNoticeText" rows="3" class="form-control saas-form-control"
                             placeholder="Nhập lời nhắn gửi đến học viên..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer saas-modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-warning text-dark fw-bold">
+
+                <div class="modal-footer saas-modal-footer px-4 py-3 bg-light border-top">
+                    <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4 shadow-sm" id="btnSubmitArchive">
                         <i class="bi bi-archive-fill me-1"></i>Xác nhận lưu trữ
                     </button>
                 </div>
@@ -1588,13 +1700,232 @@ body {
             });
     }
 
+        // =========================================================================
+    // ARCHIVE COURSE MODAL CONTROLLER (FLEXIBLE TIMING)
+    // =========================================================================
+    let currentArchiveMode = 'DURATION';
+
     function openArchiveModal(courseId, courseTitle) {
         document.getElementById('archiveCourseId').value = courseId;
         document.getElementById('archiveCourseTitleDisplay').textContent = courseTitle;
-        document.getElementById('archiveNoticeText').value = 'Khóa học này sẽ chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ. Học viên đã đăng ký vẫn được học tập trọn đời bình thường.';
+
+        // Cài đặt ngày tối thiểu cho datetime-local là thời điểm hiện tại
+        const now = new Date();
+        const pad = n => n < 10 ? '0' + n : n;
+        const minVal = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        
+        const dateInput = document.getElementById('archiveSpecificDate');
+        if (dateInput) {
+            dateInput.min = minVal;
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + 3);
+            defaultDate.setHours(23, 59, 0, 0);
+            dateInput.value = defaultDate.getFullYear() + '-' + pad(defaultDate.getMonth() + 1) + '-' + pad(defaultDate.getDate()) + 'T' + pad(defaultDate.getHours()) + ':' + pad(defaultDate.getMinutes());
+        }
+
+        // Mặc định về chế độ hẹn thời gian bất kỳ (3 ngày)
+        switchArchiveMode('DURATION');
+        setQuickDuration(3, 'DAYS');
+        generateAutoNoticeMessage();
+
         const modalEl = document.getElementById('archiveCourseModal');
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
+    }
+
+    function switchArchiveMode(mode) {
+        currentArchiveMode = mode;
+        document.getElementById('archiveModeInput').value = mode;
+
+        ['cardModeDuration', 'cardModeDate', 'cardModeImmediate'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.remove('border-warning', 'bg-warning', 'bg-opacity-10', 'shadow-sm');
+                el.classList.add('border');
+            }
+        });
+
+        const activeCardId = mode === 'DURATION' ? 'cardModeDuration' : (mode === 'SPECIFIC_DATE' ? 'cardModeDate' : 'cardModeImmediate');
+        const activeEl = document.getElementById(activeCardId);
+        if (activeEl) {
+            activeEl.classList.remove('border');
+            activeEl.classList.add('border-warning', 'bg-warning', 'bg-opacity-10', 'shadow-sm');
+        }
+
+        const secDur = document.getElementById('sectionDuration');
+        const secDate = document.getElementById('sectionSpecificDate');
+        const secImm = document.getElementById('sectionImmediate');
+        const previewBox = document.getElementById('archiveLivePreviewBox');
+
+        if (secDur) secDur.classList.toggle('d-none', mode !== 'DURATION');
+        if (secDate) secDate.classList.toggle('d-none', mode !== 'SPECIFIC_DATE');
+        if (secImm) secImm.classList.toggle('d-none', mode !== 'IMMEDIATE');
+        if (previewBox) previewBox.classList.toggle('d-none', mode === 'IMMEDIATE');
+
+        calculateArchivePreview();
+    }
+
+    function setQuickDuration(value, unit) {
+        const valInput = document.getElementById('archiveDurationValue');
+        const unitSelect = document.getElementById('archiveDurationUnit');
+        if (valInput) valInput.value = value;
+        if (unitSelect) unitSelect.value = unit;
+        
+        const container = document.getElementById('durationPillsContainer');
+        if (container) {
+            container.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('btn-outline-primary', 'active');
+                btn.classList.add('btn-outline-secondary');
+            });
+            if (window.event && window.event.target && window.event.target.tagName === 'BUTTON') {
+                window.event.target.classList.remove('btn-outline-secondary');
+                window.event.target.classList.add('btn-outline-primary', 'active');
+            }
+        }
+
+        calculateArchivePreview();
+    }
+
+    function setSpecificPreset(type) {
+        const now = new Date();
+        let target = new Date();
+
+        if (type === 'TODAY_END') {
+            target.setHours(23, 59, 0, 0);
+        } else if (type === 'WEEK_END') {
+            const day = now.getDay();
+            const diff = (7 - day) % 7;
+            target.setDate(now.getDate() + diff);
+            target.setHours(23, 59, 0, 0);
+        } else if (type === 'MONTH_END') {
+            target = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 0);
+        }
+
+        const pad = n => n < 10 ? '0' + n : n;
+        const val = target.getFullYear() + '-' + pad(target.getMonth() + 1) + '-' + pad(target.getDate()) + 'T' + pad(target.getHours()) + ':' + pad(target.getMinutes());
+        const dateInput = document.getElementById('archiveSpecificDate');
+        if (dateInput) dateInput.value = val;
+
+        calculateArchivePreview();
+    }
+
+    function calculateArchivePreview() {
+        const timeDisplay = document.getElementById('archiveCalculatedTimeDisplay');
+        const helperText = document.getElementById('archivePreviewHelperText');
+        const hiddenNoticeDays = document.getElementById('archiveNoticeDaysHidden');
+        if (!timeDisplay) return;
+
+        const now = new Date();
+        let targetTime = new Date();
+
+        if (currentArchiveMode === 'IMMEDIATE') {
+            if (hiddenNoticeDays) hiddenNoticeDays.value = 0;
+            return;
+        }
+
+        if (currentArchiveMode === 'DURATION') {
+            const val = parseInt(document.getElementById('archiveDurationValue').value) || 1;
+            const unit = document.getElementById('archiveDurationUnit').value;
+
+            if (unit === 'HOURS') {
+                targetTime.setTime(now.getTime() + val * 60 * 60 * 1000);
+                if (hiddenNoticeDays) hiddenNoticeDays.value = Math.max(1, Math.round(val / 24));
+            } else if (unit === 'DAYS') {
+                targetTime.setDate(now.getDate() + val);
+                if (hiddenNoticeDays) hiddenNoticeDays.value = val;
+            } else if (unit === 'WEEKS') {
+                targetTime.setDate(now.getDate() + (val * 7));
+                if (hiddenNoticeDays) hiddenNoticeDays.value = val * 7;
+            } else if (unit === 'MONTHS') {
+                targetTime.setMonth(now.getMonth() + val);
+                if (hiddenNoticeDays) hiddenNoticeDays.value = val * 30;
+            }
+        } else if (currentArchiveMode === 'SPECIFIC_DATE') {
+            const dateInput = document.getElementById('archiveSpecificDate').value;
+            if (dateInput) {
+                targetTime = new Date(dateInput);
+                const diffMs = targetTime.getTime() - now.getTime();
+                if (hiddenNoticeDays) hiddenNoticeDays.value = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+            } else {
+                timeDisplay.textContent = 'Vui lòng chọn ngày giờ...';
+                return;
+            }
+        }
+
+        const pad = n => n < 10 ? '0' + n : n;
+        const formattedDate = pad(targetTime.getDate()) + '/' + pad(targetTime.getMonth() + 1) + '/' + targetTime.getFullYear() + ' ' + pad(targetTime.getHours()) + ':' + pad(targetTime.getMinutes());
+        
+        const diffMs = targetTime.getTime() - now.getTime();
+        if (diffMs <= 0) {
+            timeDisplay.innerHTML = '<span class="text-danger">' + formattedDate + ' (Thời gian đã qua hoặc không hợp lệ!)</span>';
+            if (helperText) helperText.textContent = 'Vui lòng chọn thời điểm trong tương lai.';
+            return;
+        }
+
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+        const remHours = diffHours % 24;
+
+        let remainingStr = '';
+        if (diffDays > 0) {
+            remainingStr = diffDays + ' ngày' + (remHours > 0 ? ' ' + remHours + ' giờ' : '');
+        } else if (diffHours > 0) {
+            const remMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            remainingStr = diffHours + ' giờ' + (remMins > 0 ? ' ' + remMins + ' phút' : '');
+        } else {
+            const remMins = Math.floor(diffMs / (1000 * 60));
+            remainingStr = Math.max(1, remMins) + ' phút';
+        }
+
+        timeDisplay.innerHTML = '<span class="text-primary">' + formattedDate + '</span> <span class="badge bg-primary bg-opacity-10 text-primary ms-1">còn ' + remainingStr + '</span>';
+        if (helperText) {
+            helperText.textContent = 'Banner đếm ngược sẽ hiển thị công khai trên trang khóa học cho đến thời điểm trên.';
+        }
+    }
+
+    function generateAutoNoticeMessage() {
+        const noticeText = document.getElementById('archiveNoticeText');
+        if (!noticeText) return;
+
+        if (currentArchiveMode === 'IMMEDIATE') {
+            noticeText.value = 'Khóa học này đã chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ. Học viên đã đăng ký vẫn được học tập trọn đời bình thường.';
+            return;
+        }
+
+        const timeDisplayEl = document.getElementById('archiveCalculatedTimeDisplay');
+        const dateSpan = timeDisplayEl ? timeDisplayEl.querySelector('.text-primary') : null;
+        const formattedDate = dateSpan ? dateSpan.textContent : '';
+
+        if (formattedDate) {
+            noticeText.value = 'Khóa học này sẽ chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ vào lúc ' + formattedDate + '. Học viên quan tâm vui lòng đăng ký trước thời hạn này. Học viên đã đăng ký vẫn được học tập trọn đời bình thường.';
+        } else {
+            noticeText.value = 'Khóa học này sẽ chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ. Học viên đã đăng ký vẫn được học tập trọn đời bình thường.';
+        }
+    }
+
+    function validateArchiveSubmit() {
+        if (currentArchiveMode === 'DURATION') {
+            const val = parseInt(document.getElementById('archiveDurationValue').value);
+            if (isNaN(val) || val <= 0) {
+                alert('Vui lòng nhập thời lượng lưu trữ lớn hơn 0.');
+                document.getElementById('archiveDurationValue').focus();
+                return false;
+            }
+        } else if (currentArchiveMode === 'SPECIFIC_DATE') {
+            const dateVal = document.getElementById('archiveSpecificDate').value;
+            if (!dateVal) {
+                alert('Vui lòng chọn ngày giờ muốn khóa học chuyển sang Lưu trữ.');
+                document.getElementById('archiveSpecificDate').focus();
+                return false;
+            }
+            const targetTime = new Date(dateVal);
+            if (targetTime.getTime() <= Date.now()) {
+                alert('Thời điểm lưu trữ phải ở trong tương lai. Vui lòng chọn lại.');
+                document.getElementById('archiveSpecificDate').focus();
+                return false;
+            }
+        }
+        return true;
     }
 
     // =========================================================================

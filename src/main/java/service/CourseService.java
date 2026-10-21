@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import util.DbConnection;
@@ -434,11 +435,9 @@ public class CourseService {
     }
 
     /**
-     * Lên lịch hoặc thực hiện lưu trữ khóa học (Archive).
-     * - noticeDays == 0: Lưu trữ ngay lập tức, status = ARCHIVED, archive_at = now().
-     * - noticeDays > 0: Thông báo trước vài ngày, status = PUBLISHED, archive_at = now() + noticeDays.
+     * Lên lịch hoặc thực hiện lưu trữ khóa học (Archive) theo mốc thời gian cụ thể (OffsetDateTime).
      */
-    public void scheduleArchiveCourse(long courseId, int noticeDays, String customNotice, UserDto currentUser) {
+    public void scheduleArchiveCourse(long courseId, OffsetDateTime targetArchiveTime, String customNotice, UserDto currentUser) {
         if (currentUser == null) {
             throw new SecurityException("Vui lòng đăng nhập để thực hiện thao tác này.");
         }
@@ -452,27 +451,41 @@ public class CourseService {
                 throw new IllegalStateException("Khóa học ở trạng thái Nháp (Draft) không cần lưu trữ, bạn có thể xóa trực tiếp.");
             }
 
-            OffsetDateTime targetArchiveTime;
+            OffsetDateTime now = OffsetDateTime.now();
             CourseStatus targetStatus;
-            String notice = (customNotice != null && !customNotice.trim().isEmpty())
-                    ? customNotice.trim()
-                    : (noticeDays > 0
-                        ? ("Khóa học này sẽ chính thức ngừng tuyển sinh mới và chuyển sang chế độ Lưu trữ sau " + noticeDays + " ngày.")
-                        : "Khóa học này đã được chuyển sang chế độ Lưu trữ (ngừng tuyển sinh mới).");
+            OffsetDateTime finalArchiveTime;
 
-            if (noticeDays <= 0) {
+            if (targetArchiveTime == null || !targetArchiveTime.isAfter(now)) {
                 targetStatus = CourseStatus.ARCHIVED;
-                targetArchiveTime = OffsetDateTime.now();
+                finalArchiveTime = now;
             } else {
                 targetStatus = CourseStatus.PUBLISHED;
-                targetArchiveTime = OffsetDateTime.now().plusDays(noticeDays);
+                finalArchiveTime = targetArchiveTime;
             }
 
-            courseDao.updateArchiveStatus(con, courseId, targetStatus, targetArchiveTime, notice);
+            String notice = (customNotice != null && !customNotice.trim().isEmpty())
+                    ? customNotice.trim()
+                    : (targetStatus == CourseStatus.ARCHIVED
+                        ? "Khóa học này đã được chuyển sang chế độ Lưu trữ (ngừng tuyển sinh mới)."
+                        : ("Khóa học này sẽ chính thức ngừng tuyển sinh mới và chuyển sang chế độ Lưu trữ vào ngày "
+                            + finalArchiveTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + "."));
+
+            courseDao.updateArchiveStatus(con, courseId, targetStatus, finalArchiveTime, notice);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lưu trữ khóa học: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Lên lịch hoặc thực hiện lưu trữ khóa học (Archive) theo số ngày (Backward compatibility).
+     */
+    public void scheduleArchiveCourse(long courseId, int noticeDays, String customNotice, UserDto currentUser) {
+        OffsetDateTime targetTime = (noticeDays <= 0) 
+                ? OffsetDateTime.now() 
+                : OffsetDateTime.now().plusDays(noticeDays);
+        scheduleArchiveCourse(courseId, targetTime, customNotice, currentUser);
+    }
+
 
     /**
      * Khôi phục / Hủy lưu trữ (Unarchive) khóa học: Đưa trở lại trạng thái PUBLISHED và xóa thông báo lưu trữ.

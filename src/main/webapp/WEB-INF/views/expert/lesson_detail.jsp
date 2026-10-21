@@ -139,7 +139,12 @@
                                 <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}" class="btn btn-light btn-sm">
                                     <i class="bi bi-arrow-left me-1"></i>Hủy bỏ
                                 </a>
-                                <span id="autoSaveStatusText" class="small text-muted"></span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="autoSaveStatusText" class="small text-muted"></span>
+                                    <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 small text-secondary" onclick="manualSaveDraft()" title="Lưu nháp ngay bây giờ">
+                                        <i class="bi bi-cloud-arrow-up me-1"></i>Lưu nháp ngay
+                                    </button>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary fw-semibold px-4 shadow-sm" id="btnSubmitLesson">
                                 <i class="bi bi-save me-1"></i>Lưu bài học
@@ -394,6 +399,7 @@
             if (hiddenEl) {
                 hiddenEl.value = getEditorContent();
             }
+            triggerAutoSave(false);
         });
 
         updateCharCount();
@@ -408,9 +414,10 @@
     }
 
     // =========================================================================
-    // AUTO-SAVE DRAFT SYSTEM (TỰ ĐỘNG LƯU NHÁP MỖI 5 PHÚT)
+    // AUTO-SAVE DRAFT SYSTEM (TỰ ĐỘNG LƯU LIÊN TỤC / REAL-TIME AUTO-SAVE)
     // =========================================================================
-    const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 phút = 300,000ms
+    const AUTO_SAVE_INTERVAL_MS = 15 * 1000; // 15 giây đồng bộ nền định kỳ
+    let autoSaveTimeout = null;
     const courseId = document.getElementById('lessonCourseId') ? document.getElementById('lessonCourseId').value : '${course.id}';
     const lessonIdEl = document.getElementById('lessonId');
     const lessonId = lessonIdEl ? lessonIdEl.value : 'new';
@@ -456,6 +463,44 @@
         return hh + ':' + mm + ':' + ss + ' ' + dd + '/' + mo + '/' + yyyy;
     }
 
+    function saveDraftLocalOnly() {
+        if (isSubmitting) return;
+        if (!isFormDirty()) return;
+        try {
+            const cur = getFormData();
+            cur.savedAt = formatTime();
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(cur));
+        } catch (e) {
+            console.warn('Lỗi lưu nháp localStorage:', e);
+        }
+    }
+
+    function triggerAutoSave(immediate = false) {
+        if (isSubmitting) return;
+
+        // 1. Lưu ngay vào localStorage tức thì (0ms) để không bao giờ mất ký tự
+        saveDraftLocalOnly();
+
+        // 2. Xóa bộ đếm debounce cũ
+        if (autoSaveTimeout) {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = null;
+        }
+
+        if (immediate) {
+            saveDraft(false);
+        } else {
+            const statusEl = document.getElementById('autoSaveStatusText');
+            if (statusEl && isFormDirty()) {
+                statusEl.innerHTML = '<span class="text-muted"><span class="spinner-grow spinner-grow-sm me-1" style="width: 8px; height: 8px;"></span>Đang ghi nhận thay đổi...</span>';
+            }
+            // Debounce 1.5 giây sau khi ngừng gõ để gửi backup lên server
+            autoSaveTimeout = setTimeout(function() {
+                saveDraft(false);
+            }, 1500);
+        }
+    }
+
     function saveDraft(isManual = false) {
         if (isSubmitting || isSavingDraft) return;
 
@@ -475,8 +520,10 @@
         }
 
         // 1. Lưu ngay vào localStorage của trình duyệt
+        let localSuccess = false;
         try {
             localStorage.setItem(DRAFT_KEY, JSON.stringify(currentData));
+            localSuccess = true;
         } catch (e) {
             console.warn('Lỗi lưu nháp localStorage:', e);
         }
@@ -494,19 +541,30 @@
             },
             body: params.toString()
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        })
         .then(data => {
             isSavingDraft = false;
-            const timeDisplay = (data && data.savedAt) ? data.savedAt : nowStr;
-            if (statusEl) {
-                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã tự động lưu nháp (' + timeDisplay + ')</span>';
-                setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 4000);
+            if (data && data.success) {
+                const timeDisplay = (data && data.savedAt) ? data.savedAt : nowStr;
+                if (statusEl) {
+                    statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã tự động lưu nháp (' + timeDisplay + ')</span>';
+                    setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 4000);
+                }
+            } else {
+                throw new Error(data && data.message ? data.message : 'Lỗi từ máy chủ');
             }
         })
         .catch(err => {
             isSavingDraft = false;
             if (statusEl) {
-                statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check2 me-1"></i>Đã tự động lưu nháp (' + nowStr + ')</span>';
+                if (localSuccess) {
+                    statusEl.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Đã lưu nháp cục bộ</span>';
+                } else {
+                    statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Lỗi lưu nháp</span>';
+                }
                 setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 4000);
             }
         });
@@ -617,6 +675,7 @@
         try {
             localStorage.removeItem(DRAFT_KEY);
         } catch (e) {}
+        fetch('/expert/delete-lesson-draft?courseId=' + encodeURIComponent(courseId) + '&lessonId=' + encodeURIComponent(lessonId), { method: 'POST' });
     }
 
     function checkExistingDraft() {
@@ -661,9 +720,22 @@
         // Kiểm tra xem có bản nháp chưa lưu không
         checkExistingDraft();
 
-        // Kích hoạt bộ định thời tự động lưu sau mỗi 5 phút (300,000 ms)
+        // Lắng nghe thay đổi trên tất cả các trường để tự động lưu tức thì
+        const inputsToWatch = ['lessonTitle', 'lessonVideoUrl', 'lessonDocumentUrl', 'lessonModuleId', 'lessonOrderIndex'];
+        inputsToWatch.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', () => triggerAutoSave(false));
+                el.addEventListener('change', () => triggerAutoSave(true));
+                el.addEventListener('blur', () => triggerAutoSave(true));
+            }
+        });
+
+        // Định kỳ kiểm tra đồng bộ nền mỗi 15 giây
         setInterval(function() {
-            saveDraft(false);
+            if (isFormDirty() && !isSavingDraft) {
+                saveDraft(false);
+            }
         }, AUTO_SAVE_INTERVAL_MS);
 
         // Bắt sự kiện nộp biểu mẫu: đồng bộ nội dung từ Quill và dọn dẹp nháp

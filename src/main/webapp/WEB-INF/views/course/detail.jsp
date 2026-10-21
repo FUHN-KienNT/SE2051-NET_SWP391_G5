@@ -13,7 +13,7 @@
                 <div class="flex-grow-1">
                     <h5 class="fw-bold mb-1 text-dark">Thông báo: Khóa học sắp chuyển sang chế độ Lưu trữ</h5>
                     <p class="mb-0 small text-dark">
-                        Khóa học này dự kiến sẽ chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ vào ngày <strong>${course.formattedArchiveAt}</strong> (còn <strong>${course.daysUntilArchive}</strong> ngày).
+                        Khóa học này dự kiến sẽ chính thức ngừng nhận học viên mới và chuyển sang chế độ Lưu trữ vào ngày <strong>${course.formattedArchiveAt}</strong> (còn <strong>${course.timeRemainingUntilArchive}</strong>).
                         <c:if test="${not empty course.archiveNotice}">
                             <br><span class="fw-semibold">Lời nhắn từ Chuyên gia:</span> "${course.archiveNotice}"
                         </c:if>

@@ -225,6 +225,31 @@ public class CourseDto {
         return Math.max(0, days);
     }
 
+    public String getTimeRemainingUntilArchive() {
+        if (archiveAt == null) return "";
+        OffsetDateTime now = OffsetDateTime.now();
+        if (!archiveAt.isAfter(now)) return "Đã lưu trữ";
+        java.time.Duration diff = java.time.Duration.between(now, archiveAt);
+        long days = diff.toDays();
+        long hours = diff.toHours() % 24;
+        long minutes = diff.toMinutes() % 60;
+        if (days > 0) {
+            if (hours > 0) {
+                return days + " ngày " + hours + " giờ";
+            }
+            return days + " ngày";
+        } else if (hours > 0) {
+            if (minutes > 0) {
+                return hours + " giờ " + minutes + " phút";
+            }
+            return hours + " giờ";
+        } else if (minutes > 0) {
+            return minutes + " phút";
+        } else {
+            return "ít hơn 1 phút";
+        }
+    }
+
     public String getFormattedArchiveAt() {
         if (archiveAt == null) return "";
         return archiveAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));

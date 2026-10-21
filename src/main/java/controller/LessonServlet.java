@@ -20,6 +20,14 @@ import java.util.List;
 import service.CourseService;
 import util.SessionUtil;
 
+import java.time.LocalDateTime;
+
+import java.time.OffsetDateTime;
+
+import java.time.ZoneId;
+
+import java.time.format.DateTimeFormatter;
+
 /**
  * Controller phụ trách các màn hình Lesson Management (BF-04) của Toàn:
  * - Expert Dashboard (II.4.3)
@@ -28,6 +36,14 @@ import util.SessionUtil;
  */
 @WebServlet(name = "LessonServlet", urlPatterns = {"/expert/*"})
 public class LessonServlet extends HttpServlet {
+    // Quản lý bộ nhớ đệm bản nháp đa thiết bị theo tài khoản Expert (User ID)
+    private static final java.util.concurrent.ConcurrentHashMap<String, java.util.Map<String, String>> USER_DRAFTS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static String buildUserDraftKey(long userId, String courseId, String lessonId) {
+        String cId = (courseId != null && !courseId.trim().isEmpty()) ? courseId.trim() : "0";
+        String lId = (lessonId != null && !lessonId.trim().isEmpty()) ? lessonId.trim() : "new";
+        return "u" + userId + "_c" + cId + "_l" + lId;
+    }
     private CourseService courseService;
 
     // =========================================================================
@@ -121,6 +137,9 @@ public class LessonServlet extends HttpServlet {
                 break;
             case "get-lesson-draft":
                 getLessonDraft(req, resp);
+                break;
+            case "delete-lesson-draft":
+                deleteLessonDraft(req, resp);
                 break;
             case "preview-batch-videos":
                 previewBatchVideos(req, resp);
@@ -267,7 +286,7 @@ public class LessonServlet extends HttpServlet {
     }
 
     /**
-     * [Tự động lưu nháp sau mỗi 5 phút - Backup Session]:
+     * [Tự động lưu nháp liên tục (Real-time Auto-save) - Backup Session]:
      * Nhận yêu cầu tự động lưu bản nháp từ màn hình soạn thảo bài học,
      * lưu trữ tạm thời trong Session để bảo toàn dữ liệu tránh mất mát bài khi chưa kịp ấn lưu.
      */
@@ -301,6 +320,11 @@ public class LessonServlet extends HttpServlet {
         draft.put("content", content != null ? content : "");
         draft.put("savedAt", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")));
 
+        // 1. Lưu bản nháp theo User ID -> Hỗ trợ làm việc xuyên thiết bị (đổi sang máy khác vẫn nhận được)
+        String userDraftKey = buildUserDraftKey(currentUser.getId(), courseId, lessonId);
+        USER_DRAFTS.put(userDraftKey, draft);
+
+        // 2. Dự phòng trong Session của trình duyệt hiện tại
         req.getSession().setAttribute(draftKey, draft);
 
         resp.setContentType("application/json;charset=UTF-8");
@@ -308,15 +332,25 @@ public class LessonServlet extends HttpServlet {
     }
 
     /**
-     * [Khôi phục bản nháp từ Session]:
+     * [Khôi phục bản nháp đa thiết bị theo tài khoản Expert]:
      */
     private void getLessonDraft(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String courseId = req.getParameter("courseId");
         String lessonId = req.getParameter("lessonId");
         String draftKey = "draft_lesson_" + (courseId != null ? courseId : "0") + "_" + (lessonId != null && !lessonId.trim().isEmpty() ? lessonId.trim() : "new");
 
-        @SuppressWarnings("unchecked")
-        java.util.Map<String, String> draft = (java.util.Map<String, String>) req.getSession().getAttribute(draftKey);
+        java.util.Map<String, String> draft = null;
+        if (currentUser != null) {
+            String userDraftKey = buildUserDraftKey(currentUser.getId(), courseId, lessonId);
+            draft = USER_DRAFTS.get(userDraftKey);
+        }
+        if (draft == null) {
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, String> sessionDraft = (java.util.Map<String, String>) req.getSession().getAttribute(draftKey);
+            draft = sessionDraft;
+        }
+
         resp.setContentType("application/json;charset=UTF-8");
         if (draft == null) {
             resp.getWriter().write("{\"exists\":false}");
@@ -328,6 +362,25 @@ public class LessonServlet extends HttpServlet {
         }
         json.append("}");
         resp.getWriter().write(json.toString());
+    }
+
+    /**
+     * [Xóa bản nháp khi người dùng chọn Bỏ qua hoặc bài học đã lưu thành công]:
+     */
+    private void deleteLessonDraft(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        String courseId = req.getParameter("courseId");
+        String lessonId = req.getParameter("lessonId");
+        String draftKey = "draft_lesson_" + (courseId != null ? courseId : "0") + "_" + (lessonId != null && !lessonId.trim().isEmpty() ? lessonId.trim() : "new");
+
+        if (currentUser != null) {
+            String userDraftKey = buildUserDraftKey(currentUser.getId(), courseId, lessonId);
+            USER_DRAFTS.remove(userDraftKey);
+        }
+        req.getSession().removeAttribute(draftKey);
+
+        resp.setContentType("application/json;charset=UTF-8");
+        resp.getWriter().write("{\"success\":true}");
     }
 
     /**
@@ -560,7 +613,11 @@ public class LessonServlet extends HttpServlet {
     /**
      * Lưu trữ / Lên lịch lưu trữ khóa học (Archive):
      * - Áp dụng cho khóa học đã xuất bản (PUBLISHED).
-     * - Cho phép hẹn giờ thông báo trước vài ngày hoặc lưu trữ ngay.
+     * - Hỗ trợ các chế độ thời gian tùy ý:
+     *   1. IMMEDIATE: Ẩn ngay lập tức.
+     *   2. DURATION: Tùy ý nhập số lượng bất kỳ kèm đơn vị (Giờ / Ngày / Tuần / Tháng).
+     *   3. SPECIFIC_DATE: Chọn mốc ngày giờ chính xác trên lịch (datetime-local).
+     *   4. Backward compatibility: Tham số noticeDays truyền thống.
      */
     private void archiveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
@@ -575,21 +632,61 @@ public class LessonServlet extends HttpServlet {
         if (idStr != null) {
             try {
                 long courseId = Long.parseLong(idStr.trim());
-                int noticeDays = 3;
-                String noticeDaysStr = req.getParameter("noticeDays");
-                if (noticeDaysStr != null && !noticeDaysStr.trim().isEmpty()) {
-                    noticeDays = Integer.parseInt(noticeDaysStr.trim());
-                }
+                String archiveMode = req.getParameter("archiveMode");
                 String customNotice = req.getParameter("archiveNotice");
 
-                courseService.scheduleArchiveCourse(courseId, noticeDays, customNotice, currentUser);
-                if (noticeDays > 0) {
-                    SessionUtil.setFlashSuccess(req, "Đã lên lịch lưu trữ khóa học thành công! Thông báo sẽ hiển thị trên trang khóa học trong " + noticeDays + " ngày tới.");
+                OffsetDateTime targetArchiveTime;
+
+                if ("IMMEDIATE".equalsIgnoreCase(archiveMode)) {
+                    targetArchiveTime = OffsetDateTime.now();
+                } else if ("SPECIFIC_DATE".equalsIgnoreCase(archiveMode)) {
+                    String dateStr = req.getParameter("specificArchiveDate");
+                    if (dateStr != null && !dateStr.trim().isEmpty()) {
+                        LocalDateTime localDt = LocalDateTime.parse(dateStr.trim());
+                        targetArchiveTime = localDt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
+                    } else {
+                        targetArchiveTime = OffsetDateTime.now();
+                    }
+                } else if ("DURATION".equalsIgnoreCase(archiveMode)) {
+                    String durationValStr = req.getParameter("durationValue");
+                    String durationUnit = req.getParameter("durationUnit");
+                    long durationVal = (durationValStr != null && !durationValStr.trim().isEmpty())
+                            ? Long.parseLong(durationValStr.trim())
+                            : 3L;
+
+                    if (durationVal <= 0) {
+                        targetArchiveTime = OffsetDateTime.now();
+                    } else {
+                        OffsetDateTime now = OffsetDateTime.now();
+                        if ("HOURS".equalsIgnoreCase(durationUnit)) {
+                            targetArchiveTime = now.plusHours(durationVal);
+                        } else if ("WEEKS".equalsIgnoreCase(durationUnit)) {
+                            targetArchiveTime = now.plusWeeks(durationVal);
+                        } else if ("MONTHS".equalsIgnoreCase(durationUnit)) {
+                            targetArchiveTime = now.plusMonths(durationVal);
+                        } else {
+                            targetArchiveTime = now.plusDays(durationVal);
+                        }
+                    }
+                } else {
+                    int noticeDays = 3;
+                    String noticeDaysStr = req.getParameter("noticeDays");
+                    if (noticeDaysStr != null && !noticeDaysStr.trim().isEmpty()) {
+                        noticeDays = Integer.parseInt(noticeDaysStr.trim());
+                    }
+                    targetArchiveTime = (noticeDays <= 0) ? OffsetDateTime.now() : OffsetDateTime.now().plusDays(noticeDays);
+                }
+
+                courseService.scheduleArchiveCourse(courseId, targetArchiveTime, customNotice, currentUser);
+
+                if (targetArchiveTime != null && targetArchiveTime.isAfter(OffsetDateTime.now())) {
+                    String formattedTime = targetArchiveTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                    SessionUtil.setFlashSuccess(req, "Đã lên lịch lưu trữ khóa học thành công! Khóa học sẽ tự động chuyển sang chế độ Lưu trữ vào lúc " + formattedTime + ".");
                 } else {
                     SessionUtil.setFlashSuccess(req, "Đã chuyển khóa học sang chế độ Lưu trữ! Khóa học đã được ẩn khỏi danh mục chung.");
                 }
             } catch (Exception e) {
-                SessionUtil.setFlashError(req, e.getMessage());
+                SessionUtil.setFlashError(req, "Lỗi lưu trữ khóa học: " + e.getMessage());
             }
         }
         resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
@@ -888,9 +985,13 @@ public class LessonServlet extends HttpServlet {
 
             courseService.saveLesson(dto);
 
-            // [Xóa bản nháp]: Khi người dùng đã lưu thành công bài học, xóa bỏ draft trong session
+            // [Xóa bản nháp]: Khi người dùng đã lưu thành công bài học, xóa bỏ draft trên cả User Draft Map và Session
             String draftKey = "draft_lesson_" + (courseIdStr != null ? courseIdStr : "0") + "_" + (dto.getId() != null ? dto.getId() : "new");
             req.getSession().removeAttribute(draftKey);
+            if (currentUser != null) {
+                USER_DRAFTS.remove(buildUserDraftKey(currentUser.getId(), courseIdStr, dto.getId() != null ? String.valueOf(dto.getId()) : "new"));
+                USER_DRAFTS.remove(buildUserDraftKey(currentUser.getId(), courseIdStr, "new"));
+            }
 
             // [Flash Attribute chống XSS]: Lưu thông báo an toàn qua session
             SessionUtil.setFlashSuccess(req, "Đã lưu thông tin bài học thành công!");
