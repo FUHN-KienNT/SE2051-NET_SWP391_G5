@@ -544,11 +544,6 @@ body {
                 <button type="button" class="btn btn-saas-outline" data-bs-toggle="modal" data-bs-target="#addModuleModal">
                     <i class="bi bi-folder-plus text-primary me-1"></i>Thêm Chương mới
                 </button>
-                <c:if test="${not empty course.modules && course.totalLessons > 0}">
-                    <button type="button" class="btn btn-saas-outline" onclick="confirmAiAutoGroup()" title="Dùng AI tự động gom nhóm bài học vào các Chương chuẩn sư phạm">
-                        <i class="bi bi-stars text-warning me-1"></i>AI chia Module
-                    </button>
-                </c:if>
                 <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-saas-primary">
                     <i class="bi bi-plus-lg me-1"></i>Thêm bài học
                 </a>
@@ -778,19 +773,6 @@ body {
             confirmIcon: 'bi bi-arrow-counterclockwise me-1',
             confirmBtnClass: 'btn-warning text-dark',
             confirmUrl: url
-        });
-    }
-
-    function confirmAiAutoGroup() {
-        showConfirmModal({
-            title: 'AI Tự động phân chia Chương học',
-            html: 'Hệ thống sẽ dùng <strong>Gemini AI</strong> đọc toàn bộ tiêu đề bài học và tự động gom nhóm lại thành các Chương học (Modules) khoa học theo đúng chuẩn tiến trình sư phạm.<br><span class="text-muted small mt-2 d-inline-block"><i class="bi bi-info-circle me-1"></i>Các bài học hiện có sẽ được sắp xếp vào các chương mới tương ứng.</span>',
-            type: 'warning',
-            icon: 'bi bi-stars',
-            confirmText: 'Bắt đầu phân chia',
-            confirmIcon: 'bi bi-magic me-1',
-            confirmBtnClass: 'btn-primary',
-            confirmUrl: '${pageContext.request.contextPath}/expert/auto-group-modules?courseId=${course.id}'
         });
     }
 </script>

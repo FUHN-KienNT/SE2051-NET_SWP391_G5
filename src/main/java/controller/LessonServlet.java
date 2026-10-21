@@ -141,9 +141,6 @@ public class LessonServlet extends HttpServlet {
             case "delete-lesson-draft":
                 deleteLessonDraft(req, resp);
                 break;
-            case "auto-group-modules":
-                autoGroupModules(req, resp);
-                break;
             case "suggest-module-title":
                 suggestModuleTitle(req, resp);
                 break;
@@ -1102,33 +1099,6 @@ public class LessonServlet extends HttpServlet {
             SessionUtil.setFlashError(req, e.getMessage());
         }
         resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + (courseIdStr != null ? courseIdStr : ""));
-    }
-
-    /**
-     * [AI MODULE GROUPING]: Tự động phân chia toàn bộ bài học trong khóa học vào các Module bằng Gemini AI.
-     */
-    private void autoGroupModules(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        UserDto currentUser = SessionUtil.getCurrentUser(req);
-        if (currentUser == null) {
-            resp.sendRedirect(req.getContextPath() + "/auth/login");
-            return;
-        }
-
-        String courseIdStr = req.getParameter("courseId");
-        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
-            return;
-        }
-
-        long courseId = Long.parseLong(courseIdStr.trim());
-        try {
-            courseService.checkCourseOwnership(courseId, currentUser);
-            int groupCount = courseService.autoGroupCourseModulesWithAi(courseId);
-            SessionUtil.setFlashSuccess(req, "AI đã phân tích và phân chia thành công " + groupCount + " chương học cho khóa học!");
-        } catch (Exception e) {
-            SessionUtil.setFlashError(req, "Lỗi khi AI phân chia module: " + e.getMessage());
-        }
-        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId);
     }
 
     /**
