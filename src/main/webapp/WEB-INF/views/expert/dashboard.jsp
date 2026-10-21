@@ -2250,9 +2250,6 @@ body {
                             titleInp.dataset.autofilled = 'true';
                         }
                     }
-                    if (list.length > 2) {
-                        infoText += ' • <span class="text-primary fw-medium"><i class="bi bi-stars me-1"></i>AI tự động chia Module</span>';
-                    }
 
                     // Tự động gán danh mục nếu phát hiện (chọn ngầm định)
                     if (data.suggestedCategoryId && data.suggestedCategoryName) {
