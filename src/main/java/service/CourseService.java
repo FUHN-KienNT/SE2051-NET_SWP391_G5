@@ -1000,17 +1000,18 @@ public class CourseService {
     public static void autoDetectCategory(BatchParseResult result, String rawInputText) {
         if (result == null) return;
 
+        List<SettingDto> activeCategories = fetchActiveCategories();
+        String title = result.getPlaylistTitle();
+        if (title == null || title.isEmpty()) {
+            if (result.getLessons() != null && !result.getLessons().isEmpty()) {
+                title = result.getLessons().get(0).getTitle();
+            } else if (rawInputText != null && !rawInputText.trim().isEmpty()) {
+                title = rawInputText.split("\\r?\\n")[0];
+            }
+        }
+
         // 1. [AI CLASSIFICATION]: Thử nhận diện ngữ nghĩa thông minh qua Google Gemini 2.5 Flash Lite
         if (GeminiAiUtil.isAvailable()) {
-            List<SettingDto> activeCategories = fetchActiveCategories();
-            String title = result.getPlaylistTitle();
-            if (title == null || title.isEmpty()) {
-                if (result.getLessons() != null && !result.getLessons().isEmpty()) {
-                    title = result.getLessons().get(0).getTitle();
-                } else if (rawInputText != null && !rawInputText.trim().isEmpty()) {
-                    title = rawInputText.split("\\r?\\n")[0];
-                }
-            }
 
             StringBuilder ctxBuilder = new StringBuilder();
             if (result.getLessons() != null) {
@@ -1035,118 +1036,21 @@ public class CourseService {
             }
         }
 
-        // 2. [FALLBACK HEURISTIC]: Chốt chặn tự phục hồi nếu AI gặp lỗi mạng, quota hoặc offline
-        StringBuilder textBuilder = new StringBuilder();
-        if (result.getPlaylistTitle() != null) {
-            // Nhân đôi trọng số của tiêu đề playlist
-            textBuilder.append(result.getPlaylistTitle()).append(" ")
-                       .append(result.getPlaylistTitle()).append(" ")
-                       .append(result.getPlaylistTitle()).append(" ");
-        }
-        if (result.getLessons() != null) {
-            for (LessonDto l : result.getLessons()) {
-                if (l.getTitle() != null) {
-                    textBuilder.append(l.getTitle()).append(" ");
+        // 2. [FALLBACK DYNAMIC]: Nếu AI không phản hồi, đối chiếu trực tiếp với tên các danh mục thực tế từ CSDL
+        if (activeCategories != null && !activeCategories.isEmpty()) {
+            String searchCorpus = ((title != null ? title : "") + " " + (rawInputText != null ? rawInputText : "")).toLowerCase();
+            String normCorpus = removeDiacritics(searchCorpus);
+            for (SettingDto cat : activeCategories) {
+                if (cat.getName() != null && !cat.getName().trim().isEmpty()) {
+                    String normCat = removeDiacritics(cat.getName().toLowerCase());
+                    if (normCorpus.contains(normCat)) {
+                        result.setSuggestedCategoryId(cat.getId());
+                        result.setSuggestedCategoryName(cat.getName());
+                        return;
+                    }
                 }
             }
         }
-        if (rawInputText != null && !rawInputText.trim().isEmpty()) {
-            textBuilder.append(rawInputText).append(" ");
-        }
-
-        String raw = textBuilder.toString().toLowerCase();
-        String normalized = removeDiacritics(raw);
-
-        // 1. Lập trình (ID: 6)
-        int progScore = countMatches(normalized, 
-            "lap trinh", "code", "coding", "developer", "programming", "java", "python", "javascript", "react", 
-            "vue", "angular", "node", "nodejs", "html", "css", "frontend", "backend", "fullstack", "web", "app", 
-            "flutter", "android", "ios", "swift", "spring", "django", "laravel", "php", "sql", "c++", "c#", 
-            ".net", "thuat toan", "cau truc du lieu", "oop", "api", "git", "docker", "devops", "cloud", "security");
-
-        // 2. Khoa học Dữ liệu & AI (ID: 7)
-        int dataAiScore = countMatches(normalized, 
-            "data", "ai", "du lieu", "tri tue nhan tao", "machine learning", "deep learning", 
-            "khoa hoc du lieu", "phan tich du lieu", "pandas", "numpy", "tensorflow", "pytorch", 
-            "power bi", "tableau", "nlp", "llm", "chatgpt", "prompt", "neural network", "big data");
-
-        // 3. Thiết kế (ID: 18)
-        int designScore = countMatches(normalized, 
-            "thiet ke", "design", "photoshop", "illustrator", "figma", "ui", "ux", "do hoa", 
-            "graphic", "canva", "indesign", "typography", "banner", "logo", "poster", "blend", "lightroom");
-
-        // 4. Kinh doanh (ID: 20)
-        int businessScore = countMatches(normalized, 
-            "kinh doanh", "business", "khoi nghiep", "startup", "quan tri", "van hanh", 
-            "doanh nghiep", "ban hang", "sales", "ceo", "thuong mai", "lanh dao", "chien luoc");
-
-        // 5. Marketing (ID: 19)
-        int marketingScore = countMatches(normalized, 
-            "marketing", "seo", "ads", "quang cao", "truyen thong", "facebook ads", "google ads", 
-            "tiktok ads", "content", "tiep thi", "digital marketing", "copywriting");
-
-        // 6. Ngoại ngữ (ID: 21)
-        int languageScore = countMatches(normalized, 
-            "tieng anh", "english", "ielts", "toeic", "tieng nhat", "tieng han", "tieng trung", 
-            "tieng hoa", "ngoai ngu", "ngu phap", "tu vung", "phat am", "listening", "speaking", "giao tiep");
-
-        // 7. Kỹ năng mềm (ID: 8)
-        int softSkillScore = countMatches(normalized, 
-            "ky nang", "thuyet trinh", "lam viec nhom", "quan ly thoi gian", 
-            "tu duy", "soft skill", "tu tin", "dam phan", "thuyet phuc");
-
-        // 8. Tài chính (ID: 22)
-        int financeScore = countMatches(normalized, 
-            "tai chinh", "dau tu", "chung khoan", "co phieu", "crypto", "bitcoin", "tien te", 
-            "bat dong san", "tiet kiem", "finance", "quan ly tai chinh", "kinh te");
-
-        // 9. Nghệ thuật & Sáng tạo (ID: 23)
-        int artScore = countMatches(normalized, 
-            "nhiep anh", "chup anh", "video", "quay phim", "capcut", "premiere", "after effects", 
-            "dung phim", "am nhac", "guitar", "piano", "thanh nhac", "hat", "ve", "hoi hoa");
-
-        // 10. Tử Vi & Phong Thủy (ID: 13)
-        int tuViScore = countMatches(normalized, 
-            "tu vi", "phong thuy", "bat tu", "kinh dich", "ngu hanh", "am duong", "la so", "huyen hoc");
-
-        // 11. Nhân tướng học (ID: 12)
-        int physScore = countMatches(normalized, 
-            "nhan tuong", "dien mao", "nhan trac", "tuong so", "xem tuong", "ngu quan", "khuon mat", "chi tay");
-
-        // 12. Chiêm tinh học (ID: 14)
-        int astroScore = countMatches(normalized, 
-            "chiem tinh", "cung hoang dao", "astrology", "ban do sao", "12 cung", "zodiac", "horoscope");
-
-        int max = 0;
-        long bestId = 6L;
-        String bestName = "Lập trình";
-
-        int[] scores = {progScore, dataAiScore, designScore, businessScore, marketingScore, languageScore, softSkillScore, financeScore, artScore, tuViScore, physScore, astroScore};
-        long[] ids = {6L, 7L, 18L, 20L, 19L, 21L, 8L, 22L, 23L, 13L, 12L, 14L};
-        String[] names = {"Lập trình", "Khoa học Dữ liệu & AI", "Thiết kế", "Kinh doanh", "Marketing", "Ngoại ngữ", "Kỹ năng mềm", "Tài chính", "Nghệ thuật & Sáng tạo", "Tử Vi & Phong Thủy", "Nhân tướng học", "Chiêm tinh học"};
-
-        for (int i = 0; i < scores.length; i++) {
-            if (scores[i] > max) {
-                max = scores[i];
-                bestId = ids[i];
-                bestName = names[i];
-            }
-        }
-
-        if (max > 0) {
-            result.setSuggestedCategoryId(bestId);
-            result.setSuggestedCategoryName(bestName);
-        }
-    }
-
-    private static int countMatches(String text, String... keywords) {
-        int count = 0;
-        for (String kw : keywords) {
-            if (text.contains(kw)) {
-                count++;
-            }
-        }
-        return count;
     }
 
     private static String removeDiacritics(String str) {
