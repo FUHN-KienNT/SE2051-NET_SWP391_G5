@@ -173,9 +173,11 @@ public final class GeminiAiUtil {
                 HttpResponse<String> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
                 if (resp.statusCode() == 200) {
                     String body = resp.body();
-                    String idStr = extractField(body, "categoryId");
-                    String nameStr = extractField(body, "categoryName");
-                    String descStr = extractField(body, "suggestedDescription");
+                    String text = extractGeminiText(body);
+                    String target = (text != null && !text.trim().isEmpty()) ? text : body;
+                    String idStr = extractField(target, "categoryId");
+                    String nameStr = extractField(target, "categoryName");
+                    String descStr = extractField(target, "suggestedDescription");
 
                     if (idStr != null && nameStr != null) {
                         long catId = Long.parseLong(idStr);
@@ -231,7 +233,9 @@ public final class GeminiAiUtil {
 
                 HttpResponse<String> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
                 if (resp.statusCode() == 200) {
-                    String desc = extractField(resp.body(), "description");
+                    String text = extractGeminiText(resp.body());
+                    String target = (text != null && !text.trim().isEmpty()) ? text : resp.body();
+                    String desc = extractField(target, "description");
                     if (desc != null && !desc.trim().isEmpty()) {
                         return desc.trim();
                     }
@@ -277,7 +281,9 @@ public final class GeminiAiUtil {
 
                 HttpResponse<String> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
                 if (resp.statusCode() == 200) {
-                    String title = extractField(resp.body(), "moduleTitle");
+                    String text = extractGeminiText(resp.body());
+                    String target = (text != null && !text.trim().isEmpty()) ? text : resp.body();
+                    String title = extractField(target, "moduleTitle");
                     if (title != null && !title.trim().isEmpty()) {
                         return title.trim();
                     }
@@ -301,11 +307,11 @@ public final class GeminiAiUtil {
             return new ArrayList<>();
         }
         int total = lessonTitles.size();
-        if (total <= 4) {
+        if (total <= 1) {
             List<Integer> all = new ArrayList<>();
-            for (int i = 1; i <= total; i++) all.add(i);
+            if (total == 1) all.add(1);
             List<ModuleGroup> single = new ArrayList<>();
-            single.add(new ModuleGroup("Chương 1: Tổng quan & Bài học", all));
+            single.add(new ModuleGroup("Chương 1: Tổng quan & Khởi động", all));
             return single;
         }
 
@@ -318,10 +324,10 @@ public final class GeminiAiUtil {
                 for (int i = 0; i < total; i++) {
                     sb.append(i + 1).append(". ").append(escapeJson(lessonTitles.get(i))).append("\n");
                 }
-                sb.append("\nNhiệm vụ: Phân tích tiêu đề các bài học và gom nhóm các bài học theo đúng thứ tự thành các Chương học (Module) logic, khoa học (thông thường từ 2 đến 6 chương, mỗi chương có từ 3 đến 8 bài). Tuyệt đối không xáo trộn thứ tự bài học.\n");
+                sb.append("\nNhiệm vụ: Phân tích tiêu đề các bài học và gom nhóm các bài học theo đúng thứ tự thành các Chương học (Module) logic, khoa học (từ 2 đến 8 chương tùy theo độ dài khóa học, mỗi chương từ 2 đến 8 bài). Tuyệt đối không xáo trộn thứ tự bài học.\n");
                 sb.append("Tên mỗi chương bắt đầu bằng 'Chương X: <Tên chủ đề ngắn gọn, súc tích>'.\n");
                 sb.append("Chỉ trả về JSON thuần định dạng mảng (không markdown, không giải thích):\n");
-                sb.append("[\n  {\"moduleTitle\": \"Chương 1: ...\", \"lessonIndices\": [1, 2, 3]},\n  {\"moduleTitle\": \"Chương 2: ...\", \"lessonIndices\": [4, 5, 6]}\n]\n");
+                sb.append("[\n  {\"moduleTitle\": \"Chương 1: ...\", \"lessonIndices\": [1, 2]},\n  {\"moduleTitle\": \"Chương 2: ...\", \"lessonIndices\": [3, 4]}\n]\n");
                 sb.append("Lưu ý: lessonIndices là mảng số thứ tự bài học từ 1 đến ").append(total).append(". Mọi bài học phải thuộc đúng 1 chương.");
 
                 String requestBody = "{"
@@ -345,26 +351,41 @@ public final class GeminiAiUtil {
                     HttpResponse<String> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
                     if (resp.statusCode() == 200) {
                         String body = resp.body();
-                        Pattern pattern = Pattern.compile("\\{\\s*\"moduleTitle\"\\s*:\\s*\"(.*?)\"\\s*,\\s*\"lessonIndices\"\\s*:\\s*\\[([0-9,\\s]+)\\]\\s*\\}", Pattern.DOTALL);
-                        Matcher matcher = pattern.matcher(body);
+                        String jsonText = extractGeminiText(body);
+                        if (jsonText == null || jsonText.trim().isEmpty()) {
+                            jsonText = body;
+                        }
+
+                        // Parse từng object { ... }
+                        Pattern objectPattern = Pattern.compile("\\{([^{}]+)\\}");
+                        Matcher objMatcher = objectPattern.matcher(jsonText);
                         List<ModuleGroup> parsedGroups = new ArrayList<>();
                         boolean[] covered = new boolean[total + 1];
-                        while (matcher.find()) {
-                            String modTitle = matcher.group(1).replace("\\\"", "\"").trim();
-                            String idxListStr = matcher.group(2);
-                            List<Integer> indices = new ArrayList<>();
-                            String[] parts = idxListStr.split(",");
-                            for (String p : parts) {
-                                try {
-                                    int idx = Integer.parseInt(p.trim());
-                                    if (idx >= 1 && idx <= total && !covered[idx]) {
-                                        indices.add(idx);
-                                        covered[idx] = true;
-                                    }
-                                } catch (NumberFormatException ignored) {}
-                            }
-                            if (!indices.isEmpty()) {
-                                parsedGroups.add(new ModuleGroup(modTitle, indices));
+
+                        Pattern titlePattern = Pattern.compile("\"moduleTitle\"\\s*:\\s*\"(.*?)\"");
+                        Pattern idxPattern = Pattern.compile("\"lessonIndices\"\\s*:\\s*\\[([0-9,\\s]+)\\]");
+
+                        while (objMatcher.find()) {
+                            String objContent = objMatcher.group(1);
+                            Matcher tm = titlePattern.matcher(objContent);
+                            Matcher im = idxPattern.matcher(objContent);
+                            if (tm.find() && im.find()) {
+                                String modTitle = tm.group(1).replace("\\\"", "\"").trim();
+                                String idxListStr = im.group(1);
+                                List<Integer> indices = new ArrayList<>();
+                                String[] parts = idxListStr.split(",");
+                                for (String p : parts) {
+                                    try {
+                                        int idx = Integer.parseInt(p.trim());
+                                        if (idx >= 1 && idx <= total && !covered[idx]) {
+                                            indices.add(idx);
+                                            covered[idx] = true;
+                                        }
+                                    } catch (NumberFormatException ignored) {}
+                                }
+                                if (!indices.isEmpty()) {
+                                    parsedGroups.add(new ModuleGroup(modTitle, indices));
+                                }
                             }
                         }
 
@@ -390,8 +411,8 @@ public final class GeminiAiUtil {
             }
         }
 
-        // Graceful Fallback: tự động chia thành các module 4-6 bài học
-        int perModule = total <= 8 ? 4 : (total <= 15 ? 5 : 6);
+        // Graceful Fallback: tự động chia thành các module 2-5 bài học
+        int perModule = total <= 4 ? 2 : (total <= 8 ? 4 : (total <= 15 ? 5 : 6));
         List<ModuleGroup> fallback = new ArrayList<>();
         int modIndex = 1;
         for (int i = 1; i <= total; i += perModule) {
@@ -409,6 +430,64 @@ public final class GeminiAiUtil {
             modIndex++;
         }
         return fallback;
+    }
+
+    /**
+     * Trích xuất nội dung text trong phản hồi JSON của Google Gemini API
+     * (nằm trong candidates[0].content.parts[0].text) và giải mã các escape sequence.
+     */
+    public static String extractGeminiText(String json) {
+        if (json == null) return null;
+        int idx = json.indexOf("\"text\"");
+        if (idx == -1) return null;
+        int colonIdx = json.indexOf(':', idx + 6);
+        if (colonIdx == -1) return null;
+        int quoteStart = json.indexOf('"', colonIdx + 1);
+        if (quoteStart == -1) return null;
+
+        StringBuilder sb = new StringBuilder();
+        boolean escaped = false;
+        for (int i = quoteStart + 1; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (escaped) {
+                switch (c) {
+                    case '"': sb.append('"'); break;
+                    case '\\': sb.append('\\'); break;
+                    case '/': sb.append('/'); break;
+                    case 'b': sb.append('\b'); break;
+                    case 'f': sb.append('\f'); break;
+                    case 'n': sb.append('\n'); break;
+                    case 'r': sb.append('\r'); break;
+                    case 't': sb.append('\t'); break;
+                    case 'u':
+                        if (i + 4 < json.length()) {
+                            String hex = json.substring(i + 1, i + 5);
+                            try {
+                                sb.append((char) Integer.parseInt(hex, 16));
+                                i += 4;
+                            } catch (NumberFormatException e) {
+                                sb.append("\\u");
+                            }
+                        } else {
+                            sb.append("\\u");
+                        }
+                        break;
+                    default:
+                        sb.append(c);
+                        break;
+                }
+                escaped = false;
+            } else {
+                if (c == '\\') {
+                    escaped = true;
+                } else if (c == '"') {
+                    return sb.toString();
+                } else {
+                    sb.append(c);
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private static String extractField(String json, String field) {

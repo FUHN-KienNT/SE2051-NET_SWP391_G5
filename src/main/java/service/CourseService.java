@@ -28,6 +28,7 @@ import entity.enums.SettingStatus;
 import entity.enums.SettingType;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -468,12 +469,16 @@ public class CourseService {
                 }
 
                 int modOrder = 0;
+                long firstNewModId = 0;
                 for (GeminiAiUtil.ModuleGroup group : groups) {
                     Module mod = new Module();
                     mod.setCourseId(courseId);
                     mod.setTitle(group.getModuleTitle());
                     mod.setOrderIndex(++modOrder);
                     long newModId = moduleDao.insert(con, mod);
+                    if (firstNewModId == 0) {
+                        firstNewModId = newModId;
+                    }
 
                     int lessonOrder = 1;
                     for (int idx : group.getLessonIndices()) {
@@ -486,7 +491,23 @@ public class CourseService {
                     }
                 }
 
-                // Xóa các module cũ sau khi bài học đã chuyển thành công
+                // Bảo vệ các Quiz (nếu có): chuyển sang module mới trước khi xóa module cũ
+                if (firstNewModId > 0) {
+                    for (Module oldM : oldModules) {
+                        try (PreparedStatement psQ = con.prepareStatement("UPDATE quizzes SET module_id = ? WHERE module_id = ?")) {
+                            psQ.setLong(1, firstNewModId);
+                            psQ.setLong(2, oldM.getId());
+                            psQ.executeUpdate();
+                        } catch (SQLException ignored) {}
+                        try (PreparedStatement psQq = con.prepareStatement("UPDATE quiz_questions SET module_id = ? WHERE module_id = ?")) {
+                            psQq.setLong(1, firstNewModId);
+                            psQq.setLong(2, oldM.getId());
+                            psQq.executeUpdate();
+                        } catch (SQLException ignored) {}
+                    }
+                }
+
+                // Xóa các module cũ sau khi bài học và quiz đã chuyển thành công
                 for (Module oldM : oldModules) {
                     moduleDao.delete(con, oldM.getId());
                 }
