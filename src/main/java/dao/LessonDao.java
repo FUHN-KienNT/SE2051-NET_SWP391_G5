@@ -11,11 +11,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class LessonDao {
-    private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, title, content, video_url, document_url, order_index, created_at, updated_at FROM lessons WHERE module_id = ? ORDER BY order_index ASC";
-    private static final String SQL_FIND_BY_ID = "SELECT id, module_id, title, content, video_url, document_url, order_index, created_at, updated_at FROM lessons WHERE id = ?";
+    private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, title, content, video_url, document_url, order_index, is_active, created_at, updated_at FROM lessons WHERE module_id = ? ORDER BY order_index ASC";
+    private static final String SQL_FIND_BY_ID = "SELECT id, module_id, title, content, video_url, document_url, order_index, is_active, created_at, updated_at FROM lessons WHERE id = ?";
     private static final String SQL_EXISTS_ORDER = "SELECT COUNT(1) FROM lessons WHERE module_id = ? AND order_index = ? AND (? IS NULL OR id != ?)";
-    private static final String SQL_INSERT = "INSERT INTO lessons (module_id, title, content, video_url, document_url, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
-    private static final String SQL_UPDATE = "UPDATE lessons SET title = ?, content = ?, video_url = ?, document_url = ?, order_index = ?, updated_at = ? WHERE id = ?";
+    private static final String SQL_INSERT = "INSERT INTO lessons (module_id, title, content, video_url, document_url, order_index, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_UPDATE = "UPDATE lessons SET title = ?, content = ?, video_url = ?, document_url = ?, order_index = ?, is_active = ?, updated_at = ? WHERE id = ?";
+    private static final String SQL_UPDATE_ACTIVE = "UPDATE lessons SET is_active = ?, updated_at = now() WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM lessons WHERE id = ?";
 
     public List<Lesson> findByModuleId(Connection con, long moduleId) throws SQLException {
@@ -71,9 +72,10 @@ public class LessonDao {
             ps.setString(4, entity.getVideoUrl());
             ps.setString(5, entity.getDocumentUrl());
             ps.setInt(6, entity.getOrderIndex());
+            ps.setBoolean(7, entity.isActive());
             OffsetDateTime now = OffsetDateTime.now();
-            ps.setObject(7, entity.getCreatedAt() != null ? entity.getCreatedAt() : now);
-            ps.setObject(8, entity.getUpdatedAt() != null ? entity.getUpdatedAt() : now);
+            ps.setObject(8, entity.getCreatedAt() != null ? entity.getCreatedAt() : now);
+            ps.setObject(9, entity.getUpdatedAt() != null ? entity.getUpdatedAt() : now);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -93,8 +95,17 @@ public class LessonDao {
             ps.setString(3, entity.getVideoUrl());
             ps.setString(4, entity.getDocumentUrl());
             ps.setInt(5, entity.getOrderIndex());
-            ps.setObject(6, OffsetDateTime.now());
-            ps.setLong(7, entity.getId());
+            ps.setBoolean(6, entity.isActive());
+            ps.setObject(7, OffsetDateTime.now());
+            ps.setLong(8, entity.getId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateActiveStatus(Connection con, long id, boolean isActive) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_ACTIVE)) {
+            ps.setBoolean(1, isActive);
+            ps.setLong(2, id);
             return ps.executeUpdate() > 0;
         }
     }
@@ -115,6 +126,7 @@ public class LessonDao {
         l.setVideoUrl(rs.getString("video_url"));
         l.setDocumentUrl(rs.getString("document_url"));
         l.setOrderIndex(rs.getInt("order_index"));
+        l.setActive(rs.getBoolean("is_active"));
         l.setCreatedAt(rs.getObject("created_at", OffsetDateTime.class));
         l.setUpdatedAt(rs.getObject("updated_at", OffsetDateTime.class));
         return l;

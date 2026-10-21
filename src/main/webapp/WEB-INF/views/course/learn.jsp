@@ -222,18 +222,20 @@
 
     <c:forEach var="m" items="${course.modules}">
         <c:forEach var="l" items="${m.lessons}">
-            <c:choose>
-                <c:when test="${l.id == currentLessonId}">
-                    <c:set var="activeLesson" value="${l}" />
-                    <c:set var="activeModuleName" value="${m.title}" />
-                    <c:set var="prevLessonId" value="${lastLessonId}" />
-                    <c:set var="foundCurrent" value="true" />
-                </c:when>
-                <c:when test="${foundCurrent == true && nextLessonId == null}">
-                    <c:set var="nextLessonId" value="${l.id}" />
-                </c:when>
-            </c:choose>
-            <c:set var="lastLessonId" value="${l.id}" />
+            <c:if test="${l.active or l.id == currentLessonId}">
+                <c:choose>
+                    <c:when test="${l.id == currentLessonId}">
+                        <c:set var="activeLesson" value="${l}" />
+                        <c:set var="activeModuleName" value="${m.title}" />
+                        <c:set var="prevLessonId" value="${lastLessonId}" />
+                        <c:set var="foundCurrent" value="true" />
+                    </c:when>
+                    <c:when test="${foundCurrent == true && nextLessonId == null}">
+                        <c:set var="nextLessonId" value="${l.id}" />
+                    </c:when>
+                </c:choose>
+                <c:set var="lastLessonId" value="${l.id}" />
+            </c:if>
         </c:forEach>
     </c:forEach>
 
@@ -267,22 +269,27 @@
                             ${m.title}
                         </div>
                         <c:forEach var="l" items="${m.lessons}">
-                            <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${registrationId}&lessonId=${l.id}"
-                               class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 rounded-2 mb-1 ${currentLessonId == l.id ? 'active bg-primary text-white border-primary shadow-sm' : 'border-0'} learn-item"
-                               data-title="${l.title.toLowerCase()}">
-                                <span class="badge ${currentLessonId == l.id ? 'bg-white text-primary' : 'bg-light text-muted border'} flex-shrink-0" style="width: 26px;">
-                                    ${lessonSeq}
-                                </span>
-                                <img src="${l.thumbnailUrl}" class="rounded flex-shrink-0" style="width: 42px; height: 26px; object-fit: cover;" alt="${l.title}"
-                                     onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
-                                <div class="text-truncate flex-grow-1">
-                                    <span class="d-block text-truncate fw-semibold">${l.title}</span>
-                                </div>
-                                <c:if test="${l.progressStatus == 'COMPLETED'}">
-                                    <i class="bi bi-check-circle-fill ${currentLessonId == l.id ? 'text-white' : 'text-success'} flex-shrink-0"></i>
-                                </c:if>
-                            </a>
-                            <c:set var="lessonSeq" value="${lessonSeq + 1}" />
+                            <c:if test="${l.active or l.id == currentLessonId}">
+                                <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${registrationId}&lessonId=${l.id}"
+                                   class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 rounded-2 mb-1 ${currentLessonId == l.id ? 'active bg-primary text-white border-primary shadow-sm' : 'border-0'} learn-item"
+                                   data-title="${l.title.toLowerCase()}">
+                                    <span class="badge ${currentLessonId == l.id ? 'bg-white text-primary' : 'bg-light text-muted border'} flex-shrink-0" style="width: 26px;">
+                                        ${lessonSeq}
+                                    </span>
+                                    <img src="${l.thumbnailUrl}" class="rounded flex-shrink-0" style="width: 42px; height: 26px; object-fit: cover;" alt="${l.title}"
+                                         onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
+                                    <div class="text-truncate flex-grow-1">
+                                        <span class="d-block text-truncate fw-semibold">${l.title}</span>
+                                        <c:if test="${!l.active}">
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 10px;">Đã ẩn</span>
+                                        </c:if>
+                                    </div>
+                                    <c:if test="${l.progressStatus == 'COMPLETED'}">
+                                        <i class="bi bi-check-circle-fill ${currentLessonId == l.id ? 'text-white' : 'text-success'} flex-shrink-0"></i>
+                                    </c:if>
+                                </a>
+                                <c:set var="lessonSeq" value="${lessonSeq + 1}" />
+                            </c:if>
                         </c:forEach>
 
                         <c:forEach var="q" items="${m.quizzes}">
@@ -300,8 +307,26 @@
 
         <!-- 2. CONTENT AREA (Center Video/Mô tả + Right Note) -->
         <div class="learning-content-scroll">
+            <c:if test="${not empty errorMessage}">
+                <div class="alert alert-warning alert-dismissible fade show shadow-sm py-2 px-3 small mb-3 rounded-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i><c:out value="${errorMessage}" />
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+            <c:if test="${not empty successMessage}">
+                <div class="alert alert-success alert-dismissible fade show shadow-sm py-2 px-3 small mb-3 rounded-3" role="alert">
+                    <i class="bi bi-check-circle-fill me-2 text-success"></i><c:out value="${successMessage}" />
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
             <c:choose>
                 <c:when test="${activeLesson != null}">
+                    <c:if test="${!activeLesson.active}">
+                        <div class="alert alert-warning py-2 px-3 small mb-3 d-flex align-items-center gap-2 border shadow-sm rounded-3">
+                            <i class="bi bi-eye-slash-fill text-warning fs-5 flex-shrink-0"></i>
+                            <span><strong>Bài học đã được tạm ẩn:</strong> Bạn vẫn có thể tiếp tục xem và hoàn thành bài giảng trong phiên học hiện tại. Sau khi chuyển sang bài học khác, bạn sẽ không thể quay lại bài học này nữa.</span>
+                        </div>
+                    </c:if>
                     <c:if test="${course.archived}">
                         <div class="alert alert-secondary py-2 px-3 small mb-3 d-flex align-items-center gap-2 border shadow-sm rounded-3">
                             <i class="bi bi-archive text-secondary fs-5"></i>

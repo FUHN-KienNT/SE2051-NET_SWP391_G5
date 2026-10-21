@@ -117,10 +117,21 @@
 
                         <input type="hidden" name="orderIndex" id="lessonOrderIndex" value="${lesson != null ? lesson.orderIndex : (course.totalLessons + 1)}">
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Tiêu đề bài học <span class="text-danger">*</span></label>
-                            <input type="text" name="title" id="lessonTitle" class="form-control" value="${lesson != null ? lesson.title : ''}" required placeholder="Ví dụ: Giới thiệu cú pháp Java cơ bản">
-                            <div id="titleFetchFeedback" class="mt-1 small" style="display: none;"></div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-semibold">Tiêu đề bài học <span class="text-danger">*</span></label>
+                                <input type="text" name="title" id="lessonTitle" class="form-control" value="${lesson != null ? lesson.title : ''}" required placeholder="Ví dụ: Giới thiệu cú pháp Java cơ bản">
+                                <div id="titleFetchFeedback" class="mt-1 small" style="display: none;"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">
+                                    <i class="bi bi-eye text-primary me-1"></i>Trạng thái hiển thị
+                                </label>
+                                <select name="isActive" class="form-select">
+                                    <option value="true" ${lesson == null || lesson.active ? 'selected' : ''}>Hiển thị (Công khai)</option>
+                                    <option value="false" ${lesson != null && !lesson.active ? 'selected' : ''}>Tạm ẩn (Không công khai)</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mb-3">

@@ -142,6 +142,21 @@ public class CourseDto {
         int count = 0;
         for (ModuleDto m : modules) {
             if (m.getLessons() != null) {
+                for (LessonDto l : m.getLessons()) {
+                    if (l.isActive()) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    public int getAllLessonsCount() {
+        if (modules == null) return 0;
+        int count = 0;
+        for (ModuleDto m : modules) {
+            if (m.getLessons() != null) {
                 count += m.getLessons().size();
             }
         }

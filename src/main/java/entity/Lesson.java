@@ -10,6 +10,7 @@ public class Lesson {
     private String videoUrl;
     private String documentUrl;
     private int orderIndex;
+    private boolean isActive = true;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
@@ -99,5 +100,12 @@ public class Lesson {
 
     public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
     }
 }

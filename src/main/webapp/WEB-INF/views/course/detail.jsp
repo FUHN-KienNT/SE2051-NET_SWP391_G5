@@ -84,30 +84,32 @@
                             <div class="list-group list-group-flush rounded-3 border overflow-hidden" id="directLessonList">
                                 <c:forEach var="m" items="${course.modules}">
                                     <c:forEach var="l" items="${m.lessons}">
-                                        <div class="list-group-item d-flex align-items-center gap-3 py-2 px-3 list-group-item-action lesson-row" data-title="${l.title.toLowerCase()}">
-                                            <span class="badge bg-light text-muted border text-center flex-shrink-0" style="width: 32px; font-size: 0.8rem;">
-                                                #${globalLessonIndex}
-                                            </span>
-                                            <div class="position-relative flex-shrink-0" style="width: 84px; height: 48px;">
-                                                <img src="${l.thumbnailUrl}" class="w-100 h-100 rounded shadow-sm" style="object-fit: cover;" alt="${l.title}"
-                                                     onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
-                                                <span class="position-absolute bottom-0 end-0 bg-dark bg-opacity-75 text-white px-1 rounded-1" style="font-size: 9px;">
-                                                    <i class="bi bi-play-fill"></i>
+                                        <c:if test="${l.active}">
+                                            <div class="list-group-item d-flex align-items-center gap-3 py-2 px-3 list-group-item-action lesson-row" data-title="${l.title.toLowerCase()}">
+                                                <span class="badge bg-light text-muted border text-center flex-shrink-0" style="width: 32px; font-size: 0.8rem;">
+                                                    #${globalLessonIndex}
+                                                </span>
+                                                <div class="position-relative flex-shrink-0" style="width: 84px; height: 48px;">
+                                                    <img src="${l.thumbnailUrl}" class="w-100 h-100 rounded shadow-sm" style="object-fit: cover;" alt="${l.title}"
+                                                         onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
+                                                    <span class="position-absolute bottom-0 end-0 bg-dark bg-opacity-75 text-white px-1 rounded-1" style="font-size: 9px;">
+                                                        <i class="bi bi-play-fill"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1 text-truncate">
+                                                    <span class="fw-semibold text-dark d-block text-truncate">
+                                                        Bài ${globalLessonIndex}: ${l.title}
+                                                    </span>
+                                                    <span class="text-muted" style="font-size: 0.75rem;">
+                                                        <i class="bi bi-folder2 text-primary me-1"></i>${m.title} &bull; <i class="bi bi-camera-video text-danger ms-1 me-1"></i>Video bài giảng
+                                                    </span>
+                                                </div>
+                                                <span class="badge bg-light text-secondary border flex-shrink-0">
+                                                    <i class="bi bi-play-circle me-1"></i>Bài học
                                                 </span>
                                             </div>
-                                            <div class="flex-grow-1 text-truncate">
-                                                <span class="fw-semibold text-dark d-block text-truncate">
-                                                    Bài ${globalLessonIndex}: ${l.title}
-                                                </span>
-                                                <span class="text-muted" style="font-size: 0.75rem;">
-                                                    <i class="bi bi-folder2 text-primary me-1"></i>${m.title} &bull; <i class="bi bi-camera-video text-danger ms-1 me-1"></i>Video bài giảng
-                                                </span>
-                                            </div>
-                                            <span class="badge bg-light text-secondary border flex-shrink-0">
-                                                <i class="bi bi-play-circle me-1"></i>Bài học
-                                            </span>
-                                        </div>
-                                        <c:set var="globalLessonIndex" value="${globalLessonIndex + 1}" />
+                                            <c:set var="globalLessonIndex" value="${globalLessonIndex + 1}" />
+                                        </c:if>
                                     </c:forEach>
 
                                     <c:forEach var="q" items="${m.quizzes}">

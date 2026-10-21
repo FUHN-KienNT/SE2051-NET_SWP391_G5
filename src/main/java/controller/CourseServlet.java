@@ -6,6 +6,7 @@ import dao.LessonProgressDao;
 import dao.ModuleDao;
 import dao.RegistrationDao;
 import dto.CourseDto;
+import dto.LessonDto;
 import dto.ModuleDto;
 import dto.RegistrationDto;
 import dto.SettingDto;
@@ -54,6 +55,15 @@ public class CourseServlet extends HttpServlet {
 
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        String flashError = SessionUtil.popFlashError(req);
+        if (flashError != null) {
+            req.setAttribute("errorMessage", flashError);
+        }
+        String flashSuccess = SessionUtil.popFlashSuccess(req);
+        if (flashSuccess != null) {
+            req.setAttribute("successMessage", flashSuccess);
+        }
+
         switch (action) {
             case "catalog":
                 showCatalog(req, resp);
@@ -181,24 +191,69 @@ public class CourseServlet extends HttpServlet {
             req.setAttribute("course", course);
             req.setAttribute("registrationId", regId);
 
-            String currentLessonIdStr = req.getParameter("lessonId");
-            if ((currentLessonIdStr == null || currentLessonIdStr.trim().isEmpty()) && course != null
-                    && course.getModules() != null) {
-                for (ModuleDto m : course.getModules()) {
-                    if (m.getLessons() != null && !m.getLessons().isEmpty()) {
-                        currentLessonIdStr = String.valueOf(m.getLessons().get(0).getId());
-                        break;
-                    }
-                }
-            }
-            if (currentLessonIdStr != null && !currentLessonIdStr.trim().isEmpty()) {
+            String sessionKey = "active_learning_lesson_" + regId;
+            Long sessionLessonId = (Long) req.getSession().getAttribute(sessionKey);
+
+            String requestedLessonIdStr = req.getParameter("lessonId");
+            Long targetLessonId = null;
+            if (requestedLessonIdStr != null && !requestedLessonIdStr.trim().isEmpty()) {
                 try {
-                    long currentLid = Long.parseLong(currentLessonIdStr.trim());
-                    courseService.touchLessonProgress(regId, currentUser.getId(), currentLid);
+                    targetLessonId = Long.parseLong(requestedLessonIdStr.trim());
                 } catch (NumberFormatException ignored) {
                 }
             }
-            req.setAttribute("currentLessonId", currentLessonIdStr);
+
+            LessonDto targetLesson = null;
+            LessonDto firstActiveLesson = null;
+            if (course != null && course.getModules() != null) {
+                for (ModuleDto m : course.getModules()) {
+                    if (m.getLessons() != null) {
+                        for (LessonDto l : m.getLessons()) {
+                            if (firstActiveLesson == null && l.isActive()) {
+                                firstActiveLesson = l;
+                            }
+                            if (targetLessonId != null && l.getId() == targetLessonId.longValue()) {
+                                targetLesson = l;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Long finalLessonId = null;
+            if (targetLesson != null) {
+                if (targetLesson.isActive()) {
+                    finalLessonId = targetLesson.getId();
+                } else {
+                    // Bài học đã bị ẩn: Học viên đang học dở phiên hiện tại thì vẫn được học tiếp
+                    if (sessionLessonId != null && sessionLessonId.equals(targetLesson.getId())) {
+                        finalLessonId = targetLesson.getId();
+                    } else {
+                        // Đã rời khỏi bài học hoặc truy cập bài học đã ẩn mà không có phiên học dở
+                        SessionUtil.setFlashError(req, "Bài học này đã được tạm ẩn và không còn khả dụng.");
+                        if (firstActiveLesson != null) {
+                            resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId + "&lessonId=" + firstActiveLesson.getId());
+                            return;
+                        } else {
+                            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+                            return;
+                        }
+                    }
+                }
+            } else {
+                // Không truyền lessonId cụ thể -> Mở bài học hoạt động đầu tiên
+                if (firstActiveLesson != null) {
+                    finalLessonId = firstActiveLesson.getId();
+                } else if (sessionLessonId != null) {
+                    finalLessonId = sessionLessonId;
+                }
+            }
+
+            if (finalLessonId != null) {
+                req.getSession().setAttribute(sessionKey, finalLessonId);
+                courseService.touchLessonProgress(regId, currentUser.getId(), finalLessonId);
+                req.setAttribute("currentLessonId", String.valueOf(finalLessonId));
+            }
         }
         req.getRequestDispatcher("/WEB-INF/views/course/learn.jsp").forward(req, resp);
     }

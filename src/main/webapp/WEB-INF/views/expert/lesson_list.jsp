@@ -604,7 +604,7 @@ body {
                                 </c:when>
                                 <c:otherwise>
                                     <c:forEach var="l" items="${m.lessons}" varStatus="lStatus">
-                                        <div class="saas-lesson-item">
+                                        <div class="saas-lesson-item ${!l.active ? 'opacity-75 bg-light-subtle' : ''}">
                                             <div class="d-flex align-items-center gap-3 min-w-0">
                                                 <div class="lesson-thumb-box">
                                                     <img src="${l.thumbnailUrl}" alt="${l.title}"
@@ -619,8 +619,20 @@ body {
                                                         <c:if test="${not empty l.documentUrl}">
                                                             <span class="pill-doc"><i class="bi bi-file-earmark-text"></i>Tài liệu</span>
                                                         </c:if>
+                                                        <c:choose>
+                                                            <c:when test="${l.active}">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 11px;">
+                                                                    <i class="bi bi-check-circle me-1"></i>Hiển thị
+                                                                </span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 11px;">
+                                                                    <i class="bi bi-eye-slash-fill me-1"></i>Đã ẩn
+                                                                </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </div>
-                                                    <div class="fw-semibold text-dark text-truncate" style="font-size: 0.95rem;" title="${l.title}">
+                                                    <div class="fw-semibold text-dark text-truncate ${!l.active ? 'text-muted' : ''}" style="font-size: 0.95rem;" title="${l.title}">
                                                         ${l.title}
                                                     </div>
                                                 </div>
@@ -629,11 +641,22 @@ body {
                                                 <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}&lessonId=${l.id}" class="btn-icon-action" title="Chỉnh sửa bài học" aria-label="Sửa bài">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <button type="button" class="btn-icon-action text-danger border-0 bg-transparent"
-                                                        onclick="confirmDeleteLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/delete-lesson?courseId=${course.id}&lessonId=${l.id}')"
-                                                        title="Xóa bài học" aria-label="Xóa bài">
-                                                    <i class="bi bi-trash3"></i>
-                                                </button>
+                                                <c:choose>
+                                                    <c:when test="${l.active}">
+                                                        <button type="button" class="btn-icon-action text-warning border-0 bg-transparent"
+                                                                onclick="confirmToggleLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/toggle-lesson-status?courseId=${course.id}&lessonId=${l.id}&active=false', false)"
+                                                                title="Tạm ẩn bài học" aria-label="Ẩn bài học">
+                                                            <i class="bi bi-eye-slash"></i>
+                                                        </button>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <button type="button" class="btn-icon-action text-success border-0 bg-transparent"
+                                                                onclick="confirmToggleLesson('${fn:escapeXml(l.title)}', '${pageContext.request.contextPath}/expert/toggle-lesson-status?courseId=${course.id}&lessonId=${l.id}&active=true', true)"
+                                                                title="Hiển thị lại bài học" aria-label="Hiện bài học">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
                                         </div>
                                     </c:forEach>
@@ -731,17 +754,30 @@ body {
         });
     }
 
-    function confirmDeleteLesson(title, url) {
-        showConfirmModal({
-            title: 'Xác nhận xóa bài học',
-            html: 'Bạn có chắc chắn muốn xóa bài học "<strong>' + (title || '') + '</strong>"?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Thao tác này sẽ xóa vĩnh viễn bài học khỏi khóa học và không thể hoàn tác.</span>',
-            type: 'danger',
-            icon: 'bi bi-trash3-fill',
-            confirmText: 'Xóa bài học',
-            confirmIcon: 'bi bi-trash3 me-1',
-            confirmBtnClass: 'btn-danger',
-            confirmUrl: url
-        });
+    function confirmToggleLesson(title, url, willActive) {
+        if (willActive) {
+            showConfirmModal({
+                title: 'Hiển thị lại bài học',
+                html: 'Bạn có chắc chắn muốn mở hiển thị lại bài học "<strong>' + (title || '') + '</strong>" cho học viên?',
+                type: 'success',
+                icon: 'bi bi-eye-fill',
+                confirmText: 'Hiển thị bài học',
+                confirmIcon: 'bi bi-eye me-1',
+                confirmBtnClass: 'btn-success',
+                confirmUrl: url
+            });
+        } else {
+            showConfirmModal({
+                title: 'Xác nhận tạm ẩn bài học',
+                html: 'Bạn có chắc chắn muốn ẩn bài học "<strong>' + (title || '') + '</strong>"?<br><span class="text-muted small mt-2 d-inline-block"><i class="bi bi-info-circle me-1"></i>Học viên mới sẽ không thấy bài này. Học viên đang trong phiên học bài này vẫn có thể học tiếp cho đến khi chuyển bài.</span>',
+                type: 'warning',
+                icon: 'bi bi-eye-slash-fill',
+                confirmText: 'Tạm ẩn bài học',
+                confirmIcon: 'bi bi-eye-slash me-1',
+                confirmBtnClass: 'btn-warning text-dark',
+                confirmUrl: url
+            });
+        }
     }
 
     function confirmPublishCourse(title, url) {

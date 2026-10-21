@@ -13,6 +13,7 @@ public class LessonDto {
     private LessonProgressStatus progressStatus;
     private Long courseId;
     private String userNote;
+    private boolean isActive = true;
 
     public LessonDto() {
     }
@@ -134,5 +135,12 @@ public class LessonDto {
 
     public void setUserNote(String userNote) {
         this.userNote = userNote;
+    }
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
     }
 }

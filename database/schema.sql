@@ -139,6 +139,7 @@ CREATE TABLE lessons (
     video_url    varchar(500),
     document_url varchar(500),
     order_index  integer      NOT NULL,
+    is_active    boolean      NOT NULL DEFAULT true,
     created_at   timestamptz  NOT NULL DEFAULT now(),
     updated_at   timestamptz  NOT NULL DEFAULT now(),
     CONSTRAINT fk_lessons_module FOREIGN KEY (module_id) REFERENCES modules (id) ON DELETE CASCADE,

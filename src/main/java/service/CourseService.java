@@ -158,10 +158,12 @@ public class CourseService {
         try (Connection con = DbConnection.getConnection()) {
             Lesson l = lessonDao.findById(con, lessonId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học ID: " + lessonId));
-            return new LessonDto(
+            LessonDto dto = new LessonDto(
                     l.getId(), l.getModuleId(), l.getTitle(), l.getContent(),
                     l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(),
                     LessonProgressStatus.NOT_STARTED);
+            dto.setActive(l.isActive());
+            return dto;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy thông tin bài học: " + e.getMessage(), e);
         }
@@ -752,6 +754,7 @@ public class CourseService {
                     l.setVideoUrl(dto.getVideoUrl());
                     l.setDocumentUrl(dto.getDocumentUrl());
                     l.setOrderIndex(dto.getOrderIndex());
+                    l.setActive(dto.isActive());
                     lessonDao.update(con, l);
                     id = l.getId();
                 } else {
@@ -762,6 +765,7 @@ public class CourseService {
                     l.setVideoUrl(dto.getVideoUrl());
                     l.setDocumentUrl(dto.getDocumentUrl());
                     l.setOrderIndex(dto.getOrderIndex());
+                    l.setActive(dto.isActive());
                     id = lessonDao.insert(con, l);
                 }
                 con.commit();
@@ -777,14 +781,22 @@ public class CourseService {
         }
     }
 
+    /**
+     * Vô hiệu hóa / Ẩn bài học (thay thế xóa cứng):
+     * Bảo toàn toàn vẹn dữ liệu tiến độ và ghi chú của học viên.
+     */
     public void deleteLesson(long lessonId) {
+        toggleLessonActive(lessonId, false);
+    }
+
+    public void toggleLessonActive(long lessonId, boolean isActive) {
         try (Connection con = DbConnection.getConnection()) {
-            boolean deleted = lessonDao.delete(con, lessonId);
-            if (!deleted) {
-                throw new IllegalArgumentException("Không tìm thấy bài học cần xóa.");
+            boolean updated = lessonDao.updateActiveStatus(con, lessonId, isActive);
+            if (!updated) {
+                throw new IllegalArgumentException("Không tìm thấy bài học để cập nhật trạng thái.");
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi xóa bài học: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi cập nhật trạng thái hiển thị bài học: " + e.getMessage(), e);
         }
     }
 
@@ -1521,6 +1533,7 @@ public class CourseService {
                     LessonDto lDto = new LessonDto(
                             l.getId(), l.getModuleId(), l.getTitle(), l.getContent(),
                             l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(), LessonProgressStatus.NOT_STARTED);
+                    lDto.setActive(l.isActive());
                     mDto.getLessons().add(lDto);
                 }
 

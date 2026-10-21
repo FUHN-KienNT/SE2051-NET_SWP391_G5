@@ -26,8 +26,8 @@ public class LessonProgressDao {
             + "VALUES (?, ?, 'IN_PROGRESS', NOW()) "
             + "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET updated_at = NOW()";
     private static final String SQL_CALCULATE_PROGRESS = "SELECT "
-            + "  (SELECT COUNT(1) FROM lesson_progress lp WHERE lp.registration_id = r.id AND lp.status = 'COMPLETED') AS completed_count, "
-            + "  (SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = r.course_id) AS total_count "
+            + "  (SELECT COUNT(1) FROM lesson_progress lp JOIN lessons l ON lp.lesson_id = l.id WHERE lp.registration_id = r.id AND lp.status = 'COMPLETED' AND l.is_active = true) AS completed_count, "
+            + "  (SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = r.course_id AND l.is_active = true) AS total_count "
             + "FROM registrations r WHERE r.id = ?";
 
     public List<LessonProgress> findByRegistrationId(Connection con, long registrationId) throws SQLException {

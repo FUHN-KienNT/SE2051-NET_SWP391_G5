@@ -114,6 +114,9 @@ public class LessonServlet extends HttpServlet {
             case "delete-lesson":
                 deleteLesson(req, resp);
                 break;
+            case "toggle-lesson-status":
+                toggleLessonStatus(req, resp);
+                break;
             case "save-module":
                 saveModule(req, resp);
                 break;
@@ -991,6 +994,19 @@ public class LessonServlet extends HttpServlet {
             String orderStr = req.getParameter("orderIndex");
             dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
 
+            String activeStr = req.getParameter("isActive");
+            if (activeStr != null && !activeStr.trim().isEmpty()) {
+                dto.setActive(Boolean.parseBoolean(activeStr.trim()));
+            } else if (dto.getId() != null && dto.getId() > 0) {
+                try {
+                    LessonDto existing = courseService.getLessonById(dto.getId());
+                    if (existing != null) {
+                        dto.setActive(existing.isActive());
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
             courseService.saveLesson(dto);
 
             // [Xóa bản nháp]: Khi người dùng đã lưu thành công bài học, xóa bỏ draft trên cả User Draft Map và Session
@@ -1026,10 +1042,49 @@ public class LessonServlet extends HttpServlet {
         try {
             if (lessonIdStr != null) {
                 long lessonId = Long.parseLong(lessonIdStr.trim());
-                // [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi xóa
+                // [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi cập nhật
                 courseService.checkLessonOwnership(lessonId, currentUser);
-                courseService.deleteLesson(lessonId);
-                SessionUtil.setFlashSuccess(req, "Đã xóa bài học thành công!");
+                courseService.toggleLessonActive(lessonId, false);
+                SessionUtil.setFlashSuccess(req, "Đã tạm ẩn bài học thành công!");
+            }
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, e.getMessage());
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + (courseIdStr != null ? courseIdStr : ""));
+    }
+
+    /**
+     * Bật / Tắt trạng thái hiển thị của bài học (Ẩn / Mở lại):
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi thay đổi trạng thái.
+     */
+    private void toggleLessonStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String lessonIdStr = req.getParameter("lessonId");
+        String courseIdStr = req.getParameter("courseId");
+        String activeStr = req.getParameter("active");
+        try {
+            if (lessonIdStr != null) {
+                long lessonId = Long.parseLong(lessonIdStr.trim());
+                courseService.checkLessonOwnership(lessonId, currentUser);
+
+                boolean targetActive;
+                if (activeStr != null && !activeStr.trim().isEmpty()) {
+                    targetActive = Boolean.parseBoolean(activeStr.trim());
+                } else {
+                    LessonDto current = courseService.getLessonById(lessonId);
+                    targetActive = !current.isActive();
+                }
+
+                courseService.toggleLessonActive(lessonId, targetActive);
+                if (targetActive) {
+                    SessionUtil.setFlashSuccess(req, "Đã mở hiển thị bài học thành công!");
+                } else {
+                    SessionUtil.setFlashSuccess(req, "Đã tạm ẩn bài học thành công!");
+                }
             }
         } catch (Exception e) {
             SessionUtil.setFlashError(req, e.getMessage());
