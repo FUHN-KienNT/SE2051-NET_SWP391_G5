@@ -535,9 +535,10 @@ public class LessonServlet extends HttpServlet {
             // Kiểm tra nếu có nhập danh sách link video hàng loạt kèm theo
             if (batchResult != null && !batchResult.getLessons().isEmpty()) {
                 courseService.saveBatchLessons(savedId, null, batchModuleTitle, batchResult.getLessons());
+                SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Các bài giảng đã được tự động phân chia vào các Chương học (Modules) tương ứng.");
+            } else {
+                SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
             }
-
-            SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
             resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
         } catch (Exception e) {
             SessionUtil.setFlashError(req, e.getMessage());
