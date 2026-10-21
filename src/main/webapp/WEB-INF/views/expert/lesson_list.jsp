@@ -541,12 +541,9 @@ body {
                 <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}" class="btn btn-saas-outline" title="Quản lý Quiz cho khóa học">
                     <i class="bi bi-patch-question text-warning me-1"></i>Quản lý Quiz
                 </a>
-                <button type="button" class="btn btn-saas-outline" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                    <i class="bi bi-folder-plus text-primary me-1"></i>Thêm Chương mới
+                <button type="button" class="btn btn-saas-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+                    <i class="bi bi-folder-plus me-1"></i>Thêm Chương mới
                 </button>
-                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-saas-primary">
-                    <i class="bi bi-plus-lg me-1"></i>Thêm bài học
-                </a>
             </div>
         </div>
 
@@ -559,15 +556,12 @@ body {
                     </div>
                     <h5 class="fw-bold text-dark mb-2">Khóa học này chưa có chương học nào</h5>
                     <p class="text-muted small mb-4" style="max-width: 500px; margin-left: auto; margin-right: auto;">
-                        Bắt đầu xây dựng cấu trúc khóa học bằng cách thêm chương học đầu tiên hoặc thêm bài giảng.
+                        Bắt đầu xây dựng cấu trúc khóa học bằng cách thêm Chương học (Module) đầu tiên. Mỗi bài giảng sẽ được thêm vào bên trong chương học tương ứng.
                     </p>
                     <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-saas-outline" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                            <i class="bi bi-folder-plus text-primary me-1"></i>Thêm Chương mới
+                        <button type="button" class="btn btn-saas-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+                            <i class="bi bi-folder-plus me-1"></i>Thêm Chương đầu tiên
                         </button>
-                        <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}" class="btn btn-saas-primary">
-                            <i class="bi bi-plus-lg me-1"></i>Thêm bài học
-                        </a>
                     </div>
                 </div>
             </c:when>
@@ -585,8 +579,8 @@ body {
                                 <span class="pill-neutral ms-1">${fn:length(m.lessons)} bài học</span>
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-shrink-0" onclick="event.stopPropagation();">
-                                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-saas-outline" title="Thêm bài học vào chương này">
-                                    <i class="bi bi-plus-lg me-1 text-primary"></i>Thêm bài
+                                <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}" class="btn btn-sm btn-saas-primary" title="Thêm bài học vào chương này">
+                                    <i class="bi bi-plus-lg me-1"></i>Thêm bài học
                                 </a>
                                 <button type="button" class="btn-icon-action" onclick="openEditModuleModal('${m.id}', '${fn:escapeXml(m.title)}', '${m.orderIndex}')" title="Đổi tên chương">
                                     <i class="bi bi-pencil"></i>
@@ -632,6 +626,11 @@ body {
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                                <button type="button" class="btn-icon-action"
+                                                        onclick="openMoveLessonModal('${l.id}', '${fn:escapeXml(l.title)}', '${m.id}')"
+                                                        title="Di chuyển bài sang chương khác" aria-label="Chuyển chương">
+                                                    <i class="bi bi-arrow-left-right text-primary"></i>
+                                                </button>
                                                 <a href="${pageContext.request.contextPath}/expert/lesson-detail?courseId=${course.id}&moduleId=${m.id}&lessonId=${l.id}" class="btn-icon-action" title="Chỉnh sửa bài học" aria-label="Sửa bài">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
@@ -716,7 +715,55 @@ body {
     </div>
 </div>
 
+<!-- Move Lesson Modal -->
+<div class="modal fade" id="moveLessonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content saas-modal">
+            <form action="${pageContext.request.contextPath}/expert/move-lesson" method="POST">
+                <input type="hidden" name="courseId" value="${course.id}">
+                <input type="hidden" name="lessonId" id="moveLessonId">
+                <div class="modal-header saas-modal-header">
+                    <h5 class="modal-title fw-bold text-dark fs-6">
+                        <i class="bi bi-arrow-left-right text-primary me-2"></i>Di chuyển Bài học sang Chương khác
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="text-muted small mb-1">Bài học đang chọn:</div>
+                        <div class="fw-bold text-dark text-break" id="moveLessonTitle"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label saas-form-label">Chọn Chương học đích <span class="text-danger">*</span></label>
+                        <select name="targetModuleId" id="targetModuleSelect" class="form-select saas-form-control" required>
+                            <c:forEach var="targetMod" items="${course.modules}">
+                                <option value="${targetMod.id}">Chương ${targetMod.orderIndex}: ${targetMod.title}</option>
+                            </c:forEach>
+                        </select>
+                        <div class="form-text small mt-1">Bài học sẽ được chuyển và tự động đánh số thứ tự tiếp nối ở chương mới.</div>
+                    </div>
+                </div>
+                <div class="modal-footer saas-modal-footer">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-saas-primary btn-sm">
+                        <i class="bi bi-check-lg me-1"></i>Xác nhận di chuyển
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+    function openMoveLessonModal(lessonId, lessonTitle, currentModuleId) {
+        document.getElementById('moveLessonId').value = lessonId || '';
+        document.getElementById('moveLessonTitle').textContent = lessonTitle || '';
+        const select = document.getElementById('targetModuleSelect');
+        if (select && currentModuleId) {
+            select.value = currentModuleId;
+        }
+        new bootstrap.Modal(document.getElementById('moveLessonModal')).show();
+    }
     function openEditModuleModal(id, title, order) {
         document.getElementById('editModuleId').value = id || '';
         document.getElementById('editModuleTitle').value = title || '';
