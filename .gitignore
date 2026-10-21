@@ -39,3 +39,8 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+
+# Test documents (managed on Google Drive)
+*.xlsm
+*.xlsx
