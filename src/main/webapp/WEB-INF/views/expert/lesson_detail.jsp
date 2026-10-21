@@ -92,9 +92,9 @@
                             <c:choose>
                                 <c:when test="${not empty course.modules}">
                                     <select name="moduleId" id="lessonModuleId" class="form-select saas-form-control" required onchange="handleModuleSelectChange(this.value)">
-                                        <c:forEach var="mod" items="${course.modules}">
-                                            <option value="${mod.id}" ${mod.id == curModId ? 'selected' : ''}>
-                                                Chương ${mod.orderIndex}: ${mod.title}
+                                        <c:forEach var="moduleItem" items="${course.modules}">
+                                            <option value="${moduleItem.id}" ${moduleItem.id == curModId ? 'selected' : ''}>
+                                                Chương ${moduleItem.orderIndex}: ${moduleItem.title}
                                             </option>
                                         </c:forEach>
                                         <option value="__NEW__" class="fw-bold text-primary">+ Tạo Chương học mới...</option>

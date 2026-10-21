@@ -28,6 +28,7 @@ import entity.enums.SettingStatus;
 import entity.enums.SettingType;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -440,70 +441,6 @@ public class CourseService {
         }
     }
 
-    public int autoGroupCourseModulesWithAi(long courseId) {
-        try (Connection con = DbConnection.getConnection()) {
-            con.setAutoCommit(false);
-            try {
-                Course course = courseDao.findById(con, courseId)
-                        .orElseThrow(() -> new IllegalArgumentException("Khóa học không tồn tại."));
-
-                List<Module> oldModules = moduleDao.findByCourseId(con, courseId);
-                List<Lesson> allLessons = new ArrayList<>();
-                for (Module m : oldModules) {
-                    allLessons.addAll(lessonDao.findByModuleId(con, m.getId()));
-                }
-
-                if (allLessons.isEmpty()) {
-                    throw new IllegalArgumentException("Khóa học chưa có bài học nào để AI phân chia module.");
-                }
-
-                List<String> titles = new ArrayList<>();
-                for (Lesson l : allLessons) {
-                    titles.add(l.getTitle() != null ? l.getTitle() : "");
-                }
-
-                List<GeminiAiUtil.ModuleGroup> groups = GeminiAiUtil.groupLessonsIntoModules(course.getTitle(), titles);
-                if (groups == null || groups.isEmpty()) {
-                    throw new RuntimeException("AI không thể chia nhóm bài học lúc này.");
-                }
-
-                int modOrder = 0;
-                for (GeminiAiUtil.ModuleGroup group : groups) {
-                    Module mod = new Module();
-                    mod.setCourseId(courseId);
-                    mod.setTitle(group.getModuleTitle());
-                    mod.setOrderIndex(++modOrder);
-                    long newModId = moduleDao.insert(con, mod);
-
-                    int lessonOrder = 1;
-                    for (int idx : group.getLessonIndices()) {
-                        if (idx >= 1 && idx <= allLessons.size()) {
-                            Lesson l = allLessons.get(idx - 1);
-                            l.setModuleId(newModId);
-                            l.setOrderIndex(lessonOrder++);
-                            lessonDao.update(con, l);
-                        }
-                    }
-                }
-
-                // Xóa các module cũ sau khi bài học đã chuyển thành công
-                for (Module oldM : oldModules) {
-                    moduleDao.delete(con, oldM.getId());
-                }
-
-                con.commit();
-                return groups.size();
-            } catch (Exception e) {
-                DbConnection.rollbackQuietly(con);
-                throw e;
-            } finally {
-                con.setAutoCommit(true);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi phân chia module bằng AI: " + e.getMessage(), e);
-        }
-    }
-
     public void updateCourseStatus(long courseId, CourseStatus status) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
@@ -848,6 +785,42 @@ public class CourseService {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa bài học: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Di chuyển một bài học sang một Module (Chương học) khác và tự động đánh số thứ tự tiếp nối:
+     */
+    public void moveLessonToModule(long lessonId, long targetModuleId) {
+        try (Connection con = DbConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Lesson l = lessonDao.findById(con, lessonId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học cần di chuyển."));
+
+                moduleDao.findById(con, targetModuleId)
+                        .orElseThrow(() -> new IllegalArgumentException("Chương học đích không tồn tại."));
+
+                if (l.getModuleId() == targetModuleId) {
+                    return; // Đã ở cùng module, không cần di chuyển
+                }
+
+                List<Lesson> targetLessons = lessonDao.findByModuleId(con, targetModuleId);
+                int nextOrder = targetLessons.size() + 1;
+
+                l.setModuleId(targetModuleId);
+                l.setOrderIndex(nextOrder);
+                lessonDao.update(con, l);
+
+                con.commit();
+            } catch (Exception ex) {
+                DbConnection.rollbackQuietly(con);
+                throw ex;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi di chuyển bài học: " + e.getMessage(), e);
         }
     }
 
