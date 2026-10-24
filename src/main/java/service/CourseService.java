@@ -489,14 +489,88 @@ public class CourseService {
         }
     }
 
-    public void updateCourseStatus(long courseId, CourseStatus status) {
+    /**
+     * Kiểm tra tính hợp lệ của việc chuyển đổi trạng thái khóa học.
+     * Ma trận chuyển dịch:
+     * - DRAFT -> PENDING_REVIEW, PUBLISHED
+     * - PENDING_REVIEW -> DRAFT, PUBLISHED
+     * - PUBLISHED -> ARCHIVED, DRAFT
+     * - ARCHIVED -> PUBLISHED
+     */
+    public boolean isValidTransition(CourseStatus current, CourseStatus target) {
+        if (current == null || target == null) return false;
+        if (current == target) return true;
+        switch (current) {
+            case DRAFT:
+                return target == CourseStatus.PENDING_REVIEW || target == CourseStatus.PUBLISHED;
+            case PENDING_REVIEW:
+                return target == CourseStatus.DRAFT || target == CourseStatus.PUBLISHED;
+            case PUBLISHED:
+                return target == CourseStatus.ARCHIVED || target == CourseStatus.DRAFT;
+            case ARCHIVED:
+                return target == CourseStatus.PUBLISHED;
+            default:
+                return false;
+        }
+    }
+
+    public void updateCourseStatus(long courseId, CourseStatus targetStatus) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
-            course.setStatus(status);
+
+            CourseStatus current = course.getStatus();
+            if (current != targetStatus) {
+                if (!isValidTransition(current, targetStatus)) {
+                    throw new IllegalStateException("Không được phép chuyển trạng thái khóa học từ " + current + " sang " + targetStatus + ".");
+                }
+            }
+
+            // Khi chuyển sang PUBLISHED: Kiểm tra khóa học phải có ít nhất 1 bài học
+            if (targetStatus == CourseStatus.PUBLISHED) {
+                List<Module> modules = moduleDao.findByCourseId(con, courseId);
+                int count = 0;
+                for (Module m : modules) {
+                    count += lessonDao.findByModuleId(con, m.getId()).size();
+                }
+                if (count <= 0) {
+                    throw new IllegalStateException("Khóa học chưa có bài giảng nào. Không thể xuất bản khóa học rỗng.");
+                }
+                // Nếu unarchive hoặc phát hành lại, xóa lịch lưu trữ quá khứ
+                if (course.getArchiveAt() != null && !course.getArchiveAt().isAfter(OffsetDateTime.now())) {
+                    course.setArchiveAt(null);
+                    course.setArchiveNotice(null);
+                }
+            }
+
+            // Khi chuyển sang PENDING_REVIEW: Kiểm tra khóa học phải có ít nhất 1 bài học
+            if (targetStatus == CourseStatus.PENDING_REVIEW) {
+                List<Module> modules = moduleDao.findByCourseId(con, courseId);
+                int count = 0;
+                for (Module m : modules) {
+                    count += lessonDao.findByModuleId(con, m.getId()).size();
+                }
+                if (count <= 0) {
+                    throw new IllegalStateException("Khóa học chưa có bài học nào. Vui lòng thêm bài học trước khi gửi yêu cầu duyệt.");
+                }
+            }
+
+            course.setStatus(targetStatus);
             courseDao.update(con, course);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật trạng thái khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Worker quét và thực thi tự động lịch lưu trữ các khóa học đã tới hạn.
+     */
+    public int processScheduledArchives() {
+        try (Connection con = DbConnection.getConnection()) {
+            return courseDao.archiveExpiredCourses(con);
+        } catch (SQLException e) {
+            System.err.println("[CourseArchiveWorker] Lỗi thực thi lưu trữ tự động: " + e.getMessage());
+            return 0;
         }
     }
 
@@ -513,8 +587,8 @@ public class CourseService {
             Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
 
-            if (course.getStatus() == CourseStatus.DRAFT) {
-                throw new IllegalStateException("Khóa học ở trạng thái Nháp (Draft) không cần lưu trữ, bạn có thể xóa trực tiếp.");
+            if (course.getStatus() != CourseStatus.PUBLISHED) {
+                throw new IllegalStateException("Chỉ khóa học đang công khai (PUBLISHED) mới có thể thiết lập lịch lưu trữ.");
             }
 
             OffsetDateTime now = OffsetDateTime.now();
@@ -563,8 +637,12 @@ public class CourseService {
         checkCourseOwnership(courseId, currentUser);
 
         try (Connection con = DbConnection.getConnection()) {
-            courseDao.findById(con, courseId)
+            Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
+
+            if (course.getStatus() != CourseStatus.ARCHIVED) {
+                throw new IllegalStateException("Khóa học không ở trạng thái lưu trữ (ARCHIVED).");
+            }
 
             courseDao.updateArchiveStatus(con, courseId, CourseStatus.PUBLISHED, null, null);
         } catch (SQLException e) {
@@ -582,8 +660,12 @@ public class CourseService {
         checkCourseOwnership(courseId, currentUser);
 
         try (Connection con = DbConnection.getConnection()) {
-            courseDao.findById(con, courseId)
+            Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
+
+            if (course.getStatus() != CourseStatus.PUBLISHED || course.getArchiveAt() == null) {
+                throw new IllegalStateException("Khóa học không có lịch hẹn lưu trữ nào cần hủy.");
+            }
 
             courseDao.updateArchiveStatus(con, courseId, CourseStatus.PUBLISHED, null, null);
         } catch (SQLException e) {
@@ -798,10 +880,34 @@ public class CourseService {
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
-                // Kiểm tra chương học có tồn tại trong hệ thống hay không
-                moduleDao.findById(con, dto.getModuleId())
+                // 1. Kiểm tra chương học có tồn tại và thuộc đúng khóa học hay không
+                Module targetModule = moduleDao.findById(con, dto.getModuleId())
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "Chương học ID " + dto.getModuleId() + " không tồn tại."));
+
+                if (dto.getCourseId() != null && dto.getCourseId() > 0) {
+                    if (targetModule.getCourseId() != dto.getCourseId()) {
+                        throw new IllegalArgumentException("Chương học ID " + dto.getModuleId() + " không thuộc về khóa học ID " + dto.getCourseId());
+                    }
+                }
+
+                // 2. Nếu là sửa bài học, kiểm tra bài học cũ có hợp lệ không
+                if (dto.getId() != null && dto.getId() > 0) {
+                    Lesson existing = lessonDao.findById(con, dto.getId())
+                            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học cần sửa."));
+                    if (existing.getModuleId() != dto.getModuleId()) {
+                        Module oldMod = moduleDao.findById(con, existing.getModuleId()).orElse(null);
+                        if (oldMod != null && oldMod.getCourseId() != targetModule.getCourseId()) {
+                            throw new IllegalArgumentException("Không thể di chuyển bài học sang chương thuộc khóa học khác.");
+                        }
+                    }
+                }
+
+                // 3. Kiểm tra chống trùng thứ tự bài học (order_index) trong cùng một Module
+                Long excludeLessonId = (dto.getId() != null && dto.getId() > 0) ? dto.getId() : null;
+                if (lessonDao.existsOrderIndex(con, dto.getModuleId(), dto.getOrderIndex(), excludeLessonId)) {
+                    throw new IllegalArgumentException("Thứ tự bài học (" + dto.getOrderIndex() + ") đã tồn tại trong chương này. Vui lòng chọn số thứ tự khác.");
+                }
 
                 long id;
                 if (dto.getId() != null && dto.getId() > 0) {

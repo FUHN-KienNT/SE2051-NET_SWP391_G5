@@ -832,6 +832,7 @@ body {
     function confirmPublishCourse(title, url) {
         showConfirmModal({
             title: 'Gửi yêu cầu xuất bản',
+            method: 'POST',
             html: 'Bạn có chắc chắn muốn gửi yêu cầu duyệt khóa học "<strong>' + (title || '') + '</strong>" để Quản lý kiểm tra và công khai khóa học?',
             type: 'success',
             icon: 'bi bi-send-check-fill',
@@ -845,6 +846,7 @@ body {
     function confirmCancelPublishCourse(title, url) {
         showConfirmModal({
             title: 'Thu hồi yêu cầu xuất bản (Chuyển về Bản nháp)',
+            method: 'POST',
             html: 'Bạn có chắc chắn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?<br><span class="text-muted small mt-2 d-inline-block"><i class="bi bi-info-circle me-1"></i>Khóa học sẽ trở về trạng thái <strong>Bản nháp</strong> để bạn có thể thêm, sửa bài giảng và chương học.</span>',
             type: 'warning',
             icon: 'bi bi-arrow-counterclockwise',

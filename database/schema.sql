@@ -107,7 +107,7 @@ CREATE TABLE courses (
     CONSTRAINT fk_courses_category FOREIGN KEY (category_id, category_type) REFERENCES settings (id, type),
     CONSTRAINT fk_courses_manager  FOREIGN KEY (manager_id) REFERENCES users (id),
     CONSTRAINT fk_courses_expert   FOREIGN KEY (expert_id)  REFERENCES users (id),
-    CONSTRAINT chk_courses_status CHECK (status IN ('DRAFT','PUBLISHED','ARCHIVED')),
+    CONSTRAINT chk_courses_status CHECK (status IN ('DRAFT','PENDING_REVIEW','PUBLISHED','ARCHIVED')),
     CONSTRAINT chk_courses_price  CHECK (price >= 0)
 );
 CREATE INDEX idx_courses_manager_id  ON courses (manager_id);

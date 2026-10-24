@@ -782,7 +782,7 @@
             }
         }, AUTO_SAVE_INTERVAL_MS);
 
-        // Bắt sự kiện nộp biểu mẫu: đồng bộ nội dung từ Quill và dọn dẹp nháp
+        // Bắt sự kiện nộp biểu mẫu: đồng bộ nội dung từ Quill (giữ nguyên nháp local phòng sự cố nộp lỗi)
         const formEl = document.getElementById('lessonForm');
         if (formEl) {
             formEl.addEventListener('submit', function() {
@@ -791,9 +791,7 @@
                     hiddenEl.value = getEditorContent();
                 }
                 isSubmitting = true;
-                try {
-                    localStorage.removeItem(DRAFT_KEY);
-                } catch (e) {}
+                // [Zero Data Loss]: KHÔNG xóa localStorage tại đây. Chỉ xóa khi server xác nhận lưu thành công.
             });
         }
 

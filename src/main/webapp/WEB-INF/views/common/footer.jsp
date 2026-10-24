@@ -117,12 +117,43 @@
 <script>
     (function(global) {
         'use strict';
+
+        function submitAsPost(url) {
+            if (!url) return;
+            const parts = url.split('?');
+            const actionPath = parts[0];
+            const queryString = parts[1] || '';
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = actionPath;
+            form.style.display = 'none';
+
+            if (queryString) {
+                const params = new URLSearchParams(queryString);
+                params.forEach((val, key) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = val;
+                    form.appendChild(input);
+                });
+            }
+            document.body.appendChild(form);
+            form.submit();
+        }
+        global.submitAsPost = submitAsPost;
+
         global.showConfirmModal = function(options) {
+            const isMutatingUrl = options.confirmUrl && /(\/expert\/(?:toggle-lesson-status|delete-lesson|hide-lesson|delete-module|delete-course|request-publish|cancel-request-publish|archive-course|unarchive-course|cancel-archive))/.test(options.confirmUrl);
+            const usePost = options.method === 'POST' || options.usePost || isMutatingUrl;
             const modalEl = document.getElementById('coursonConfirmModal');
             if (!modalEl || typeof bootstrap === 'undefined') {
                 if (confirm(options.message || 'Bạn có chắc chắn muốn tiếp tục?')) {
                     if (typeof options.onConfirm === 'function') options.onConfirm();
-                    else if (options.confirmUrl) window.location.href = options.confirmUrl;
+                    else if (options.confirmUrl) {
+                        if (usePost) submitAsPost(options.confirmUrl);
+                        else window.location.href = options.confirmUrl;
+                    }
                 }
                 return;
             }
@@ -184,7 +215,11 @@
                     if (typeof options.onConfirm === 'function') {
                         options.onConfirm();
                     } else if (options.confirmUrl) {
-                        window.location.href = options.confirmUrl;
+                        if (usePost) {
+                            submitAsPost(options.confirmUrl);
+                        } else {
+                            window.location.href = options.confirmUrl;
+                        }
                     }
                 });
             }

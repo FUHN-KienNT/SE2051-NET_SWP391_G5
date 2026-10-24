@@ -98,6 +98,25 @@ public class LessonServlet extends HttpServlet {
             req.setAttribute("successMessage", flashSuccess);
         }
 
+        // [Security - Mutating Endpoint Guard]: Chặn triệt để phương thức GET tại các endpoint thay đổi dữ liệu
+        java.util.Set<String> mutatingActions = java.util.Set.of(
+            "save-lesson", "hide-lesson", "delete-lesson", "toggle-lesson-status",
+            "save-module", "delete-module", "save-course", "batch-save-lessons",
+            "delete-course", "save-lesson-draft", "delete-lesson-draft",
+            "generate-ai-description", "request-publish", "cancel-request-publish",
+            "archive-course", "unarchive-course", "cancel-archive"
+        );
+        if (mutatingActions.contains(action) && !"POST".equalsIgnoreCase(req.getMethod())) {
+            SessionUtil.setFlashError(req, "Phương thức " + req.getMethod() + " không được hỗ trợ cho thao tác này. Vui lòng gửi yêu cầu qua POST.");
+            String courseId = req.getParameter("courseId");
+            if (courseId != null && !courseId.trim().isEmpty()) {
+                resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId.trim());
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+            }
+            return;
+        }
+
         switch (action) {
             case "dashboard":
                 showExpertDashboard(req, resp);

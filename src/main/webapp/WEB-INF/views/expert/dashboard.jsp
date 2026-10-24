@@ -2358,6 +2358,7 @@ body {
         const title = document.getElementById('editCourseTitle').value;
         showConfirmModal({
             title: 'Xác nhận xóa khóa học nháp',
+            method: 'POST',
             html: 'Bạn có chắc chắn muốn xóa vĩnh viễn khóa học nháp "<strong>' + (title || '') + '</strong>" (cùng toàn bộ bài học bên trong)?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Thao tác này sẽ xóa vĩnh viễn khỏi hệ thống và không thể khôi phục.</span>',
             type: 'danger',
             icon: 'bi bi-trash3-fill',
@@ -2371,6 +2372,7 @@ body {
     function confirmPublishCourse(title, url) {
         showConfirmModal({
             title: 'Gửi yêu cầu xuất bản',
+            method: 'POST',
             html: 'Bạn có chắc chắn muốn gửi yêu cầu duyệt khóa học "<strong>' + (title || '') + '</strong>" để Quản lý kiểm tra và công khai khóa học?',
             type: 'success',
             icon: 'bi bi-send-check-fill',
@@ -2384,6 +2386,7 @@ body {
     function confirmCancelPublishCourse(title, url) {
         showConfirmModal({
             title: 'Thu hồi yêu cầu xuất bản (Chuyển về Bản nháp)',
+            method: 'POST',
             html: 'Bạn có chắc chắn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?<br><span class="text-muted small mt-2 d-inline-block"><i class="bi bi-info-circle me-1"></i>Khóa học sẽ trở về trạng thái <strong>Bản nháp</strong> để bạn có thể thêm, sửa bài giảng và chương học.</span>',
             type: 'warning',
             icon: 'bi bi-arrow-counterclockwise',
@@ -2397,6 +2400,7 @@ body {
     function confirmCancelArchive(title, url) {
         showConfirmModal({
             title: 'Hủy lịch lưu trữ',
+            method: 'POST',
             html: 'Bạn có chắc chắn muốn hủy lịch lưu trữ và tiếp tục giữ khóa học "<strong>' + (title || '') + '</strong>" công khai bình thường?',
             type: 'primary',
             icon: 'bi bi-calendar-x-fill',
@@ -2410,6 +2414,7 @@ body {
     function confirmUnarchiveCourse(title, url) {
         showConfirmModal({
             title: 'Mở lại khóa học (Unarchive)',
+            method: 'POST',
             html: 'Khóa học "<strong>' + (title || '') + '</strong>" sẽ được công khai trở lại trên danh mục và cho phép học viên mới tiếp tục đăng ký.',
             type: 'success',
             icon: 'bi bi-arrow-counterclockwise',
@@ -2423,6 +2428,7 @@ body {
     function confirmDeleteCourse(title, url) {
         showConfirmModal({
             title: 'Xác nhận xóa khóa học nháp',
+            method: 'POST',
             html: 'Bạn có chắc chắn muốn xóa vĩnh viễn khóa học nháp "<strong>' + (title || '') + '</strong>"?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Toàn bộ nội dung bài học bên trong sẽ bị xóa vĩnh viễn.</span>',
             type: 'danger',
             icon: 'bi bi-trash3-fill',

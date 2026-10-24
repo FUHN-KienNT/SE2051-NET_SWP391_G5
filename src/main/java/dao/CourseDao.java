@@ -177,6 +177,18 @@ public class CourseDao {
         }
     }
 
+    /**
+     * Tự động quét và chuyển trạng thái các khóa học đã tới hạn lưu trữ (archive_at <= NOW()).
+     * Trả về số lượng khóa học đã được chuyển sang ARCHIVED.
+     */
+    public int archiveExpiredCourses(Connection con) throws SQLException {
+        String sql = "UPDATE courses SET status = 'ARCHIVED', updated_at = NOW() " +
+                     "WHERE status = 'PUBLISHED' AND archive_at IS NOT NULL AND archive_at <= NOW()";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            return ps.executeUpdate();
+        }
+    }
+
     public boolean updateArchiveStatus(Connection con, long courseId, CourseStatus status, OffsetDateTime archiveAt, String archiveNotice) throws SQLException {
         String sql = "UPDATE courses SET status = ?, archive_at = ?, archive_notice = ?, updated_at = NOW() WHERE id = ?";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
