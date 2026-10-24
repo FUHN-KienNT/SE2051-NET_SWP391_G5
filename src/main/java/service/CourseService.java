@@ -384,7 +384,16 @@ public class CourseService {
                     course.setDescription(dto.getDescription());
                     course.setPrice(dto.getPrice());
                     course.setStatus(dto.getStatus() != null ? dto.getStatus() : CourseStatus.DRAFT);
-                    course.setManagerId(dto.getManagerId());
+                    
+                    Long managerId = dto.getManagerId();
+                    if (managerId == null || managerId <= 0) {
+                        UserDao userDao = new UserDao();
+                        managerId = userDao.findDefaultManagerId(con).orElse(null);
+                        if (managerId == null) {
+                            throw new IllegalStateException("Không tìm thấy Quản lý (Manager) hoặc Quản trị viên (Admin) khả dụng trong hệ thống.");
+                        }
+                    }
+                    course.setManagerId(managerId);
                     course.setExpertId(dto.getExpertId());
                     course.setArchiveAt(dto.getArchiveAt());
                     course.setArchiveNotice(dto.getArchiveNotice());
@@ -832,11 +841,28 @@ public class CourseService {
     }
 
     /**
-     * Vô hiệu hóa / Ẩn bài học (thay thế xóa cứng):
+     * Lấy ID của Manager khả dụng để phân công cho khóa học mới.
+     */
+    public Long getDefaultManagerId() {
+        try (Connection con = DbConnection.getConnection()) {
+            UserDao userDao = new UserDao();
+            return userDao.findDefaultManagerId(con).orElse(null);
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Tạm ẩn bài học (Soft-Hide thay thế xóa cứng):
      * Bảo toàn toàn vẹn dữ liệu tiến độ và ghi chú của học viên.
      */
-    public void deleteLesson(long lessonId) {
+    public void hideLesson(long lessonId) {
         toggleLessonActive(lessonId, false);
+    }
+
+    @Deprecated
+    public void deleteLesson(long lessonId) {
+        hideLesson(lessonId);
     }
 
     public void toggleLessonActive(long lessonId, boolean isActive) {

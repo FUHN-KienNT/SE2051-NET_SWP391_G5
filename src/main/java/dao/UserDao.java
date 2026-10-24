@@ -90,6 +90,52 @@ public class UserDao {
         return Optional.empty();
     }
 
+    /**
+     * Tìm ID của Manager đang ACTIVE khả dụng nhất để phân công cho khóa học mới.
+     * Thuật toán:
+     * 1. Ưu tiên: Manager đang ACTIVE có ít khóa học được phân công nhất (cân bằng tải).
+     * 2. Dự phòng 1: Admin đang ACTIVE nếu hệ thống chưa có Manager nào.
+     * 3. Dự phòng 2: Bất kỳ người dùng nào đang ACTIVE đầu tiên trong hệ thống.
+     */
+    public Optional<Long> findDefaultManagerId(Connection con) throws SQLException {
+        // 1. Tìm Manager đang ACTIVE có ít khóa học được gán nhất
+        String sqlManager = "SELECT u.id FROM users u " +
+                            "JOIN settings s ON u.role_id = s.id AND u.role_type = s.type " +
+                            "LEFT JOIN courses c ON c.manager_id = u.id " +
+                            "WHERE s.type = 'USER_ROLE' AND UPPER(s.value) = 'MANAGER' AND u.status = 'ACTIVE' " +
+                            "GROUP BY u.id " +
+                            "ORDER BY COUNT(c.id) ASC, u.id ASC LIMIT 1";
+        try (PreparedStatement ps = con.prepareStatement(sqlManager);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return Optional.of(rs.getLong("id"));
+            }
+        }
+
+        // 2. Dự phòng 1: Admin đang ACTIVE
+        String sqlAdmin = "SELECT u.id FROM users u " +
+                          "JOIN settings s ON u.role_id = s.id AND u.role_type = s.type " +
+                          "WHERE s.type = 'USER_ROLE' AND UPPER(s.value) = 'ADMIN' AND u.status = 'ACTIVE' " +
+                          "ORDER BY u.id ASC LIMIT 1";
+        try (PreparedStatement ps = con.prepareStatement(sqlAdmin);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return Optional.of(rs.getLong("id"));
+            }
+        }
+
+        // 3. Dự phòng 2: Bất kỳ User nào đang ACTIVE
+        String sqlAny = "SELECT id FROM users WHERE status = 'ACTIVE' ORDER BY id ASC LIMIT 1";
+        try (PreparedStatement ps = con.prepareStatement(sqlAny);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return Optional.of(rs.getLong("id"));
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public boolean existsUsername(Connection con, String username, Long excludeId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_EXISTS_USERNAME)) {
             ps.setString(1, username);

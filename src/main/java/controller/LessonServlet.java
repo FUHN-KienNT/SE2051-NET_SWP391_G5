@@ -111,8 +111,9 @@ public class LessonServlet extends HttpServlet {
             case "save-lesson":
                 saveLesson(req, resp);
                 break;
+            case "hide-lesson":
             case "delete-lesson":
-                deleteLesson(req, resp);
+                hideLesson(req, resp);
                 break;
             case "toggle-lesson-status":
                 toggleLessonStatus(req, resp);
@@ -497,7 +498,10 @@ public class LessonServlet extends HttpServlet {
         } else {
             // Khóa học mới tạo bởi Expert luôn ở trạng thái DRAFT để chờ Quản lý duyệt
             dto.setStatus(entity.enums.CourseStatus.DRAFT);
-            dto.setManagerId(2L); // ID Manager mặc định
+            Long defaultManagerId = courseService.getDefaultManagerId();
+            if (defaultManagerId != null) {
+                dto.setManagerId(defaultManagerId);
+            }
         }
 
         String title = req.getParameter("title");
@@ -1037,10 +1041,10 @@ public class LessonServlet extends HttpServlet {
     }
 
     /**
-     * Xóa Bài học:
-     * - [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi xóa.
+     * Tạm ẩn Bài học (Soft-Hide):
+     * - [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi ẩn.
      */
-    private void deleteLesson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void hideLesson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -1054,7 +1058,7 @@ public class LessonServlet extends HttpServlet {
                 // [IDOR Defense]: Kiểm tra quyền sở hữu bài học trước khi cập nhật
                 courseService.checkLessonOwnership(lessonId, currentUser);
                 courseService.checkLessonEditable(lessonId);
-                courseService.toggleLessonActive(lessonId, false);
+                courseService.hideLesson(lessonId);
                 SessionUtil.setFlashSuccess(req, "Đã tạm ẩn bài học thành công!");
             }
         } catch (Exception e) {
