@@ -803,7 +803,7 @@ body {
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label saas-form-label">Tên chương học <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control saas-form-control" required placeholder="Ví dụ: Chương 1: Cài đặt và cấu hình">
+                        <input type="text" name="title" class="form-control saas-form-control" required placeholder="Ví dụ: Cài đặt và cấu hình môi trường">
                     </div>
                 </div>
                 <div class="modal-footer saas-modal-footer">

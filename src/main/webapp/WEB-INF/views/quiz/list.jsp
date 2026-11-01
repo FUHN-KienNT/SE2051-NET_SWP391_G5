@@ -809,7 +809,7 @@ body {
                                                             <span class="badge bg-light text-dark border fw-semibold flex-shrink-0">
                                                                 Chương ${m.orderIndex}
                                                             </span>
-                                                            <span class="fw-bold text-dark text-truncate">${m.title}</span>
+                                                            <span class="fw-bold text-dark text-truncate">${m.cleanTitle}</span>
                                                             <c:choose>
                                                                 <c:when test="${mHasQuizzes}">
                                                                     <span class="saas-badge saas-badge-blue flex-shrink-0 ms-1">
@@ -997,8 +997,8 @@ body {
                                                         class="form-select form-select-sm bg-light">
                                                         <option value="all">Tất cả chương học</option>
                                                         <c:forEach var="moduleItem" items="${course.modules}">
-                                                            <option value="${moduleItem.id}">Chương
-                                                                ${moduleItem.orderIndex}: ${moduleItem.title}</option>
+                                                            <option value="${moduleItem.id}"><c:out value="${moduleItem.displayTitle}" /></option>
+
                                                         </c:forEach>
                                                     </select>
                                                 </div>
@@ -1065,7 +1065,7 @@ body {
                                                             <span class="badge bg-light text-dark border fw-semibold flex-shrink-0">
                                                                 Chương ${m.orderIndex}
                                                             </span>
-                                                            <span class="fw-bold text-dark text-truncate">${m.title}</span>
+                                                            <span class="fw-bold text-dark text-truncate">${m.cleanTitle}</span>
                                                             <c:choose>
                                                                 <c:when test="${mHasQuestions}">
                                                                     <span class="saas-badge saas-badge-published flex-shrink-0 ms-1">
