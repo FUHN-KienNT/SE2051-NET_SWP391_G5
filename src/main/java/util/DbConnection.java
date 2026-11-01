@@ -124,8 +124,12 @@ public final class DbConnection {
                        "ALTER TABLE courses ADD CONSTRAINT chk_courses_status CHECK (status IN ('DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'ARCHIVED'));");
             // Đảm bảo có các cột lưu trữ và ghi chú mới
             st.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_at timestamptz; " +
-                       "ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_notice text;");
-            st.execute("ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text;");
+                       "ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_notice text; " +
+                       "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
+                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text;");
+            st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url varchar(255); " +
+                       "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone varchar(20); " +
+                       "ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date date;");
         } catch (Exception ex) {
             // Không chặn ứng dụng nếu tài khoản không đủ quyền DDL
         } finally {
