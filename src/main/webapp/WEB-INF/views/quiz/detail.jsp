@@ -842,7 +842,7 @@ body {
                                     </button>
                                 </c:when>
                                 <c:otherwise>
-                                    <button type="button" class="btn-saas-outline text-danger justify-content-start py-2" data-bs-toggle="modal" data-bs-target="#deleteQuizModal">
+                                    <button type="button" class="btn-saas-outline text-danger justify-content-start py-2" onclick="startDeleteQuizDetailCountdown('${quiz.id}', '${fn:escapeXml(quiz.title)}', '${courseId}')">
                                         <i class="bi bi-trash3 me-2"></i>Xóa bài thi này
                                     </button>
                                 </c:otherwise>
@@ -959,7 +959,7 @@ body {
                             <c:otherwise>
                                 <div class="d-flex flex-column gap-3" id="quizQuestionsContainer">
                                     <c:forEach var="qq" items="${quiz.questions}" varStatus="status">
-                                        <div class="question-item-card p-3 p-md-4"
+                                        <div class="question-item-card p-3 p-md-4" id="questionCard-${qq.id}"
                                              data-question-text="${fn:toLowerCase(fn:escapeXml(qq.questionText))}"
                                              data-question-type="${qq.questionType}"
                                              data-q-id="${qq.id}"
@@ -1065,11 +1065,11 @@ body {
                                                                     <c:param name="courseId" value="${courseId}"/>
                                                                 </c:if>
                                                             </c:url>
-                                                            <a href="${removeUrl}" class="btn-icon-action text-danger" 
-                                                               onclick="return confirm('Bạn có chắc muốn gỡ câu hỏi này khỏi bài thi? (Câu hỏi vẫn được giữ nguyên an toàn trong Ngân hàng câu hỏi)');"
-                                                               title="Gỡ khỏi bài thi">
+                                                            <button type="button" class="btn-icon-action text-danger border-0 bg-transparent" 
+                                                               onclick="startRemoveQuestionCountdown('${qq.id}', '${fn:escapeXml(qq.questionText)}', '${quiz.id}', '${courseId}')"
+                                                               title="Gỡ khỏi bài thi (Có 5s để Hoàn tác / Rollback bằng Ctrl+Z)">
                                                                 <i class="bi bi-trash3"></i>
-                                                            </a>
+                                                            </button>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </div>
@@ -1378,6 +1378,40 @@ body {
     </div>
 </div>
 
+<!-- Floating Undo Delete Countdown Toast (5s Rollback / Ctrl+Z) -->
+<div id="undoToastContainer" class="position-fixed bottom-0 start-50 translate-middle-x pb-4" style="z-index: 1080; display: none;">
+    <div class="shadow-lg rounded-4 p-3 border border-secondary text-white" style="background: #1e293b; min-width: 380px; max-width: 520px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+            <div class="d-flex align-items-center gap-2 text-truncate">
+                <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                    <i class="bi bi-trash3-fill"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-white-50 small" id="undoItemLabel" style="font-size: 11px;">Đang chuẩn bị...</div>
+                    <div class="fw-bold text-white text-truncate small" id="undoItemTitle" style="max-width: 200px;"></div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <button type="button" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill shadow-sm d-inline-flex align-items-center gap-1.5" onclick="rollbackDelete()" style="font-size: 12px;">
+                    <i class="bi bi-arrow-counterclockwise fs-6"></i>
+                    <span>Hoàn tác (<strong id="undoCountdownSeconds">5</strong>s)</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm text-white-50 border-0 p-1" onclick="commitDeleteNow()" title="Xóa ngay lập tức">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between text-muted mt-1 px-1" style="font-size: 11px;">
+            <span><i class="bi bi-keyboard me-1 text-light"></i>Bấm <kbd class="bg-dark text-white border border-secondary px-1.5 py-0.5 rounded">Ctrl</kbd> + <kbd class="bg-dark text-white border border-secondary px-1.5 py-0.5 rounded">Z</kbd> để hoàn tác</span>
+            <span id="undoStatusText" class="text-warning-emphasis">Hủy sau 5s...</span>
+        </div>
+        <!-- Countdown Progress Bar -->
+        <div class="progress mt-2" style="height: 3px; background-color: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden;">
+            <div id="undoProgressBar" class="progress-bar bg-warning" role="progressbar" style="width: 100%; transition: width 0.05s linear;"></div>
+        </div>
+    </div>
+</div>
+
 <!-- ======================================================= -->
 <!-- MODAL 4: XÁC NHẬN XÓA BÀI THI                            -->
 <!-- ======================================================= -->
@@ -1403,9 +1437,9 @@ body {
                             <c:param name="moduleId" value="${quiz.moduleId}"/>
                         </c:if>
                     </c:url>
-                    <a href="${deleteQuizUrl}" class="btn btn-danger btn-sm fw-semibold rounded-3 px-3">
+                    <button type="button" class="btn btn-danger btn-sm fw-semibold rounded-3 px-3" onclick="bootstrap.Modal.getInstance(document.getElementById('deleteQuizModal')).hide(); startDeleteQuizDetailCountdown('${quiz.id}', '${fn:escapeXml(quiz.title)}', '${courseId}')">
                         <i class="bi bi-trash3 me-1"></i>Xóa bài thi
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1769,6 +1803,263 @@ body {
             if (textB && textB.value === 'Sai (False)') textB.value = '';
         }
     }
+
+    // ==========================================
+    // ROLLBACK & 5S COUNTDOWN CHO QUIZ DETAIL
+    // ==========================================
+    let pendingQuizDetailState = null;
+    let quizDetailTimer = null;
+    let quizDetailProgressTimer = null;
+
+    function startRemoveQuestionCountdown(qId, qText, quizId, courseId) {
+        if (pendingQuizDetailState) {
+            commitDeleteNow();
+        }
+
+        const card = document.getElementById('questionCard-' + qId);
+
+        pendingQuizDetailState = {
+            type: 'remove_question',
+            qId: qId,
+            quizId: quizId,
+            courseId: courseId,
+            title: qText,
+            startTime: Date.now(),
+            totalDuration: 5000,
+            rowElement: card
+        };
+
+        if (card) {
+            card.style.opacity = '0.25';
+            card.style.pointerEvents = 'none';
+            card.style.filter = 'grayscale(100%)';
+        }
+
+        showDetailUndoToast('Đang chuẩn bị gỡ câu hỏi khỏi bài thi...', qText);
+    }
+
+    function startDeleteQuizDetailCountdown(quizId, quizTitle, courseId) {
+        if (pendingQuizDetailState) {
+            commitDeleteNow();
+        }
+
+        const mainCard = document.querySelector('.saas-card');
+
+        pendingQuizDetailState = {
+            type: 'delete_quiz',
+            quizId: quizId,
+            courseId: courseId,
+            title: quizTitle,
+            startTime: Date.now(),
+            totalDuration: 5000,
+            rowElement: mainCard
+        };
+
+        if (mainCard) {
+            mainCard.style.opacity = '0.25';
+            mainCard.style.pointerEvents = 'none';
+            mainCard.style.filter = 'grayscale(100%)';
+        }
+
+        showDetailUndoToast('Đang chuẩn bị xóa bài thi...', quizTitle);
+    }
+
+    function showDetailUndoToast(label, title) {
+        const container = document.getElementById('undoToastContainer');
+        const labelEl = document.getElementById('undoItemLabel');
+        const titleEl = document.getElementById('undoItemTitle');
+        const secEl = document.getElementById('undoCountdownSeconds');
+        const pBar = document.getElementById('undoProgressBar');
+        const statusText = document.getElementById('undoStatusText');
+
+        if (labelEl) labelEl.textContent = label;
+        if (titleEl) titleEl.textContent = title;
+        secEl.textContent = '5';
+        pBar.style.width = '100%';
+        pBar.className = 'progress-bar bg-warning';
+        statusText.textContent = 'Xóa vĩnh viễn sau 5s...';
+        container.style.display = 'block';
+
+        let elapsed = 0;
+        const interval = 50;
+        quizDetailProgressTimer = setInterval(() => {
+            elapsed += interval;
+            const remaining = Math.max(0, 5000 - elapsed);
+            const remainingSec = Math.ceil(remaining / 1000);
+            const percent = (remaining / 5000) * 100;
+
+            secEl.textContent = remainingSec;
+            pBar.style.width = percent + '%';
+            if (remainingSec <= 2) {
+                pBar.className = 'progress-bar bg-danger';
+            }
+
+            if (elapsed >= 5000) {
+                clearInterval(quizDetailProgressTimer);
+                quizDetailProgressTimer = null;
+            }
+        }, interval);
+
+        quizDetailTimer = setTimeout(() => {
+            commitDeleteNow();
+        }, 5000);
+    }
+
+    function rollbackDelete() {
+        if (!pendingQuizDetailState) return;
+
+        if (quizDetailTimer) { clearTimeout(quizDetailTimer); quizDetailTimer = null; }
+        if (quizDetailProgressTimer) { clearInterval(quizDetailProgressTimer); quizDetailProgressTimer = null; }
+
+        const row = pendingQuizDetailState.rowElement;
+        const title = pendingQuizDetailState.title;
+        const isRemove = pendingQuizDetailState.type === 'remove_question';
+        pendingQuizDetailState = null;
+
+        document.getElementById('undoToastContainer').style.display = 'none';
+
+        if (row) {
+            row.style.opacity = '1';
+            row.style.pointerEvents = '';
+            row.style.filter = '';
+            row.style.boxShadow = '0 0 0 2px #22c55e';
+            setTimeout(() => { row.style.boxShadow = ''; }, 1200);
+        }
+
+        const msg = isRemove
+            ? 'Đã hoàn tác (Rollback)! Câu hỏi "' + title + '" vẫn được giữ trong bài thi.'
+            : 'Đã hoàn tác (Rollback)! Bài thi "' + title + '" được giữ nguyên.';
+        if (window.CoursonToast) {
+            window.CoursonToast.show('success', msg);
+        } else {
+            alert(msg);
+        }
+    }
+
+    function commitDeleteNow() {
+        if (!pendingQuizDetailState) return;
+
+        if (quizDetailTimer) { clearTimeout(quizDetailTimer); quizDetailTimer = null; }
+        if (quizDetailProgressTimer) { clearInterval(quizDetailProgressTimer); quizDetailProgressTimer = null; }
+
+        const state = pendingQuizDetailState;
+        pendingQuizDetailState = null;
+        document.getElementById('undoToastContainer').style.display = 'none';
+
+        const row = state.rowElement;
+        const isRemove = state.type === 'remove_question';
+
+        if (isRemove) {
+            const bodyData = 'quizId=' + encodeURIComponent(state.quizId)
+                + '&questionId=' + encodeURIComponent(state.qId)
+                + (state.courseId ? '&courseId=' + encodeURIComponent(state.courseId) : '')
+                + '&ajax=true';
+
+            fetch('${pageContext.request.contextPath}/quizzes/remove-question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: bodyData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (row) {
+                        row.style.transition = 'all 0.3s ease';
+                        row.style.maxHeight = '0px';
+                        row.style.padding = '0px';
+                        row.style.margin = '0px';
+                        row.style.overflow = 'hidden';
+                        setTimeout(() => { row.remove(); }, 350);
+                    }
+                    if (window.CoursonToast) {
+                        window.CoursonToast.show('success', data.message || 'Đã gỡ câu hỏi khỏi bài thi thành công!');
+                    }
+                } else {
+                    if (row) {
+                        row.style.opacity = '1';
+                        row.style.pointerEvents = '';
+                        row.style.filter = '';
+                    }
+                    alert(data.message || 'Lỗi khi gỡ câu hỏi.');
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi khi gỡ câu hỏi:', err);
+                if (row) {
+                    row.style.opacity = '1';
+                    row.style.pointerEvents = '';
+                    row.style.filter = '';
+                    row.style.boxShadow = '0 0 0 2px #ef4444';
+                    setTimeout(() => { row.style.boxShadow = ''; }, 1500);
+                }
+                if (window.CoursonToast) {
+                    window.CoursonToast.show('error', 'Mất kết nối mạng! Không thể gửi lệnh gỡ câu hỏi. Dữ liệu đã được tự động giữ nguyên.');
+                }
+            });
+        } else {
+            // Delete entire quiz
+            let bodyData = 'id=' + encodeURIComponent(state.quizId) + '&ajax=true';
+            if (state.courseId) bodyData += '&courseId=' + encodeURIComponent(state.courseId);
+
+            fetch('${pageContext.request.contextPath}/quizzes/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: bodyData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    let redirectUrl = '${pageContext.request.contextPath}/quizzes/list?';
+                    if (state.courseId) redirectUrl += 'courseId=' + encodeURIComponent(state.courseId) + '&';
+                    redirectUrl += 'success=deleted';
+                    window.location.href = redirectUrl;
+                } else {
+                    if (row) {
+                        row.style.opacity = '1';
+                        row.style.pointerEvents = '';
+                        row.style.filter = '';
+                    }
+                    alert(data.message || 'Lỗi khi xóa bài thi.');
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi khi xóa bài thi:', err);
+                if (row) {
+                    row.style.opacity = '1';
+                    row.style.pointerEvents = '';
+                    row.style.filter = '';
+                }
+                if (window.CoursonToast) {
+                    window.CoursonToast.show('error', 'Mất kết nối mạng! Không thể xóa bài thi.');
+                }
+            });
+        }
+    }
+
+    // Ctrl + Z listener
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+            if (pendingQuizDetailState) {
+                e.preventDefault();
+                rollbackDelete();
+            }
+        }
+    });
+
+    // Fail-safe on reload/close
+    window.addEventListener('beforeunload', function() {
+        if (pendingQuizDetailState) {
+            if (quizDetailTimer) clearTimeout(quizDetailTimer);
+            if (quizDetailProgressTimer) clearInterval(quizDetailProgressTimer);
+            pendingQuizDetailState = null;
+        }
+    });
 </script>
 
 <jsp:include page="../common/footer.jsp" />
