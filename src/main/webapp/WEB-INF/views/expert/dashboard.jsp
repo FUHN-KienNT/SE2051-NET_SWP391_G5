@@ -1195,19 +1195,7 @@ body {
     </div>
 </main>
 
-<!-- Floating Undo Delete Countdown Toast (5s Rollback / Ctrl+Z) -->
-<div id="undoToastContainer" class="position-fixed bottom-0 start-50 translate-middle-x pb-4" style="z-index: 1080; display: none;">
-    <div class="shadow-lg rounded-4 p-3 border border-secondary text-white" style="background: #1e293b; min-width: 380px; max-width: 520px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);">
-        <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
-            <div class="d-flex align-items-center gap-2 text-truncate">
-                <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px; font-size: 1.1rem;">
-                    <i class="bi bi-trash3-fill"></i>
-                </div>
-                <div class="min-w-0">
-                    <div class="text-white-50 small" id="undoItemLabel" style="font-size: 11px;">Đang chuẩn bị xóa khóa học nháp...</div>
-                    <div class="fw-bold text-white text-truncate small" id="undoCourseTitle" style="max-width: 200px;"></div>
-                </div>
-            </div>
+
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 <button type="button" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill shadow-sm d-inline-flex align-items-center gap-1.5" onclick="rollbackDelete()" style="font-size: 12px;">
                     <i class="bi bi-arrow-counterclockwise fs-6"></i>
@@ -2453,178 +2441,17 @@ body {
     }
 
     // ==========================================
-    // KHÓA HỌC: ĐẾM NGƯỢC 5S & ROLLBACK (CTRL + Z)
+    // KHÓA HỌC: ROLLBACK QUA COURSONROLLBACK
     // ==========================================
-    let pendingCourseDeleteState = null;
-    let courseDeleteTimer = null;
-    let courseProgressTimer = null;
-
     function startDeleteCourseCountdown(courseId, courseTitle) {
-        if (pendingCourseDeleteState) {
-            commitDeleteNow();
-        }
-
-        const row = document.getElementById('courseRow-' + courseId);
-
-        pendingCourseDeleteState = {
-            id: courseId,
+        CoursonRollback.start({
+            element: 'courseRow-' + courseId,
+            type: 'Khóa học',
             title: courseTitle,
-            startTime: Date.now(),
-            totalDuration: 5000,
-            rowElement: row
-        };
-
-        if (row) {
-            row.style.opacity = '0.25';
-            row.style.pointerEvents = 'none';
-            row.style.filter = 'grayscale(100%)';
-        }
-
-        const container = document.getElementById('undoToastContainer');
-        const titleEl = document.getElementById('undoCourseTitle');
-        const secEl = document.getElementById('undoCountdownSeconds');
-        const pBar = document.getElementById('undoProgressBar');
-        const statusText = document.getElementById('undoStatusText');
-
-        titleEl.textContent = courseTitle;
-        secEl.textContent = '5';
-        pBar.style.width = '100%';
-        pBar.className = 'progress-bar bg-warning';
-        statusText.textContent = 'Xóa vĩnh viễn sau 5s...';
-        container.style.display = 'block';
-
-        let elapsed = 0;
-        const interval = 50;
-        courseProgressTimer = setInterval(() => {
-            elapsed += interval;
-            const remaining = Math.max(0, 5000 - elapsed);
-            const remainingSec = Math.ceil(remaining / 1000);
-            const percent = (remaining / 5000) * 100;
-
-            secEl.textContent = remainingSec;
-            pBar.style.width = percent + '%';
-            if (remainingSec <= 2) {
-                pBar.className = 'progress-bar bg-danger';
-            }
-
-            if (elapsed >= 5000) {
-                clearInterval(courseProgressTimer);
-                courseProgressTimer = null;
-            }
-        }, interval);
-
-        courseDeleteTimer = setTimeout(() => {
-            commitDeleteNow();
-        }, 5000);
-    }
-
-    function rollbackDelete() {
-        if (!pendingCourseDeleteState) return;
-
-        if (courseDeleteTimer) { clearTimeout(courseDeleteTimer); courseDeleteTimer = null; }
-        if (courseProgressTimer) { clearInterval(courseProgressTimer); courseProgressTimer = null; }
-
-        const row = pendingCourseDeleteState.rowElement;
-        const title = pendingCourseDeleteState.title;
-        pendingCourseDeleteState = null;
-
-        document.getElementById('undoToastContainer').style.display = 'none';
-
-        if (row) {
-            row.style.opacity = '1';
-            row.style.pointerEvents = '';
-            row.style.filter = '';
-            row.style.boxShadow = '0 0 0 2px #22c55e';
-            setTimeout(() => { row.style.boxShadow = ''; }, 1200);
-        }
-
-        if (typeof showFloatingToast === 'function') {
-            showFloatingToast('Đã hoàn tác (Rollback)! Khóa học "' + title + '" được giữ nguyên.', 'success');
-        } else if (window.CoursonToast) {
-            window.CoursonToast.show('success', 'Đã hoàn tác (Rollback)! Khóa học "' + title + '" được giữ nguyên.');
-        }
-    }
-
-    function commitDeleteNow() {
-        if (!pendingCourseDeleteState) return;
-
-        if (courseDeleteTimer) { clearTimeout(courseDeleteTimer); courseDeleteTimer = null; }
-        if (courseProgressTimer) { clearInterval(courseProgressTimer); courseProgressTimer = null; }
-
-        const state = pendingCourseDeleteState;
-        pendingCourseDeleteState = null;
-        document.getElementById('undoToastContainer').style.display = 'none';
-
-        const row = state.rowElement;
-        const courseId = state.id;
-
-        fetch('${pageContext.request.contextPath}/expert/delete-course', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            endpoint: '${pageContext.request.contextPath}/expert/delete-course',
             body: 'id=' + encodeURIComponent(courseId) + '&ajax=true'
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                if (row) {
-                    row.style.transition = 'all 0.3s ease';
-                    row.style.maxHeight = '0px';
-                    row.style.padding = '0px';
-                    row.style.margin = '0px';
-                    row.style.overflow = 'hidden';
-                    setTimeout(() => { row.remove(); }, 350);
-                }
-                if (typeof showFloatingToast === 'function') {
-                    showFloatingToast(data.message || 'Đã xóa khóa học thành công!', 'success');
-                } else if (window.CoursonToast) {
-                    window.CoursonToast.show('success', data.message || 'Đã xóa khóa học thành công!');
-                }
-            } else {
-                if (row) {
-                    row.style.opacity = '1';
-                    row.style.pointerEvents = '';
-                    row.style.filter = '';
-                }
-                alert(data.message || 'Lỗi khi xóa khóa học.');
-            }
-        })
-        .catch(err => {
-            console.error('Lỗi kết nối khi xóa khóa học:', err);
-            if (row) {
-                row.style.opacity = '1';
-                row.style.pointerEvents = '';
-                row.style.filter = '';
-                row.style.boxShadow = '0 0 0 2px #ef4444';
-                setTimeout(() => { row.style.boxShadow = ''; }, 1500);
-            }
-            if (typeof showFloatingToast === 'function') {
-                showFloatingToast('Mất kết nối mạng! Không thể gửi lệnh xóa khóa học tới máy chủ. Dữ liệu đã được tự động giữ nguyên.', 'danger');
-            } else if (window.CoursonToast) {
-                window.CoursonToast.show('error', 'Mất kết nối mạng! Khóa học đã được tự động giữ nguyên.');
-            }
         });
     }
-
-    // Ctrl + Z keyboard shortcut
-    window.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
-            if (pendingCourseDeleteState) {
-                e.preventDefault();
-                rollbackDelete();
-            }
-        }
-    });
-
-    window.addEventListener('beforeunload', function() {
-        if (pendingCourseDeleteState) {
-            if (courseDeleteTimer) clearTimeout(courseDeleteTimer);
-            if (courseProgressTimer) clearInterval(courseProgressTimer);
-            pendingCourseDeleteState = null;
-        }
-    });
 
     function confirmDeleteCourse(title, url) {
         const match = url.match(/[?&]id=([^&]+)/);

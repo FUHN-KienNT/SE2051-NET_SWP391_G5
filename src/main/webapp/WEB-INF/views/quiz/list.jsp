@@ -1367,39 +1367,6 @@ body {
                 <!-- MODAL: XÁC NHẬN XÓA QUIZ                                -->
                 <!-- ======================================================= -->
 
-                <!-- Floating Undo Delete Countdown Toast (5s Rollback / Ctrl+Z) -->
-                <div id="undoToastContainer" class="position-fixed bottom-0 start-50 translate-middle-x pb-4" style="z-index: 1080; display: none;">
-                    <div class="shadow-lg rounded-4 p-3 border border-secondary text-white" style="background: #1e293b; min-width: 380px; max-width: 520px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);">
-                        <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
-                            <div class="d-flex align-items-center gap-2 text-truncate">
-                                <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px; font-size: 1.1rem;">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="text-white-50 small" id="undoItemLabel" style="font-size: 11px;">Đang chuẩn bị xóa...</div>
-                                    <div class="fw-bold text-white text-truncate small" id="undoItemTitle" style="max-width: 200px;"></div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                <button type="button" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill shadow-sm d-inline-flex align-items-center gap-1.5" onclick="rollbackDelete()" style="font-size: 12px;">
-                                    <i class="bi bi-arrow-counterclockwise fs-6"></i>
-                                    <span>Hoàn tác (<strong id="undoCountdownSeconds">5</strong>s)</span>
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm text-white-50 border-0 p-1" onclick="commitDeleteNow()" title="Xóa ngay lập tức">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between text-muted mt-1 px-1" style="font-size: 11px;">
-                            <span><i class="bi bi-keyboard me-1 text-light"></i>Bấm <kbd class="bg-dark text-white border border-secondary px-1.5 py-0.5 rounded">Ctrl</kbd> + <kbd class="bg-dark text-white border border-secondary px-1.5 py-0.5 rounded">Z</kbd> để hoàn tác</span>
-                            <span id="undoStatusText" class="text-warning-emphasis">Hủy sau 5s...</span>
-                        </div>
-                        <!-- Countdown Progress Bar -->
-                        <div class="progress mt-2" style="height: 3px; background-color: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden;">
-                            <div id="undoProgressBar" class="progress-bar bg-warning" role="progressbar" style="width: 100%; transition: width 0.05s linear;"></div>
-                        </div>
-                    </div>
-                </div>
                 <div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-sm">
                         <div class="modal-content saas-modal">
@@ -2055,222 +2022,35 @@ body {
                     }
 
                     // ==========================================
-                    // ROLLBACK & 5S COUNTDOWN CHO QUIZ & CÂU HỎI
+                    // ROLLBACK CHO QUIZ & CÂU HỎI QUA COURSONROLLBACK
                     // ==========================================
-                    let pendingQuizDeleteState = null;
-                    let quizDeleteTimer = null;
-                    let quizProgressTimer = null;
-
                     function startDeleteQuizCountdown(quizId, quizTitle, courseId, moduleId) {
-                        if (pendingQuizDeleteState) {
-                            commitDeleteNow();
-                        }
+                        let bodyData = 'id=' + encodeURIComponent(quizId) + '&ajax=true';
+                        if (courseId) bodyData += '&courseId=' + encodeURIComponent(courseId);
+                        if (moduleId) bodyData += '&moduleId=' + encodeURIComponent(moduleId);
 
-                        const row = document.getElementById('quizRow-' + quizId);
-
-                        pendingQuizDeleteState = {
-                            type: 'quiz',
-                            id: quizId,
+                        CoursonRollback.start({
+                            element: 'quizRow-' + quizId,
+                            type: 'Bài thi',
                             title: quizTitle,
-                            courseId: courseId,
-                            moduleId: moduleId,
-                            startTime: Date.now(),
-                            totalDuration: 5000,
-                            rowElement: row
-                        };
-
-                        if (row) {
-                            row.style.opacity = '0.25';
-                            row.style.pointerEvents = 'none';
-                            row.style.filter = 'grayscale(100%)';
-                        }
-
-                        showUndoToast('Đang chuẩn bị xóa bài thi (Quiz)...', quizTitle);
-                    }
-
-                    function startDeleteQuestionCountdown(qId, qText, courseId, moduleId) {
-                        if (pendingQuizDeleteState) {
-                            commitDeleteNow();
-                        }
-
-                        const row = document.getElementById('questionRow-' + qId);
-
-                        pendingQuizDeleteState = {
-                            type: 'question',
-                            id: qId,
-                            title: qText,
-                            courseId: courseId,
-                            moduleId: moduleId,
-                            startTime: Date.now(),
-                            totalDuration: 5000,
-                            rowElement: row
-                        };
-
-                        if (row) {
-                            row.style.opacity = '0.25';
-                            row.style.pointerEvents = 'none';
-                            row.style.filter = 'grayscale(100%)';
-                        }
-
-                        showUndoToast('Đang chuẩn bị xóa câu hỏi khỏi ngân hàng...', qText);
-                    }
-
-                    function showUndoToast(label, title) {
-                        const container = document.getElementById('undoToastContainer');
-                        const labelEl = document.getElementById('undoItemLabel');
-                        const titleEl = document.getElementById('undoItemTitle');
-                        const secEl = document.getElementById('undoCountdownSeconds');
-                        const pBar = document.getElementById('undoProgressBar');
-                        const statusText = document.getElementById('undoStatusText');
-
-                        if (labelEl) labelEl.textContent = label;
-                        if (titleEl) titleEl.textContent = title;
-                        secEl.textContent = '5';
-                        pBar.style.width = '100%';
-                        pBar.className = 'progress-bar bg-warning';
-                        statusText.textContent = 'Xóa vĩnh viễn sau 5s...';
-                        container.style.display = 'block';
-
-                        let elapsed = 0;
-                        const interval = 50;
-                        quizProgressTimer = setInterval(() => {
-                            elapsed += interval;
-                            const remaining = Math.max(0, 5000 - elapsed);
-                            const remainingSec = Math.ceil(remaining / 1000);
-                            const percent = (remaining / 5000) * 100;
-
-                            secEl.textContent = remainingSec;
-                            pBar.style.width = percent + '%';
-                            if (remainingSec <= 2) {
-                                pBar.className = 'progress-bar bg-danger';
-                            }
-
-                            if (elapsed >= 5000) {
-                                clearInterval(quizProgressTimer);
-                                quizProgressTimer = null;
-                            }
-                        }, interval);
-
-                        quizDeleteTimer = setTimeout(() => {
-                            commitDeleteNow();
-                        }, 5000);
-                    }
-
-                    function rollbackDelete() {
-                        if (!pendingQuizDeleteState) return;
-
-                        if (quizDeleteTimer) { clearTimeout(quizDeleteTimer); quizDeleteTimer = null; }
-                        if (quizProgressTimer) { clearInterval(quizProgressTimer); quizProgressTimer = null; }
-
-                        const row = pendingQuizDeleteState.rowElement;
-                        const title = pendingQuizDeleteState.title;
-                        const isQuiz = pendingQuizDeleteState.type === 'quiz';
-                        pendingQuizDeleteState = null;
-
-                        document.getElementById('undoToastContainer').style.display = 'none';
-
-                        if (row) {
-                            row.style.opacity = '1';
-                            row.style.pointerEvents = '';
-                            row.style.filter = '';
-                            row.style.boxShadow = '0 0 0 2px #22c55e';
-                            setTimeout(() => { row.style.boxShadow = ''; }, 1200);
-                        }
-
-                        const typeName = isQuiz ? 'Bài thi' : 'Câu hỏi';
-                        if (window.CoursonToast) {
-                            window.CoursonToast.show('success', 'Đã hoàn tác (Rollback)! ' + typeName + ' "' + title + '" được giữ nguyên.');
-                        } else {
-                            alert('Đã hoàn tác (Rollback)! ' + typeName + ' "' + title + '" được giữ nguyên.');
-                        }
-                    }
-
-                    function commitDeleteNow() {
-                        if (!pendingQuizDeleteState) return;
-
-                        if (quizDeleteTimer) { clearTimeout(quizDeleteTimer); quizDeleteTimer = null; }
-                        if (quizProgressTimer) { clearInterval(quizProgressTimer); quizProgressTimer = null; }
-
-                        const state = pendingQuizDeleteState;
-                        pendingQuizDeleteState = null;
-                        document.getElementById('undoToastContainer').style.display = 'none';
-
-                        const row = state.rowElement;
-                        const isQuiz = state.type === 'quiz';
-                        const endpoint = isQuiz
-                            ? '${pageContext.request.contextPath}/quizzes/delete'
-                            : '${pageContext.request.contextPath}/quizzes/delete-question';
-
-                        let bodyData = 'id=' + encodeURIComponent(state.id) + '&ajax=true';
-                        if (state.courseId) bodyData += '&courseId=' + encodeURIComponent(state.courseId);
-                        if (state.moduleId) bodyData += '&moduleId=' + encodeURIComponent(state.moduleId);
-
-                        fetch(endpoint, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
+                            endpoint: '${pageContext.request.contextPath}/quizzes/delete',
                             body: bodyData
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                if (row) {
-                                    row.style.transition = 'all 0.3s ease';
-                                    row.style.maxHeight = '0px';
-                                    row.style.padding = '0px';
-                                    row.style.margin = '0px';
-                                    row.style.overflow = 'hidden';
-                                    setTimeout(() => { row.remove(); }, 350);
-                                }
-                                const defaultMsg = isQuiz ? 'Đã xóa bài thi thành công!' : 'Đã xóa câu hỏi khỏi ngân hàng thành công!';
-                                if (window.CoursonToast) {
-                                    window.CoursonToast.show('success', data.message || defaultMsg);
-                                }
-                            } else {
-                                if (row) {
-                                    row.style.opacity = '1';
-                                    row.style.pointerEvents = '';
-                                    row.style.filter = '';
-                                }
-                                alert(data.message || 'Lỗi khi xóa.');
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Lỗi kết nối khi xóa:', err);
-                            if (row) {
-                                row.style.opacity = '1';
-                                row.style.pointerEvents = '';
-                                row.style.filter = '';
-                                row.style.boxShadow = '0 0 0 2px #ef4444';
-                                setTimeout(() => { row.style.boxShadow = ''; }, 1500);
-                            }
-                            const typeName = isQuiz ? 'bài thi' : 'câu hỏi';
-                            if (window.CoursonToast) {
-                                window.CoursonToast.show('error', 'Mất kết nối mạng! Không thể gửi lệnh xóa ' + typeName + ' tới máy chủ. Dữ liệu đã được tự động giữ nguyên.');
-                            }
                         });
                     }
 
-                    // Ctrl + Z listener
-                    window.addEventListener('keydown', function(e) {
-                        if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
-                            if (pendingQuizDeleteState) {
-                                e.preventDefault();
-                                rollbackDelete();
-                            }
-                        }
-                    });
+                    function startDeleteQuestionCountdown(qId, qText, courseId, moduleId) {
+                        let bodyData = 'id=' + encodeURIComponent(qId) + '&ajax=true';
+                        if (courseId) bodyData += '&courseId=' + encodeURIComponent(courseId);
+                        if (moduleId) bodyData += '&moduleId=' + encodeURIComponent(moduleId);
 
-                    // Fail-safe on reload/close
-                    window.addEventListener('beforeunload', function() {
-                        if (pendingQuizDeleteState) {
-                            if (quizDeleteTimer) clearTimeout(quizDeleteTimer);
-                            if (quizProgressTimer) clearInterval(quizProgressTimer);
-                            pendingQuizDeleteState = null;
-                        }
-                    });
+                        CoursonRollback.start({
+                            element: 'questionRow-' + qId,
+                            type: 'Câu hỏi',
+                            title: qText,
+                            endpoint: '${pageContext.request.contextPath}/quizzes/delete-question',
+                            body: bodyData
+                        });
+                    }
                 </script>
 
                 <jsp:include page="../common/footer.jsp" />
