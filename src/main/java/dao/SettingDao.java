@@ -19,6 +19,9 @@ public class SettingDao {
     private static final String SQL_UPDATE = "UPDATE settings SET type = ?, name = ?, value = ?, priority = ?, status = ?, description = ?, updated_at = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM settings WHERE id = ?";
 
+    /**
+     * Truy vấn danh sách cấu hình theo loại (Role, Course Category,...) từ bảng 'settings'.
+     */
     public List<Setting> findByType(Connection con, SettingType type) throws SQLException {
         List<Setting> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_TYPE)) {
@@ -32,6 +35,9 @@ public class SettingDao {
         return list;
     }
 
+    /**
+     * Tìm kiếm, lọc và sắp xếp động danh sách cấu hình từ bảng 'settings'.
+     */
     public List<Setting> search(Connection con, String type, String status, String keyword, String sortBy, String sortOrder) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT id, type, name, value, priority, status, description, created_at, updated_at FROM settings WHERE 1=1");
         List<Object> params = new ArrayList<>();
@@ -87,6 +93,9 @@ public class SettingDao {
         return list;
     }
 
+    /**
+     * Lấy thông tin cấu hình theo ID từ bảng 'settings'.
+     */
     public Optional<Setting> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);
@@ -99,6 +108,9 @@ public class SettingDao {
         return Optional.empty();
     }
 
+    /**
+     * Thêm mới một bản ghi cấu hình vào bảng 'settings'.
+     */
     public long insert(Connection con, Setting entity) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_INSERT)) {
             ps.setString(1, entity.getType().getDbValue());
@@ -121,6 +133,9 @@ public class SettingDao {
         return 0L;
     }
 
+    /**
+     * Cập nhật thông tin bản ghi cấu hình trong bảng 'settings'.
+     */
     public boolean update(Connection con, Setting entity) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE)) {
             ps.setString(1, entity.getType().getDbValue());
@@ -135,6 +150,9 @@ public class SettingDao {
         }
     }
 
+    /**
+     * Cập nhật nhanh trạng thái (ACTIVE/INACTIVE) trong bảng 'settings'.
+     */
     public boolean updateStatus(Connection con, long id, SettingStatus status) throws SQLException {
         String sql = "UPDATE settings SET status = ?, updated_at = ? WHERE id = ?";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
@@ -145,6 +163,9 @@ public class SettingDao {
         }
     }
 
+    /**
+     * Xóa vĩnh viễn một bản ghi cấu hình khỏi bảng 'settings'.
+     */
     public boolean delete(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_DELETE)) {
             ps.setLong(1, id);

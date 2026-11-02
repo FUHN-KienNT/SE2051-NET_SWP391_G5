@@ -346,6 +346,42 @@ public class RegistrationService {
         }
     }
 
+    /**
+     * Tính tổng doanh thu hệ thống cho Admin Dashboard.
+     * 1. Gọi registrationDao.sumTotalRevenue(con) để truy vấn bảng 'registrations'.
+     */
+    public BigDecimal sumTotalRevenue() {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.sumTotalRevenue(con);
+        } catch (SQLException e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * Đếm tổng số đơn đăng ký đã thanh toán thành công cho Admin Dashboard.
+     * 1. Gọi registrationDao.countTotalPaidRegistrations(con) để truy vấn bảng 'registrations'.
+     */
+    public int countTotalPaidRegistrations() {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.countTotalPaidRegistrations(con);
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Đếm tổng số đơn đăng ký cho Admin Dashboard.
+     * 1. Gọi registrationDao.countTotalRegistrations(con) để truy vấn bảng 'registrations'.
+     */
+    public int countTotalRegistrations() {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.countTotalRegistrations(con);
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
     public void updatePayment(long id, PaymentStatus status, String code, OffsetDateTime paidAt) {
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);

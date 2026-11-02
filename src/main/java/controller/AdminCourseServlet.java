@@ -23,6 +23,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import service.CourseService;
+import service.RegistrationService;
 import service.SettingService;
 import service.UserService;
 import util.SessionUtil;
@@ -38,17 +39,24 @@ public class AdminCourseServlet extends HttpServlet {
     private CourseService courseService;
     private SettingService settingService;
     private UserService userService;
+    private RegistrationService registrationService;
 
     @Override
     public void init() throws ServletException {
+        CourseDao courseDao = new CourseDao();
+        RegistrationDao registrationDao = new RegistrationDao();
         this.courseService = new CourseService(
-                new CourseDao(), new ModuleDao(), new LessonDao(),
-                new LessonProgressDao(), new RegistrationDao()
+                courseDao, new ModuleDao(), new LessonDao(),
+                new LessonProgressDao(), registrationDao
         );
         this.settingService = new SettingService(new SettingDao());
         this.userService = new UserService(new UserDao(), new SettingDao());
+        this.registrationService = new RegistrationService(registrationDao, courseDao);
     }
 
+    /**
+     * Tiếp nhận và điều hướng các yêu cầu HTTP GET từ Quản trị viên (Admin) và Quản lý (Manager).
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
@@ -56,6 +64,9 @@ public class AdminCourseServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
+    /**
+     * Tiếp nhận và điều hướng các yêu cầu HTTP POST (lưu, xóa, cập nhật trạng thái) từ Admin/Manager.
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
@@ -63,6 +74,9 @@ public class AdminCourseServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
+    /**
+     * Điều hướng các action của Admin Course: dashboard, courses, course-detail, save-course, toggle-status, delete-course.
+     */
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         switch (action) {
             case "dashboard":
@@ -89,6 +103,11 @@ public class AdminCourseServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Duyệt xuất bản hoặc Từ chối khóa học.
+     * 1. Gọi courseService.getCourseDetail(courseId) để kiểm tra khóa học tồn tại.
+     * 2. Gọi courseService.updateCourseStatus(courseId, newStatus) để cập nhật cột 'status' trong bảng 'courses'.
+     */
     private void toggleCourseStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         String fromDashboard = req.getParameter("fromDashboard");
@@ -113,6 +132,11 @@ public class AdminCourseServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Hiển thị Bảng điều khiển Quản trị (Admin Dashboard).
+     * 1. Gọi courseService, userService, settingService lấy thống kê khóa học, user, danh mục và khóa chờ duyệt.
+     * 2. Gọi registrationService tính tổng doanh thu và số lượt đăng ký từ database.
+     */
     private void showDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         dto.UserDto currentUser = util.SessionUtil.getCurrentUser(req);
         if (currentUser != null && "MANAGER".equalsIgnoreCase(currentUser.getRoleName())) {
@@ -142,6 +166,15 @@ public class AdminCourseServlet extends HttpServlet {
             }
         }
 
+        BigDecimal totalRevenue = registrationService.sumTotalRevenue();
+        int totalPaidRegistrations = registrationService.countTotalPaidRegistrations();
+        int totalRegistrations = registrationService.countTotalRegistrations();
+
+        boolean isDbConnected = false;
+        try (java.sql.Connection con = util.DbConnection.getConnection()) {
+            isDbConnected = con != null && !con.isClosed() && con.isValid(2);
+        } catch (Exception ignored) {}
+
         req.setAttribute("totalCourses", allCourses != null ? allCourses.size() : 0);
         req.setAttribute("publishedCount", publishedCount);
         req.setAttribute("draftCount", draftCount);
@@ -151,10 +184,19 @@ public class AdminCourseServlet extends HttpServlet {
         req.setAttribute("totalExperts", experts != null ? experts.size() : 0);
         req.setAttribute("totalUsers", allUsers != null ? allUsers.size() : 0);
         req.setAttribute("totalCategories", categories != null ? categories.size() : 0);
+        req.setAttribute("totalRevenue", totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
+        req.setAttribute("totalPaidRegistrations", totalPaidRegistrations);
+        req.setAttribute("totalRegistrations", totalRegistrations);
+        req.setAttribute("isDbConnected", isDbConnected);
         req.setAttribute("recentCourses", allCourses != null && allCourses.size() > 5 ? allCourses.subList(0, 5) : allCourses);
         req.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(req, resp);
     }
 
+    /**
+     * Quản lý danh sách khóa học toàn hệ thống.
+     * 1. Gọi courseService.searchAdminCourses() lọc khóa học theo keyword, danh mục, manager, status.
+     * 2. Gọi courseService.getExperts(), settingService, userService lấy danh sách cho bộ lọc.
+     */
     private void showCourseList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String search = req.getParameter("search");
         String categoryIdStr = req.getParameter("categoryId");
@@ -185,6 +227,11 @@ public class AdminCourseServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/course_list.jsp").forward(req, resp);
     }
 
+    /**
+     * Xem chi tiết khóa học và phân công Expert/Manager phụ trách.
+     * 1. Gọi courseService.getCourseDetail(courseId) lấy thông tin khóa học và đề cương.
+     * 2. Gọi courseService.getExperts(), settingService, userService nạp dữ liệu phân công.
+     */
     private void showCourseDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
@@ -209,6 +256,11 @@ public class AdminCourseServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/course_detail.jsp").forward(req, resp);
     }
 
+    /**
+     * Lưu thông tin khóa học và phân công Expert.
+     * 1. Gọi bindCourse(req) để đọc dữ liệu form.
+     * 2. Gọi courseService.saveCourse(dto) để cập nhật vào bảng 'courses'.
+     */
     private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         CourseDto dto = bindCourse(req);
         if (dto.getId() == null || dto.getId() <= 0) {
@@ -228,6 +280,10 @@ public class AdminCourseServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Xóa khóa học khỏi hệ thống.
+     * 1. Gọi courseService.deleteCourse(courseId, currentUser) để kiểm tra và xóa khóa học.
+     */
     private void deleteCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
@@ -245,6 +301,9 @@ public class AdminCourseServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses");
     }
 
+    /**
+     * Bóc tách tham số form request sang đối tượng CourseDto.
+     */
     private CourseDto bindCourse(HttpServletRequest req) {
         CourseDto dto = new CourseDto();
         String idStr = req.getParameter("id");
