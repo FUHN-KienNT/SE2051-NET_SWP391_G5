@@ -388,10 +388,10 @@
             <form id="setPasswordForm" action="${pageContext.request.contextPath}/auth/set-password" method="POST" novalidate>
 
                 <div class="field-group">
-                    <label class="field-label" for="password">Mật khẩu mới</label>
+                    <label class="field-label" for="password">Mật khẩu</label>
                     <div class="input-wrapper">
                         <input type="password" id="password" name="password" class="field-input"
-                               placeholder="Nhập mật khẩu mới" autocomplete="new-password">
+                               placeholder="Nhập mật khẩu" autocomplete="new-password">
                         <span class="toggle-icon" id="togglePw" onclick="togglePass('password', 'pwIcon')">
                             <i class="bi bi-eye-slash" id="pwIcon"></i>
                         </span>
@@ -407,10 +407,10 @@
                 </div>
 
                 <div class="field-group">
-                    <label class="field-label" for="confirmPassword">Xác nhận mật khẩu mới</label>
+                    <label class="field-label" for="confirmPassword">Xác nhận mật khẩu</label>
                     <div class="input-wrapper">
                         <input type="password" id="confirmPassword" name="confirmPassword" class="field-input"
-                               placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                               placeholder="Nhập lại mật khẩu" autocomplete="new-password">
                         <span class="toggle-icon" id="toggleCp" onclick="togglePass('confirmPassword', 'cpIcon')">
                             <i class="bi bi-eye-slash" id="cpIcon"></i>
                         </span>

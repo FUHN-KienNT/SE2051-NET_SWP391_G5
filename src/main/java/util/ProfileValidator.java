@@ -96,17 +96,32 @@ public final class ProfileValidator {
         }
     }
 
-    public static String validatePassword(String newPassword, String confirmPassword) {
+    public static String validatePassword(String currentPassword, String newPassword, String confirmPassword, String currentHash) {
+        if (currentHash != null) {
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                return "Vui lòng nhập mật khẩu hiện tại.";
+            }
+            if (!PasswordUtil.verify(currentPassword, currentHash)) {
+                return "Mật khẩu hiện tại không chính xác.";
+            }
+        }
         if (newPassword == null || newPassword.trim().isEmpty()) {
             return "Mật khẩu mới không được để trống.";
         }
         if (!ValidationUtil.isStrongPassword(newPassword)) {
-            return "Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.";
+            return "Mật khẩu mới phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.";
+        }
+        if (currentPassword != null && currentPassword.equals(newPassword)) {
+            return "Mật khẩu mới không được trùng với mật khẩu hiện tại.";
         }
         if (!newPassword.equals(confirmPassword)) {
             return "Mật khẩu xác nhận không khớp.";
         }
         return null;
+    }
+
+    public static String validatePassword(String newPassword, String confirmPassword) {
+        return validatePassword(null, newPassword, confirmPassword, null);
     }
 
     public static String validateAvatar(Part part) {

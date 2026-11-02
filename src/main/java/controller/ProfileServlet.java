@@ -104,6 +104,7 @@ public class ProfileServlet extends HttpServlet {
 
     private void handleChangePassword(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
             throws IOException {
+        String currentPassword = req.getParameter("currentPassword");
         String newPassword = req.getParameter("newPassword");
         String confirmPassword = req.getParameter("confirmPassword");
 
@@ -112,7 +113,7 @@ public class ProfileServlet extends HttpServlet {
         }
 
         try {
-            profileService.changePassword(currentUser.getId(), newPassword, confirmPassword);
+            profileService.changePassword(currentUser.getId(), currentPassword, newPassword, confirmPassword);
             sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "password", "Đổi mật khẩu thành công!", null);
         } catch (IllegalArgumentException | IllegalStateException e) {
             sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, "password", e.getMessage(), null);

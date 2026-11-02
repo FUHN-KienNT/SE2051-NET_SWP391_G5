@@ -38,6 +38,9 @@ public class ProfileDao {
     private static final String SQL_UPDATE_PASSWORD =
             "UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?";
 
+    private static final String SQL_GET_PASSWORD_HASH =
+            "SELECT password_hash FROM users WHERE id = ?";
+
     private static final String SQL_GET_AVATAR_URL =
             "SELECT avatar_url FROM users WHERE id = ?";
 
@@ -116,6 +119,18 @@ public class ProfileDao {
             ps.setLong(2, userId);
             return ps.executeUpdate() > 0;
         }
+    }
+
+    public String getPasswordHash(Connection con, long userId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_GET_PASSWORD_HASH)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("password_hash");
+                }
+            }
+        }
+        return null;
     }
 
     public String getAvatarUrl(Connection con, long userId) throws SQLException {

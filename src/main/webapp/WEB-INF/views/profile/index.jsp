@@ -339,6 +339,16 @@
 
                     <div class="profile-field-card">
                         <div class="mb-3">
+                            <label class="form-label fw-bold text-dark mb-1">Mật khẩu hiện tại</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="inputCurrentPassword" placeholder="Nhập mật khẩu hiện tại" />
+                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" data-target="inputCurrentPassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="field-error-msg" id="errorCurrentPassword"></div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-bold text-dark mb-1">Mật khẩu mới</label>
                             <div class="input-group">
                                 <input type="password" class="form-control" id="inputNewPassword" placeholder="Nhập mật khẩu mới (8–32 ký tự)" />
@@ -355,6 +365,7 @@
                             <small class="form-text text-muted d-block mt-1" style="font-size: 0.8rem;">
                                 Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.
                             </small>
+                            <div class="field-error-msg" id="errorNewPassword"></div>
                         </div>
 
                         <div class="mb-3">
@@ -578,8 +589,11 @@
         });
 
         const btnSavePassword = document.getElementById('btnSavePassword');
+        const inputCurrentPassword = document.getElementById('inputCurrentPassword');
         const inputNewPassword = document.getElementById('inputNewPassword');
         const inputConfirmPassword = document.getElementById('inputConfirmPassword');
+        const errorCurrentPassword = document.getElementById('errorCurrentPassword');
+        const errorNewPassword = document.getElementById('errorNewPassword');
         const errorPassword = document.getElementById('errorPassword');
 
         const STRONG_RE = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]).{8,32}$/;
@@ -603,9 +617,35 @@
             }
         }
 
+        function clearPasswordErrors() {
+            if (errorCurrentPassword) {
+                errorCurrentPassword.style.display = 'none';
+                errorCurrentPassword.textContent = '';
+            }
+            if (errorNewPassword) {
+                errorNewPassword.style.display = 'none';
+                errorNewPassword.textContent = '';
+            }
+            if (errorPassword) {
+                errorPassword.style.display = 'none';
+                errorPassword.textContent = '';
+            }
+        }
+
+        if (inputCurrentPassword) {
+            inputCurrentPassword.addEventListener('input', function () {
+                if (errorCurrentPassword) {
+                    errorCurrentPassword.style.display = 'none';
+                    errorCurrentPassword.textContent = '';
+                }
+            });
+        }
+
         inputNewPassword.addEventListener('input', function () {
-            errorPassword.style.display = 'none';
-            errorPassword.textContent = '';
+            if (errorNewPassword) {
+                errorNewPassword.style.display = 'none';
+                errorNewPassword.textContent = '';
+            }
             const barsEl = document.getElementById('profileStrengthBars');
             if (this.value.length > 0) {
                 barsEl.classList.add('show');
@@ -616,25 +656,37 @@
         });
 
         inputConfirmPassword.addEventListener('input', function () {
-            errorPassword.style.display = 'none';
-            errorPassword.textContent = '';
+            if (errorPassword) {
+                errorPassword.style.display = 'none';
+                errorPassword.textContent = '';
+            }
         });
 
         btnSavePassword.addEventListener('click', function () {
-            errorPassword.style.display = 'none';
-            errorPassword.textContent = '';
+            clearPasswordErrors();
 
+            const pOld = inputCurrentPassword ? inputCurrentPassword.value : '';
             const p1 = inputNewPassword.value;
             const p2 = inputConfirmPassword.value;
 
+            if (!pOld) {
+                errorCurrentPassword.textContent = 'Vui lòng nhập mật khẩu hiện tại.';
+                errorCurrentPassword.style.display = 'block';
+                return;
+            }
             if (!p1) {
-                errorPassword.textContent = 'Mật khẩu mới không được để trống.';
-                errorPassword.style.display = 'block';
+                errorNewPassword.textContent = 'Mật khẩu mới không được để trống.';
+                errorNewPassword.style.display = 'block';
                 return;
             }
             if (!STRONG_RE.test(p1)) {
-                errorPassword.textContent = 'Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.';
-                errorPassword.style.display = 'block';
+                errorNewPassword.textContent = 'Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.';
+                errorNewPassword.style.display = 'block';
+                return;
+            }
+            if (pOld === p1) {
+                errorNewPassword.textContent = 'Mật khẩu mới không được trùng với mật khẩu hiện tại.';
+                errorNewPassword.style.display = 'block';
                 return;
             }
             if (p1 !== p2) {
@@ -648,6 +700,7 @@
             btnSavePassword.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Đang đổi mật khẩu...';
 
             const params = new URLSearchParams();
+            params.append('currentPassword', pOld);
             params.append('newPassword', p1);
             params.append('confirmPassword', p2);
 
@@ -665,13 +718,23 @@
 
                 if (data.success) {
                     showAlert(data.message || 'Đổi mật khẩu thành công!', 'success');
+                    if (inputCurrentPassword) inputCurrentPassword.value = '';
                     inputNewPassword.value = '';
                     inputConfirmPassword.value = '';
                     const barsEl = document.getElementById('profileStrengthBars');
                     if (barsEl) barsEl.classList.remove('show');
                 } else {
-                    errorPassword.textContent = data.message || 'Đã có lỗi xảy ra khi đổi mật khẩu.';
-                    errorPassword.style.display = 'block';
+                    const msg = data.message || 'Đã có lỗi xảy ra khi đổi mật khẩu.';
+                    if (msg.includes('hiện tại') || msg.includes('mật khẩu cũ')) {
+                        errorCurrentPassword.textContent = msg;
+                        errorCurrentPassword.style.display = 'block';
+                    } else if (msg.includes('khớp') || msg.includes('xác nhận')) {
+                        errorPassword.textContent = msg;
+                        errorPassword.style.display = 'block';
+                    } else {
+                        errorNewPassword.textContent = msg;
+                        errorNewPassword.style.display = 'block';
+                    }
                 }
             })
             .catch(err => {
@@ -681,7 +744,6 @@
                 errorPassword.style.display = 'block';
             });
         });
-
         // 9. Avatar Upload Handler
         const btnTriggerAvatar = document.getElementById('btnTriggerAvatar');
         const avatarFileInput = document.getElementById('avatarFileInput');
