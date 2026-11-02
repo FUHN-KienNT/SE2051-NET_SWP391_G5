@@ -123,9 +123,10 @@
         border-color: #F38020;
         color: #ffffff;
         font-weight: 600;
-        padding: 8px 20px;
+        padding: 9px 24px;
         border-radius: 8px;
         transition: all 0.2s;
+        white-space: nowrap;
     }
     .btn-cf-save:hover, .btn-cf-save:focus {
         background-color: #E56B00;
@@ -257,16 +258,14 @@
                             <span class="badge bg-light text-muted border">Bắt buộc</span>
                         </div>
                         <p class="text-muted small mb-3">Tên hiển thị trên chứng chỉ và toàn bộ hệ thống Courson LMS.</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="inputFullName" value="<c:out value='${user.fullName}' />" placeholder="Nhập họ và tên..." maxlength="50" />
-                                <div class="field-error-msg" id="errorFullName"></div>
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSaveFullName">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu họ tên
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="inputFullName" value="<c:out value='${user.fullName}' />" placeholder="Nhập họ và tên..." maxlength="50" />
+                            <div class="field-error-msg" id="errorFullName"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSaveFullName">
+                                Lưu họ tên
+                            </button>
                         </div>
                     </div>
 
@@ -277,16 +276,14 @@
                             <span class="badge bg-light text-muted border">Tùy chọn</span>
                         </div>
                         <p class="text-muted small mb-3">Số điện thoại 10 chữ số tại Việt Nam (hỗ trợ đầu số 0 hoặc +84).</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="inputPhone" value="<c:out value='${user.phone}' />" placeholder="Ví dụ: 0912345678 hoặc +84912345678" maxlength="15" />
-                                <div class="field-error-msg" id="errorPhone"></div>
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSavePhone">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu SĐT
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="inputPhone" value="<c:out value='${user.phone}' />" placeholder="Ví dụ: 0912345678 hoặc +84912345678" maxlength="15" />
+                            <div class="field-error-msg" id="errorPhone"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSavePhone">
+                                Lưu số điện thoại
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -302,19 +299,17 @@
                             <span class="badge bg-light text-muted border">Bắt buộc</span>
                         </div>
                         <p class="text-muted small mb-3">Độ dài 4-30 ký tự, chỉ gồm chữ cái, chữ số hoặc dấu gạch dưới (_).</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white text-muted">@</span>
-                                    <input type="text" class="form-control" id="inputUsername" value="<c:out value='${user.username}' />" placeholder="Tên đăng nhập..." maxlength="30" />
-                                </div>
-                                <div class="field-error-msg" id="errorUsername"></div>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted">@</span>
+                                <input type="text" class="form-control" id="inputUsername" value="<c:out value='${user.username}' />" placeholder="Tên đăng nhập..." maxlength="30" />
                             </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSaveUsername">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu tên đăng nhập
-                                </button>
-                            </div>
+                            <div class="field-error-msg" id="errorUsername"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSaveUsername">
+                                Lưu tên đăng nhập
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -346,9 +341,9 @@
                             <div class="field-error-msg" id="errorPassword"></div>
                         </div>
 
-                        <div class="text-end">
+                        <div class="d-flex justify-content-end">
                             <button type="button" class="btn btn-cf-save" id="btnSavePassword">
-                                <i class="bi bi-shield-check me-1"></i>Đổi mật khẩu
+                                Đổi mật khẩu
                             </button>
                         </div>
                     </div>
@@ -388,16 +383,14 @@
                             <span class="badge bg-light text-muted border">Tùy chọn</span>
                         </div>
                         <p class="text-muted small mb-3">Độ tuổi học viên hợp lệ từ 10 đến 120 tuổi.</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <input type="date" class="form-control" id="inputBirthDate" value="${user.birthDate}" />
-                                <div class="field-error-msg" id="errorBirthDate"></div>
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSaveBirthDate">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu ngày sinh
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <input type="date" class="form-control" id="inputBirthDate" value="${user.birthDate}" />
+                            <div class="field-error-msg" id="errorBirthDate"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSaveBirthDate">
+                                Lưu ngày sinh
+                            </button>
                         </div>
                     </div>
                 </div>
