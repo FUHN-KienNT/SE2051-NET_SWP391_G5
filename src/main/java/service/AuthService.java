@@ -122,7 +122,6 @@ public class AuthService {
                 Optional<User> userOpt = userDao.findByEmail(con, email.trim());
                 User user;
                 GoogleAuthResult.Status authStatus;
-                String generatedPassword = null;
 
                 if (userOpt.isPresent()) {
                     // ── 2a. Đã có tài khoản với email này ────────────────────
@@ -159,13 +158,11 @@ public class AuthService {
                     String baseUsername = sanitizeUsername(email.split("@")[0]);
                     String username = resolveUniqueUsername(con, baseUsername);
 
-                    // Tạo mật khẩu ngẫu nhiên bằng SecureRandom thỏa mãn chuẩn validate đăng ký
-                    generatedPassword = PasswordUtil.generateSecureRandomPassword();
 
                     user = new User();
                     user.setUsername(username);
                     user.setEmail(email.trim());
-                    user.setPasswordHash(PasswordUtil.hash(generatedPassword));
+                    user.setPasswordHash(null);
                     user.setFullName(name != null && !name.trim().isEmpty()
                         ? name.trim()
                         : baseUsername);
@@ -181,16 +178,6 @@ public class AuthService {
 
                 con.commit();
 
-                // Gửi email thật chứa thông tin tài khoản và mật khẩu sau khi commit thành công
-                if (authStatus == GoogleAuthResult.Status.NEW_USER_CREATED && generatedPassword != null) {
-                    MailUtil.sendAccountCredentialsEmailAsync(
-                        user.getEmail(),
-                        user.getFullName(),
-                        user.getUsername(),
-                        generatedPassword,
-                        dynamicBaseUrl
-                    );
-                }
 
                 return new GoogleAuthResult(mapUser(user), authStatus);
             } catch (Exception ex) {
@@ -206,6 +193,28 @@ public class AuthService {
 
     public UserDto authenticateGoogle(String email, String name) {
         return authenticateGoogle(email, name, null).getUser();
+    }
+
+    public void setPassword(long userId, String password, String confirmPassword) {
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Mật khẩu không được để trống.");
+        }
+        if (!ValidationUtil.isStrongPassword(password)) {
+            throw new IllegalArgumentException(
+                    "Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
+        }
+        if (!password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Xác nhận mật khẩu không khớp.");
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            String hash = PasswordUtil.hash(password);
+            boolean updated = userDao.updatePassword(con, userId, hash);
+            if (!updated) {
+                throw new IllegalStateException("Không tìm thấy người dùng để cập nhật mật khẩu.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lưu mật khẩu: " + e.getMessage(), e);
+        }
     }
 
     public void logout(HttpSession session) {

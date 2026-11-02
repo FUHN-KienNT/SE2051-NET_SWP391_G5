@@ -213,6 +213,16 @@ public class UserDao {
         }
     }
 
+    public boolean updatePassword(Connection con, long id, String passwordHash) throws SQLException {
+        String sql = "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, passwordHash);
+            ps.setObject(2, OffsetDateTime.now());
+            ps.setLong(3, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     public boolean updateStatus(Connection con, long id, UserStatus status) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_STATUS)) {
             ps.setString(1, status.getDbValue());
