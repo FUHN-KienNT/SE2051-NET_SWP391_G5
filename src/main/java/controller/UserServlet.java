@@ -64,12 +64,20 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Quản lý danh sách Người dùng (User List).
+     * 1. Gọi userService.getUsers() để lấy toàn bộ danh sách tài khoản từ bảng 'users'.
+     */
     private void showList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<UserDto> users = userService.getUsers();
         req.setAttribute("users", users);
         req.getRequestDispatcher("/WEB-INF/views/user/list.jsp").forward(req, resp);
     }
 
+    /**
+     * Xem chi tiết & Phân quyền Người dùng (User Detail & Role Assignment).
+     * 1. Gọi userService.getUser(userId) để lấy thông tin chi tiết người dùng.
+     */
     private void showDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         if (idStr != null) {
@@ -89,6 +97,11 @@ public class UserServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/profile");
     }
 
+    /**
+     * Cập nhật thông tin & Phân quyền Người dùng (Save User Role & Status).
+     * 1. Gọi bindUser(req) để đọc dữ liệu form.
+     * 2. Gọi userService.saveUser(dto) để cập nhật vào bảng 'users'.
+     */
     private void saveUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto dto = bindUser(req);
         try {
@@ -118,6 +131,11 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Khóa hoặc Mở khóa tài khoản Người dùng (Change User Status).
+     * 1. Đọc 'id' và 'status' (ACTIVE / BANNED) từ request.
+     * 2. Gọi userService.changeStatus(id, status) để cập nhật cột 'status' trong bảng 'users'.
+     */
     private void changeStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         String statusStr = req.getParameter("status");

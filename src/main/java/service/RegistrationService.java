@@ -3,8 +3,10 @@ package service;
 import dao.CourseDao;
 import dao.LessonProgressDao;
 import dao.RegistrationDao;
+import dto.CourseDto;
 import dto.RecentLearningDto;
 import dto.RegistrationDto;
+import dto.UserDto;
 import entity.Course;
 import entity.Registration;
 import entity.enums.CourseStatus;
@@ -317,6 +319,51 @@ public class RegistrationService {
         }
     }
 
+    public RegistrationDto getById(long registrationId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.findById(con, registrationId).map(this::mapRegistration).orElse(null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy chi tiết đăng ký: " + e.getMessage(), e);
+        }
+    }
+
+    public CourseDto getCourseSummary(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return courseDao.findById(con, courseId).map(this::mapCourse).orElse(null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy thông tin khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean canViewCourseRegistrations(long courseId, UserDto user) {
+        if (user == null || user.getRoleName() == null) {
+            return false;
+        }
+        if ("ADMIN".equalsIgnoreCase(user.getRoleName())) {
+            return true;
+        }
+        if (!"MANAGER".equalsIgnoreCase(user.getRoleName())) {
+            return false;
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            Optional<Course> course = courseDao.findById(con, courseId);
+            return course.isPresent() && Long.valueOf(user.getId()).equals(course.get().getManagerId());
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    public boolean canViewRegistration(RegistrationDto registration, UserDto user) {
+        if (registration == null || user == null || user.getRoleName() == null) {
+            return false;
+        }
+        if (Long.valueOf(user.getId()).equals(registration.getUserId()) || "ADMIN".equalsIgnoreCase(user.getRoleName())) {
+            return true;
+        }
+        return "MANAGER".equalsIgnoreCase(user.getRoleName())
+                && canViewCourseRegistrations(registration.getCourseId(), user);
+    }
+
     public List<RegistrationDto> getByManager(long managerId) {
         try (Connection con = DbConnection.getConnection()) {
             List<Registration> list = registrationDao.findByManagerId(con, managerId);
@@ -343,6 +390,42 @@ public class RegistrationService {
             return registrationDao.sumRevenueByManagerId(con, managerId);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tính doanh thu cho quản lý: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Tính tổng doanh thu hệ thống cho Admin Dashboard.
+     * 1. Gọi registrationDao.sumTotalRevenue(con) để truy vấn bảng 'registrations'.
+     */
+    public BigDecimal sumTotalRevenue() {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.sumTotalRevenue(con);
+        } catch (SQLException e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * Đếm tổng số đơn đăng ký đã thanh toán thành công cho Admin Dashboard.
+     * 1. Gọi registrationDao.countTotalPaidRegistrations(con) để truy vấn bảng 'registrations'.
+     */
+    public int countTotalPaidRegistrations() {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.countTotalPaidRegistrations(con);
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Đếm tổng số đơn đăng ký cho Admin Dashboard.
+     * 1. Gọi registrationDao.countTotalRegistrations(con) để truy vấn bảng 'registrations'.
+     */
+    public int countTotalRegistrations() {
+        try (Connection con = DbConnection.getConnection()) {
+            return registrationDao.countTotalRegistrations(con);
+        } catch (SQLException e) {
+            return 0;
         }
     }
 
@@ -477,6 +560,15 @@ public class RegistrationService {
             }
         } catch (SQLException ignored) {
         }
+        return dto;
+    }
+
+    private CourseDto mapCourse(Course course) {
+        CourseDto dto = new CourseDto();
+        dto.setId(course.getId());
+        dto.setTitle(course.getTitle());
+        dto.setPrice(course.getPrice());
+        dto.setStatus(course.getStatus());
         return dto;
     }
 }

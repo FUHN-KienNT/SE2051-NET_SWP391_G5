@@ -22,6 +22,10 @@ public class SettingService {
         this.settingDao = settingDao;
     }
 
+    /**
+     * Lấy danh sách cấu hình theo loại (Role, Course Category,...).
+     * 1. Gọi settingDao.findByType(con, type) để truy vấn bảng 'settings'.
+     */
     public List<SettingDto> getByType(SettingType type) {
         try (Connection con = DbConnection.getConnection()) {
             List<Setting> list = settingDao.findByType(con, type);
@@ -35,6 +39,10 @@ public class SettingService {
         }
     }
 
+    /**
+     * Tìm kiếm và sắp xếp cấu hình hệ thống theo bộ lọc.
+     * 1. Gọi settingDao.search(con, type, status, keyword, sortBy, sortOrder) để truy vấn bảng 'settings'.
+     */
     public List<SettingDto> search(String type, String status, String keyword, String sortBy, String sortOrder) {
         try (Connection con = DbConnection.getConnection()) {
             List<Setting> list = settingDao.search(con, type, status, keyword, sortBy, sortOrder);
@@ -48,6 +56,10 @@ public class SettingService {
         }
     }
 
+    /**
+     * Cập nhật trạng thái ACTIVE/INACTIVE cho cấu hình.
+     * 1. Gọi settingDao.updateStatus(con, id, status) để cập nhật bảng 'settings'.
+     */
     public void updateStatus(long id, SettingStatus status) {
         try (Connection con = DbConnection.getConnection()) {
             boolean updated = settingDao.updateStatus(con, id, status);
@@ -59,6 +71,10 @@ public class SettingService {
         }
     }
 
+    /**
+     * Lấy thông tin chi tiết cấu hình theo ID.
+     * 1. Gọi settingDao.findById(con, id) để truy vấn bảng 'settings'.
+     */
     public SettingDto getSetting(long id) {
         try (Connection con = DbConnection.getConnection()) {
             return settingDao.findById(con, id)
@@ -69,6 +85,11 @@ public class SettingService {
         }
     }
 
+    /**
+     * Thêm mới hoặc cập nhật cấu hình hệ thống.
+     * 1. Gọi validateSetting(dto) để kiểm tra hợp lệ.
+     * 2. Gọi settingDao.insert hoặc settingDao.update để lưu vào bảng 'settings'.
+     */
     public long saveSetting(SettingDto dto) {
         validateSetting(dto);
         try (Connection con = DbConnection.getConnection()) {
@@ -115,6 +136,11 @@ public class SettingService {
         }
     }
 
+    /**
+     * Xóa cấu hình hệ thống.
+     * 1. Gọi preventReferencedDelete(id) kiểm tra ràng buộc khóa ngoại (users, courses).
+     * 2. Gọi settingDao.delete(con, id) để xóa khỏi bảng 'settings'.
+     */
     public void deleteSetting(long id) {
         try (Connection con = DbConnection.getConnection()) {
             preventReferencedDelete(id);

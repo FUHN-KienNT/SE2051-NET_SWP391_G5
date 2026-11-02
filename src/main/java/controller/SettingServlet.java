@@ -13,6 +13,13 @@ import java.io.IOException;
 import java.util.List;
 import service.SettingService;
 
+/**
+ * Controller phụ trách các màn hình Quản lý Cài đặt Hệ thống (System Settings - BF-02):
+ * - Dành riêng cho Quản trị viên (Admin) để quản lý cấu hình Master Data:
+ *   + Danh mục khóa học (COURSE_CATEGORY)
+ *   + Vai trò tài khoản người dùng (USER_ROLE)
+ *   + Cấu hình gửi mail, cổng thanh toán và các tham số vận hành hệ thống
+ */
 @WebServlet(name = "SettingServlet", urlPatterns = {"/settings/*"})
 public class SettingServlet extends HttpServlet {
     private SettingService settingService;
@@ -22,6 +29,9 @@ public class SettingServlet extends HttpServlet {
         this.settingService = new SettingService(new SettingDao());
     }
 
+    /**
+     * Tiếp nhận yêu cầu HTTP GET từ Admin: Xem danh sách, xem chi tiết hoặc thay đổi trạng thái.
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
@@ -29,6 +39,9 @@ public class SettingServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
+    /**
+     * Tiếp nhận yêu cầu HTTP POST từ Admin: Lưu cài đặt (thêm mới / cập nhật) hoặc xóa cấu hình.
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
@@ -36,6 +49,9 @@ public class SettingServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
+    /**
+     * Điều hướng các action của Setting: list, detail, save, delete, toggle-status.
+     */
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         switch (action) {
             case "list":
@@ -59,6 +75,11 @@ public class SettingServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Bật/tắt trạng thái cấu hình hệ thống (ACTIVE / INACTIVE).
+     * 1. Gọi settingService.getSetting(id) để lấy cấu hình hiện tại.
+     * 2. Gọi settingService.updateStatus(id, newStatus) để cập nhật cột 'status' trong bảng 'settings'.
+     */
     private void toggleStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
@@ -77,6 +98,10 @@ public class SettingServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/settings/list");
     }
 
+    /**
+     * Quản lý danh sách Cài đặt Hệ thống (Setting List).
+     * 1. Gọi settingService.search(type, status, keyword, sortBy, sortOrder) để lọc dữ liệu từ bảng 'settings'.
+     */
     private void showList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String type = req.getParameter("type");
         if (type == null) type = "ALL";
@@ -114,6 +139,10 @@ public class SettingServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/setting/list.jsp").forward(req, resp);
     }
 
+    /**
+     * Xem chi tiết & Form Thêm mới/Cập nhật Cài đặt.
+     * 1. Gọi settingService.getSetting(id) nếu có tham số id để lấy thông tin chi tiết.
+     */
     private void showDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
@@ -124,6 +153,11 @@ public class SettingServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/setting/detail.jsp").forward(req, resp);
     }
 
+    /**
+     * Lưu Cài đặt hệ thống (Thêm mới hoặc Cập nhật).
+     * 1. Gọi bindSetting(req) để đọc dữ liệu form.
+     * 2. Gọi settingService.saveSetting(dto) để lưu vào bảng 'settings'.
+     */
     private void saveSetting(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             SettingDto dto = bindSetting(req);
@@ -136,6 +170,10 @@ public class SettingServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Xóa Cài đặt hệ thống.
+     * 1. Gọi settingService.deleteSetting(id) để kiểm tra ràng buộc và xóa bản ghi.
+     */
     private void deleteSetting(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
@@ -152,6 +190,9 @@ public class SettingServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/settings/list");
     }
 
+    /**
+     * Bóc tách tham số form request sang đối tượng SettingDto.
+     */
     private SettingDto bindSetting(HttpServletRequest req) {
         SettingDto dto = new SettingDto();
         String idStr = req.getParameter("id");

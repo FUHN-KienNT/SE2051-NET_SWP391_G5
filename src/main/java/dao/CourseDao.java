@@ -62,6 +62,9 @@ public class CourseDao {
         return list;
     }
 
+    /**
+     * Tìm kiếm và lọc danh sách khóa học toàn hệ thống dành cho Admin.
+     */
     public List<Course> searchAdmin(Connection con, String keyword, Long categoryId, Long managerId, String status) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE 1=1");
         List<Object> params = new ArrayList<>();
@@ -100,6 +103,9 @@ public class CourseDao {
         return list;
     }
 
+    /**
+     * Lấy thông tin chi tiết một khóa học theo ID từ bảng 'courses'.
+     */
     public Optional<Course> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);
@@ -126,6 +132,9 @@ public class CourseDao {
         return list;
     }
 
+    /**
+     * Thêm mới một khóa học vào bảng 'courses'.
+     */
     public long insert(Connection con, Course entity) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_INSERT)) {
             ps.setString(1, entity.getTitle());
@@ -156,6 +165,9 @@ public class CourseDao {
         return 0L;
     }
 
+    /**
+     * Cập nhật thông tin khóa học, phân công Expert/Manager vào bảng 'courses'.
+     */
     public boolean update(Connection con, Course entity) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE)) {
             ps.setString(1, entity.getTitle());
@@ -200,6 +212,9 @@ public class CourseDao {
         }
     }
 
+    /**
+     * Xóa một khóa học theo ID khỏi bảng 'courses'.
+     */
     public boolean delete(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_DELETE)) {
             ps.setLong(1, id);

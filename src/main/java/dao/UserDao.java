@@ -24,6 +24,9 @@ public class UserDao {
     private static final String SQL_UPDATE = "UPDATE users SET full_name = ?, role_id = ?, role_type = ?, status = ?, password_hash = COALESCE(?, password_hash), updated_at = ? WHERE id = ?";
     private static final String SQL_UPDATE_STATUS = "UPDATE users SET status = ?, updated_at = ? WHERE id = ?";
 
+    /**
+     * Truy vấn toàn bộ danh sách người dùng trong bảng 'users'.
+     */
     public List<User> findAll(Connection con) throws SQLException {
         List<User> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_ALL);
@@ -35,6 +38,9 @@ public class UserDao {
         return list;
     }
 
+    /**
+     * Tìm kiếm người dùng theo ID trong bảng 'users'.
+     */
     public Optional<User> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);
@@ -174,6 +180,9 @@ public class UserDao {
         return false;
     }
 
+    /**
+     * Thêm mới một tài khoản người dùng vào bảng 'users'.
+     */
     public long insert(Connection con, User entity) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_INSERT)) {
             ps.setString(1, entity.getUsername());
@@ -199,6 +208,9 @@ public class UserDao {
         return 0L;
     }
 
+    /**
+     * Cập nhật thông tin và vai trò (role_id) của người dùng trong bảng 'users'.
+     */
     public boolean update(Connection con, User entity) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE)) {
             ps.setString(1, entity.getFullName());
@@ -223,6 +235,9 @@ public class UserDao {
         }
     }
 
+    /**
+     * Cập nhật trạng thái tài khoản (ACTIVE / BANNED) trong bảng 'users'.
+     */
     public boolean updateStatus(Connection con, long id, UserStatus status) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_STATUS)) {
             ps.setString(1, status.getDbValue());
