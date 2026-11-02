@@ -96,6 +96,19 @@ public final class ProfileValidator {
         }
     }
 
+    public static String validatePassword(String newPassword, String confirmPassword) {
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            return "Mật khẩu mới không được để trống.";
+        }
+        if (!ValidationUtil.isStrongPassword(newPassword)) {
+            return "Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.";
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            return "Mật khẩu xác nhận không khớp.";
+        }
+        return null;
+    }
+
     public static String validateAvatar(Part part) {
         if (part == null || part.getSize() == 0) {
             return "Vui lòng chọn một file ảnh.";
