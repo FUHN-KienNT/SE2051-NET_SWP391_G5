@@ -126,7 +126,9 @@ public final class DbConnection {
             st.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_at timestamptz; " +
                        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_notice text; " +
                        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
-                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text;");
+                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text; " +
+                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(); " +
+                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();");
             st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url varchar(255); " +
                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone varchar(20); " +
                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date date;");
