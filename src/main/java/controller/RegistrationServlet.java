@@ -2,6 +2,7 @@ package controller;
 
 import dao.CourseDao;
 import dao.RegistrationDao;
+import dto.CourseDto;
 import dto.RecentLearningDto;
 import dto.RegistrationDto;
 import dto.UserDto;
@@ -56,10 +57,15 @@ public class RegistrationServlet extends HttpServlet {
                 confirmPayment(req, resp);
                 break;
             case "my":
+            case "history":
                 showMyRegistrations(req, resp);
                 break;
             case "course":
+            case "list":
                 showCourseRegistrations(req, resp);
+                break;
+            case "detail":
+                showRegistrationDetail(req, resp);
                 break;
             case "enroll":
                 enroll(req, resp);
@@ -202,13 +208,64 @@ public class RegistrationServlet extends HttpServlet {
     }
 
     private void showCourseRegistrations(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         String courseIdStr = req.getParameter("courseId");
-        if (courseIdStr != null) {
+        if (courseIdStr == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thiếu mã khóa học.");
+            return;
+        }
+
+        try {
             long courseId = Long.parseLong(courseIdStr);
-            List<RegistrationDto> list = registrationService.getByCourse(courseId);
-            req.setAttribute("registrations", list);
+            if (!registrationService.canViewCourseRegistrations(courseId, currentUser)) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem danh sách đăng ký của khóa học này.");
+                return;
+            }
+            CourseDto course = registrationService.getCourseSummary(courseId);
+            if (course == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy khóa học.");
+                return;
+            }
+            req.setAttribute("course", course);
+            req.setAttribute("registrations", registrationService.getByCourse(courseId));
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Mã khóa học không hợp lệ.");
+            return;
         }
         req.getRequestDispatcher("/WEB-INF/views/registration/course.jsp").forward(req, resp);
+    }
+
+    private void showRegistrationDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        String idStr = req.getParameter("id");
+        if (idStr == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thiếu mã đăng ký.");
+            return;
+        }
+        try {
+            RegistrationDto registration = registrationService.getById(Long.parseLong(idStr));
+            if (registration == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy đăng ký.");
+                return;
+            }
+            if (!registrationService.canViewRegistration(registration, currentUser)) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem đăng ký này.");
+                return;
+            }
+            req.setAttribute("registration", registration);
+            req.getRequestDispatcher("/WEB-INF/views/registration/detail.jsp").forward(req, resp);
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Mã đăng ký không hợp lệ.");
+        }
     }
 
     private void enroll(HttpServletRequest req, HttpServletResponse resp) throws IOException {

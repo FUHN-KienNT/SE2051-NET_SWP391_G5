@@ -6,6 +6,7 @@ import entity.enums.PaymentStatus;
 import entity.enums.RegistrationStatus;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class RegistrationDto {
     private Long id;
@@ -101,6 +102,10 @@ public class RegistrationDto {
 
     public void setRegistrationDate(OffsetDateTime registrationDate) {
         this.registrationDate = registrationDate;
+    }
+
+    public String getFormattedRegistrationDate() {
+        return registrationDate == null ? "" : registrationDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 
     public BigDecimal getProgressPercentage() {
