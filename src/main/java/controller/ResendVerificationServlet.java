@@ -26,7 +26,7 @@ public class ResendVerificationServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String email = req.getParameter("email");
         if (email != null && !email.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/auth/check-email?email=" + URLEncoder.encode(email.trim(), StandardCharsets.UTF_8));
+            doPost(req, resp);
         } else {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
         }

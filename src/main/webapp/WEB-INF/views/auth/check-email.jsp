@@ -531,6 +531,15 @@
 
             // Start countdown immediately on arrival
             startCountdown(60);
+            <c:if test="${param.resent == 'true'}">
+            CoursonToast.show('success', 'Email xác thực mới đã được gửi đi! Vui lòng kiểm tra hộp thư của bạn.');
+            </c:if>
+            <c:if test="${param.error == 'ratelimit'}">
+            CoursonToast.show('warning', 'Vui lòng đợi 60 giây trước khi yêu cầu gửi lại email xác nhận.');
+            </c:if>
+            <c:if test="${param.error == 'system'}">
+            CoursonToast.show('error', 'Có lỗi xảy ra khi gửi lại email. Vui lòng thử lại sau.');
+            </c:if>
 
             // Handle Resend with Fetch (AJAX)
             resendForm.addEventListener('submit', function (e) {
