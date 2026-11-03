@@ -550,7 +550,7 @@ public class QuizService {
                             }
                         }
                     }
-                    QuizAnswer graded = gradeAnswer(question, submittedAns, qq.getPoints());
+                    QuizAnswer graded = gradeAnswer(con, question, submittedAns, qq.getPoints());
                     gradedAnswers.add(graded);
                     totalScore = totalScore.add(graded.getScore());
                 }
@@ -625,7 +625,7 @@ public class QuizService {
         }
     }
 
-    private QuizAnswer gradeAnswer(Question question, QuizAnswerDto submitted, BigDecimal assignedPoints) {
+    private QuizAnswer gradeAnswer(Connection con, Question question, QuizAnswerDto submitted, BigDecimal assignedPoints) throws SQLException {
         QuizAnswer answer = new QuizAnswer();
         answer.setQuestionId(question.getId());
         answer.setScore(BigDecimal.ZERO);
@@ -633,16 +633,13 @@ public class QuizService {
 
         if (submitted != null && submitted.getSelectedOptionId() != null) {
             answer.setSelectedOptionId(submitted.getSelectedOptionId());
-            try (Connection con = DbConnection.getConnection()) {
-                List<AnswerOption> options = questionDao.findOptions(con, question.getId());
-                for (AnswerOption opt : options) {
-                    if (opt.getId().equals(submitted.getSelectedOptionId()) && opt.isCorrect()) {
-                        answer.setCorrect(true);
-                        answer.setScore(assignedPoints != null ? assignedPoints : question.getDefaultPoints());
-                        break;
-                    }
+            List<AnswerOption> options = questionDao.findOptions(con, question.getId());
+            for (AnswerOption opt : options) {
+                if (opt.getId().equals(submitted.getSelectedOptionId()) && opt.isCorrect()) {
+                    answer.setCorrect(true);
+                    answer.setScore(assignedPoints != null ? assignedPoints : question.getDefaultPoints());
+                    break;
                 }
-            } catch (SQLException ignored) {
             }
         }
         return answer;

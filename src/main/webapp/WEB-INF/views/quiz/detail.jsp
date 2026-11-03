@@ -563,11 +563,11 @@ body {
             </div>
         </c:if>
 
-        <c:if test="${not empty param.error}">
+        <c:if test="${not empty param.error or not empty error}">
             <div class="saas-alert saas-alert-danger alert-dismissible fade show" role="alert">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-                    <div><c:out value="${param.error}" /></div>
+                    <div><c:out value="${not empty param.error ? param.error : error}" /></div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
