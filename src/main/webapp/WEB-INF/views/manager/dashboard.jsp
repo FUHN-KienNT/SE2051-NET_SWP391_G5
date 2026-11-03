@@ -3,7 +3,6 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="pageTitle" value="Manager Dashboard - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
 
 <style>
 /* ==========================================================================

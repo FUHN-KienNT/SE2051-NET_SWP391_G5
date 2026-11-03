@@ -2,7 +2,6 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Soạn thảo bài học - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
 
 <!-- Quill WYSIWYG Editor CSS -->
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">

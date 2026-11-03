@@ -3,7 +3,6 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Quản lý bài học - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
 
 <style>
 /* ==========================================================================

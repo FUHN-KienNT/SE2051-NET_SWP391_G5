@@ -5,7 +5,6 @@
 
 <c:set var="pageTitle" value="${quiz.title} - Quản lý bài thi - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
 
 <style>
 /* ==========================================================================

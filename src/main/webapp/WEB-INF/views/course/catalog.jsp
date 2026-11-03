@@ -2,7 +2,6 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Danh mục khóa học - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
 
 <main class="main-content py-5">
     <div class="container">

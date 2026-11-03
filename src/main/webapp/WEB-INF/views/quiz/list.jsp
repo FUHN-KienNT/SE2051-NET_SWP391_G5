@@ -6,7 +6,6 @@
                 <c:set var="pageTitle"
                     value="Quản lý Quiz & Ngân hàng câu hỏi - ${not empty course ? course.title : 'Courson LMS'}" />
                 <jsp:include page="../common/header.jsp" />
-                <jsp:include page="../common/navbar.jsp" />
 
                 <style>
 /* ==========================================================================

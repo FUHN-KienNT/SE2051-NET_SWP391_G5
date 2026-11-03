@@ -5,7 +5,6 @@
 
 <c:set var="pageTitle" value="Courson LMS - Nền tảng học trực tuyến thông minh" />
 <jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
 
 <style>
     :root {

@@ -5,7 +5,6 @@
 <c:set var="pageTitle" value="Quản lý khóa học - Courson LMS" />
 <c:set var="rolePath" value="${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager' : '/admin'}" />
 <jsp:include page="../common/header.jsp" />
-<jsp:include page="../common/navbar.jsp" />
 
 <style>
 /* ==========================================================================
