@@ -1282,6 +1282,7 @@ body {
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content saas-modal">
                             <form id="quizForm" action="${pageContext.request.contextPath}/quizzes/save" method="POST">
+                                <input type="hidden" name="from" value="list">
                                 <input type="hidden" name="id" id="modalQuizId" value="">
                                 <c:if test="${not empty course}">
                                     <input type="hidden" name="courseId" value="${course.id}">
@@ -1403,6 +1404,7 @@ body {
                         <div class="modal-content saas-modal">
                             <form action="${pageContext.request.contextPath}/quizzes/save-question" method="POST"
                                 id="bankQuestionForm">
+                                <input type="hidden" name="from" value="list">
                                 <input type="hidden" name="id" id="modalQId" value="">
                                 <c:if test="${not empty course}">
                                     <input type="hidden" name="courseId" value="${course.id}">

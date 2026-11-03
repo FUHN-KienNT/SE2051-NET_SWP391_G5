@@ -712,6 +712,7 @@ body {
                         </div>
 
                         <form action="${pageContext.request.contextPath}/quizzes/save" method="POST" id="quizSettingsForm">
+                            <input type="hidden" name="from" value="detail">
                             <input type="hidden" name="id" value="${quiz.id}">
                             <input type="hidden" name="moduleId" value="${quiz.moduleId}">
                             <c:if test="${not empty courseId}">

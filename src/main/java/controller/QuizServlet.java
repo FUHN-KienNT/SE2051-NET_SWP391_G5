@@ -228,19 +228,41 @@ public class QuizServlet extends HttpServlet {
 
     private void saveQuiz(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String courseIdStr = req.getParameter("courseId");
+        String from = req.getParameter("from");
         QuizDto dto = null;
         try {
             dto = bindQuiz(req);
             long id = quizService.saveQuiz(dto);
+
+            // Nếu submit từ trang list (hoặc không phải từ detail)
+            if ("list".equalsIgnoreCase(from) || !"detail".equalsIgnoreCase(from)) {
+                String target = req.getContextPath() + "/quizzes/list?";
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    target += "courseId=" + courseIdStr.trim();
+                } else if (dto.getModuleId() != null) {
+                    target += "moduleId=" + dto.getModuleId();
+                }
+                resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "success=saved");
+                return;
+            }
+
+            // Nếu lưu từ trang chi tiết (detail)
             String target = req.getContextPath() + "/quizzes/detail?id=" + id;
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 target += "&courseId=" + courseIdStr.trim();
             }
             resp.sendRedirect(target + "&success=saved");
         } catch (Exception e) {
-            String redirectUrl = req.getContextPath() + "/quizzes/detail?";
-            if (dto != null && dto.getId() != null && dto.getId() > 0) {
-                redirectUrl += "id=" + dto.getId();
+            String redirectUrl;
+            if ("list".equalsIgnoreCase(from) || !"detail".equalsIgnoreCase(from)) {
+                redirectUrl = req.getContextPath() + "/quizzes/list?";
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    redirectUrl += "courseId=" + courseIdStr.trim();
+                } else if (dto != null && dto.getModuleId() != null) {
+                    redirectUrl += "moduleId=" + dto.getModuleId();
+                }
+            } else if (dto != null && dto.getId() != null && dto.getId() > 0) {
+                redirectUrl = req.getContextPath() + "/quizzes/detail?id=" + dto.getId();
                 if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                     redirectUrl += "&courseId=" + courseIdStr.trim();
                 }
@@ -252,7 +274,7 @@ public class QuizServlet extends HttpServlet {
                     redirectUrl += "moduleId=" + dto.getModuleId();
                 }
             }
-            resp.sendRedirect(redirectUrl + (redirectUrl.endsWith("?") ? "" : "&") + "error="
+            resp.sendRedirect(redirectUrl + (redirectUrl.contains("?") ? "&" : "?") + "error="
                     + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi khi lưu bài thi.", java.nio.charset.StandardCharsets.UTF_8));
         }
     }
@@ -300,12 +322,26 @@ public class QuizServlet extends HttpServlet {
     private void saveQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String quizIdStr = req.getParameter("quizId");
         String courseIdStr = req.getParameter("courseId");
+        String from = req.getParameter("from");
         QuestionDto dto = null;
         try {
             dto = bindQuestion(req);
             long questionId = quizService.saveQuestion(dto);
             boolean isNewQuestion = (dto.getId() == null || dto.getId() <= 0);
-            // Nếu có quizId VÀ câu hỏi mới tạo, tự động gán câu hỏi này vào Quiz luôn!
+
+            // Nếu đến từ trang danh sách (questionlist), luôn redirect về trang list tab questions
+            if ("list".equalsIgnoreCase(from)) {
+                String target = req.getContextPath() + "/quizzes/list?";
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    target += "courseId=" + courseIdStr.trim() + "&tab=questions";
+                } else if (dto.getModuleId() != null) {
+                    target += "moduleId=" + dto.getModuleId() + "&tab=questions";
+                }
+                resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "success=question_saved");
+                return;
+            }
+
+            // Nếu có quizId VÀ câu hỏi mới tạo (từ detail modal), tự động gán câu hỏi này vào Quiz luôn
             if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
                 long quizId = Long.parseLong(quizIdStr.trim());
                 String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
@@ -321,6 +357,8 @@ public class QuizServlet extends HttpServlet {
                 }
                 return;
             }
+
+            // Mặc định về trang list tab questions
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim()
                         + "&tab=questions&success=question_saved");
@@ -329,6 +367,18 @@ public class QuizServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId()
                     + "&tab=questions&success=question_saved");
         } catch (Exception e) {
+            if ("list".equalsIgnoreCase(from)) {
+                String target = req.getContextPath() + "/quizzes/list?";
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    target += "courseId=" + courseIdStr.trim() + "&tab=questions";
+                } else {
+                    String modParam = (dto != null && dto.getModuleId() != null) ? String.valueOf(dto.getModuleId()) : req.getParameter("moduleId");
+                    target += "moduleId=" + modParam + "&tab=questions";
+                }
+                resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "error="
+                        + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi khi lưu câu hỏi.", java.nio.charset.StandardCharsets.UTF_8));
+                return;
+            }
             if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
                 String target = req.getContextPath() + "/quizzes/detail?id=" + quizIdStr.trim();
                 if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
