@@ -870,7 +870,7 @@ body {
                                                                         </thead>
                                                                         <tbody>
                                                                             <c:forEach var="q" items="${m.quizzes}">
-                                                                                <tr class="quiz-row" id="quizRow-${q.id}"
+                                                                                <tr class="quiz-row"
                                                                                     data-quiz-title="${fn:toLowerCase(q.title)}">
                                                                                     <td class="text-center">
                                                                                         <span class="badge bg-light text-muted border">#${q.orderIndex}</span>
@@ -931,8 +931,10 @@ body {
                                                                                                 <c:otherwise>
                                                                                                     <button type="button"
                                                                                                         class="btn-icon-action text-danger"
-                                                                                                        onclick="startDeleteQuizCountdown('${q.id}', '${fn:escapeXml(q.title)}', '${course.id}', '${m.id}')"
-                                                                                                        title="Xóa bài Quiz (Có 5s để Hoàn tác / Rollback bằng Ctrl+Z)">
+                                                                                                        onclick="openDeleteQuizModal('${q.id}', '${fn:escapeXml(q.title)}', '${course.id}', '${m.id}')"
+                                                                                                        data-bs-toggle="modal"
+                                                                                                        data-bs-target="#deleteQuizModal"
+                                                                                                        title="Xóa bài Quiz">
                                                                                                         <i class="bi bi-trash3"></i>
                                                                                                     </button>
                                                                                                 </c:otherwise>
@@ -1124,7 +1126,7 @@ body {
                                                                         </thead>
                                                                         <tbody>
                                                                             <c:forEach var="q" items="${m.questions}">
-                                                                                <tr class="question-row" id="questionRow-${q.id}"
+                                                                                <tr class="question-row"
                                                                                     data-module-id="${q.moduleId}"
                                                                                     data-type="${q.questionType}"
                                                                                     data-text="${fn:toLowerCase(fn:escapeXml(q.questionText))}"
@@ -1244,12 +1246,12 @@ body {
                                                                                                     </button>
                                                                                                 </c:when>
                                                                                                 <c:otherwise>
-                                                                                                    <button type="button"
-                                                                                                        class="btn-icon-action text-danger border-0 bg-transparent"
-                                                                                                        onclick="startDeleteQuestionCountdown('${q.id}', '${fn:escapeXml(q.questionText)}', '${course.id}', '${m.id}')"
-                                                                                                        title="Xóa câu hỏi (Có 5s để Hoàn tác / Rollback bằng Ctrl+Z)">
+                                                                                                    <a href="${pageContext.request.contextPath}/quizzes/delete-question?id=${q.id}&courseId=${course.id}"
+                                                                                                        class="btn-icon-action text-danger"
+                                                                                                        onclick="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi?');"
+                                                                                                        title="Xóa câu hỏi">
                                                                                                         <i class="bi bi-trash3"></i>
-                                                                                                    </button>
+                                                                                                    </a>
                                                                                                 </c:otherwise>
                                                                                             </c:choose>
                                                                                         </div>
@@ -2021,36 +2023,6 @@ body {
                         if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
                     }
 
-                    // ==========================================
-                    // ROLLBACK CHO QUIZ & CÂU HỎI QUA COURSONROLLBACK
-                    // ==========================================
-                    function startDeleteQuizCountdown(quizId, quizTitle, courseId, moduleId) {
-                        let bodyData = 'id=' + encodeURIComponent(quizId) + '&ajax=true';
-                        if (courseId) bodyData += '&courseId=' + encodeURIComponent(courseId);
-                        if (moduleId) bodyData += '&moduleId=' + encodeURIComponent(moduleId);
-
-                        CoursonRollback.start({
-                            element: 'quizRow-' + quizId,
-                            type: 'Bài thi',
-                            title: quizTitle,
-                            endpoint: '${pageContext.request.contextPath}/quizzes/delete',
-                            body: bodyData
-                        });
-                    }
-
-                    function startDeleteQuestionCountdown(qId, qText, courseId, moduleId) {
-                        let bodyData = 'id=' + encodeURIComponent(qId) + '&ajax=true';
-                        if (courseId) bodyData += '&courseId=' + encodeURIComponent(courseId);
-                        if (moduleId) bodyData += '&moduleId=' + encodeURIComponent(moduleId);
-
-                        CoursonRollback.start({
-                            element: 'questionRow-' + qId,
-                            type: 'Câu hỏi',
-                            title: qText,
-                            endpoint: '${pageContext.request.contextPath}/quizzes/delete-question',
-                            body: bodyData
-                        });
-                    }
                 </script>
 
                 <jsp:include page="../common/footer.jsp" />
