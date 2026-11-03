@@ -270,6 +270,10 @@ public class AdminCourseServlet extends HttpServlet {
         }
         try {
             boolean isNew = (dto.getId() == null || dto.getId() <= 0);
+            if (isNew) {
+                // Khóa học mới tạo luôn luôn khởi tạo ở trạng thái DRAFT (Bản nháp) để Expert xây dựng nội dung
+                dto.setStatus(CourseStatus.DRAFT);
+            }
             long id = courseService.saveCourse(dto);
             if (isNew) {
                 resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?created=true");

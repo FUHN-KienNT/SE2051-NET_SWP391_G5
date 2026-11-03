@@ -519,13 +519,14 @@ body {
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-dark">Trạng thái (Status)</label>
-                        <select name="status" class="form-select saas-select">
-                            <option value="DRAFT">Draft (Nháp)</option>
-                            <option value="PENDING_REVIEW">Pending Review (Chờ duyệt)</option>
-                            <option value="PUBLISHED">Published (Đã duyệt)</option>
-                            <option value="ARCHIVED">Archived (Đã đóng)</option>
-                        </select>
+                        <label class="form-label small fw-semibold text-dark">Trạng thái ban đầu</label>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <span class="saas-badge saas-badge-draft">
+                                <span class="badge-dot"></span> Bản nháp (Draft)
+                            </span>
+                            <small class="text-muted">Mặc định riêng tư để Chuyên gia hoàn thiện giáo trình trước khi duyệt xuất bản.</small>
+                        </div>
+                        <input type="hidden" name="status" value="DRAFT">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-dark">Mô tả khóa học</label>
