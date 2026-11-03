@@ -303,8 +303,9 @@
     .course-meta-text {
         font-size: 0.8rem;
         color: var(--text-muted);
-        margin-bottom: 16px;
+        margin-bottom: 10px;
     }
+
     .course-footer-custom {
         margin-top: auto;
         padding-top: 14px;

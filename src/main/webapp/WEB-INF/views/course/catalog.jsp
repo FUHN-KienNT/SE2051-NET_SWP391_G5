@@ -92,7 +92,7 @@
                                     <h5 class="card-title fw-bold text-truncate" title="${c.title}">
                                         <a href="${targetCourseUrl}" class="text-dark text-decoration-none">${c.title}</a>
                                     </h5>
-                                    <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    <p class="card-text text-muted small flex-grow-1 mb-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                         ${c.description != null ? c.description : "Chưa có mô tả chi tiết."}
                                     </p>
                                     <div class="pt-3 border-top d-flex justify-content-between align-items-center">

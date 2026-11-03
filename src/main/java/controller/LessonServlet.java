@@ -669,13 +669,8 @@ public class LessonServlet extends HttpServlet {
     }
 
     /**
-     * Lưu trữ / Lên lịch lưu trữ khóa học (Archive):
-     * - Áp dụng cho khóa học đã xuất bản (PUBLISHED).
-     * - Hỗ trợ các chế độ thời gian tùy ý:
-     *   1. IMMEDIATE: Ẩn ngay lập tức.
-     *   2. DURATION: Tùy ý nhập số lượng bất kỳ kèm đơn vị (Giờ / Ngày / Tuần / Tháng).
-     *   3. SPECIFIC_DATE: Chọn mốc ngày giờ chính xác trên lịch (datetime-local).
-     *   4. Backward compatibility: Tham số noticeDays truyền thống.
+     * Lưu trữ / Ẩn khóa học (Archive) ngay lập tức:
+     * Chuyển status = ARCHIVED, ẩn khỏi danh mục chung, học viên cũ vẫn học bình thường.
      */
     private void archiveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
@@ -690,59 +685,8 @@ public class LessonServlet extends HttpServlet {
         if (idStr != null) {
             try {
                 long courseId = Long.parseLong(idStr.trim());
-                String archiveMode = req.getParameter("archiveMode");
-                String customNotice = req.getParameter("archiveNotice");
-
-                OffsetDateTime targetArchiveTime;
-
-                if ("IMMEDIATE".equalsIgnoreCase(archiveMode)) {
-                    targetArchiveTime = OffsetDateTime.now();
-                } else if ("SPECIFIC_DATE".equalsIgnoreCase(archiveMode)) {
-                    String dateStr = req.getParameter("specificArchiveDate");
-                    if (dateStr != null && !dateStr.trim().isEmpty()) {
-                        LocalDateTime localDt = LocalDateTime.parse(dateStr.trim());
-                        targetArchiveTime = localDt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
-                    } else {
-                        targetArchiveTime = OffsetDateTime.now();
-                    }
-                } else if ("DURATION".equalsIgnoreCase(archiveMode)) {
-                    String durationValStr = req.getParameter("durationValue");
-                    String durationUnit = req.getParameter("durationUnit");
-                    long durationVal = (durationValStr != null && !durationValStr.trim().isEmpty())
-                            ? Long.parseLong(durationValStr.trim())
-                            : 3L;
-
-                    if (durationVal <= 0) {
-                        targetArchiveTime = OffsetDateTime.now();
-                    } else {
-                        OffsetDateTime now = OffsetDateTime.now();
-                        if ("HOURS".equalsIgnoreCase(durationUnit)) {
-                            targetArchiveTime = now.plusHours(durationVal);
-                        } else if ("WEEKS".equalsIgnoreCase(durationUnit)) {
-                            targetArchiveTime = now.plusWeeks(durationVal);
-                        } else if ("MONTHS".equalsIgnoreCase(durationUnit)) {
-                            targetArchiveTime = now.plusMonths(durationVal);
-                        } else {
-                            targetArchiveTime = now.plusDays(durationVal);
-                        }
-                    }
-                } else {
-                    int noticeDays = 3;
-                    String noticeDaysStr = req.getParameter("noticeDays");
-                    if (noticeDaysStr != null && !noticeDaysStr.trim().isEmpty()) {
-                        noticeDays = Integer.parseInt(noticeDaysStr.trim());
-                    }
-                    targetArchiveTime = (noticeDays <= 0) ? OffsetDateTime.now() : OffsetDateTime.now().plusDays(noticeDays);
-                }
-
-                courseService.scheduleArchiveCourse(courseId, targetArchiveTime, customNotice, currentUser);
-
-                if (targetArchiveTime != null && targetArchiveTime.isAfter(OffsetDateTime.now())) {
-                    String formattedTime = targetArchiveTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-                    SessionUtil.setFlashSuccess(req, "Đã lên lịch lưu trữ khóa học thành công! Khóa học sẽ tự động chuyển sang chế độ Lưu trữ vào lúc " + formattedTime + ".");
-                } else {
-                    SessionUtil.setFlashSuccess(req, "Đã chuyển khóa học sang chế độ Lưu trữ! Khóa học đã được ẩn khỏi danh mục chung.");
-                }
+                courseService.scheduleArchiveCourse(courseId, OffsetDateTime.now(), null, currentUser);
+                SessionUtil.setFlashSuccess(req, "Đã chuyển khóa học sang chế độ Lưu trữ! Khóa học đã được ẩn khỏi danh mục chung.");
             } catch (Exception e) {
                 SessionUtil.setFlashError(req, "Lỗi lưu trữ khóa học: " + e.getMessage());
             }
