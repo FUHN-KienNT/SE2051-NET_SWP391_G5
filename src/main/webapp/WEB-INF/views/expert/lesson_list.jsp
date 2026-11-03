@@ -759,8 +759,8 @@ body {
                                                             </c:otherwise>
                                                         </c:choose>
                                                         <button type="button" class="btn-icon-action text-danger border-0 bg-transparent ms-1"
-                                                                onclick="startDeleteCountdown('${l.id}', '${fn:escapeXml(l.title)}', '${m.id}')"
-                                                                title="Xóa bài học (Có 5s để Hoàn tác / Rollback bằng Ctrl+Z)" aria-label="Xóa bài">
+                                                                onclick="confirmDeleteLesson('${l.id}', '${fn:escapeXml(l.title)}')"
+                                                                title="Xóa bài học" aria-label="Xóa bài">
                                                             <i class="bi bi-trash3"></i>
                                                         </button>
                                                     </c:otherwise>
@@ -856,7 +856,17 @@ body {
             });
             return;
         }
-        startDeleteModuleCountdown(moduleId, title);
+        showConfirmModal({
+            title: 'Xác nhận xóa chương học',
+            method: 'POST',
+            html: 'Bạn có chắc chắn muốn xóa chương "<strong>' + (title || '') + '</strong>"?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Thao tác này sẽ xóa vĩnh viễn chương học và không thể hoàn tác.</span>',
+            type: 'danger',
+            icon: 'bi bi-trash3-fill',
+            confirmText: 'Xóa vĩnh viễn',
+            confirmIcon: 'bi bi-trash3 me-1',
+            confirmBtnClass: 'btn-danger',
+            confirmUrl: '${pageContext.request.contextPath}/expert/delete-module?courseId=${course.id}&moduleId=' + moduleId
+        });
     }
 
     // ==========================================
@@ -890,26 +900,17 @@ body {
         }
     }
 
-    // ==========================================
-    // 2. XÓA BÀI HỌC VỚI COUNTDOWN 5s & ROLLBACK (Ctrl+Z)
-    // ==========================================
-    function startDeleteCountdown(lessonId, lessonTitle, moduleId) {
-        CoursonRollback.start({
-            element: 'lessonRow-' + lessonId,
-            type: 'Bài học',
-            title: lessonTitle,
-            endpoint: '${pageContext.request.contextPath}/expert/delete-lesson',
-            body: 'courseId=${course.id}&lessonId=' + encodeURIComponent(lessonId) + '&ajax=true'
-        });
-    }
-
-    function startDeleteModuleCountdown(moduleId, moduleTitle) {
-        CoursonRollback.start({
-            element: 'moduleCard-' + moduleId,
-            type: 'Chương học',
-            title: moduleTitle,
-            endpoint: '${pageContext.request.contextPath}/expert/delete-module',
-            body: 'courseId=${course.id}&moduleId=' + encodeURIComponent(moduleId) + '&ajax=true'
+    function confirmDeleteLesson(lessonId, lessonTitle) {
+        showConfirmModal({
+            title: 'Xác nhận xóa bài học',
+            method: 'POST',
+            html: 'Bạn có chắc chắn muốn xóa bài học "<strong>' + (lessonTitle || '') + '</strong>"?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Thao tác này sẽ xóa vĩnh viễn bài học và không thể hoàn tác.</span>',
+            type: 'danger',
+            icon: 'bi bi-trash3-fill',
+            confirmText: 'Xóa vĩnh viễn',
+            confirmIcon: 'bi bi-trash3 me-1',
+            confirmBtnClass: 'btn-danger',
+            confirmUrl: '${pageContext.request.contextPath}/expert/delete-lesson?courseId=${course.id}&lessonId=' + lessonId
         });
     }
 
