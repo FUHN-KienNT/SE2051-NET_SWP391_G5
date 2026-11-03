@@ -1098,16 +1098,7 @@ body {
                                                                 </li>
                                                                 <li><hr class="dropdown-divider my-1"></li>
                                                             </c:when>
-                                                            <c:when test="${c.status == 'ARCHIVED'}">
-                                                                <li>
-                                                                    <a class="saas-dropdown-item text-success fw-semibold"
-                                                                       href="javascript:void(0)"
-                                                                       onclick="confirmUnarchiveCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/unarchive-course?id=${c.id}')">
-                                                                        <i class="bi bi-arrow-counterclockwise text-success"></i>Mở lại khóa học (Unarchive)
-                                                                    </a>
-                                                                </li>
-                                                                <li><hr class="dropdown-divider my-1"></li>
-                                                            </c:when>
+                                                            
                                                         </c:choose>
                                                         <li>
                                                             <a class="saas-dropdown-item" href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}">
@@ -1550,7 +1541,7 @@ body {
                   '<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>' +
                   'Khóa học sẽ <strong>lập tức ẩn khỏi trang Chủ và Danh mục</strong> (ngừng nhận học viên mới).<br>' +
                   '<i class="bi bi-shield-check text-success me-1"></i>Học viên đã mua trước đây vẫn học tập bình thường.<br>' +
-                  '<i class="bi bi-arrow-counterclockwise text-primary me-1"></i>Bạn có thể mở lại (Unarchive) bất cứ lúc nào trong tab Lưu trữ.</span>',
+                  '<i class="bi bi-exclamation-circle text-danger me-1"></i>Lưu ý: Thao tác này là vĩnh viễn và không thể hoàn tác.</span>',
             type: 'warning',
             icon: 'bi bi-archive-fill',
             confirmText: 'Lưu trữ ngay',
@@ -2025,19 +2016,7 @@ body {
         });
     }
 
-    function confirmUnarchiveCourse(title, url) {
-        showConfirmModal({
-            title: 'Mở lại khóa học (Unarchive)',
-            method: 'POST',
-            html: 'Khóa học "<strong>' + (title || '') + '</strong>" sẽ được công khai trở lại trên danh mục và cho phép học viên mới tiếp tục đăng ký.',
-            type: 'success',
-            icon: 'bi bi-arrow-counterclockwise',
-            confirmText: 'Công khai trở lại',
-            confirmIcon: 'bi bi-check-circle me-1',
-            confirmBtnClass: 'btn-success',
-            confirmUrl: url
-        });
-    }
+
 
     // ==========================================
     // KHÓA HỌC: ROLLBACK QUA COURSONROLLBACK

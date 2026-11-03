@@ -399,8 +399,14 @@ body {
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td class="pe-3 text-end">
-                                            <a href="${pageContext.request.contextPath}${rolePath}/course-detail?id=${c.id}" class="btn btn-outline-primary btn-sm fw-semibold rounded-pill px-2 py-1 text-nowrap" style="font-size: 0.75rem;" title="View Details Link">
+                                        <td class="pe-3 text-end text-nowrap">
+                                            <c:if test="${c.status == 'PUBLISHED'}">
+                                                <button type="button" class="btn btn-outline-warning btn-sm fw-semibold rounded-pill px-2 py-1 me-1" style="font-size: 0.75rem;" title="Lưu trữ / Ẩn khóa học"
+                                                        onclick="confirmArchiveCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}${rolePath}/toggle-status?id=${c.id}&status=ARCHIVED')">
+                                                    <i class="bi bi-archive me-1"></i>Lưu trữ
+                                                </button>
+                                            </c:if>
+                                            <a href="${pageContext.request.contextPath}${rolePath}/course-detail?id=${c.id}" class="btn btn-outline-primary btn-sm fw-semibold rounded-pill px-2 py-1" style="font-size: 0.75rem;" title="View Details Link">
                                                 Chi tiết
                                             </a>
                                         </td>
@@ -414,6 +420,32 @@ body {
         </div>
     </div>
 </main>
+
+<script>
+    function confirmArchiveCourse(title, url) {
+        if (typeof showConfirmModal === 'function') {
+            showConfirmModal({
+                title: 'Lưu trữ / Ẩn khóa học',
+                method: 'POST',
+                html: 'Bạn có chắc chắn muốn lưu trữ khóa học "<strong>' + (title || '') + '</strong>"?<br><br>' +
+                      '<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>' +
+                      'Khóa học sẽ <strong>lập tức ẩn khỏi trang Chủ và Danh mục</strong> (ngừng nhận học viên mới).<br>' +
+                      '<i class="bi bi-shield-check text-success me-1"></i>Học viên đã mua trước đây vẫn học tập bình thường.<br>' +
+                      '<i class="bi bi-exclamation-circle text-danger me-1"></i>Lưu ý: Thao tác này là vĩnh viễn và không thể hoàn tác.</span>',
+                type: 'warning',
+                icon: 'bi bi-archive-fill',
+                confirmText: 'Lưu trữ ngay',
+                confirmIcon: 'bi bi-archive me-1',
+                confirmBtnClass: 'btn-warning text-dark fw-bold',
+                confirmUrl: url
+            });
+        } else {
+            if (confirm('Bạn có chắc chắn muốn lưu trữ khóa học "' + title + '"? Thao tác này không thể hoàn tác.')) {
+                submitAsPost(url);
+            }
+        }
+    }
+</script>
 
 <!-- Modal Create Course with Expert Assignment -->
 <div class="modal fade" id="newCourseModal" tabindex="-1" aria-labelledby="newCourseModalLabel" aria-hidden="true">
