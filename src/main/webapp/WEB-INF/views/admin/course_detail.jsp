@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Quản trị khóa học - Courson LMS" />
 <c:set var="rolePath" value="${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager' : '/admin'}" />
 <jsp:include page="../common/header.jsp" />
@@ -249,7 +250,8 @@ body {
 
                             <div class="mb-4">
                                 <label class="saas-label">Ghi chú kiểm duyệt (Moderation Note)</label>
-                                <textarea name="moderationNote" rows="2" class="form-control saas-input" maxlength="255" placeholder="Ghi chú lý do thay đổi trạng thái (tối đa 255 ký tự)..."></textarea>
+                                <textarea name="moderationNote" rows="3" class="form-control saas-input" maxlength="500" placeholder="Ghi chú lý do thay đổi trạng thái, yêu cầu sửa đổi hoặc phản hồi cho Chuyên gia...">${fn:escapeXml(course.moderationNote)}</textarea>
+                                <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i>Chuyên gia phụ trách khóa học sẽ đọc được ghi chú / lý do này trên Dashboard và trang Quản lý bài học.</small>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top">

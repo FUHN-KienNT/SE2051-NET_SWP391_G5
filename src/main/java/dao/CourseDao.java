@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class CourseDao {
-    private static final String SQL_FIND_ALL = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses ORDER BY id DESC";
-    private static final String SQL_FIND_BY_ID = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE id = ?";
-    private static final String SQL_FIND_BY_MANAGER_OR_EXPERT = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE manager_id = ? OR expert_id = ? ORDER BY id DESC";
-    private static final String SQL_INSERT = "INSERT INTO courses (title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
-    private static final String SQL_UPDATE = "UPDATE courses SET title = ?, category_id = ?, category_type = ?, description = ?, price = ?, status = ?, manager_id = ?, expert_id = ?, updated_at = ?, archive_at = ?, archive_notice = ? WHERE id = ?";
+    private static final String SQL_FIND_ALL = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice, moderation_note FROM courses ORDER BY id DESC";
+    private static final String SQL_FIND_BY_ID = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice, moderation_note FROM courses WHERE id = ?";
+    private static final String SQL_FIND_BY_MANAGER_OR_EXPERT = "SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice, moderation_note FROM courses WHERE manager_id = ? OR expert_id = ? ORDER BY id DESC";
+    private static final String SQL_INSERT = "INSERT INTO courses (title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice, moderation_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_UPDATE = "UPDATE courses SET title = ?, category_id = ?, category_type = ?, description = ?, price = ?, status = ?, manager_id = ?, expert_id = ?, updated_at = ?, archive_at = ?, archive_notice = ?, moderation_note = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM courses WHERE id = ?";
 
     public List<Course> findAll(Connection con) throws SQLException {
@@ -33,7 +33,7 @@ public class CourseDao {
     }
 
     public List<Course> searchPublished(Connection con, String keyword, Long categoryId) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE status = 'PUBLISHED' AND (archive_at IS NULL OR archive_at > NOW())");
+        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice, moderation_note FROM courses WHERE status = 'PUBLISHED' AND (archive_at IS NULL OR archive_at > NOW())");
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -66,7 +66,7 @@ public class CourseDao {
      * Tìm kiếm và lọc danh sách khóa học toàn hệ thống dành cho Admin.
      */
     public List<Course> searchAdmin(Connection con, String keyword, Long categoryId, Long managerId, String status) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice FROM courses WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT id, title, category_id, category_type, description, price, status, manager_id, expert_id, created_at, updated_at, archive_at, archive_notice, moderation_note FROM courses WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -153,6 +153,7 @@ public class CourseDao {
             ps.setObject(10, entity.getUpdatedAt() != null ? entity.getUpdatedAt() : now);
             ps.setObject(11, entity.getArchiveAt());
             ps.setString(12, entity.getArchiveNotice());
+            ps.setString(13, entity.getModerationNote());
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -184,7 +185,8 @@ public class CourseDao {
             ps.setObject(9, OffsetDateTime.now());
             ps.setObject(10, entity.getArchiveAt());
             ps.setString(11, entity.getArchiveNotice());
-            ps.setLong(12, entity.getId());
+            ps.setString(12, entity.getModerationNote());
+            ps.setLong(13, entity.getId());
             return ps.executeUpdate() > 0;
         }
     }
@@ -240,6 +242,7 @@ public class CourseDao {
         c.setUpdatedAt(rs.getObject("updated_at", OffsetDateTime.class));
         c.setArchiveAt(rs.getObject("archive_at", OffsetDateTime.class));
         c.setArchiveNotice(rs.getString("archive_notice"));
+        try { c.setModerationNote(rs.getString("moderation_note")); } catch (SQLException ignored) {}
         return c;
     }
 }

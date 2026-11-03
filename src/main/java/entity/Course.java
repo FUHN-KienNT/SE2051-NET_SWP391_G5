@@ -19,6 +19,7 @@ public class Course {
     private OffsetDateTime updatedAt;
     private OffsetDateTime archiveAt;
     private String archiveNotice;
+    private String moderationNote;
 
     public Course() {
     }
@@ -150,5 +151,13 @@ public class Course {
 
     public void setArchiveNotice(String archiveNotice) {
         this.archiveNotice = archiveNotice;
+    }
+
+    public String getModerationNote() {
+        return moderationNote;
+    }
+
+    public void setModerationNote(String moderationNote) {
+        this.moderationNote = moderationNote;
     }
 }

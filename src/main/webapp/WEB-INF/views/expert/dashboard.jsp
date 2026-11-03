@@ -948,7 +948,8 @@ body {
                 <table class="saas-table align-middle" id="coursesTable">
                     <thead>
                         <tr>
-                            <th style="width: 38%;">Khóa học</th>
+                            <th style="width: 50px;" class="text-center">STT</th>
+                            <th style="width: 36%;">Khóa học</th>
                             <th style="width: 17%;">Danh mục &amp; Học phí</th>
                             <th style="width: 16%;">Nội dung</th>
                             <th style="width: 14%;">Trạng thái</th>
@@ -959,7 +960,7 @@ body {
                         <c:choose>
                             <c:when test="${empty courses}">
                                 <tr id="emptyCourseRow">
-                                    <td colspan="5" class="text-center py-5">
+                                    <td colspan="6" class="text-center py-5">
                                         <div class="py-4">
                                             <div class="saas-stat-icon saas-icon-slate mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.5rem;">
                                                 <i class="bi bi-journal-plus"></i>
@@ -974,11 +975,12 @@ body {
                                 </tr>
                             </c:when>
                             <c:otherwise>
-                                <c:forEach var="c" items="${courses}">
+                                <c:forEach var="c" items="${courses}" varStatus="status">
                                     <tr class="course-row" id="courseRow-${c.id}" 
                                         data-status="${c.status}" 
                                         data-title="${fn:escapeXml(c.title)}" 
                                         data-category="${fn:escapeXml(c.categoryName != null ? c.categoryName : '')}">
+                                        <td class="text-center fw-bold text-muted" style="font-size: 0.875rem;">${status.count}</td>
                                         <td>
                                             <div class="course-info-wrap">
                                                 <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}" class="course-thumb-box">
@@ -995,6 +997,14 @@ body {
                                                         <span>${c.totalLessons} bài học</span>
                                                     </div>
                                                 </div>
+                                                <c:if test="${not empty c.moderationNote}">
+                                                    <div class="mt-2 p-2 rounded-2 bg-danger bg-opacity-10 border border-danger border-opacity-25" style="max-width: 440px;">
+                                                        <div class="d-flex align-items-center gap-1 text-danger fw-bold small mb-1">
+                                                            <i class="bi bi-chat-left-dots-fill"></i> Lý do / Góp ý từ Quản trị viên:
+                                                        </div>
+                                                        <div class="text-dark small" style="white-space: pre-wrap; font-size: 0.825rem; line-height: 1.4;">${fn:escapeXml(c.moderationNote)}</div>
+                                                    </div>
+                                                </c:if>
                                             </div>
                                         </td>
                                         <td>
@@ -1033,6 +1043,11 @@ body {
                                                 <c:when test="${c.status == 'ARCHIVED'}">
                                                     <span class="saas-badge saas-badge-archived" title="Đã ngừng nhận học viên mới">
                                                         <span class="badge-dot"></span>Đã lưu trữ
+                                                    </span>
+                                                </c:when>
+                                                <c:when test="${not empty c.moderationNote}">
+                                                    <span class="saas-badge" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;" title="Khóa học bị từ chối / Cần chỉnh sửa lại">
+                                                        <span class="badge-dot" style="background-color: #ef4444;"></span>Cần chỉnh sửa
                                                     </span>
                                                 </c:when>
                                                 <c:otherwise>
@@ -1100,6 +1115,14 @@ body {
                                                             </c:when>
                                                             
                                                         </c:choose>
+                                                        <c:if test="${not empty c.moderationNote}">
+                                                            <li>
+                                                                <button type="button" class="saas-dropdown-item text-danger fw-semibold w-100 border-0 bg-transparent text-start" onclick="showModerationNoteModal('${fn:escapeXml(c.title)}', '${fn:escapeXml(c.moderationNote)}')">
+                                                                    <i class="bi bi-chat-square-text text-danger"></i>Xem góp ý kiểm duyệt
+                                                                </button>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider my-1"></li>
+                                                        </c:if>
                                                         <li>
                                                             <a class="saas-dropdown-item" href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}">
                                                                 <i class="bi bi-patch-question text-warning"></i>Quản lý Quiz (${c.totalQuizzes})

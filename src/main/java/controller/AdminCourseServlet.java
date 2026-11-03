@@ -112,6 +112,7 @@ public class AdminCourseServlet extends HttpServlet {
         String idStr = req.getParameter("id");
         String fromDashboard = req.getParameter("fromDashboard");
         String targetStatus = req.getParameter("status");
+        String moderationNote = req.getParameter("moderationNote");
         if (idStr != null) {
             try {
                 long courseId = Long.parseLong(idStr.trim());
@@ -122,7 +123,7 @@ public class AdminCourseServlet extends HttpServlet {
                 } else {
                     newStatus = course.getStatus() == CourseStatus.PUBLISHED ? CourseStatus.DRAFT : CourseStatus.PUBLISHED;
                 }
-                courseService.updateCourseStatus(courseId, newStatus);
+                courseService.updateCourseStatus(courseId, newStatus, moderationNote);
             } catch (Exception ignored) {}
         }
         if ("true".equalsIgnoreCase(fromDashboard)) {
@@ -325,6 +326,7 @@ public class AdminCourseServlet extends HttpServlet {
         dto.setPrice(priceStr != null && !priceStr.trim().isEmpty() ? new BigDecimal(priceStr.trim()) : BigDecimal.ZERO);
         String statusStr = req.getParameter("status");
         dto.setStatus(statusStr != null ? CourseStatus.fromDb(statusStr) : CourseStatus.DRAFT);
+        dto.setModerationNote(req.getParameter("moderationNote"));
         
         // Gán Expert phụ trách khóa học (theo SRS)
         String expertIdStr = req.getParameter("expertId");

@@ -512,6 +512,30 @@ body {
             </div>
         </c:if>
 
+        <c:if test="${not empty course.moderationNote}">
+            <div class="alert alert-danger border-danger border-2 shadow-sm rounded-3 py-3 px-4 mb-4" style="background-color: #fef2f2;">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-danger bg-opacity-25 p-2 text-danger fs-4 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                        <i class="bi bi-chat-left-quote-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="fw-bold mb-1 text-danger">
+                                <i class="bi bi-shield-exclamation me-1"></i>Lý do / Góp ý kiểm duyệt từ Quản trị viên (Admin / Manager)
+                            </h6>
+                            <c:if test="${course.status == 'DRAFT'}">
+                                <span class="badge bg-danger text-white">Yêu cầu hoàn thiện</span>
+                            </c:if>
+                        </div>
+                        <div class="p-3 bg-white rounded-2 border border-danger border-opacity-25 mt-2 text-dark" style="font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap;">${fn:escapeXml(course.moderationNote)}</div>
+                        <p class="mb-0 text-muted small mt-2">
+                            <i class="bi bi-info-circle me-1"></i>Vui lòng điều chỉnh hoặc bổ sung nội dung bài giảng theo góp ý trên, sau đó nhấn <strong>"Gửi duyệt"</strong> để Quản trị viên phê duyệt lại.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </c:if>
+
         <c:if test="${course.status == 'PENDING_REVIEW'}">
             <div class="alert alert-warning border border-warning shadow-sm rounded-3 py-3 px-4 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">

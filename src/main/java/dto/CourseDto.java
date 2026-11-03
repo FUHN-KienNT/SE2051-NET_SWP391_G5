@@ -22,6 +22,7 @@ public class CourseDto {
     private List<ModuleDto> modules = new ArrayList<>();
     private OffsetDateTime archiveAt;
     private String archiveNotice;
+    private String moderationNote;
 
     public CourseDto() {
     }
@@ -220,6 +221,14 @@ public class CourseDto {
 
     public void setArchiveNotice(String archiveNotice) {
         this.archiveNotice = archiveNotice;
+    }
+
+    public String getModerationNote() {
+        return moderationNote;
+    }
+
+    public void setModerationNote(String moderationNote) {
+        this.moderationNote = moderationNote;
     }
 
     public boolean isArchiveScheduled() {

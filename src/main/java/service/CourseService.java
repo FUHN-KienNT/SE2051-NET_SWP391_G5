@@ -393,6 +393,8 @@ public class CourseService {
                         course.setArchiveAt(dto.getArchiveAt());
                     if (dto.getArchiveNotice() != null)
                         course.setArchiveNotice(dto.getArchiveNotice());
+                    if (dto.getModerationNote() != null)
+                        course.setModerationNote(dto.getModerationNote());
                     courseDao.update(con, course);
                     id = course.getId();
                 } else {
@@ -416,6 +418,7 @@ public class CourseService {
                     course.setExpertId(dto.getExpertId());
                     course.setArchiveAt(dto.getArchiveAt());
                     course.setArchiveNotice(dto.getArchiveNotice());
+                    course.setModerationNote(dto.getModerationNote());
                     id = courseDao.insert(con, course);
                 }
                 con.commit();
@@ -539,6 +542,10 @@ public class CourseService {
      * 2. Gọi courseDao.update(con, course) để cập nhật bảng 'courses'.
      */
     public void updateCourseStatus(long courseId, CourseStatus targetStatus) {
+        updateCourseStatus(courseId, targetStatus, null);
+    }
+
+    public void updateCourseStatus(long courseId, CourseStatus targetStatus, String moderationNote) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học."));
@@ -580,6 +587,11 @@ public class CourseService {
             }
 
             course.setStatus(targetStatus);
+            if (moderationNote != null && !moderationNote.trim().isEmpty()) {
+                course.setModerationNote(moderationNote.trim());
+            } else if (targetStatus == CourseStatus.PUBLISHED) {
+                course.setModerationNote(null);
+            }
             courseDao.update(con, course);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật trạng thái khóa học: " + e.getMessage(), e);
@@ -816,9 +828,17 @@ public class CourseService {
             if (quizzes != null && !quizzes.isEmpty()) {
                 throw new IllegalArgumentException("Không thể xóa chương học này vì vẫn còn " + quizzes.size() + " bài kiểm tra (Quiz) bên trong. Vui lòng di chuyển hoặc xóa bài kiểm tra trước khi xóa chương.");
             }
+            Module m = moduleDao.findById(con, moduleId).orElse(null);
             boolean deleted = moduleDao.delete(con, moduleId);
             if (!deleted) {
                 throw new IllegalArgumentException("Không tìm thấy chương cần xóa.");
+            }
+            if (m != null) {
+                try (PreparedStatement psShift = con.prepareStatement("UPDATE modules SET order_index = order_index - 1 WHERE course_id = ? AND order_index > ?")) {
+                    psShift.setLong(1, m.getCourseId());
+                    psShift.setInt(2, m.getOrderIndex());
+                    psShift.executeUpdate();
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa chương học: " + e.getMessage(), e);
@@ -1111,6 +1131,11 @@ public class CourseService {
             boolean deleted = lessonDao.delete(con, lessonId);
             if (!deleted) {
                 throw new IllegalArgumentException("Không thể xóa bài học.");
+            }
+            try (PreparedStatement psShift = con.prepareStatement("UPDATE lessons SET order_index = order_index - 1 WHERE module_id = ? AND order_index > ?")) {
+                psShift.setLong(1, l.getModuleId());
+                psShift.setInt(2, l.getOrderIndex());
+                psShift.executeUpdate();
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa bài học: " + e.getMessage(), e);
@@ -1834,6 +1859,7 @@ public class CourseService {
         dto.setExpertId(course.getExpertId());
         dto.setArchiveAt(course.getArchiveAt());
         dto.setArchiveNotice(course.getArchiveNotice());
+        dto.setModerationNote(course.getModerationNote());
 
         try (Connection con = DbConnection.getConnection()) {
             if (course.getCategoryId() != null) {

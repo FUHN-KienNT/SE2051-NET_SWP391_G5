@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Quản lý khóa học - Courson LMS" />
 <c:set var="rolePath" value="${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager' : '/admin'}" />
 <jsp:include page="../common/header.jsp" />
@@ -317,7 +318,7 @@ body {
                 <table class="saas-table">
                     <thead>
                         <tr>
-                            <th class="ps-3" style="width: 55px;">ID</th>
+                            <th class="ps-3 text-center" style="width: 65px;">STT</th>
                             <th style="min-width: 190px;">Tên khóa học</th>
                             <th style="width: 135px;">Danh mục</th>
                             <th style="width: 140px;">Người quản lý</th>
@@ -338,9 +339,9 @@ body {
                                 </tr>
                             </c:when>
                             <c:otherwise>
-                                <c:forEach var="c" items="${courses}">
+                                <c:forEach var="c" items="${courses}" varStatus="status">
                                     <tr>
-                                        <td class="ps-3 fw-semibold text-muted">#${c.id}</td>
+                                        <td class="ps-3 text-center"><span class="fw-bold text-dark">${status.count}</span><small class="text-muted d-block" style="font-size: 0.725rem;">#${c.id}</small></td>
                                         <td>
                                             <div class="fw-bold text-dark text-truncate" style="max-width: 260px;" title="${c.title}">${c.title}</div>
                                             <small class="text-muted text-truncate d-block" style="max-width: 240px;" title="${c.description}">

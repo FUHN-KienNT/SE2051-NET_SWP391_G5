@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Admin Dashboard - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
@@ -579,5 +580,19 @@ body {
         </div>
     </div>
 </main>
+
+<script>
+    function rejectPendingCourse(courseId, courseTitle) {
+        const reason = prompt('Nhập lý do từ chối khóa học "' + courseTitle + '" để phản hồi cho Chuyên gia:', '');
+        if (reason !== null) {
+            if (!reason.trim()) {
+                alert('Vui lòng nhập lý do từ chối để Chuyên gia biết cần chỉnh sửa gì.');
+                return;
+            }
+            window.location.href = '${pageContext.request.contextPath}/admin/toggle-status?id=' + courseId + '&status=DRAFT&fromDashboard=true&moderationNote=' + encodeURIComponent(reason.trim());
+        }
+    }
+</script>
+
 
 <jsp:include page="../common/footer.jsp" />
