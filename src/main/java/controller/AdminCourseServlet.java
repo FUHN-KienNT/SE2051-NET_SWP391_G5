@@ -264,17 +264,18 @@ public class AdminCourseServlet extends HttpServlet {
      */
     private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         CourseDto dto = bindCourse(req);
-        if (dto.getId() == null || dto.getId() <= 0) {
-            resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=" + java.net.URLEncoder.encode("Admin và Manager không trực tiếp tạo khóa học. Khóa học phải do Expert khởi tạo và gửi duyệt.", "UTF-8"));
-            return;
-        }
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (dto.getManagerId() == null && currentUser != null) {
             dto.setManagerId(currentUser.getId());
         }
         try {
+            boolean isNew = (dto.getId() == null || dto.getId() <= 0);
             long id = courseService.saveCourse(dto);
-            resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/course-detail?id=" + id + "&success=true");
+            if (isNew) {
+                resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?created=true");
+            } else {
+                resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/course-detail?id=" + id + "&success=true");
+            }
         } catch (Exception e) {
             String encodedErr = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
             resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=" + encodedErr);

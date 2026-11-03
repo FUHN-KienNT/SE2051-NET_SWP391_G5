@@ -244,22 +244,40 @@ body {
         </div>
 
         <!-- Alerts -->
+        <c:if test="${param.created == 'true'}">
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center justify-content-between rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success fs-6 flex-shrink-0"></i>
+                    <span>Tạo mới và phân công khóa học cho Chuyên gia thành công!</span>
+                </div>
+                <button type="button" class="btn-close position-static p-1 m-0" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </c:if>
         <c:if test="${param.success == 'true'}">
-            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>Cập nhật thông tin khóa học thành công!
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center justify-content-between rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success fs-6 flex-shrink-0"></i>
+                    <span>Cập nhật thông tin khóa học thành công!</span>
+                </div>
+                <button type="button" class="btn-close position-static p-1 m-0" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </c:if>
         <c:if test="${param.deleted == 'true'}">
-            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>Đã xóa khóa học thành công!
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center justify-content-between rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success fs-6 flex-shrink-0"></i>
+                    <span>Đã xóa khóa học thành công! Thứ tự khóa học đã được cập nhật.</span>
+                </div>
+                <button type="button" class="btn-close position-static p-1 m-0" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </c:if>
         <c:if test="${not empty param.error}">
-            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>${param.error}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center justify-content-between rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-6 flex-shrink-0"></i>
+                    <span>${param.error}</span>
+                </div>
+                <button type="button" class="btn-close position-static p-1 m-0" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </c:if>
 
