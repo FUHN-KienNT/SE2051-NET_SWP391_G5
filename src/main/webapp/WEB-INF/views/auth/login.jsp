@@ -619,9 +619,12 @@
                             <i class="bi bi-envelope-exclamation" style="font-size: 18px;"></i>
                             <span>Tài khoản chưa được kích hoạt email.</span>
                         </div>
-                        <a href="${pageContext.request.contextPath}/auth/check-email?email=<c:out value='${inactiveEmail}'/>" style="color: #ffffff; background: #F38020; text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-                            Gửi lại email xác nhận <i class="bi bi-arrow-right"></i>
-                        </a>
+                        <form action="${pageContext.request.contextPath}/auth/resend-verification" method="POST" style="margin: 0; display: inline;">
+                            <input type="hidden" name="email" value="<c:out value='${inactiveEmail}'/>">
+                            <button type="submit" style="color: #ffffff; background: #F38020; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#e56b00'" onmouseout="this.style.background='#F38020'">
+                                Gửi lại email xác nhận <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </form>
                     </div>
                 </c:if>
 

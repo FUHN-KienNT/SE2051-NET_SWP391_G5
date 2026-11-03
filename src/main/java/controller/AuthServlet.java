@@ -78,6 +78,13 @@ public class AuthServlet extends HttpServlet {
                 // Bước 2: Google redirect về đây với ?code=... sau khi người dùng đồng ý
                 googleCallback(req, resp);
                 break;
+            case "set-password":
+                if ("POST".equalsIgnoreCase(method)) {
+                    setPassword(req, resp);
+                } else {
+                    showSetPassword(req, resp);
+                }
+                break;
             default:
                 showLogin(req, resp);
                 break;
@@ -276,19 +283,21 @@ public class AuthServlet extends HttpServlet {
 
             if (session == null) session = req.getSession(true);
             if (result.getStatus() == GoogleAuthResult.Status.NEW_USER_CREATED) {
-                session.setAttribute("flashToastType", "success");
+                session.setAttribute("flashToastType", "info");
                 session.setAttribute("flashToastMessage",
-                    "Đăng nhập Google thành công! Thông tin tài khoản và mật khẩu đã được gửi về Gmail của bạn.");
+                    "Đăng nhập Google thành công! Vui lòng thiết lập mật khẩu để hoàn tất tài khoản của bạn.");
+                resp.sendRedirect(ctx + "/auth/set-password");
+                return;
             } else if (result.getStatus() == GoogleAuthResult.Status.UNVERIFIED_ACTIVATED) {
                 session.setAttribute("flashToastType", "success");
                 session.setAttribute("flashToastMessage",
-                    "Đăng nhập Google thành công! Tài khoản của bạn đã được kích hoạt. Tên đăng nhập và mật khẩu được giữ nguyên như khi đăng ký.");
+                    "Đăng nhập Google thành công! Tài khoản của bạn đã được kích hoạt.");
+                redirectByRole(user, req, resp);
             } else {
                 session.setAttribute("flashToastType", "success");
                 session.setAttribute("flashToastMessage", "Đăng nhập bằng Google thành công! Chào mừng bạn quay trở lại.");
+                redirectByRole(user, req, resp);
             }
-
-            redirectByRole(user, req, resp);
 
         } catch (Exception e) {
             String msg = e.getMessage();
@@ -318,6 +327,41 @@ public class AuthServlet extends HttpServlet {
             resp.sendRedirect(ctx + "/admin/courses");
         } else {
             resp.sendRedirect(ctx + "/home");
+        }
+    }
+    private void showSetPassword(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
+    }
+
+    private void setPassword(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        String password = req.getParameter("password");
+        String confirmPassword = req.getParameter("confirmPassword");
+
+        try {
+            authService.setPassword(currentUser.getId(), password, confirmPassword);
+            HttpSession session = req.getSession(true);
+            session.setAttribute("flashToastType", "success");
+            session.setAttribute("flashToastMessage", "Thiết lập mật khẩu thành công! Chào mừng bạn đến với Courson LMS.");
+            redirectByRole(currentUser, req, resp);
+        } catch (IllegalArgumentException e) {
+            req.setAttribute("error", e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
+        } catch (Exception e) {
+            req.setAttribute("error", "Không thể thiết lập mật khẩu: " + e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
         }
     }
 }

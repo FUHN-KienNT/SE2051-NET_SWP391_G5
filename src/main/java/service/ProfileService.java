@@ -132,6 +132,27 @@ public class ProfileService {
         }
     }
 
+    public void changePassword(long userId, String currentPassword, String newPassword, String confirmPassword) {
+        try (Connection con = DbConnection.getConnection()) {
+            String currentHash = profileDao.getPasswordHash(con, userId);
+            String error = ProfileValidator.validatePassword(currentPassword, newPassword, confirmPassword, currentHash);
+            if (error != null) {
+                throw new IllegalArgumentException(error);
+            }
+            String hash = util.PasswordUtil.hash(newPassword);
+            boolean ok = profileDao.updatePassword(con, userId, hash);
+            if (!ok) {
+                throw new IllegalStateException("Không tìm thấy người dùng hoặc không thể đổi mật khẩu.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi CSDL khi cập nhật mật khẩu: " + e.getMessage(), e);
+        }
+    }
+
+    public void changePassword(long userId, String newPassword, String confirmPassword) {
+        changePassword(userId, null, newPassword, confirmPassword);
+    }
+
     public String updateAvatar(long userId, Part filePart) {
         String error = ProfileValidator.validateAvatar(filePart);
         if (error != null) {

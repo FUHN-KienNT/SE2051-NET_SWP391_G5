@@ -9,19 +9,22 @@ echo ======================================================================
 echo.
 
 :: 1. Nhan dien psql
-set "PG_BIN=C:\Program Files\PostgreSQL\18\bin"
-if not exist "%PG_BIN%\psql.exe" (
-    for %%v in (18 17 16 15 14) do (
-        if exist "C:\Program Files\PostgreSQL\%%v\bin\psql.exe" (
-            set "PG_BIN=C:\Program Files\PostgreSQL\%%v\bin"
-        )
-    )
-)
-
-set "PSQL_CMD=%PG_BIN%\psql.exe"
+set "PSQL_CMD="
 where psql >nul 2>&1
 if %errorlevel% equ 0 (
     set "PSQL_CMD=psql"
+) else (
+    for %%d in (C: D:) do (
+        if not defined PSQL_CMD (
+            if exist "%%d\progestsql\bin\psql.exe" set "PSQL_CMD=%%d\progestsql\bin\psql.exe"
+            for %%v in (18 17 16 15 14) do (
+                if not defined PSQL_CMD (
+                    if exist "%%d\Program Files\PostgreSQL\%%v\bin\psql.exe" set "PSQL_CMD=%%d\Program Files\PostgreSQL\%%v\bin\psql.exe"
+                    if exist "%%d\PostgreSQL\%%v\bin\psql.exe" set "PSQL_CMD=%%d\PostgreSQL\%%v\bin\psql.exe"
+                )
+            )
+        )
+    )
 )
 
 if not exist "%PSQL_CMD%" (

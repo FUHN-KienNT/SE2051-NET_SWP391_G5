@@ -26,6 +26,10 @@ public class UserService {
         this.settingDao = settingDao;
     }
 
+    /**
+     * Lấy toàn bộ danh sách người dùng trong hệ thống.
+     * 1. Gọi userDao.findAll(con) để truy vấn bảng 'users'.
+     */
     public List<UserDto> getUsers() {
         try (Connection con = DbConnection.getConnection()) {
             List<User> list = userDao.findAll(con);
@@ -39,6 +43,10 @@ public class UserService {
         }
     }
 
+    /**
+     * Lấy thông tin chi tiết một người dùng theo ID.
+     * 1. Gọi userDao.findById(con, userId) để truy vấn bảng 'users'.
+     */
     public UserDto getUser(long userId) {
         try (Connection con = DbConnection.getConnection()) {
             return userDao.findById(con, userId)
@@ -49,6 +57,11 @@ public class UserService {
         }
     }
 
+    /**
+     * Thêm mới hoặc cập nhật thông tin người dùng / phân quyền.
+     * 1. Gọi validateUser(dto) và ensureUniqueIdentity(dto) để kiểm tra hợp lệ.
+     * 2. Gọi userDao.insert hoặc userDao.update để lưu vào bảng 'users'.
+     */
     public long saveUser(UserDto dto) {
         validateUser(dto);
         ensureUniqueIdentity(dto);
@@ -110,6 +123,10 @@ public class UserService {
         }
     }
 
+    /**
+     * Khóa hoặc mở khóa trạng thái tài khoản người dùng (ACTIVE / BANNED).
+     * 1. Gọi userDao.updateStatus(con, userId, status) để cập nhật bảng 'users'.
+     */
     public void changeStatus(long userId, UserStatus status) {
         if (status == null) {
             throw new IllegalArgumentException("Trạng thái không hợp lệ.");

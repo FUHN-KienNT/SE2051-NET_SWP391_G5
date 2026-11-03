@@ -64,6 +64,10 @@ public class ProfileServlet extends HttpServlet {
             case "avatar":
                 handleUpdateAvatar(req, resp, currentUser);
                 break;
+            case "change-password":
+            case "password":
+                handleChangePassword(req, resp, currentUser);
+                break;
             case "update-field":
             case "":
                 handleUpdateField(req, resp, currentUser);
@@ -98,6 +102,25 @@ public class ProfileServlet extends HttpServlet {
         }
     }
 
+    private void handleChangePassword(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
+            throws IOException {
+        String currentPassword = req.getParameter("currentPassword");
+        String newPassword = req.getParameter("newPassword");
+        String confirmPassword = req.getParameter("confirmPassword");
+
+        if (newPassword == null) {
+            newPassword = req.getParameter("value");
+        }
+
+        try {
+            profileService.changePassword(currentUser.getId(), currentPassword, newPassword, confirmPassword);
+            sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "password", "Đổi mật khẩu thành công!", null);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, "password", e.getMessage(), null);
+        } catch (Exception e) {
+            sendJsonResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "password", "Lỗi máy chủ khi đổi mật khẩu: " + e.getMessage(), null);
+        }
+    }
     private void handleUpdateField(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
             throws IOException {
         String field = req.getParameter("field");
@@ -145,6 +168,10 @@ public class ProfileServlet extends HttpServlet {
                     SessionUtil.setCurrentUser(req, currentUser);
                     String dateStr = updated != null ? updated.toString() : "";
                     sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "birthDate", "Cập nhật ngày sinh thành công!", dateStr);
+                    break;
+                }
+                case "password": {
+                    handleChangePassword(req, resp, currentUser);
                     break;
                 }
                 default:

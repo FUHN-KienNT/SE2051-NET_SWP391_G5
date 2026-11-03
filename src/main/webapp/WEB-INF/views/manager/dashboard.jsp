@@ -441,7 +441,7 @@ body {
                                                 </td>
                                                 <td>
                                                     <c:choose>
-                                                        <c:when test="${reg.paymentStatus == 'COMPLETED'}">
+                                                        <c:when test="${reg.paymentStatus == 'SUCCESS' || reg.paymentStatus == 'FREE'}">
                                                             <span class="saas-badge saas-badge-success">
                                                                 <span class="badge-dot"></span> Thành công
                                                             </span>
@@ -459,8 +459,7 @@ body {
                                                     </c:choose>
                                                 </td>
                                                 <td class="pe-3 text-end text-muted small text-nowrap">
-                                                    <fmt:parseDate value="${reg.registrationDate}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDate" type="both" />
-                                                    <fmt:formatDate value="${parsedDate}" pattern="dd/MM/yyyy HH:mm"/>
+                                                    ${reg.formattedRegistrationDate}
                                                 </td>
                                             </tr>
                                         </c:forEach>

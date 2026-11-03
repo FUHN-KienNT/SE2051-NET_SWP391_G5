@@ -26,7 +26,10 @@ public class RegistrationDao {
     private static final String SQL_UPDATE_STATUS = "UPDATE registrations SET status = ? WHERE id = ?";
     private static final String SQL_FIND_BY_MANAGER = "SELECT r.* FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ? ORDER BY r.id DESC";
     private static final String SQL_COUNT_BY_MANAGER = "SELECT COUNT(*) FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ?";
-    private static final String SQL_SUM_REVENUE_BY_MANAGER = "SELECT SUM(r.payment_amount) FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ? AND r.payment_status = 'COMPLETED'";
+    private static final String SQL_SUM_REVENUE_BY_MANAGER = "SELECT SUM(r.payment_amount) FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ? AND r.payment_status IN ('SUCCESS', 'COMPLETED')";
+    private static final String SQL_SUM_TOTAL_REVENUE = "SELECT SUM(payment_amount) FROM registrations WHERE payment_status IN ('SUCCESS', 'COMPLETED')";
+    private static final String SQL_COUNT_PAID_REGISTRATIONS = "SELECT COUNT(*) FROM registrations WHERE payment_status IN ('SUCCESS', 'COMPLETED')";
+    private static final String SQL_COUNT_TOTAL_REGISTRATIONS = "SELECT COUNT(*) FROM registrations";
 
     public Optional<Registration> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
@@ -179,6 +182,49 @@ public class RegistrationDao {
             }
         }
         return BigDecimal.ZERO;
+    }
+
+    /**
+     * Tính tổng doanh thu hệ thống từ các đơn đăng ký đã thanh toán thành công (SUCCESS / COMPLETED).
+     */
+    public BigDecimal sumTotalRevenue(Connection con) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_SUM_TOTAL_REVENUE)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal sum = rs.getBigDecimal(1);
+                    return sum != null ? sum : BigDecimal.ZERO;
+                }
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * Đếm tổng số lượt đăng ký đã thanh toán thành công trong toàn hệ thống.
+     */
+    public int countTotalPaidRegistrations(Connection con) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_COUNT_PAID_REGISTRATIONS)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Đếm tổng số lượt đăng ký (tất cả trạng thái) trong toàn hệ thống.
+     */
+    public int countTotalRegistrations(Connection con) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_COUNT_TOTAL_REGISTRATIONS)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
     }
 
     private Registration mapRow(ResultSet rs) throws SQLException {

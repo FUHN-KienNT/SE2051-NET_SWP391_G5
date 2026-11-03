@@ -123,9 +123,10 @@
         border-color: #F38020;
         color: #ffffff;
         font-weight: 600;
-        padding: 8px 20px;
+        padding: 9px 24px;
         border-radius: 8px;
         transition: all 0.2s;
+        white-space: nowrap;
     }
     .btn-cf-save:hover, .btn-cf-save:focus {
         background-color: #E56B00;
@@ -147,6 +148,24 @@
     .password-toggle-btn:hover {
         color: #475569;
     }
+    .strength-bars {
+        display: none;
+        gap: 4px;
+        margin-top: 6px;
+    }
+    .strength-bars.show {
+        display: flex;
+    }
+    .s-bar {
+        height: 3px;
+        flex: 1;
+        border-radius: 2px;
+        background-color: #E5E7EB;
+        transition: background-color 0.2s;
+    }
+    .s-bar.weak   { background-color: #ed4956; }
+    .s-bar.fair   { background-color: #f5a623; }
+    .s-bar.strong { background-color: #3ee04b; }
 </style>
 
 <main class="main-content py-5">
@@ -257,16 +276,14 @@
                             <span class="badge bg-light text-muted border">Bắt buộc</span>
                         </div>
                         <p class="text-muted small mb-3">Tên hiển thị trên chứng chỉ và toàn bộ hệ thống Courson LMS.</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="inputFullName" value="<c:out value='${user.fullName}' />" placeholder="Nhập họ và tên..." maxlength="50" />
-                                <div class="field-error-msg" id="errorFullName"></div>
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSaveFullName">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu họ tên
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="inputFullName" value="<c:out value='${user.fullName}' />" placeholder="Nhập họ và tên..." maxlength="50" />
+                            <div class="field-error-msg" id="errorFullName"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSaveFullName">
+                                Lưu họ tên
+                            </button>
                         </div>
                     </div>
 
@@ -277,16 +294,14 @@
                             <span class="badge bg-light text-muted border">Tùy chọn</span>
                         </div>
                         <p class="text-muted small mb-3">Số điện thoại 10 chữ số tại Việt Nam (hỗ trợ đầu số 0 hoặc +84).</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="inputPhone" value="<c:out value='${user.phone}' />" placeholder="Ví dụ: 0912345678 hoặc +84912345678" maxlength="15" />
-                                <div class="field-error-msg" id="errorPhone"></div>
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSavePhone">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu SĐT
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="inputPhone" value="<c:out value='${user.phone}' />" placeholder="Ví dụ: 0912345678 hoặc +84912345678" maxlength="15" />
+                            <div class="field-error-msg" id="errorPhone"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSavePhone">
+                                Lưu số điện thoại
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -302,19 +317,17 @@
                             <span class="badge bg-light text-muted border">Bắt buộc</span>
                         </div>
                         <p class="text-muted small mb-3">Độ dài 4-30 ký tự, chỉ gồm chữ cái, chữ số hoặc dấu gạch dưới (_).</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white text-muted">@</span>
-                                    <input type="text" class="form-control" id="inputUsername" value="<c:out value='${user.username}' />" placeholder="Tên đăng nhập..." maxlength="30" />
-                                </div>
-                                <div class="field-error-msg" id="errorUsername"></div>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted">@</span>
+                                <input type="text" class="form-control" id="inputUsername" value="<c:out value='${user.username}' />" placeholder="Tên đăng nhập..." maxlength="30" />
                             </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSaveUsername">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu tên đăng nhập
-                                </button>
-                            </div>
+                            <div class="field-error-msg" id="errorUsername"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSaveUsername">
+                                Lưu tên đăng nhập
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -326,13 +339,33 @@
 
                     <div class="profile-field-card">
                         <div class="mb-3">
+                            <label class="form-label fw-bold text-dark mb-1">Mật khẩu hiện tại</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="inputCurrentPassword" placeholder="Nhập mật khẩu hiện tại" />
+                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" data-target="inputCurrentPassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="field-error-msg" id="errorCurrentPassword"></div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-bold text-dark mb-1">Mật khẩu mới</label>
                             <div class="input-group">
-                                <input type="password" class="form-control" id="inputNewPassword" placeholder="Tối thiểu 6 ký tự" />
+                                <input type="password" class="form-control" id="inputNewPassword" placeholder="Nhập mật khẩu mới (8–32 ký tự)" />
                                 <button class="btn btn-outline-secondary password-toggle-btn" type="button" data-target="inputNewPassword">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
+                            <div class="strength-bars" id="profileStrengthBars">
+                                <div class="s-bar" id="pb1"></div>
+                                <div class="s-bar" id="pb2"></div>
+                                <div class="s-bar" id="pb3"></div>
+                                <div class="s-bar" id="pb4"></div>
+                            </div>
+                            <small class="form-text text-muted d-block mt-1" style="font-size: 0.8rem;">
+                                Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.
+                            </small>
+                            <div class="field-error-msg" id="errorNewPassword"></div>
                         </div>
 
                         <div class="mb-3">
@@ -346,9 +379,9 @@
                             <div class="field-error-msg" id="errorPassword"></div>
                         </div>
 
-                        <div class="text-end">
+                        <div class="d-flex justify-content-end">
                             <button type="button" class="btn btn-cf-save" id="btnSavePassword">
-                                <i class="bi bi-shield-check me-1"></i>Đổi mật khẩu
+                                Đổi mật khẩu
                             </button>
                         </div>
                     </div>
@@ -388,16 +421,14 @@
                             <span class="badge bg-light text-muted border">Tùy chọn</span>
                         </div>
                         <p class="text-muted small mb-3">Độ tuổi học viên hợp lệ từ 10 đến 120 tuổi.</p>
-                        <div class="row g-2 align-items-start">
-                            <div class="col-sm-8">
-                                <input type="date" class="form-control" id="inputBirthDate" value="${user.birthDate}" />
-                                <div class="field-error-msg" id="errorBirthDate"></div>
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="button" class="btn btn-cf-save w-100" id="btnSaveBirthDate">
-                                    <i class="bi bi-check-lg me-1"></i>Lưu ngày sinh
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <input type="date" class="form-control" id="inputBirthDate" value="${user.birthDate}" />
+                            <div class="field-error-msg" id="errorBirthDate"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-cf-save" id="btnSaveBirthDate">
+                                Lưu ngày sinh
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -558,20 +589,104 @@
         });
 
         const btnSavePassword = document.getElementById('btnSavePassword');
+        const inputCurrentPassword = document.getElementById('inputCurrentPassword');
         const inputNewPassword = document.getElementById('inputNewPassword');
         const inputConfirmPassword = document.getElementById('inputConfirmPassword');
+        const errorCurrentPassword = document.getElementById('errorCurrentPassword');
+        const errorNewPassword = document.getElementById('errorNewPassword');
         const errorPassword = document.getElementById('errorPassword');
 
-        btnSavePassword.addEventListener('click', function () {
-            errorPassword.style.display = 'none';
-            errorPassword.textContent = '';
+        const STRONG_RE = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]).{8,32}$/;
 
+        function passwordScore(pw) {
+            let s = 0;
+            if (pw.length >= 8) s++;
+            if (/[A-Z]/.test(pw)) s++;
+            if (/\d/.test(pw)) s++;
+            if (/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(pw)) s++;
+            return s;
+        }
+
+        function updateBars(score) {
+            const bars = [document.getElementById('pb1'), document.getElementById('pb2'),
+                document.getElementById('pb3'), document.getElementById('pb4')];
+            bars.forEach(b => b.className = 's-bar');
+            const cls = score <= 1 ? 'weak' : score <= 2 ? 'fair' : 'strong';
+            for (let i = 0; i < score; i++) {
+                bars[i].classList.add(cls);
+            }
+        }
+
+        function clearPasswordErrors() {
+            if (errorCurrentPassword) {
+                errorCurrentPassword.style.display = 'none';
+                errorCurrentPassword.textContent = '';
+            }
+            if (errorNewPassword) {
+                errorNewPassword.style.display = 'none';
+                errorNewPassword.textContent = '';
+            }
+            if (errorPassword) {
+                errorPassword.style.display = 'none';
+                errorPassword.textContent = '';
+            }
+        }
+
+        if (inputCurrentPassword) {
+            inputCurrentPassword.addEventListener('input', function () {
+                if (errorCurrentPassword) {
+                    errorCurrentPassword.style.display = 'none';
+                    errorCurrentPassword.textContent = '';
+                }
+            });
+        }
+
+        inputNewPassword.addEventListener('input', function () {
+            if (errorNewPassword) {
+                errorNewPassword.style.display = 'none';
+                errorNewPassword.textContent = '';
+            }
+            const barsEl = document.getElementById('profileStrengthBars');
+            if (this.value.length > 0) {
+                barsEl.classList.add('show');
+                updateBars(passwordScore(this.value));
+            } else {
+                barsEl.classList.remove('show');
+            }
+        });
+
+        inputConfirmPassword.addEventListener('input', function () {
+            if (errorPassword) {
+                errorPassword.style.display = 'none';
+                errorPassword.textContent = '';
+            }
+        });
+
+        btnSavePassword.addEventListener('click', function () {
+            clearPasswordErrors();
+
+            const pOld = inputCurrentPassword ? inputCurrentPassword.value : '';
             const p1 = inputNewPassword.value;
             const p2 = inputConfirmPassword.value;
 
-            if (!p1 || p1.length < 6) {
-                errorPassword.textContent = 'Mật khẩu mới phải có tối thiểu 6 ký tự.';
-                errorPassword.style.display = 'block';
+            if (!pOld) {
+                errorCurrentPassword.textContent = 'Vui lòng nhập mật khẩu hiện tại.';
+                errorCurrentPassword.style.display = 'block';
+                return;
+            }
+            if (!p1) {
+                errorNewPassword.textContent = 'Mật khẩu mới không được để trống.';
+                errorNewPassword.style.display = 'block';
+                return;
+            }
+            if (!STRONG_RE.test(p1)) {
+                errorNewPassword.textContent = 'Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.';
+                errorNewPassword.style.display = 'block';
+                return;
+            }
+            if (pOld === p1) {
+                errorNewPassword.textContent = 'Mật khẩu mới không được trùng với mật khẩu hiện tại.';
+                errorNewPassword.style.display = 'block';
                 return;
             }
             if (p1 !== p2) {
@@ -580,12 +695,55 @@
                 return;
             }
 
-            // TODO: Kết nối API đổi mật khẩu thực tế khi triển khai tính năng đổi mật khẩu
-            showAlert('Chức năng đổi mật khẩu hiện đang được nâng cấp và sẽ sớm ra mắt!', 'success');
-            inputNewPassword.value = '';
-            inputConfirmPassword.value = '';
-        });
+            const originalHtml = btnSavePassword.innerHTML;
+            btnSavePassword.disabled = true;
+            btnSavePassword.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Đang đổi mật khẩu...';
 
+            const params = new URLSearchParams();
+            params.append('currentPassword', pOld);
+            params.append('newPassword', p1);
+            params.append('confirmPassword', p2);
+
+            fetch(contextPath + '/profile/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: params.toString()
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnSavePassword.disabled = false;
+                btnSavePassword.innerHTML = originalHtml;
+
+                if (data.success) {
+                    showAlert(data.message || 'Đổi mật khẩu thành công!', 'success');
+                    if (inputCurrentPassword) inputCurrentPassword.value = '';
+                    inputNewPassword.value = '';
+                    inputConfirmPassword.value = '';
+                    const barsEl = document.getElementById('profileStrengthBars');
+                    if (barsEl) barsEl.classList.remove('show');
+                } else {
+                    const msg = data.message || 'Đã có lỗi xảy ra khi đổi mật khẩu.';
+                    if (msg.includes('hiện tại') || msg.includes('mật khẩu cũ')) {
+                        errorCurrentPassword.textContent = msg;
+                        errorCurrentPassword.style.display = 'block';
+                    } else if (msg.includes('khớp') || msg.includes('xác nhận')) {
+                        errorPassword.textContent = msg;
+                        errorPassword.style.display = 'block';
+                    } else {
+                        errorNewPassword.textContent = msg;
+                        errorNewPassword.style.display = 'block';
+                    }
+                }
+            })
+            .catch(err => {
+                btnSavePassword.disabled = false;
+                btnSavePassword.innerHTML = originalHtml;
+                errorPassword.textContent = 'Lỗi kết nối máy chủ: ' + err.message;
+                errorPassword.style.display = 'block';
+            });
+        });
         // 9. Avatar Upload Handler
         const btnTriggerAvatar = document.getElementById('btnTriggerAvatar');
         const avatarFileInput = document.getElementById('avatarFileInput');

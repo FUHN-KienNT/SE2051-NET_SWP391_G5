@@ -100,6 +100,10 @@ public class CourseService {
         }
     }
 
+    /**
+     * Tìm kiếm và lọc danh sách khóa học cho Admin theo từ khóa, danh mục, manager, trạng thái.
+     * 1. Gọi courseDao.searchAdmin(...) để truy vấn bảng 'courses'.
+     */
     public List<CourseDto> searchAdminCourses(String keyword, Long categoryId, Long managerId, String status) {
         try (Connection con = DbConnection.getConnection()) {
             List<Course> list = courseDao.searchAdmin(con, keyword, categoryId, managerId, status);
@@ -113,6 +117,10 @@ public class CourseService {
         }
     }
 
+    /**
+     * Lấy chi tiết toàn bộ khóa học cùng cây chương/bài giảng.
+     * 1. Gọi courseDao.findById(con, courseId) để truy vấn bảng 'courses'.
+     */
     public CourseDto getCourseDetail(long courseId) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
@@ -330,6 +338,10 @@ public class CourseService {
         }
     }
 
+    /**
+     * Lấy danh sách tài khoản thuộc vai trò Chuyên gia (Expert - Role 4).
+     * 1. Gọi userDao.findByRoleId(con, 4L) để truy vấn bảng 'users'.
+     */
     public List<UserDto> getExperts() {
         try (Connection con = DbConnection.getConnection()) {
             UserDao uDao = new UserDao();
@@ -353,6 +365,11 @@ public class CourseService {
         }
     }
 
+    /**
+     * Thêm mới hoặc cập nhật thông tin khóa học và phân công phụ trách.
+     * 1. Gọi validateCourse(dto) để kiểm tra hợp lệ.
+     * 2. Gọi courseDao.insert hoặc courseDao.update để lưu vào bảng 'courses'.
+     */
     public long saveCourse(CourseDto dto) {
         validateCourse(dto);
         try (Connection con = DbConnection.getConnection()) {
@@ -516,6 +533,11 @@ public class CourseService {
         }
     }
 
+    /**
+     * Cập nhật trạng thái khóa học (DRAFT, PENDING_REVIEW, PUBLISHED, ARCHIVED).
+     * 1. Gọi courseDao.findById(con, courseId) để kiểm tra khóa học và điều kiện chuyển đổi trạng thái.
+     * 2. Gọi courseDao.update(con, course) để cập nhật bảng 'courses'.
+     */
     public void updateCourseStatus(long courseId, CourseStatus targetStatus) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
@@ -680,9 +702,9 @@ public class CourseService {
     }
 
     /**
-     * Xóa vĩnh viễn khóa học:
-     * - Expert: CHỈ có thể xóa hoàn toàn nếu khóa học ở trạng thái DRAFT và chưa có học viên nào đăng ký.
-     * - Khóa học đã xuất bản (PUBLISHED) hoặc đã lưu trữ (ARCHIVED) hoặc đã có học viên: CHỈ Admin mới có quyền xóa hoàn toàn khỏi CSDL.
+     * Xóa vĩnh viễn khóa học theo quyền Admin/Expert.
+     * 1. Gọi courseDao.findById(con, courseId) để kiểm tra tồn tại.
+     * 2. Gọi courseDao.delete(con, courseId) để xóa khỏi bảng 'courses'.
      */
     public void deleteCourse(long courseId, UserDto currentUser) {
         try (Connection con = DbConnection.getConnection()) {

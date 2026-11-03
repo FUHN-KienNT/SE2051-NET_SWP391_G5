@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="pageTitle" value="Admin Dashboard - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/navbar.jsp" />
@@ -332,13 +333,23 @@ body {
                     <div class="saas-stat-header">
                         <span class="saas-stat-label">Doanh thu hệ thống</span>
                         <div class="saas-stat-icon saas-icon-violet">
-                            <i class="bi bi-currency-dollar"></i>
+                            <i class="bi bi-cash-stack"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="saas-stat-value text-primary">$45,230</div>
+                        <div class="saas-stat-value text-primary" style="font-size: 1.75rem;">
+                            <fmt:formatNumber value="${totalRevenue != null ? totalRevenue : 0}" type="currency" currencySymbol="VND" maxFractionDigits="0"/>
+                        </div>
                         <div class="saas-stat-desc">
-                            <i class="bi bi-graph-up text-primary"></i> Tổng giao dịch thành công
+                            <i class="bi bi-graph-up-arrow text-primary"></i>
+                            <c:choose>
+                                <c:when test="${totalPaidRegistrations != null && totalPaidRegistrations > 0}">
+                                    ${totalPaidRegistrations} giao dịch thành công
+                                </c:when>
+                                <c:otherwise>
+                                    ${totalRegistrations != null ? totalRegistrations : 0} lượt đăng ký
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
                 </div>
@@ -348,17 +359,29 @@ body {
                 <div class="saas-stat-card">
                     <div class="saas-stat-header">
                         <span class="saas-stat-label">Tình trạng máy chủ</span>
-                        <div class="saas-stat-icon saas-icon-emerald">
+                        <div class="saas-stat-icon ${isDbConnected ? 'saas-icon-emerald' : 'saas-icon-amber'}">
                             <i class="bi bi-server"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="saas-stat-value text-success" style="font-size: 1.75rem;">
-                            <i class="bi bi-check-circle-fill me-1"></i> Hoạt động tốt
-                        </div>
-                        <div class="saas-stat-desc">
-                            <i class="bi bi-cpu text-muted"></i> PostgreSQL & Tomcat 10
-                        </div>
+                        <c:choose>
+                            <c:when test="${isDbConnected}">
+                                <div class="saas-stat-value text-success" style="font-size: 1.75rem;">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Hoạt động tốt
+                                </div>
+                                <div class="saas-stat-desc">
+                                    <i class="bi bi-cpu text-muted"></i> PostgreSQL &amp; Tomcat 10
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="saas-stat-value text-danger" style="font-size: 1.75rem;">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Cảnh báo kết nối
+                                </div>
+                                <div class="saas-stat-desc">
+                                    <i class="bi bi-exclamation-circle text-danger"></i> Kiểm tra CSDL PostgreSQL
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
             </div>
