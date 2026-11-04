@@ -152,8 +152,18 @@ public class ProfileServlet extends HttpServlet {
             SessionUtil.setCurrentUser(req, updatedUser);
 
             if (ajax) {
-                String fullAvatarUrl = (updatedUser.getAvatarUrl() != null && !updatedUser.getAvatarUrl().isEmpty())
-                        ? (req.getContextPath() + updatedUser.getAvatarUrl()) : "";
+                String avatarRel = updatedUser.getAvatarUrl();
+                String fullAvatarUrl = "";
+                if (avatarRel != null && !avatarRel.trim().isEmpty()) {
+                    String ctx = req.getContextPath();
+                    if (ctx == null) {
+                        ctx = "";
+                    }
+                    if (!avatarRel.startsWith("/")) {
+                        avatarRel = "/" + avatarRel;
+                    }
+                    fullAvatarUrl = ctx + avatarRel;
+                }
                 sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "profile", "Cập nhật thông tin hồ sơ thành công!", fullAvatarUrl);
             } else {
                 HttpSession session = req.getSession(true);
@@ -333,6 +343,7 @@ public class ProfileServlet extends HttpServlet {
         }
         if (value != null) {
             sb.append(",\"value\":\"").append(escapeJson(value)).append("\"");
+            sb.append(",\"avatarUrl\":\"").append(escapeJson(value)).append("\"");
         }
         sb.append("}");
         resp.getWriter().write(sb.toString());

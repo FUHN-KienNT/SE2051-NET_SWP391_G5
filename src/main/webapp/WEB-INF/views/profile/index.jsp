@@ -622,29 +622,22 @@
                 btnSubmitText.textContent = 'Lưu thay đổi';
 
                 if (data.success) {
-                    const newAvatarUrl = data.value;
+                    const rawAvatarUrl = data.avatarUrl || data.value;
                     const newFullName = fullNameInput.value.trim();
                     const newInitial = newFullName ? newFullName.substring(0, 1).toUpperCase() : 'U';
+                    const isExplicitRemove = (removeAvatarInput.value === 'true');
 
-                    // 1. Cập nhật ngay lập tức toàn bộ Avatar trên thanh Navbar và Dropdown Menu
-                    if (newAvatarUrl && newAvatarUrl.length > 0) {
-                        const cacheBuster = newAvatarUrl + '?t=' + Date.now();
-                        document.querySelectorAll('.navbar-avatar-img').forEach(img => {
-                            img.src = cacheBuster;
-                            img.style.display = 'inline-block';
-                        });
-                        document.querySelectorAll('.navbar-avatar-text').forEach(el => {
-                            el.style.display = 'none';
-                        });
-                        if (avatarPreviewImg) {
-                            avatarPreviewImg.src = cacheBuster;
-                            avatarPreviewImg.style.display = 'block';
+                    const contextPath = '${pageContext.request.contextPath}';
+                    let resolvedAvatarUrl = rawAvatarUrl;
+                    if (resolvedAvatarUrl && !resolvedAvatarUrl.startsWith('http://') && !resolvedAvatarUrl.startsWith('https://')) {
+                        if (contextPath && !resolvedAvatarUrl.startsWith(contextPath)) {
+                            resolvedAvatarUrl = contextPath + (resolvedAvatarUrl.startsWith('/') ? resolvedAvatarUrl : '/' + resolvedAvatarUrl);
                         }
-                        if (avatarPreviewInitial) {
-                            avatarPreviewInitial.style.display = 'none';
-                        }
-                    } else {
-                        // Trường hợp xóa ảnh -> chuyển sang hiển thị chữ cái đại diện
+                    }
+
+                    // 1. Cập nhật ngay lập tức toàn bộ Avatar trên trang cá nhân và thanh Navbar / Dropdown Menu
+                    if (isExplicitRemove) {
+                        // Người dùng đã bấm "Xóa ảnh" và nhấn Lưu thay đổi
                         document.querySelectorAll('.navbar-avatar-img').forEach(img => {
                             img.style.display = 'none';
                             img.src = '';
@@ -661,6 +654,35 @@
                             avatarPreviewInitial.textContent = newInitial;
                             avatarPreviewInitial.style.display = 'flex';
                         }
+                    } else if (resolvedAvatarUrl && resolvedAvatarUrl.length > 0) {
+                        // Có URL ảnh hợp lệ (ảnh vừa tải lên hoặc avatar hiện tại)
+                        const cacheBuster = resolvedAvatarUrl.includes('?')
+                            ? (resolvedAvatarUrl + '&t=' + Date.now())
+                            : (resolvedAvatarUrl + '?t=' + Date.now());
+
+                        document.querySelectorAll('.navbar-avatar-img').forEach(img => {
+                            img.src = cacheBuster;
+                            img.style.display = 'inline-block';
+                        });
+                        document.querySelectorAll('.navbar-avatar-text').forEach(el => {
+                            el.style.display = 'none';
+                        });
+
+                        if (avatarPreviewImg) {
+                            avatarPreviewImg.src = cacheBuster;
+                            avatarPreviewImg.style.display = 'block';
+                        }
+                        if (avatarPreviewInitial) {
+                            avatarPreviewInitial.style.display = 'none';
+                        }
+                    } else {
+                        // Không có URL trả về và không chủ động xóa ảnh:
+                        // Giữ nguyên preview ảnh hiện tại (tuyệt đối không reset về chữ cái đại diện!)
+                        document.querySelectorAll('.navbar-avatar-text').forEach(el => {
+                            if (el.style.display !== 'none') {
+                                el.textContent = newInitial;
+                            }
+                        });
                     }
 
                     // 2. Cập nhật tên hiển thị trên header và menu dropdown
