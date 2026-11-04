@@ -464,6 +464,7 @@
     const DRAFT_KEY = 'courson_draft_lesson_' + courseId + '_' + lessonId;
 
     let isSubmitting = false;
+    let bypassExitPrompt = false;
     let isSavingDraft = false;
     let initialFormData = null;
     let cachedDraft = null;
@@ -805,7 +806,7 @@
 
         // Cảnh báo khi người dùng tắt tab/rời trang khi chưa lưu và cố gắng bảo toàn nháp
         window.addEventListener('beforeunload', function(e) {
-            if (isSubmitting) return;
+            if (isSubmitting || bypassExitPrompt) return;
             if (isFormDirty()) {
                 const cur = getFormData();
                 cur.savedAt = formatTime();
@@ -849,8 +850,7 @@
     // BOOTSTRAP EXIT CONFIRMATION MODAL KHI ĐANG SỬA MÀ THOÁT RA
     // =========================================================================
     let pendingNavigationUrl = null;
-    let bypassExitPrompt = false;
-    let isHistoryIntercepted = false;
+        let isHistoryIntercepted = false;
 
     function getExitModal() {
         const modalEl = document.getElementById('unsavedChangesModal');

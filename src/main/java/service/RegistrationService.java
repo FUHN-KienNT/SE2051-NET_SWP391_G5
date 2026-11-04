@@ -165,7 +165,8 @@ public class RegistrationService {
                     dto.setCompletedLessons(completed);
 
                     // Recalculate dynamic progress if lesson count changed
-                    if (total > 0 && completed > 0) {
+                                        // #m_tiendo [TRẠM 3/4 - CÔNG THỨC % TIẾN ĐỘ]: (completed_lessons / total_lessons) * 100, làm tròn 1 chữ số thập phân
+if (total > 0 && completed > 0) {
                         dto.setProgressPercentage(BigDecimal.valueOf(completed * 100.0 / total).setScale(1,
                                 java.math.RoundingMode.HALF_UP));
                     }
@@ -185,7 +186,8 @@ public class RegistrationService {
         }
     }
 
-    public RecentLearningDto getRecentLearning(long userId) {
+        // #m_tiendo [TRẠM 2/4 - TRUY VẤN BÀI GẦN NHẤT]: SQL JOIN 4 bảng lesson_progress, registrations, courses, lessons -> ORDER BY last_studied_at DESC LIMIT 1
+public RecentLearningDto getRecentLearning(long userId) {
         String sqlRecent = "SELECT "
                 + "  r.id AS reg_id, r.course_id, c.title AS course_title, s.name AS category_name, "
                 + "  l.id AS lesson_id, l.title AS lesson_title, l.video_url, lp.status AS lp_status, "

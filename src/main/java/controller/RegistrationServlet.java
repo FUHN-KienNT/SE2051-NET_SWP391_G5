@@ -140,7 +140,8 @@ public class RegistrationServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/registrations/my?success=true");
     }
 
-    private void showMyRegistrations(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // #m_tiendo [TRẠM 1/4 - CONTROLLER]: Lấy danh sách đăng ký bằng getByUser() và lấy bài học gần nhất bằng getRecentLearning()
+private void showMyRegistrations(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");

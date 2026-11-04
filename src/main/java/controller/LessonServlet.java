@@ -155,7 +155,8 @@ public class LessonServlet extends HttpServlet {
             case "batch-save-lessons":
                 batchSaveLessons(req, resp);
                 break;
-            case "delete-course":
+                        // #m_xoa [TRẠM 2/4 - ĐIỀU PHỐI SERVLET]: Bắt action delete-course, điều hướng sang hàm deleteCourse(req, resp)
+case "delete-course":
                 deleteCourse(req, resp);
                 break;
             case "get-course":
@@ -179,7 +180,8 @@ public class LessonServlet extends HttpServlet {
             case "generate-ai-description":
                 generateAiDescription(req, resp);
                 break;
-            case "request-publish":
+                        // #m_duyet [TRẠM 2/4 - CONTROLLER]: Bắt action request-publish, gọi courseService.requestPublish(courseId, currentUser)
+case "request-publish":
                 requestPublish(req, resp);
                 break;
             case "cancel-request-publish":
@@ -214,7 +216,8 @@ public class LessonServlet extends HttpServlet {
      * - Lấy danh mục thể loại khóa học để phục vụ form tạo khóa học mới.
      * - Chuyển tiếp (forward) dữ liệu sang views/expert/dashboard.jsp.
      */
-    private void showExpertDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // #m_ds [TRẠM 1/4 - CONTROLLER]: Bắt GET /expert/dashboard, lấy currentUser.id trong Session, gọi CourseService lấy danh sách khóa học rồi req.setAttribute("courses", ...)
+private void showExpertDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -438,6 +441,8 @@ public class LessonServlet extends HttpServlet {
         } else {
             sb.append("null");
         }
+        sb.append(",\"aiProcessed\":").append(result.isAiProcessed());
+        sb.append(",\"aiAvailable\":").append(util.GeminiAiUtil.isAvailable());
         sb.append(",\"suggestedDescription\":");
         if (result.getSuggestedDescription() != null && !result.getSuggestedDescription().isEmpty()) {
             sb.append("\"").append(escapeJson(result.getSuggestedDescription())).append("\"");
@@ -476,6 +481,8 @@ public class LessonServlet extends HttpServlet {
 
         resp.setContentType("application/json;charset=UTF-8");
         StringBuilder sb = new StringBuilder("{");
+        boolean isAvail = util.GeminiAiUtil.isAvailable();
+        sb.append("\"aiAvailable\":").append(isAvail).append(",");
         sb.append("\"description\":");
         if (desc != null && !desc.trim().isEmpty()) {
             sb.append("\"").append(escapeJson(desc)).append("\"");
@@ -629,7 +636,8 @@ public class LessonServlet extends HttpServlet {
      * - [Quy tắc bảo mật]: Chuyên gia CHỈ có thể xóa hoàn toàn khóa học nếu đang ở trạng thái Nháp (DRAFT).
      * - Nếu khóa học đã xuất bản hoặc có học viên thì chỉ có Admin mới có quyền xóa.
      */
-    private void deleteCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // #m_xoa [TRẠM 2.1/4 - CONTROLLER METHOD]: Lấy courseId từ req.getParameter("id"), bắt User session, gọi courseService.deleteCourse(courseId, currentUser)
+private void deleteCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(req.getHeader("X-Requested-With"))
                 || (req.getHeader("Accept") != null && req.getHeader("Accept").contains("application/json"))
@@ -744,7 +752,8 @@ public class LessonServlet extends HttpServlet {
      * - Điều kiện tiên quyết: Khóa học phải có ít nhất 1 chương học và 1 bài học.
      * - Chuyển trạng thái từ DRAFT sang PENDING_REVIEW để Ban Quản Trị xem xét.
      */
-    private void requestPublish(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // #m_duyet [TRẠM 2.1/4 - CONTROLLER METHOD]: Bắt courseId, check Session, gọi courseService.requestPublishCourse(courseId, currentUser)
+private void requestPublish(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -839,7 +848,8 @@ public class LessonServlet extends HttpServlet {
      * - Lấy toàn bộ chi tiết khóa học (bao gồm cấu trúc cây Modules -> Lessons).
      * - Chuyển tiếp sang views/expert/lesson_list.jsp.
      */
-    private void showLessonList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // #m_cay [TRẠM 1/4 - CONTROLLER]: Bắt GET /expert/lessons?courseId=..., gọi courseService.getCourseWithModulesAndLessons(courseId) rồi req.setAttribute("course", course)
+private void showLessonList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -1105,7 +1115,8 @@ public class LessonServlet extends HttpServlet {
      * Sắp xếp lại thứ tự bài học (Kéo thả Drag & Drop):
      * - Cập nhật danh sách ID bài học theo thứ tự mới trong Module.
      */
-    private void reorderLessons(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // #m_keotha [TRẠM 2/4 - CONTROLLER AJAX]: Đọc body JSON danh sách lessonIds, gọi courseService.reorderLessons(courseId, lessonIds)
+private void reorderLessons(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
