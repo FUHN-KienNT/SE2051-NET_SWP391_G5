@@ -126,6 +126,7 @@ public final class DbConnection {
             st.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_at timestamptz; " +
                        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_notice text; " +
                        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS moderation_note text; " +
+                       "ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false; " +
                        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text; " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(); " +

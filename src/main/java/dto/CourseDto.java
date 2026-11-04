@@ -23,6 +23,7 @@ public class CourseDto {
     private OffsetDateTime archiveAt;
     private String archiveNotice;
     private String moderationNote;
+    private boolean isFeatured;
 
     public CourseDto() {
     }
@@ -277,5 +278,17 @@ public class CourseDto {
     public String getFormattedArchiveAt() {
         if (archiveAt == null) return "";
         return archiveAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    public boolean isFeatured() {
+        return isFeatured;
+    }
+
+    public boolean getFeatured() {
+        return isFeatured;
+    }
+
+    public void setFeatured(boolean isFeatured) {
+        this.isFeatured = isFeatured;
     }
 }

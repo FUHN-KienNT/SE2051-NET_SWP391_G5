@@ -613,12 +613,7 @@ body {
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <c:if test="${not empty course}">
-                                    <button type="button"
-                                        class="btn-saas-outline-emerald"
-                                        data-bs-toggle="modal" data-bs-target="#questionModal"
-                                        onclick="openCreateQuestionModal('')">
-                                        <i class="bi bi-database-add me-1"></i>Thêm câu hỏi
-                                    </button>
+                                    
                                     <button type="button"
                                         class="btn-saas-primary"
                                         data-bs-toggle="modal" data-bs-target="#quizModal"
@@ -1011,14 +1006,7 @@ body {
                                                     </select>
                                                 </div>
 
-                                                <div class="col-md-2 col-12 text-md-end d-flex justify-content-md-end">
-                                                    <button type="button"
-                                                        class="btn-saas-outline-emerald w-100 w-md-auto"
-                                                        onclick="openCreateQuestionModal('')" data-bs-toggle="modal"
-                                                        data-bs-target="#questionModal">
-                                                        <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
-                                                    </button>
-                                                </div>
+                                                
                                             </div>
                                         </div>
 

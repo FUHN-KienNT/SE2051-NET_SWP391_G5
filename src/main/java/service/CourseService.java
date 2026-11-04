@@ -69,6 +69,38 @@ public class CourseService {
         }
     }
 
+    public List<CourseDto> getFeaturedCourses(int limit) {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Course> list = courseDao.findFeatured(con, limit);
+            List<CourseDto> dtos = new ArrayList<>();
+            for (Course c : list) {
+                dtos.add(buildCourseTree(c));
+            }
+            return dtos;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy danh sách khóa học nổi bật: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean toggleFeatured(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Course course = courseDao.findById(con, courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
+            boolean newFeatured = !course.isFeatured();
+            return courseDao.updateFeatured(con, courseId, newFeatured);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật cờ nổi bật khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean setFeatured(long courseId, boolean isFeatured) {
+        try (Connection con = DbConnection.getConnection()) {
+            return courseDao.updateFeatured(con, courseId, isFeatured);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật cờ nổi bật khóa học: " + e.getMessage(), e);
+        }
+    }
+
     /**
      * Lấy danh sách các danh mục khóa học đang ACTIVE từ bảng settings trong CSDL.
      */
@@ -150,6 +182,7 @@ public class CourseService {
             dto.setExpertId(course.getExpertId());
             dto.setArchiveAt(course.getArchiveAt());
             dto.setArchiveNotice(course.getArchiveNotice());
+            dto.setFeatured(course.isFeatured());
             if (course.getCategoryId() != null) {
                 SettingDao sDao = new SettingDao();
                 sDao.findById(con, course.getCategoryId()).ifPresent(s -> dto.setCategoryName(s.getName()));
@@ -199,6 +232,7 @@ public class CourseService {
             dto.setExpertId(course.getExpertId());
             dto.setArchiveAt(course.getArchiveAt());
             dto.setArchiveNotice(course.getArchiveNotice());
+            dto.setFeatured(course.isFeatured());
 
             List<Module> modules = moduleDao.findByCourseId(con, course.getId());
             for (Module m : modules) {
@@ -395,6 +429,7 @@ public class CourseService {
                         course.setArchiveNotice(dto.getArchiveNotice());
                     if (dto.getModerationNote() != null)
                         course.setModerationNote(dto.getModerationNote());
+                    course.setFeatured(dto.isFeatured());
                     courseDao.update(con, course);
                     id = course.getId();
                 } else {
@@ -419,6 +454,7 @@ public class CourseService {
                     course.setArchiveAt(dto.getArchiveAt());
                     course.setArchiveNotice(dto.getArchiveNotice());
                     course.setModerationNote(dto.getModerationNote());
+                    course.setFeatured(dto.isFeatured());
                     id = courseDao.insert(con, course);
                 }
                 con.commit();
@@ -1860,6 +1896,7 @@ public class CourseService {
         dto.setArchiveAt(course.getArchiveAt());
         dto.setArchiveNotice(course.getArchiveNotice());
         dto.setModerationNote(course.getModerationNote());
+        dto.setFeatured(course.isFeatured());
 
         try (Connection con = DbConnection.getConnection()) {
             if (course.getCategoryId() != null) {

@@ -39,9 +39,10 @@ public class HomeServlet extends HttpServlet {
     }
 
     private void showHome(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        List<CourseDto> courses = courseService.searchPublished(null, null);
+        List<CourseDto> featuredCourses = courseService.getFeaturedCourses(6);
         List<SettingDto> categories = courseService.getActiveCategories();
-        req.setAttribute("courses", courses);
+        req.setAttribute("featuredCourses", featuredCourses);
+        req.setAttribute("courses", featuredCourses);
         req.setAttribute("categories", categories);
         forward("/WEB-INF/views/home/index.jsp", req, resp);
     }

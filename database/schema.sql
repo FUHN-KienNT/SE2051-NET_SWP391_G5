@@ -125,6 +125,8 @@ CREATE TABLE courses (
     updated_at     timestamptz   NOT NULL DEFAULT now(),
     archive_at     timestamptz,
     archive_notice text,
+    moderation_note text,
+    is_featured    boolean       NOT NULL DEFAULT false,
     CONSTRAINT chk_courses_category_type CHECK (category_type = 'COURSE_CATEGORY'),
     CONSTRAINT fk_courses_category FOREIGN KEY (category_id, category_type) REFERENCES settings (id, type),
     CONSTRAINT fk_courses_manager  FOREIGN KEY (manager_id) REFERENCES users (id),
@@ -135,6 +137,7 @@ CREATE TABLE courses (
 CREATE INDEX idx_courses_manager_id  ON courses (manager_id);
 CREATE INDEX idx_courses_expert_id   ON courses (expert_id);
 CREATE INDEX idx_courses_category_id ON courses (category_id);
+CREATE INDEX idx_courses_is_featured ON courses (is_featured);
 
 -- ---------------------------------------------------------------------
 -- 4. modules

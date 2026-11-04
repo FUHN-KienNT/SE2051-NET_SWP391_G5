@@ -566,12 +566,12 @@
                 <c:when test="${empty courses}">
                     <div class="text-center py-5 bg-light rounded-3 border">
                         <i class="bi bi-journal-x fs-1 text-muted"></i>
-                        <p class="text-muted mt-2 mb-0">Chưa có khóa học nào được xuất bản.</p>
+                        <p class="text-muted mt-2 mb-0">Chưa có khóa học nổi bật nào được chọn.</p>
                     </div>
                 </c:when>
                 <c:otherwise>
                     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                        <c:forEach var="c" items="${courses}" begin="0" end="2">
+                        <c:forEach var="c" items="${courses}">
                             <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/courses/detail?id=${c.id}" />
                             <c:set var="targetCourseCta" value="Xem khóa học" />
                             <c:set var="targetCourseIcon" value="bi-arrow-right" />
@@ -593,8 +593,9 @@
                                              onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
                                     </div>
                                     <div class="course-body-custom">
-                                        <div class="course-category-tag">
-                                            <c:out value="${c.categoryName != null ? c.categoryName : 'LẬP TRÌNH CỐT LÕI'}" />
+                                        <div class="course-category-tag d-flex justify-content-between align-items-center">
+                                            <span><c:out value="${c.categoryName != null ? c.categoryName : 'LẬP TRÌNH CỐT LÕI'}" /></span>
+                                            <span class="badge bg-warning text-dark border-0 px-2 py-0.5" style="font-size: 0.7rem;"><i class="bi bi-star-fill text-warning me-1"></i>Nổi bật</span>
                                         </div>
                                         <h3 class="course-title-custom" title="${c.title}">
                                             <c:out value="${c.title}" />

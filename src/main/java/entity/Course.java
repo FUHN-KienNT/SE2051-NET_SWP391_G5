@@ -20,6 +20,7 @@ public class Course {
     private OffsetDateTime archiveAt;
     private String archiveNotice;
     private String moderationNote;
+    private boolean isFeatured;
 
     public Course() {
     }
@@ -159,5 +160,13 @@ public class Course {
 
     public void setModerationNote(String moderationNote) {
         this.moderationNote = moderationNote;
+    }
+
+    public boolean isFeatured() {
+        return isFeatured;
+    }
+
+    public void setFeatured(boolean isFeatured) {
+        this.isFeatured = isFeatured;
     }
 }
