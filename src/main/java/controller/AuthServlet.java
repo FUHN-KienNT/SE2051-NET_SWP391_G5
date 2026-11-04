@@ -283,9 +283,9 @@ public class AuthServlet extends HttpServlet {
 
             if (session == null) session = req.getSession(true);
             if (result.getStatus() == GoogleAuthResult.Status.NEW_USER_CREATED) {
-                session.setAttribute("flashToastType", "info");
+                session.setAttribute("flashToastType", "success");
                 session.setAttribute("flashToastMessage",
-                    "Đăng nhập Google thành công! Vui lòng thiết lập mật khẩu để hoàn tất tài khoản của bạn.");
+                    "Đăng nhập bằng Google thành công! Bạn có thể sử dụng tài khoản Gmail này để đăng nhập các lần sau.");
                 resp.sendRedirect(ctx + "/auth/set-password");
                 return;
             } else if (result.getStatus() == GoogleAuthResult.Status.UNVERIFIED_ACTIVATED) {
@@ -336,6 +336,7 @@ public class AuthServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
+        req.setAttribute("user", currentUser);
         req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
     }
 
@@ -358,9 +359,11 @@ public class AuthServlet extends HttpServlet {
             redirectByRole(currentUser, req, resp);
         } catch (IllegalArgumentException e) {
             req.setAttribute("error", e.getMessage());
+            req.setAttribute("user", currentUser);
             req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
         } catch (Exception e) {
             req.setAttribute("error", "Không thể thiết lập mật khẩu: " + e.getMessage());
+            req.setAttribute("user", currentUser);
             req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
         }
     }

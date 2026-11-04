@@ -356,25 +356,27 @@
                 <p class="auth-subtitle">Tạo mật khẩu cho tài khoản để hoàn tất đăng ký và bắt đầu học tập trên Courson LMS.</p>
             </div>
 
+            <c:set var="u" value="${not empty user ? user : (not empty sessionScope.CURRENT_USER ? sessionScope.CURRENT_USER : sessionScope.user)}" />
+
             <!-- Current User Profile Card -->
-            <c:if test="${not empty sessionScope.user}">
+            <c:if test="${not empty u}">
                 <div class="user-info-card">
                     <div class="user-avatar-wrap">
                         <c:choose>
-                            <c:when test="${not empty sessionScope.user.avatarUrl}">
-                                <img src="${pageContext.request.contextPath}/${sessionScope.user.avatarUrl}" alt="Avatar">
+                            <c:when test="${not empty u.avatarUrl}">
+                                <img src="${pageContext.request.contextPath}/${u.avatarUrl}" alt="Avatar">
                             </c:when>
                             <c:otherwise>
                                 <span class="user-avatar-initial">
-                                    <c:out value="${sessionScope.user.fullName != null && !sessionScope.user.fullName.isEmpty() ? sessionScope.user.fullName.substring(0,1).toUpperCase() : 'U'}"/>
+                                    <c:out value="${u.fullName != null && !u.fullName.isEmpty() ? u.fullName.substring(0,1).toUpperCase() : 'U'}"/>
                                 </span>
                             </c:otherwise>
                         </c:choose>
                     </div>
                     <div class="user-details">
-                        <div class="user-name"><c:out value="${sessionScope.user.fullName}"/></div>
-                        <div class="user-meta">@<c:out value="${sessionScope.user.username}"/> &bull; <c:out value="${sessionScope.user.email}"/></div>
-                        <span class="role-badge"><c:out value="${sessionScope.user.roleName != null ? sessionScope.user.roleName : 'HỌC VIÊN'}"/></span>
+                        <div class="user-name"><c:out value="${u.fullName}"/></div>
+                        <div class="user-meta">@<c:out value="${u.username}"/> &bull; <c:out value="${u.email}"/></div>
+                        <span class="role-badge"><c:out value="${u.roleName != null ? u.roleName : 'HỌC VIÊN'}"/></span>
                     </div>
                 </div>
             </c:if>
@@ -421,6 +423,7 @@
                 <button type="submit" id="btnSubmit" class="btn-submit">
                     Lưu mật khẩu & Bắt đầu học
                 </button>
+
 
             </form>
         </div>
