@@ -55,73 +55,6 @@
                 line-height: 1.4;
             }
 
-            /* User Info Card */
-            .user-info-card {
-                background: #FFFFFF;
-                border: 1px solid #E5E7EB;
-                border-radius: 14px;
-                padding: 16px;
-                margin-bottom: 22px;
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            }
-            .user-avatar-wrap {
-                width: 48px;
-                height: 48px;
-                border-radius: 50%;
-                overflow: hidden;
-                flex-shrink: 0;
-                background: #FFF0E2;
-                border: 2px solid #F38020;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .user-avatar-wrap img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-            .user-avatar-initial {
-                font-size: 1.2rem;
-                font-weight: 700;
-                color: #F38020;
-            }
-            .user-details {
-                flex: 1;
-                min-width: 0;
-            }
-            .user-name {
-                font-size: 0.96rem;
-                font-weight: 700;
-                color: #111827;
-                margin-bottom: 2px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .user-meta {
-                font-size: 0.82rem;
-                color: #6B7280;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .role-badge {
-                display: inline-block;
-                background-color: #EBF5FF;
-                color: #1E40AF;
-                font-size: 0.72rem;
-                font-weight: 700;
-                padding: 2px 8px;
-                border-radius: 6px;
-                margin-top: 4px;
-                text-transform: uppercase;
-                letter-spacing: 0.4px;
-            }
-
             .alert-server {
                 background-color: rgba(237, 73, 86, 0.12);
                 border: 1px solid rgba(237, 73, 86, 0.45);
@@ -356,31 +289,6 @@
                 <p class="auth-subtitle">Tạo mật khẩu cho tài khoản để hoàn tất đăng ký và bắt đầu học tập trên Courson LMS.</p>
             </div>
 
-            <c:set var="u" value="${not empty user ? user : (not empty sessionScope.CURRENT_USER ? sessionScope.CURRENT_USER : sessionScope.user)}" />
-
-            <!-- Current User Profile Card -->
-            <c:if test="${not empty u}">
-                <div class="user-info-card">
-                    <div class="user-avatar-wrap">
-                        <c:choose>
-                            <c:when test="${not empty u.avatarUrl}">
-                                <img src="${pageContext.request.contextPath}/${u.avatarUrl}" alt="Avatar">
-                            </c:when>
-                            <c:otherwise>
-                                <span class="user-avatar-initial">
-                                    <c:out value="${u.fullName != null && !u.fullName.isEmpty() ? u.fullName.substring(0,1).toUpperCase() : 'U'}"/>
-                                </span>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name"><c:out value="${u.fullName}"/></div>
-                        <div class="user-meta">@<c:out value="${u.username}"/> &bull; <c:out value="${u.email}"/></div>
-                        <span class="role-badge"><c:out value="${u.roleName != null ? u.roleName : 'HỌC VIÊN'}"/></span>
-                    </div>
-                </div>
-            </c:if>
-
             <c:if test="${not empty error}">
                 <div class="alert-server">
                     <i class="bi bi-exclamation-circle me-1"></i><c:out value="${error}"/>
@@ -459,7 +367,7 @@
                     }, 400);
                 }
                 const CoursonToast = {
-                    show: function(type, message, duration = 6000) {
+                    show: function(type, message, duration = 9000) {
                         if (!message) return;
                         const c = getOrCreateContainer();
                         const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
@@ -620,7 +528,8 @@
                     if (window.CoursonToast) {
                         window.CoursonToast.show(
                             '<c:out value="${sessionScope.flashToastType != null ? sessionScope.flashToastType : 'info'}"/>',
-                            '<c:out value="${sessionScope.flashToastMessage}"/>'
+                            '<c:out value="${sessionScope.flashToastMessage}"/>',
+                            9000
                         );
                     }
                 });

@@ -373,7 +373,7 @@
                 }, 400);
             }
             const CoursonToast = {
-                show: function(type, message, duration = 6000) {
+                show: function(type, message, duration = 8000) {
                     if (!message) return;
                     const c = getOrCreateContainer();
                     const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
