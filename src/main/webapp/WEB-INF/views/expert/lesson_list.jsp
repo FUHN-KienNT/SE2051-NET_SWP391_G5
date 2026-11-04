@@ -589,7 +589,8 @@ body {
                     <c:when test="${course.status == 'DRAFT'}">
                         <button type="button"
                            class="btn btn-saas-outline-emerald"
-                           onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons')"
+                           <!-- #m_duyet [TRẠM 1/4 - GIAO DIỆN]: Nút Gửi duyệt. Bấm xác nhận sẽ gửi POST /expert/request-publish?courseId=... -->
+onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons')"
                            title="Gửi duyệt khóa học">
                             <i class="bi bi-send-check"></i>Gửi duyệt
                         </button>
@@ -635,7 +636,8 @@ body {
                 </div>
             </c:when>
             <c:otherwise>
-                <c:forEach var="m" items="${course.modules}">
+                                    <!-- #m_cay [TRẠM 4/4 - HIỂN THỊ JSP]: 2 vòng lặp lồng nhau: Vòng ngoài duyệt ${course.modules} in ra Chương, vòng trong duyệt ${m.lessons} in ra từng Bài học -->
+<c:forEach var="m" items="${course.modules}">
                     <div class="saas-module-card mb-3" id="moduleCard-${m.id}">
                         <!-- Module Header -->
                         <div class="saas-module-header">
@@ -963,7 +965,8 @@ body {
         this.classList.remove('drag-over');
     }
 
-    function handleDropOnItem(e) {
+        // #m_keotha [TRẠM 1/4 - GIAO DIỆN JS]: Tính tọa độ chuột (rect.top + rect.height/2) chèn trên/dưới, rồi gọi AJAX gửi orderedLessonIds sang Servlet
+function handleDropOnItem(e) {
         if (!draggedLesson || draggedLesson === this) return;
         e.preventDefault();
         e.stopPropagation();

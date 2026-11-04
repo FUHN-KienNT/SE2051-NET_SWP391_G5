@@ -277,7 +277,8 @@
         </div>
 
         <!-- 2. TIẾP TỤC BÀI HỌC GẦN NHẤT (Feature 2 - Resume Hero Banner) -->
-        <c:if test="${not empty recentLearning}">
+                <!-- #m_tiendo [TRẠM 4/4 - HIỂN THỊ JSP]: Hero Resume Banner hiển thị ${recentLearning.lessonTitle} và thanh progress bar ${r.progressPercentage}% -->
+<c:if test="${not empty recentLearning}">
             <div class="hero-resume-card p-4 p-md-4 mb-5 text-white">
                 <div class="row align-items-center g-4">
                     <div class="col-lg-7 col-md-7">

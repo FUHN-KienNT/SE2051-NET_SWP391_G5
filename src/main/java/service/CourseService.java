@@ -312,7 +312,8 @@ public class CourseService {
         }
     }
 
-    public List<CourseDto> getManagedCourses(long userId) {
+        // #m_ds [TRẠM 2/4 - SERVICE]: Gọi CourseDao.findByManagerOrExpert(con, userId) để lấy danh sách khóa học của Expert
+public List<CourseDto> getManagedCourses(long userId) {
         try (Connection con = DbConnection.getConnection()) {
             List<Course> list = courseDao.findByManagerOrExpert(con, userId);
             List<CourseDto> dtos = new ArrayList<>();
@@ -541,7 +542,8 @@ public class CourseService {
      * 1. Gọi courseDao.findById(con, courseId) để kiểm tra khóa học và điều kiện chuyển đổi trạng thái.
      * 2. Gọi courseDao.update(con, course) để cập nhật bảng 'courses'.
      */
-    public void updateCourseStatus(long courseId, CourseStatus targetStatus) {
+        // #m_duyet [TRẠM 3/4 - NGHIỆP VỤ SERVICE]: Kiểm tra tính hợp lệ trạng thái -> Gọi CourseDao.updateStatus() để chuyển sang PENDING_REVIEW hoặc DRAFT
+public void updateCourseStatus(long courseId, CourseStatus targetStatus) {
         updateCourseStatus(courseId, targetStatus, null);
     }
 
@@ -718,7 +720,8 @@ public class CourseService {
      * 1. Gọi courseDao.findById(con, courseId) để kiểm tra tồn tại.
      * 2. Gọi courseDao.delete(con, courseId) để xóa khỏi bảng 'courses'.
      */
-    public void deleteCourse(long courseId, UserDto currentUser) {
+        // #m_xoa [TRẠM 3/4 - NGHIỆP VỤ SERVICE]: 1. Check IDOR -> 2. Check DRAFT -> 3. Check học viên -> 4. Bọc Transaction gọi CourseDao.delete
+public void deleteCourse(long courseId, UserDto currentUser) {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học cần xóa ID: " + courseId));
@@ -1050,7 +1053,8 @@ public class CourseService {
      * - Hỗ trợ kéo thả trong cùng một chương hoặc kéo thả xuyên chương.
      * - Cập nhật nguyên tử trong một Transaction dùng số âm tạm thời để triệt tiêu vi phạm unique constraint.
      */
-    public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
+        // #m_keotha [TRẠM 3/4 - NGHIỆP VỤ 2 PHA]: Pha 1: Gán -orderIndex tạm thời giải phóng vị trí; Pha 2: Gán lại 1..N tránh vi phạm unique constraint
+public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
         if (orderedLessonIds == null || orderedLessonIds.isEmpty()) return;
         checkModuleEditable(targetModuleId);
         try (Connection con = DbConnection.getConnection()) {
@@ -1281,6 +1285,7 @@ public class CourseService {
         private Long suggestedCategoryId;
         private String suggestedCategoryName;
         private String suggestedDescription;
+        private boolean aiProcessed = false;
 
         public BatchParseResult() {}
 
@@ -1297,6 +1302,8 @@ public class CourseService {
         public void setSuggestedCategoryId(Long suggestedCategoryId) { this.suggestedCategoryId = suggestedCategoryId; }
         public String getSuggestedCategoryName() { return suggestedCategoryName; }
         public void setSuggestedCategoryName(String suggestedCategoryName) { this.suggestedCategoryName = suggestedCategoryName; }
+        public boolean isAiProcessed() { return aiProcessed; }
+        public void setAiProcessed(boolean aiProcessed) { this.aiProcessed = aiProcessed; }
         public String getSuggestedDescription() { return suggestedDescription; }
         public void setSuggestedDescription(String suggestedDescription) { this.suggestedDescription = suggestedDescription; }
     }
@@ -1467,6 +1474,7 @@ public class CourseService {
                 result.setSuggestedCategoryId(aiResult.getCategoryId());
                 result.setSuggestedCategoryName(aiResult.getCategoryName());
                 result.setSuggestedDescription(aiResult.getSuggestedDescription());
+                result.setAiProcessed(true);
                 return; // Phân loại AI thành công!
             }
         }
@@ -1845,7 +1853,8 @@ public class CourseService {
         ValidationUtil.requirePositive(dto.getPrice(), "Học phí");
     }
 
-    private CourseDto buildCourseTree(Course course) {
+        // #m_cay [TRẠM 2/4 - SERVICE GOM CÂY DỮ LIỆU]: 1. Lấy Course -> 2. ModuleDao lấy modules -> 3. LessonDao lấy lessons từng module -> Gắn thành cây CourseDto
+private CourseDto buildCourseTree(Course course) {
         if (course == null)
             return null;
         CourseDto dto = new CourseDto();

@@ -118,7 +118,8 @@ public class CourseDao {
         return Optional.empty();
     }
 
-    public List<Course> findByManagerOrExpert(Connection con, long userId) throws SQLException {
+        // #m_ds [TRẠM 3/4 - SQL DATABASE]: SQL: "SELECT ... FROM courses WHERE manager_id = ? OR expert_id = ? ORDER BY id DESC"
+public List<Course> findByManagerOrExpert(Connection con, long userId) throws SQLException {
         List<Course> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_MANAGER_OR_EXPERT)) {
             ps.setLong(1, userId);
@@ -217,7 +218,8 @@ public class CourseDao {
     /**
      * Xóa một khóa học theo ID khỏi bảng 'courses'.
      */
-    public boolean delete(Connection con, long id) throws SQLException {
+        // #m_xoa [TRẠM 4/4 - SQL DATABASE]: Chạy SQL_DELETE: "DELETE FROM courses WHERE id = ?" (PostgreSQL ON DELETE CASCADE tự xóa modules & lessons)
+public boolean delete(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_DELETE)) {
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;

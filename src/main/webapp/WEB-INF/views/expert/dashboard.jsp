@@ -828,7 +828,8 @@ body {
         <c:set var="draftCount" value="0" />
         <c:set var="archivedCount" value="0" />
         <c:set var="totalAllQuizzes" value="0" />
-        <c:forEach var="c" items="${courses}">
+                                <!-- #m_ds [TRẠM 4/4 - HIỂN THỊ JSP]: Nhận list ${courses} từ Servlet và dùng forEach vẽ từng dòng bảng: tiêu đề, giá, badge trạng thái -->
+<c:forEach var="c" items="${courses}">
             <c:choose>
                 <c:when test="${c.status == 'PUBLISHED'}">
                     <c:set var="publishedCount" value="${publishedCount + 1}" />
@@ -1142,7 +1143,8 @@ body {
                                                                 <li><hr class="dropdown-divider my-1"></li>
                                                                 <li>
                                                                     <a class="saas-dropdown-item text-danger" href="javascript:void(0)"
-                                                                       onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
+                                                                       <!-- #m_xoa [TRẠM 1/4 - GIAO DIỆN]: Nút xóa bản nháp menu 3 chấm. Bấm xác nhận sẽ gửi POST /expert/delete-course?id=... -->
+onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
                                                                         <i class="bi bi-trash3 text-danger"></i>Xóa vĩnh viễn (Nháp)
                                                                     </a>
                                                                 </li>
@@ -1893,8 +1895,17 @@ body {
                         }
                     }
 
+                    let aiBadge = '';
+                    if (data.aiProcessed) {
+                        aiBadge = ' <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 11px;"><i class="bi bi-stars text-primary me-1"></i>Gemini AI</span>';
+                    } else if (data.aiAvailable === false) {
+                        aiBadge = ' <span class="badge bg-warning-subtle text-dark border border-warning-subtle ms-2" style="font-size: 11px;" title="Chưa cấu hình GEMINI_API_KEY hoặc khóa API tạm vắng"><i class="bi bi-cpu text-warning me-1"></i>Chế độ Fallback (Chưa có AI)</span>';
+                    } else {
+                        aiBadge = ' <span class="badge bg-warning-subtle text-dark border border-warning-subtle ms-2" style="font-size: 11px;" title="AI tạm thời không phản hồi hoặc hết quota, đang dùng thuật toán nội bộ"><i class="bi bi-exclamation-triangle text-warning me-1"></i>Chế độ Fallback (AI lỗi/hết quota)</span>';
+                    }
+
                     feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
-                    feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + '</span>';
+                    feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + aiBadge + '</span>';
                 } else {
                     feedback.className = 'mt-2 small text-muted';
                     feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Chưa nhận diện được video YouTube hợp lệ.';
@@ -1954,7 +1965,11 @@ body {
                     descInp.style.backgroundColor = '';
                 }, 800);
             } else {
-                alert('Không thể tạo mô tả lúc này. Vui lòng kiểm tra lại tên khóa học hoặc thử lại sau!');
+                if (data && data.aiAvailable === false) {
+                    alert('⚠️ Chưa cấu hình GEMINI_API_KEY trong hệ thống! Vui lòng cấu hình file ai.properties hoặc biến môi trường để sử dụng tính năng này.');
+                } else {
+                    alert('⚠️ Kết nối đến Google Gemini AI thất bại hoặc vượt quá hạn mức (Quota limit)! Vui lòng kiểm tra lại API Key hoặc kết nối mạng.');
+                }
             }
         })
         .catch(err => {

@@ -197,6 +197,18 @@
             if (actionText) actionText.textContent = options.confirmText || 'Xác nhận';
             if (actionIcon) actionIcon.className = options.confirmIcon || (type === 'danger' ? 'bi bi-trash3 me-1' : 'bi bi-check-lg me-1');
 
+            const cancelBtn = document.getElementById('coursonConfirmCancelBtn');
+            const isAlertOnly = !options.confirmUrl && typeof options.onConfirm !== 'function';
+
+            if (cancelBtn) {
+                if (isAlertOnly) {
+                    cancelBtn.classList.add('d-none');
+                } else {
+                    cancelBtn.classList.remove('d-none');
+                    cancelBtn.textContent = options.cancelText || 'Hủy bỏ';
+                }
+            }
+
             if (actionBtn) {
                 let btnClass = options.confirmBtnClass;
                 if (!btnClass) {
