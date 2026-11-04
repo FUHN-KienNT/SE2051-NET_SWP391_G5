@@ -32,23 +32,26 @@
         letter-spacing: -0.5px;
         margin-bottom: 0;
     }
+    /* Đổi mật khẩu button using project brand orange tone */
     .cf-change-pwd-link {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        color: #2563EB;
+        color: #F38020;
+        background-color: #FFF5EB;
+        border: 1.5px solid #FEEBD6;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 700;
         text-decoration: none;
-        font-size: 0.98rem;
-        font-weight: 600;
-        padding: 7px 14px;
-        border-radius: 8px;
         transition: all 0.2s ease;
-        background-color: #EFF6FF;
     }
     .cf-change-pwd-link:hover {
-        background-color: #DBEAFE;
-        color: #1D4ED8;
+        background-color: #F38020;
+        border-color: #F38020;
+        color: #FFFFFF;
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(243, 128, 32, 0.25);
     }
     .cf-form-label {
         font-size: 0.92rem;
@@ -57,10 +60,6 @@
         margin-bottom: 7px;
         display: flex;
         align-items: center;
-        gap: 4px;
-    }
-    .cf-form-label .req-star {
-        color: #EF4444;
     }
     .cf-form-control {
         border: 1.5px solid #CBD5E1;
@@ -82,24 +81,26 @@
         color: #64748B;
         cursor: not-allowed;
     }
-    .cf-avatar-row {
+
+    /* Avatar block styled matching wireframe image (Circular avatar + text + 2 buttons) */
+    .cf-avatar-block {
         display: flex;
         align-items: center;
         gap: 24px;
-        margin-bottom: 26px;
+        margin-bottom: 28px;
         padding: 18px 20px;
         background-color: #F8FAFC;
         border: 1px solid #E2E8F0;
-        border-radius: 14px;
+        border-radius: 16px;
     }
     .cf-avatar-preview-wrap {
-        width: 76px;
-        height: 76px;
+        width: 84px;
+        height: 84px;
         border-radius: 50%;
         overflow: hidden;
         flex-shrink: 0;
-        border: 3px solid #FFF0E2;
-        box-shadow: 0 4px 10px rgba(243, 128, 32, 0.2);
+        border: 2px solid #E2E8F0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -111,19 +112,61 @@
         object-fit: cover;
     }
     .cf-avatar-initial {
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 700;
         color: #FFFFFF;
         user-select: none;
     }
-    .cf-avatar-upload-col {
+    .cf-avatar-actions-wrap {
         flex: 1;
     }
+    .cf-avatar-hint-text {
+        color: #475569;
+        font-size: 0.93rem;
+        font-weight: 500;
+        margin-bottom: 12px;
+    }
+    .cf-avatar-btns-group {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .cf-btn-upload {
+        background-color: #FFFFFF;
+        color: #1E293B;
+        border: 1.5px solid #CBD5E1;
+        padding: 7px 18px;
+        font-size: 0.92rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .cf-btn-upload:hover {
+        border-color: #F38020;
+        color: #F38020;
+        background-color: #FFF5EB;
+    }
+    .cf-btn-remove {
+        background: transparent;
+        color: #475569;
+        border: none;
+        padding: 7px 12px;
+        font-size: 0.92rem;
+        font-weight: 600;
+        transition: color 0.2s ease;
+        cursor: pointer;
+    }
+    .cf-btn-remove:hover {
+        color: #DC2626;
+    }
+
+    /* Save Changes Button (clean, no checkmark icon) */
     .cf-btn-save {
         background: linear-gradient(135deg, #F38020 0%, #E56B00 100%);
         color: #FFFFFF;
         border: none;
-        padding: 11px 32px;
+        padding: 11px 34px;
         font-size: 1rem;
         font-weight: 700;
         border-radius: 10px;
@@ -131,7 +174,7 @@
         transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
         cursor: pointer;
     }
     .cf-btn-save:hover {
@@ -175,13 +218,13 @@
     .role-tag {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        padding: 4px 12px;
+        gap: 6px;
+        padding: 6px 14px;
         border-radius: 20px;
-        font-size: 0.78rem;
+        font-size: 0.84rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
     }
     .role-tag.student { background: #EFF6FF; color: #1E40AF; }
     .role-tag.expert  { background: #FAF5FF; color: #6B21A8; }
@@ -208,16 +251,15 @@
 
         <div class="cf-profile-wrapper">
             <div class="cf-profile-card">
-                <!-- Header: User Profile Title + Change Password Link -->
+                <!-- Header: Hồ sơ cá nhân + Nút Đổi mật khẩu -->
                 <div class="cf-profile-header">
                     <div>
-                        <h1 class="cf-profile-title">User Profile</h1>
+                        <h1 class="cf-profile-title">Hồ sơ cá nhân</h1>
                         <p class="text-muted small mb-0 mt-1">Quản lý và cập nhật thông tin tài khoản cá nhân của bạn trên Courson LMS</p>
                     </div>
                     <div>
                         <a href="${pageContext.request.contextPath}/profile/change-password" class="cf-change-pwd-link" title="Đổi mật khẩu tài khoản">
-                            <i class="bi bi-shield-lock-fill"></i>
-                            <span>Change Password</span>
+                            Đổi mật khẩu
                         </a>
                     </div>
                 </div>
@@ -233,9 +275,10 @@
                 <!-- Profile Form -->
                 <form id="profileForm" action="${pageContext.request.contextPath}/profile" method="POST" enctype="multipart/form-data" novalidate>
                     <input type="hidden" name="action" value="update" />
+                    <input type="hidden" id="removeAvatarInput" name="removeAvatar" value="false" />
 
-                    <!-- Avatar Section -->
-                    <div class="cf-avatar-row">
+                    <!-- Avatar Section (Giống ảnh 2: Avatar tròn, Text 15MB, Nút Tải ảnh lên & Xóa ảnh) -->
+                    <div class="cf-avatar-block">
                         <div class="cf-avatar-preview-wrap" id="avatarPreviewContainer">
                             <c:choose>
                                 <c:when test="${not empty user.avatarUrl}">
@@ -249,131 +292,99 @@
                             </c:choose>
                         </div>
 
-                        <div class="cf-avatar-upload-col">
-                            <label class="cf-form-label" for="avatarInput">
-                                Avatar
-                                <span class="text-muted fw-normal small ms-2">(Ảnh đại diện)</span>
-                            </label>
-                            <input type="file" id="avatarInput" name="avatar" class="form-control cf-form-control"
-                                   accept="image/jpeg,image/png,image/webp" />
-                            <div class="d-flex align-items-center justify-content-between mt-1">
-                                <span class="form-text text-muted small">Hỗ trợ JPG, PNG, WEBP. Dung lượng tối đa 15MB.</span>
-                                <span id="avatarFileName" class="text-muted small"></span>
+                        <div class="cf-avatar-actions-wrap">
+                            <div class="cf-avatar-hint-text">
+                                Dung lượng tối đa: 15MB. Định dạng hỗ trợ: JPG, PNG hoặc WEBP.
                             </div>
+                            <div class="cf-avatar-btns-group">
+                                <button type="button" id="btnUploadAvatar" class="cf-btn-upload">Tải ảnh lên</button>
+                                <button type="button" id="btnRemoveAvatar" class="cf-btn-remove">Xóa ảnh</button>
+                            </div>
+                            <!-- Hidden File Input -->
+                            <input type="file" id="avatarInput" name="avatar" accept="image/jpeg,image/png,image/webp" style="display: none;" />
                             <div id="avatarError" class="field-error-text"></div>
                         </div>
                     </div>
 
-                    <!-- Row 1: Full Name & Username -->
+                    <!-- Row 1: Họ và tên & Tên người dùng -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="cf-form-label" for="fullNameInput">
-                                Full Name<span class="req-star">*</span>
-                            </label>
+                            <label class="cf-form-label" for="fullNameInput">Họ và tên</label>
                             <input type="text" id="fullNameInput" name="fullName" class="form-control cf-form-control"
                                    value="<c:out value='${user.fullName}'/>" placeholder="Nhập họ và tên" required />
                             <div id="fullNameError" class="field-error-text"></div>
                         </div>
                         <div class="col-md-6">
-                            <label class="cf-form-label" for="usernameInput">
-                                Username<span class="req-star">*</span>
-                            </label>
+                            <label class="cf-form-label" for="usernameInput">Tên người dùng</label>
                             <input type="text" id="usernameInput" name="username" class="form-control cf-form-control"
-                                   value="<c:out value='${user.username}'/>" placeholder="Nhập tên đăng nhập" required />
+                                   value="<c:out value='${user.username}'/>" placeholder="Nhập tên người dùng" required />
                             <div id="usernameError" class="field-error-text"></div>
                         </div>
                     </div>
 
-                    <!-- Row 2: Email Address & Phone -->
+                    <!-- Row 2: Email & Số điện thoại -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="cf-form-label" for="emailInput">
-                                Email Address
-                                <i class="bi bi-lock-fill text-muted ms-1" title="Email là định danh cố định, không thể chỉnh sửa"></i>
-                            </label>
+                            <label class="cf-form-label" for="emailInput">Email</label>
                             <input type="email" id="emailInput" class="form-control cf-form-control"
                                    value="<c:out value='${user.email}'/>" disabled readonly />
                             <small class="form-text text-muted">Email định danh tài khoản cố định, không được phép thay đổi.</small>
                         </div>
                         <div class="col-md-6">
-                            <label class="cf-form-label" for="phoneInput">
-                                Phone
-                                <span class="text-muted fw-normal small ms-1">(Số điện thoại)</span>
-                            </label>
+                            <label class="cf-form-label" for="phoneInput">Số điện thoại</label>
                             <input type="tel" id="phoneInput" name="phone" class="form-control cf-form-control"
                                    value="<c:out value='${user.phone}'/>" placeholder="0912345678" />
                             <div id="phoneError" class="field-error-text"></div>
                         </div>
                     </div>
 
-                    <!-- Row 3: Date of Birth & Role Badge -->
+                    <!-- Row 3: Ngày sinh & Vai trò (chỉ hiển thị Học viên) -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="cf-form-label" for="birthDateInput">
-                                Ngày sinh
-                                <span class="text-muted fw-normal small ms-1">(Date of Birth)</span>
-                            </label>
+                            <label class="cf-form-label" for="birthDateInput">Ngày sinh</label>
                             <input type="date" id="birthDateInput" name="birthDate" class="form-control cf-form-control"
                                    value="${user.birthDate}" />
                             <div id="birthDateError" class="field-error-text"></div>
                         </div>
                         <div class="col-md-6">
-                            <label class="cf-form-label">
-                                Vai trò & Quyền hạn
-                            </label>
-                            <div class="p-2 border rounded-3 bg-light d-flex align-items-center justify-content-between" style="min-height: 44px;">
-                                <div>
-                                    <c:choose>
-                                        <c:when test="${user.roleName == 'STUDENT'}">
-                                            <span class="role-tag student"><i class="bi bi-mortarboard-fill"></i> Học viên</span>
-                                        </c:when>
-                                        <c:when test="${user.roleName == 'EXPERT'}">
-                                            <span class="role-tag expert"><i class="bi bi-person-badge-fill"></i> Chuyên gia</span>
-                                        </c:when>
-                                        <c:when test="${user.roleName == 'ADMIN'}">
-                                            <span class="role-tag admin"><i class="bi bi-shield-fill-check"></i> Quản trị viên</span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="role-tag manager"><i class="bi bi-briefcase-fill"></i> Quản lý</span>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                                <small class="text-muted">
-                                    <c:choose>
-                                        <c:when test="${user.authProvider == 'GOOGLE'}">
-                                            <i class="bi bi-google text-danger me-1"></i>Google Auth
-                                        </c:when>
-                                        <c:otherwise>
-                                            <i class="bi bi-shield-lock text-secondary me-1"></i>Tài khoản nội bộ
-                                        </c:otherwise>
-                                    </c:choose>
-                                </small>
+                            <label class="cf-form-label">Vai trò</label>
+                            <div class="p-2 border rounded-3 bg-light d-flex align-items-center" style="min-height: 44px;">
+                                <c:choose>
+                                    <c:when test="${user.roleName == 'STUDENT'}">
+                                        <span class="role-tag student"><i class="bi bi-mortarboard-fill"></i> Học viên</span>
+                                    </c:when>
+                                    <c:when test="${user.roleName == 'EXPERT'}">
+                                        <span class="role-tag expert"><i class="bi bi-person-badge-fill"></i> Chuyên gia</span>
+                                    </c:when>
+                                    <c:when test="${user.roleName == 'ADMIN'}">
+                                        <span class="role-tag admin"><i class="bi bi-shield-fill-check"></i> Quản trị viên</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="role-tag manager"><i class="bi bi-briefcase-fill"></i> Quản lý</span>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Row 4: Bio / Description -->
+                    <!-- Row 4: Tiểu sử / Mô tả bản thân -->
                     <div class="mb-4">
                         <div class="d-flex align-items-center justify-content-between mb-1">
-                            <label class="cf-form-label mb-0" for="bioTextarea">
-                                Bio / Description
-                                <span class="text-muted fw-normal small ms-1">(Tiểu sử bản thân)</span>
-                            </label>
+                            <label class="cf-form-label mb-0" for="bioTextarea">Tiểu sử</label>
                             <span id="bioWordCounter" class="word-count-badge">0 / 250 từ</span>
                         </div>
                         <textarea id="bioTextarea" name="bio" rows="4" class="form-control cf-form-control"
-                                  placeholder="Computer Science student passionate about full-stack web development..."><c:out value="${user.bio}"/></textarea>
+                                  placeholder="Mô tả tóm tắt kinh nghiệm, chuyên môn hoặc định hướng học tập của bạn..."><c:out value="${user.bio}"/></textarea>
                         <div class="d-flex align-items-center justify-content-between mt-1">
-                            <small class="form-text text-muted">Mô tả tóm tắt kinh nghiệm, chuyên môn hoặc định hướng học tập của bạn (tối đa 250 từ).</small>
+                            <small class="form-text text-muted">Giới hạn tối đa 250 từ.</small>
                         </div>
                         <div id="bioError" class="field-error-text"></div>
                     </div>
 
-                    <!-- Submit Button -->
+                    <!-- Nút Lưu thay đổi (không có icon dấu tích) -->
                     <div class="pt-2">
                         <button type="submit" id="btnSubmitProfile" class="cf-btn-save">
-                            <i class="bi bi-check2-circle"></i>
-                            <span id="btnSubmitText">Save Changes</span>
+                            <span id="btnSubmitText">Lưu thay đổi</span>
                         </button>
                     </div>
                 </form>
@@ -385,7 +396,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('profileForm');
+        const btnUploadAvatar = document.getElementById('btnUploadAvatar');
+        const btnRemoveAvatar = document.getElementById('btnRemoveAvatar');
         const avatarInput = document.getElementById('avatarInput');
+        const removeAvatarInput = document.getElementById('removeAvatarInput');
         const avatarPreviewImg = document.getElementById('avatarPreviewImg');
         const avatarPreviewInitial = document.getElementById('avatarPreviewInitial');
         const fullNameInput = document.getElementById('fullNameInput');
@@ -396,6 +410,20 @@
         const bioWordCounter = document.getElementById('bioWordCounter');
         const btnSubmit = document.getElementById('btnSubmitProfile');
         const btnSubmitText = document.getElementById('btnSubmitText');
+
+        // Initial setup for avatar buttons
+        btnUploadAvatar.addEventListener('click', function() {
+            avatarInput.click();
+        });
+
+        btnRemoveAvatar.addEventListener('click', function() {
+            avatarInput.value = '';
+            removeAvatarInput.value = 'true';
+            avatarPreviewImg.style.display = 'none';
+            avatarPreviewImg.src = '';
+            avatarPreviewInitial.style.display = 'flex';
+            clearError('avatarError', 'avatarInput');
+        });
 
         // Validation helpers
         function getWords(text) {
@@ -425,12 +453,11 @@
             }
         }
 
-        // Live bio counter
         bioTextarea.addEventListener('input', updateBioWordCount);
         updateBioWordCount();
 
-        // Live Avatar preview
-        avatarInput.addEventListener('change', function(e) {
+        // Live Avatar preview when choosing file
+        avatarInput.addEventListener('change', function() {
             const file = this.files && this.files[0];
             if (!file) return;
 
@@ -449,6 +476,7 @@
                 return;
             }
 
+            removeAvatarInput.value = 'false';
             clearError('avatarError', 'avatarInput');
 
             // Show preview
@@ -490,11 +518,11 @@
         phoneInput.addEventListener('input', () => clearError('phoneError', 'phoneInput'));
         birthDateInput.addEventListener('change', () => clearError('birthDateError', 'birthDateInput'));
 
-        // Client-side form validation before submission
+        // Form submission
         form.addEventListener('submit', function(e) {
             let isValid = true;
 
-            // 1. Full Name
+            // 1. Họ và tên
             const fullName = fullNameInput.value.trim();
             if (!fullName) {
                 showError('fullNameError', 'fullNameInput', 'Họ và tên không được để trống.');
@@ -506,20 +534,20 @@
                 clearError('fullNameError', 'fullNameInput');
             }
 
-            // 2. Username
+            // 2. Tên người dùng
             const username = usernameInput.value.trim();
             const usernameRe = /^[a-zA-Z0-9_]{4,30}$/;
             if (!username) {
-                showError('usernameError', 'usernameInput', 'Tên đăng nhập không được để trống.');
+                showError('usernameError', 'usernameInput', 'Tên người dùng không được để trống.');
                 isValid = false;
             } else if (!usernameRe.test(username)) {
-                showError('usernameError', 'usernameInput', 'Tên đăng nhập phải từ 4-30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).');
+                showError('usernameError', 'usernameInput', 'Tên người dùng phải từ 4-30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).');
                 isValid = false;
             } else {
                 clearError('usernameError', 'usernameInput');
             }
 
-            // 3. Phone (optional)
+            // 3. Số điện thoại (tùy chọn)
             const phone = phoneInput.value.trim();
             if (phone) {
                 const phoneCleaned = phone.replace(/\s+/g, '');
@@ -534,7 +562,7 @@
                 clearError('phoneError', 'phoneInput');
             }
 
-            // 4. Date of Birth (optional)
+            // 4. Ngày sinh (tùy chọn)
             const birthDate = birthDateInput.value;
             if (birthDate) {
                 const bDate = new Date(birthDate);
@@ -573,7 +601,7 @@
                 return;
             }
 
-            // AJAX Submission with FormData
+            // Submit via AJAX FormData
             e.preventDefault();
 
             btnSubmit.disabled = true;
@@ -591,16 +619,62 @@
             .then(res => res.json())
             .then(data => {
                 btnSubmit.disabled = false;
-                btnSubmitText.textContent = 'Save Changes';
+                btnSubmitText.textContent = 'Lưu thay đổi';
 
                 if (data.success) {
+                    const newAvatarUrl = data.value;
+                    const newFullName = fullNameInput.value.trim();
+                    const newInitial = newFullName ? newFullName.substring(0, 1).toUpperCase() : 'U';
+
+                    // 1. Cập nhật ngay lập tức toàn bộ Avatar trên thanh Navbar và Dropdown Menu
+                    if (newAvatarUrl && newAvatarUrl.length > 0) {
+                        const cacheBuster = newAvatarUrl + '?t=' + Date.now();
+                        document.querySelectorAll('.navbar-avatar-img').forEach(img => {
+                            img.src = cacheBuster;
+                            img.style.display = 'inline-block';
+                        });
+                        document.querySelectorAll('.navbar-avatar-text').forEach(el => {
+                            el.style.display = 'none';
+                        });
+                        if (avatarPreviewImg) {
+                            avatarPreviewImg.src = cacheBuster;
+                            avatarPreviewImg.style.display = 'block';
+                        }
+                        if (avatarPreviewInitial) {
+                            avatarPreviewInitial.style.display = 'none';
+                        }
+                    } else {
+                        // Trường hợp xóa ảnh -> chuyển sang hiển thị chữ cái đại diện
+                        document.querySelectorAll('.navbar-avatar-img').forEach(img => {
+                            img.style.display = 'none';
+                            img.src = '';
+                        });
+                        document.querySelectorAll('.navbar-avatar-text').forEach(el => {
+                            el.textContent = newInitial;
+                            el.style.display = 'flex';
+                        });
+                        if (avatarPreviewImg) {
+                            avatarPreviewImg.style.display = 'none';
+                            avatarPreviewImg.src = '';
+                        }
+                        if (avatarPreviewInitial) {
+                            avatarPreviewInitial.textContent = newInitial;
+                            avatarPreviewInitial.style.display = 'flex';
+                        }
+                    }
+
+                    // 2. Cập nhật tên hiển thị trên header và menu dropdown
+                    document.querySelectorAll('.cf-account-header .fw-bold, .cf-user-name').forEach(el => {
+                        el.textContent = newFullName;
+                    });
+
+                    // Reset trạng thái file & remove flag
+                    avatarInput.value = '';
+                    removeAvatarInput.value = 'false';
+
+                    // Hiển thị thông báo thành công
                     if (window.CoursonToast) {
                         window.CoursonToast.show('success', data.message || 'Cập nhật thông tin hồ sơ thành công!', 8000);
-                    }
-                    // Update header avatar or display name if available
-                    const headerUserName = document.querySelector('.cf-user-name');
-                    if (headerUserName) {
-                        headerUserName.textContent = fullNameInput.value.trim();
                     }
                 } else {
                     if (data.field === 'fullName') {
@@ -623,8 +697,7 @@
             })
             .catch(err => {
                 btnSubmit.disabled = false;
-                btnSubmitText.textContent = 'Save Changes';
-                // Fallback to normal form submit if fetch fails
+                btnSubmitText.textContent = 'Lưu thay đổi';
                 form.submit();
             });
         });

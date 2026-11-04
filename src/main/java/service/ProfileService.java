@@ -272,4 +272,20 @@ public class ProfileService {
             throw new RuntimeException("Lỗi CSDL khi cập nhật hồ sơ: " + e.getMessage(), e);
         }
     }
+
+    public void removeAvatar(long userId) {
+        try (Connection con = DbConnection.getConnection()) {
+            String oldAvatarUrl = profileDao.getAvatarUrl(con, userId);
+            profileDao.updateAvatar(con, userId, null);
+            if (oldAvatarUrl != null && oldAvatarUrl.startsWith("/uploads/avatar/")) {
+                String oldFileName = oldAvatarUrl.substring("/uploads/avatar/".length());
+                File oldFile = new File(avatarStorageDir, oldFileName);
+                if (oldFile.exists() && oldFile.isFile()) {
+                    oldFile.delete();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi CSDL khi xóa ảnh đại diện: " + e.getMessage(), e);
+        }
+    }
 }

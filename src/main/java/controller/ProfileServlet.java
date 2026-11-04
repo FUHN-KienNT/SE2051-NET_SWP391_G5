@@ -130,15 +130,20 @@ public class ProfileServlet extends HttpServlet {
         boolean ajax = isAjax(req);
 
         try {
-            // Check avatar upload
-            Part avatarPart = null;
-            try {
-                avatarPart = req.getPart("avatar");
-            } catch (Exception ignored) {
-            }
+            // Check avatar upload or remove
+            String removeAvatar = req.getParameter("removeAvatar");
+            if ("true".equalsIgnoreCase(removeAvatar)) {
+                profileService.removeAvatar(currentUser.getId());
+            } else {
+                Part avatarPart = null;
+                try {
+                    avatarPart = req.getPart("avatar");
+                } catch (Exception ignored) {
+                }
 
-            if (avatarPart != null && avatarPart.getSize() > 0) {
-                profileService.updateAvatar(currentUser.getId(), avatarPart);
+                if (avatarPart != null && avatarPart.getSize() > 0) {
+                    profileService.updateAvatar(currentUser.getId(), avatarPart);
+                }
             }
 
             UserDto updatedUser = profileService.updateProfile(currentUser.getId(), fullName, username, phone, birthDate, bio);
@@ -147,7 +152,9 @@ public class ProfileServlet extends HttpServlet {
             SessionUtil.setCurrentUser(req, updatedUser);
 
             if (ajax) {
-                sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "profile", "Cập nhật thông tin hồ sơ thành công!", null);
+                String fullAvatarUrl = (updatedUser.getAvatarUrl() != null && !updatedUser.getAvatarUrl().isEmpty())
+                        ? (req.getContextPath() + updatedUser.getAvatarUrl()) : "";
+                sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "profile", "Cập nhật thông tin hồ sơ thành công!", fullAvatarUrl);
             } else {
                 HttpSession session = req.getSession(true);
                 session.setAttribute("flashToastType", "success");

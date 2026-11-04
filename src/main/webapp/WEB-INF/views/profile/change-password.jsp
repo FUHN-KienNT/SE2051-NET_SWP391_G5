@@ -181,7 +181,7 @@
             <!-- Back to profile link -->
             <a href="${pageContext.request.contextPath}/profile" class="cf-back-link">
                 <i class="bi bi-arrow-left"></i>
-                <span>Quay lại User Profile</span>
+                <span>Quay lại Hồ sơ cá nhân</span>
             </a>
 
             <div class="cf-pwd-card">
