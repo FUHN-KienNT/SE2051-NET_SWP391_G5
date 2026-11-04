@@ -1142,8 +1142,8 @@ body {
                                                             <c:when test="${c.status == 'DRAFT'}">
                                                                 <li><hr class="dropdown-divider my-1"></li>
                                                                 <li>
+                                                                <!-- #m_xoa [TRẠM 1/4 - GIAO DIỆN]: Nút xóa bản nháp menu 3 chấm. Bấm xác nhận sẽ gửi POST /expert/delete-course?id=... -->
                                                                     <a class="saas-dropdown-item text-danger" href="javascript:void(0)"
-                                                                       <!-- #m_xoa [TRẠM 1/4 - GIAO DIỆN]: Nút xóa bản nháp menu 3 chấm. Bấm xác nhận sẽ gửi POST /expert/delete-course?id=... -->
 onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
                                                                         <i class="bi bi-trash3 text-danger"></i>Xóa vĩnh viễn (Nháp)
                                                                     </a>
