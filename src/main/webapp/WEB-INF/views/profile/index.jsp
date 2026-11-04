@@ -2,828 +2,633 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
-<c:set var="pageTitle" value="Hồ sơ người dùng - Courson LMS" />
+<c:set var="pageTitle" value="Hồ sơ cá nhân - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
 
 <style>
-    .profile-sidebar-card {
+    .cf-profile-wrapper {
+        max-width: 960px;
+        margin: 0 auto;
+    }
+    .cf-profile-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid #E2E8F0;
+        border-radius: 18px;
+        padding: 36px 40px;
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 6px 12px -4px rgba(0, 0, 0, 0.02);
     }
-    .profile-avatar-wrapper {
-        position: relative;
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 16px auto;
+    .cf-profile-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 24px;
+        margin-bottom: 28px;
+        border-bottom: 1px solid #F1F5F9;
     }
-    .profile-avatar-img, .profile-avatar-initial {
-        width: 120px;
-        height: 120px;
+    .cf-profile-title {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: #0F172A;
+        letter-spacing: -0.5px;
+        margin-bottom: 0;
+    }
+    .cf-change-pwd-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #2563EB;
+        text-decoration: none;
+        font-size: 0.98rem;
+        font-weight: 600;
+        padding: 7px 14px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background-color: #EFF6FF;
+    }
+    .cf-change-pwd-link:hover {
+        background-color: #DBEAFE;
+        color: #1D4ED8;
+        transform: translateY(-1px);
+    }
+    .cf-form-label {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .cf-form-label .req-star {
+        color: #EF4444;
+    }
+    .cf-form-control {
+        border: 1.5px solid #CBD5E1;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        color: #1E293B;
+        transition: all 0.2s ease;
+        background-color: #FFFFFF;
+    }
+    .cf-form-control:focus {
+        border-color: #F38020;
+        box-shadow: 0 0 0 3px rgba(243, 128, 32, 0.18);
+        outline: none;
+    }
+    .cf-form-control:disabled, .cf-form-control[readonly] {
+        background-color: #F1F5F9;
+        border-color: #E2E8F0;
+        color: #64748B;
+        cursor: not-allowed;
+    }
+    .cf-avatar-row {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 26px;
+        padding: 18px 20px;
+        background-color: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 14px;
+    }
+    .cf-avatar-preview-wrap {
+        width: 76px;
+        height: 76px;
         border-radius: 50%;
-        object-fit: cover;
-        box-shadow: 0 4px 12px rgba(243, 128, 32, 0.2);
-        border: 3px solid #FFF5EB;
-    }
-    .profile-avatar-initial {
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 3px solid #FFF0E2;
+        box-shadow: 0 4px 10px rgba(243, 128, 32, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, #FAAD3F 0%, #F38020 100%);
-        color: #ffffff;
-        font-size: 42px;
+    }
+    .cf-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .cf-avatar-initial {
+        font-size: 2rem;
         font-weight: 700;
+        color: #FFFFFF;
+        user-select: none;
     }
-    .profile-avatar-btn {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background-color: #F38020;
-        color: #ffffff;
-        border: 2px solid #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    }
-    .profile-avatar-btn:hover {
-        background-color: #E56B00;
-        transform: scale(1.08);
-    }
-    .profile-nav-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        margin-bottom: 6px;
-        border-radius: 10px;
-        color: #475569;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-        cursor: pointer;
-    }
-    .profile-nav-item i {
-        font-size: 1.15rem;
-        margin-right: 12px;
-        color: #94a3b8;
-        transition: color 0.2s;
-    }
-    .profile-nav-item:hover {
-        background-color: #FFF5EB;
-        color: #F38020;
-    }
-    .profile-nav-item:hover i {
-        color: #F38020;
-    }
-    .profile-nav-item.active {
-        background: linear-gradient(135deg, #FFF5EB 0%, #FEEBD6 100%);
-        color: #F38020;
-        font-weight: 600;
-        border-left: 4px solid #F38020;
-    }
-    .profile-nav-item.active i {
-        color: #F38020;
-    }
-    .profile-content-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 32px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    .profile-section-title {
-        font-weight: 700;
-        font-size: 1.25rem;
-        color: #1e293b;
-        margin-bottom: 6px;
-    }
-    .profile-section-desc {
-        color: #64748b;
-        font-size: 0.9rem;
-        margin-bottom: 24px;
-    }
-    .profile-field-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    .btn-cf-save {
-        background-color: #F38020;
-        border-color: #F38020;
-        color: #ffffff;
-        font-weight: 600;
-        padding: 9px 24px;
-        border-radius: 8px;
-        transition: all 0.2s;
-        white-space: nowrap;
-    }
-    .btn-cf-save:hover, .btn-cf-save:focus {
-        background-color: #E56B00;
-        border-color: #E56B00;
-        color: #ffffff;
-    }
-    .field-error-msg {
-        font-size: 0.85rem;
-        color: #dc3545;
-        margin-top: 6px;
-        display: none;
-    }
-    .password-toggle-btn {
-        cursor: pointer;
-        background: transparent;
-        border: none;
-        color: #94a3b8;
-    }
-    .password-toggle-btn:hover {
-        color: #475569;
-    }
-    .strength-bars {
-        display: none;
-        gap: 4px;
-        margin-top: 6px;
-    }
-    .strength-bars.show {
-        display: flex;
-    }
-    .s-bar {
-        height: 3px;
+    .cf-avatar-upload-col {
         flex: 1;
-        border-radius: 2px;
-        background-color: #E5E7EB;
-        transition: background-color 0.2s;
     }
-    .s-bar.weak   { background-color: #ed4956; }
-    .s-bar.fair   { background-color: #f5a623; }
-    .s-bar.strong { background-color: #3ee04b; }
+    .cf-btn-save {
+        background: linear-gradient(135deg, #F38020 0%, #E56B00 100%);
+        color: #FFFFFF;
+        border: none;
+        padding: 11px 32px;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(243, 128, 32, 0.28);
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+    .cf-btn-save:hover {
+        background: linear-gradient(135deg, #E56B00 0%, #CF5A00 100%);
+        box-shadow: 0 6px 16px rgba(243, 128, 32, 0.38);
+        transform: translateY(-1px);
+        color: #FFFFFF;
+    }
+    .cf-btn-save:active {
+        transform: translateY(0);
+    }
+    .cf-btn-save:disabled {
+        background: #94A3B8;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+    .word-count-badge {
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 12px;
+        background-color: #F1F5F9;
+        color: #475569;
+        transition: all 0.2s ease;
+    }
+    .word-count-badge.warning {
+        background-color: #FEF3C7;
+        color: #D97706;
+    }
+    .word-count-badge.danger {
+        background-color: #FEE2E2;
+        color: #DC2626;
+        font-weight: 700;
+    }
+    .field-error-text {
+        font-size: 0.82rem;
+        color: #DC2626;
+        margin-top: 5px;
+        display: none;
+    }
+    .role-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .role-tag.student { background: #EFF6FF; color: #1E40AF; }
+    .role-tag.expert  { background: #FAF5FF; color: #6B21A8; }
+    .role-tag.admin   { background: #FEF2F2; color: #991B1B; }
+    .role-tag.manager { background: #ECFDF5; color: #065F46; }
 </style>
 
-<main class="main-content py-5">
+<main class="main-content py-5" style="background-color: #F8FAFC; min-height: 80vh;">
     <div class="container">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/home" class="text-decoration-none text-muted">Trang chủ</a></li>
-                <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Hồ sơ người dùng</li>
+                <li class="breadcrumb-item">
+                    <a href="${pageContext.request.contextPath}/home" class="text-decoration-none text-muted">
+                        <i class="bi bi-house-door me-1"></i>Trang chủ
+                    </a>
+                </li>
+                <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Hồ sơ cá nhân</li>
             </ol>
         </nav>
 
         <c:set var="displayName" value="${not empty user.fullName ? user.fullName : user.username}" />
         <c:set var="userInitial" value="${fn:toUpperCase(fn:substring(displayName, 0, 1))}" />
 
-        <div class="row g-4">
-            <!-- Left Sidebar -->
-            <div class="col-lg-4 col-md-5">
-                <div class="profile-sidebar-card text-center">
-                    <!-- Avatar Area -->
-                    <div class="profile-avatar-wrapper">
-                        <c:choose>
-                            <c:when test="${not empty user.avatarUrl}">
-                                <img src="${pageContext.request.contextPath}${user.avatarUrl}" id="sidebarAvatarImg" class="profile-avatar-img" alt="Avatar" />
-                                <div id="sidebarAvatarInitial" class="profile-avatar-initial" style="display: none;">${userInitial}</div>
-                            </c:when>
-                            <c:otherwise>
-                                <img src="" id="sidebarAvatarImg" class="profile-avatar-img" style="display: none;" alt="Avatar" />
-                                <div id="sidebarAvatarInitial" class="profile-avatar-initial">${userInitial}</div>
-                            </c:otherwise>
-                        </c:choose>
+        <div class="cf-profile-wrapper">
+            <div class="cf-profile-card">
+                <!-- Header: User Profile Title + Change Password Link -->
+                <div class="cf-profile-header">
+                    <div>
+                        <h1 class="cf-profile-title">User Profile</h1>
+                        <p class="text-muted small mb-0 mt-1">Quản lý và cập nhật thông tin tài khoản cá nhân của bạn trên Courson LMS</p>
+                    </div>
+                    <div>
+                        <a href="${pageContext.request.contextPath}/profile/change-password" class="cf-change-pwd-link" title="Đổi mật khẩu tài khoản">
+                            <i class="bi bi-shield-lock-fill"></i>
+                            <span>Change Password</span>
+                        </a>
+                    </div>
+                </div>
 
-                        <!-- Change Avatar Button -->
-                        <button type="button" class="profile-avatar-btn" id="btnTriggerAvatar" title="Thay đổi ảnh đại diện">
-                            <i class="bi bi-camera-fill"></i>
-                        </button>
-                        <!-- Hidden file input -->
-                        <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp" style="display: none;" />
+                <!-- Server Error Alert -->
+                <c:if test="${not empty error}">
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2 fs-5"></i>
+                        <div><c:out value="${error}" /></div>
+                    </div>
+                </c:if>
+
+                <!-- Profile Form -->
+                <form id="profileForm" action="${pageContext.request.contextPath}/profile" method="POST" enctype="multipart/form-data" novalidate>
+                    <input type="hidden" name="action" value="update" />
+
+                    <!-- Avatar Section -->
+                    <div class="cf-avatar-row">
+                        <div class="cf-avatar-preview-wrap" id="avatarPreviewContainer">
+                            <c:choose>
+                                <c:when test="${not empty user.avatarUrl}">
+                                    <img src="${pageContext.request.contextPath}${user.avatarUrl}" id="avatarPreviewImg" class="cf-avatar-img" alt="Avatar" />
+                                    <div id="avatarPreviewInitial" class="cf-avatar-initial" style="display: none;">${userInitial}</div>
+                                </c:when>
+                                <c:otherwise>
+                                    <img src="" id="avatarPreviewImg" class="cf-avatar-img" style="display: none;" alt="Avatar" />
+                                    <div id="avatarPreviewInitial" class="cf-avatar-initial">${userInitial}</div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+
+                        <div class="cf-avatar-upload-col">
+                            <label class="cf-form-label" for="avatarInput">
+                                Avatar
+                                <span class="text-muted fw-normal small ms-2">(Ảnh đại diện)</span>
+                            </label>
+                            <input type="file" id="avatarInput" name="avatar" class="form-control cf-form-control"
+                                   accept="image/jpeg,image/png,image/webp" />
+                            <div class="d-flex align-items-center justify-content-between mt-1">
+                                <span class="form-text text-muted small">Hỗ trợ JPG, PNG, WEBP. Dung lượng tối đa 15MB.</span>
+                                <span id="avatarFileName" class="text-muted small"></span>
+                            </div>
+                            <div id="avatarError" class="field-error-text"></div>
+                        </div>
                     </div>
 
-                    <!-- User Information in Sidebar -->
-                    <h5 class="fw-bold text-dark mb-1" id="sidebarFullNameDisplay">${displayName}</h5>
-                    <p class="text-muted small mb-2" id="sidebarUsernameDisplay">@${user.username}</p>
+                    <!-- Row 1: Full Name & Username -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="cf-form-label" for="fullNameInput">
+                                Full Name<span class="req-star">*</span>
+                            </label>
+                            <input type="text" id="fullNameInput" name="fullName" class="form-control cf-form-control"
+                                   value="<c:out value='${user.fullName}'/>" placeholder="Nhập họ và tên" required />
+                            <div id="fullNameError" class="field-error-text"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="cf-form-label" for="usernameInput">
+                                Username<span class="req-star">*</span>
+                            </label>
+                            <input type="text" id="usernameInput" name="username" class="form-control cf-form-control"
+                                   value="<c:out value='${user.username}'/>" placeholder="Nhập tên đăng nhập" required />
+                            <div id="usernameError" class="field-error-text"></div>
+                        </div>
+                    </div>
 
-                    <!-- Role Badge -->
+                    <!-- Row 2: Email Address & Phone -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="cf-form-label" for="emailInput">
+                                Email Address
+                                <i class="bi bi-lock-fill text-muted ms-1" title="Email là định danh cố định, không thể chỉnh sửa"></i>
+                            </label>
+                            <input type="email" id="emailInput" class="form-control cf-form-control"
+                                   value="<c:out value='${user.email}'/>" disabled readonly />
+                            <small class="form-text text-muted">Email định danh tài khoản cố định, không được phép thay đổi.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="cf-form-label" for="phoneInput">
+                                Phone
+                                <span class="text-muted fw-normal small ms-1">(Số điện thoại)</span>
+                            </label>
+                            <input type="tel" id="phoneInput" name="phone" class="form-control cf-form-control"
+                                   value="<c:out value='${user.phone}'/>" placeholder="0912345678" />
+                            <div id="phoneError" class="field-error-text"></div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Date of Birth & Role Badge -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="cf-form-label" for="birthDateInput">
+                                Ngày sinh
+                                <span class="text-muted fw-normal small ms-1">(Date of Birth)</span>
+                            </label>
+                            <input type="date" id="birthDateInput" name="birthDate" class="form-control cf-form-control"
+                                   value="${user.birthDate}" />
+                            <div id="birthDateError" class="field-error-text"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="cf-form-label">
+                                Vai trò & Quyền hạn
+                            </label>
+                            <div class="p-2 border rounded-3 bg-light d-flex align-items-center justify-content-between" style="min-height: 44px;">
+                                <div>
+                                    <c:choose>
+                                        <c:when test="${user.roleName == 'STUDENT'}">
+                                            <span class="role-tag student"><i class="bi bi-mortarboard-fill"></i> Học viên</span>
+                                        </c:when>
+                                        <c:when test="${user.roleName == 'EXPERT'}">
+                                            <span class="role-tag expert"><i class="bi bi-person-badge-fill"></i> Chuyên gia</span>
+                                        </c:when>
+                                        <c:when test="${user.roleName == 'ADMIN'}">
+                                            <span class="role-tag admin"><i class="bi bi-shield-fill-check"></i> Quản trị viên</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="role-tag manager"><i class="bi bi-briefcase-fill"></i> Quản lý</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <small class="text-muted">
+                                    <c:choose>
+                                        <c:when test="${user.authProvider == 'GOOGLE'}">
+                                            <i class="bi bi-google text-danger me-1"></i>Google Auth
+                                        </c:when>
+                                        <c:otherwise>
+                                            <i class="bi bi-shield-lock text-secondary me-1"></i>Tài khoản nội bộ
+                                        </c:otherwise>
+                                    </c:choose>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Bio / Description -->
                     <div class="mb-4">
-                        <c:choose>
-                            <c:when test="${user.roleName == 'STUDENT'}">
-                                <span class="cf-role-badge cf-role-student py-1 px-3 fs-6">
-                                    <i class="bi bi-mortarboard me-1"></i>Học viên
-                                </span>
-                            </c:when>
-                            <c:when test="${user.roleName == 'EXPERT'}">
-                                <span class="cf-role-badge cf-role-expert py-1 px-3 fs-6">
-                                    <i class="bi bi-person-badge me-1"></i>Chuyên gia
-                                </span>
-                            </c:when>
-                            <c:when test="${user.roleName == 'ADMIN'}">
-                                <span class="cf-role-badge cf-role-admin py-1 px-3 fs-6">
-                                    <i class="bi bi-shield-lock me-1"></i>Quản trị viên
-                                </span>
-                            </c:when>
-                            <c:otherwise>
-                                <span class="cf-role-badge cf-role-manager py-1 px-3 fs-6">
-                                    <i class="bi bi-briefcase me-1"></i>Quản lý
-                                </span>
-                            </c:otherwise>
-                        </c:choose>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="cf-form-label mb-0" for="bioTextarea">
+                                Bio / Description
+                                <span class="text-muted fw-normal small ms-1">(Tiểu sử bản thân)</span>
+                            </label>
+                            <span id="bioWordCounter" class="word-count-badge">0 / 250 từ</span>
+                        </div>
+                        <textarea id="bioTextarea" name="bio" rows="4" class="form-control cf-form-control"
+                                  placeholder="Computer Science student passionate about full-stack web development..."><c:out value="${user.bio}"/></textarea>
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <small class="form-text text-muted">Mô tả tóm tắt kinh nghiệm, chuyên môn hoặc định hướng học tập của bạn (tối đa 250 từ).</small>
+                        </div>
+                        <div id="bioError" class="field-error-text"></div>
                     </div>
 
-                    <div id="avatarUploadFeedback" class="small text-danger mb-3" style="display: none;"></div>
-
-                    <!-- Sidebar Navigation Tabs -->
-                    <div class="text-start mt-2">
-                        <a class="profile-nav-item active" data-tab="tab-general">
-                            <i class="bi bi-person-badge"></i>Hồ sơ cá nhân
-                        </a>
-                        <a class="profile-nav-item" data-tab="tab-username">
-                            <i class="bi bi-at"></i>Tên người dùng
-                        </a>
-                        <a class="profile-nav-item" data-tab="tab-password">
-                            <i class="bi bi-key"></i>Mật khẩu
-                        </a>
-                        <a class="profile-nav-item" data-tab="tab-email">
-                            <i class="bi bi-envelope"></i>Email
-                        </a>
-                        <a class="profile-nav-item" data-tab="tab-birthdate">
-                            <i class="bi bi-calendar-event"></i>Ngày sinh
-                        </a>
+                    <!-- Submit Button -->
+                    <div class="pt-2">
+                        <button type="submit" id="btnSubmitProfile" class="cf-btn-save">
+                            <i class="bi bi-check2-circle"></i>
+                            <span id="btnSubmitText">Save Changes</span>
+                        </button>
                     </div>
-                </div>
-            </div>
-
-            <!-- Right Main Panel -->
-            <div class="col-lg-8 col-md-7">
-                <!-- Global Alerts Container -->
-                <div id="globalAlertContainer" class="mb-3"></div>
-
-                <!-- TAB 1: General Profile (Full Name & Phone) -->
-                <div class="profile-content-card tab-content-panel" id="tab-general">
-                    <h4 class="profile-section-title">Hồ sơ cá nhân</h4>
-                    <p class="profile-section-desc">Cập nhật họ và tên và số điện thoại liên lạc của tài khoản.</p>
-
-                    <!-- Form 1: Họ và tên -->
-                    <div class="profile-field-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold text-dark mb-0">Họ và tên</label>
-                            <span class="badge bg-light text-muted border">Bắt buộc</span>
-                        </div>
-                        <p class="text-muted small mb-3">Tên hiển thị trên chứng chỉ và toàn bộ hệ thống Courson LMS.</p>
-                        <div class="mb-3">
-                            <input type="text" class="form-control" id="inputFullName" value="<c:out value='${user.fullName}' />" placeholder="Nhập họ và tên..." maxlength="50" />
-                            <div class="field-error-msg" id="errorFullName"></div>
-                        </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-cf-save" id="btnSaveFullName">
-                                Lưu họ tên
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Form 2: Số điện thoại -->
-                    <div class="profile-field-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold text-dark mb-0">Số điện thoại</label>
-                            <span class="badge bg-light text-muted border">Tùy chọn</span>
-                        </div>
-                        <p class="text-muted small mb-3">Số điện thoại 10 chữ số tại Việt Nam (hỗ trợ đầu số 0 hoặc +84).</p>
-                        <div class="mb-3">
-                            <input type="text" class="form-control" id="inputPhone" value="<c:out value='${user.phone}' />" placeholder="Ví dụ: 0912345678 hoặc +84912345678" maxlength="15" />
-                            <div class="field-error-msg" id="errorPhone"></div>
-                        </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-cf-save" id="btnSavePhone">
-                                Lưu số điện thoại
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 2: Username -->
-                <div class="profile-content-card tab-content-panel" id="tab-username" style="display: none;">
-                    <h4 class="profile-section-title">Tên người dùng</h4>
-                    <p class="profile-section-desc">Tên đăng nhập duy nhất được dùng để truy cập vào hệ thống Courson LMS.</p>
-
-                    <div class="profile-field-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold text-dark mb-0">Tên đăng nhập (Username)</label>
-                            <span class="badge bg-light text-muted border">Bắt buộc</span>
-                        </div>
-                        <p class="text-muted small mb-3">Độ dài 4-30 ký tự, chỉ gồm chữ cái, chữ số hoặc dấu gạch dưới (_).</p>
-                        <div class="mb-3">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white text-muted">@</span>
-                                <input type="text" class="form-control" id="inputUsername" value="<c:out value='${user.username}' />" placeholder="Tên đăng nhập..." maxlength="30" />
-                            </div>
-                            <div class="field-error-msg" id="errorUsername"></div>
-                        </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-cf-save" id="btnSaveUsername">
-                                Lưu tên đăng nhập
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 3: Password (UI & Client-side validation) -->
-                <div class="profile-content-card tab-content-panel" id="tab-password" style="display: none;">
-                    <h4 class="profile-section-title">Đổi mật khẩu</h4>
-                    <p class="profile-section-desc">Quản lý và cập nhật mật khẩu để bảo mật tài khoản.</p>
-
-                    <div class="profile-field-card">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-dark mb-1">Mật khẩu hiện tại</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="inputCurrentPassword" placeholder="Nhập mật khẩu hiện tại" />
-                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" data-target="inputCurrentPassword">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                            <div class="field-error-msg" id="errorCurrentPassword"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-dark mb-1">Mật khẩu mới</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="inputNewPassword" placeholder="Nhập mật khẩu mới (8–32 ký tự)" />
-                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" data-target="inputNewPassword">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                            <div class="strength-bars" id="profileStrengthBars">
-                                <div class="s-bar" id="pb1"></div>
-                                <div class="s-bar" id="pb2"></div>
-                                <div class="s-bar" id="pb3"></div>
-                                <div class="s-bar" id="pb4"></div>
-                            </div>
-                            <small class="form-text text-muted d-block mt-1" style="font-size: 0.8rem;">
-                                Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.
-                            </small>
-                            <div class="field-error-msg" id="errorNewPassword"></div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-dark mb-1">Nhập lại mật khẩu mới</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="inputConfirmPassword" placeholder="Nhập lại mật khẩu mới" />
-                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" data-target="inputConfirmPassword">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                            <div class="field-error-msg" id="errorPassword"></div>
-                        </div>
-
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-cf-save" id="btnSavePassword">
-                                Đổi mật khẩu
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 4: Email (Readonly) -->
-                <div class="profile-content-card tab-content-panel" id="tab-email" style="display: none;">
-                    <h4 class="profile-section-title">Địa chỉ Email</h4>
-                    <p class="profile-section-desc">Email dùng để đăng nhập, xác thực và nhận thông báo quan trọng.</p>
-
-                    <div class="profile-field-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold text-dark mb-0">Email tài khoản</label>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                <i class="bi bi-patch-check-fill me-1"></i>Đã xác thực
-                            </span>
-                        </div>
-                        <p class="text-muted small mb-3">Email là định danh tài khoản cố định và không thể thay đổi vì lý do bảo mật.</p>
-                        <div class="input-group mb-2">
-                            <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope-fill"></i></span>
-                            <input type="email" class="form-control bg-light text-muted" value="<c:out value='${user.email}' />" readonly disabled />
-                        </div>
-                        <div class="alert alert-secondary py-2 px-3 small mt-3 mb-0" role="alert">
-                            <i class="bi bi-info-circle-fill me-1 text-primary"></i>Nếu cần thay đổi email liên lạc, vui lòng liên hệ Ban quản trị qua trang Hỗ trợ.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 5: Birth Date -->
-                <div class="profile-content-card tab-content-panel" id="tab-birthdate" style="display: none;">
-                    <h4 class="profile-section-title">Ngày sinh</h4>
-                    <p class="profile-section-desc">Ngày tháng năm sinh phục vụ cấp chứng chỉ và cá nhân hóa khóa học.</p>
-
-                    <div class="profile-field-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold text-dark mb-0">Ngày sinh</label>
-                            <span class="badge bg-light text-muted border">Tùy chọn</span>
-                        </div>
-                        <p class="text-muted small mb-3">Độ tuổi học viên hợp lệ từ 10 đến 120 tuổi.</p>
-                        <div class="mb-3">
-                            <input type="date" class="form-control" id="inputBirthDate" value="${user.birthDate}" />
-                            <div class="field-error-msg" id="errorBirthDate"></div>
-                        </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-cf-save" id="btnSaveBirthDate">
-                                Lưu ngày sinh
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
+                </form>
             </div>
         </div>
     </div>
 </main>
 
-<jsp:include page="../common/footer.jsp" />
-
-<!-- Profile Interactions Script -->
 <script>
-    (function () {
-        const contextPath = '${pageContext.request.contextPath}';
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('profileForm');
+        const avatarInput = document.getElementById('avatarInput');
+        const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+        const avatarPreviewInitial = document.getElementById('avatarPreviewInitial');
+        const fullNameInput = document.getElementById('fullNameInput');
+        const usernameInput = document.getElementById('usernameInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const birthDateInput = document.getElementById('birthDateInput');
+        const bioTextarea = document.getElementById('bioTextarea');
+        const bioWordCounter = document.getElementById('bioWordCounter');
+        const btnSubmit = document.getElementById('btnSubmitProfile');
+        const btnSubmitText = document.getElementById('btnSubmitText');
 
-        // 1. Tab Switching
-        const navItems = document.querySelectorAll('.profile-nav-item');
-        const panels = document.querySelectorAll('.tab-content-panel');
-
-        navItems.forEach(item => {
-            item.addEventListener('click', function () {
-                navItems.forEach(n => n.classList.remove('active'));
-                this.classList.add('active');
-
-                const targetTab = this.getAttribute('data-tab');
-                panels.forEach(p => {
-                    p.style.display = (p.id === targetTab) ? 'block' : 'none';
-                });
-            });
-        });
-
-        // 2. Alert Toast Utility
-        const alertContainer = document.getElementById('globalAlertContainer');
-        function showAlert(message, type = 'success') {
-            const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-            alertContainer.innerHTML = `
-                <div class="alert \${alertClass} alert-dismissible fade show py-2.5 px-3 small d-flex align-items-center" role="alert">
-                    <i class="bi \${icon} me-2 fs-6"></i>
-                    <div>\${message}</div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="padding: 0.85rem;"></button>
-                </div>
-            `;
-            // Auto dismiss after 5s
-            setTimeout(() => {
-                const el = alertContainer.querySelector('.alert');
-                if (el) {
-                    el.classList.remove('show');
-                    setTimeout(() => el.remove(), 200);
-                }
-            }, 5000);
+        // Validation helpers
+        function getWords(text) {
+            if (!text) return [];
+            const trimmed = text.trim();
+            if (!trimmed) return [];
+            return trimmed.split(/\s+/);
         }
 
-        // 3. Reusable AJAX Field Saver
-        function saveField(field, value, btn, errorEl, onSuccessCallback) {
-            // Clear previous error
-            errorEl.style.display = 'none';
-            errorEl.textContent = '';
+        function updateBioWordCount() {
+            const words = getWords(bioTextarea.value);
+            const count = words.length;
+            bioWordCounter.textContent = count + ' / 250 từ';
 
-            // Loading state
-            const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Đang lưu...';
-
-            const params = new URLSearchParams();
-            params.append('field', field);
-            params.append('value', value != null ? value : '');
-
-            fetch(contextPath + '/profile/update-field', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                },
-                body: params.toString()
-            })
-            .then(res => res.json())
-            .then(data => {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    if (onSuccessCallback) {
-                        onSuccessCallback(data.value);
-                    }
-                } else {
-                    errorEl.textContent = data.message || 'Đã có lỗi xảy ra.';
-                    errorEl.style.display = 'block';
-                }
-            })
-            .catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-                errorEl.textContent = 'Lỗi kết nối máy chủ: ' + err.message;
-                errorEl.style.display = 'block';
-            });
-        }
-
-        // 4. Save Full Name
-        const btnSaveFullName = document.getElementById('btnSaveFullName');
-        const inputFullName = document.getElementById('inputFullName');
-        const errorFullName = document.getElementById('errorFullName');
-
-        btnSaveFullName.addEventListener('click', function () {
-            saveField('fullName', inputFullName.value, btnSaveFullName, errorFullName, function (val) {
-                document.getElementById('sidebarFullNameDisplay').textContent = val;
-            });
-        });
-
-        // 5. Save Phone
-        const btnSavePhone = document.getElementById('btnSavePhone');
-        const inputPhone = document.getElementById('inputPhone');
-        const errorPhone = document.getElementById('errorPhone');
-
-        btnSavePhone.addEventListener('click', function () {
-            saveField('phone', inputPhone.value, btnSavePhone, errorPhone, function (normalizedVal) {
-                inputPhone.value = normalizedVal || '';
-            });
-        });
-
-        // 6. Save Username
-        const btnSaveUsername = document.getElementById('btnSaveUsername');
-        const inputUsername = document.getElementById('inputUsername');
-        const errorUsername = document.getElementById('errorUsername');
-
-        btnSaveUsername.addEventListener('click', function () {
-            saveField('username', inputUsername.value, btnSaveUsername, errorUsername, function (val) {
-                document.getElementById('sidebarUsernameDisplay').textContent = '@' + val;
-            });
-        });
-
-        // 7. Save Birth Date
-        const btnSaveBirthDate = document.getElementById('btnSaveBirthDate');
-        const inputBirthDate = document.getElementById('inputBirthDate');
-        const errorBirthDate = document.getElementById('errorBirthDate');
-
-        btnSaveBirthDate.addEventListener('click', function () {
-            saveField('birthDate', inputBirthDate.value, btnSaveBirthDate, errorBirthDate);
-        });
-
-        // 8. Password Toggle & Validation
-        document.querySelectorAll('.password-toggle-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const targetId = this.getAttribute('data-target');
-                const targetInput = document.getElementById(targetId);
-                const icon = this.querySelector('i');
-                if (targetInput.type === 'password') {
-                    targetInput.type = 'text';
-                    icon.classList.remove('bi-eye');
-                    icon.classList.add('bi-eye-slash');
-                } else {
-                    targetInput.type = 'password';
-                    icon.classList.remove('bi-eye-slash');
-                    icon.classList.add('bi-eye');
-                }
-            });
-        });
-
-        const btnSavePassword = document.getElementById('btnSavePassword');
-        const inputCurrentPassword = document.getElementById('inputCurrentPassword');
-        const inputNewPassword = document.getElementById('inputNewPassword');
-        const inputConfirmPassword = document.getElementById('inputConfirmPassword');
-        const errorCurrentPassword = document.getElementById('errorCurrentPassword');
-        const errorNewPassword = document.getElementById('errorNewPassword');
-        const errorPassword = document.getElementById('errorPassword');
-
-        const STRONG_RE = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]).{8,32}$/;
-
-        function passwordScore(pw) {
-            let s = 0;
-            if (pw.length >= 8) s++;
-            if (/[A-Z]/.test(pw)) s++;
-            if (/\d/.test(pw)) s++;
-            if (/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(pw)) s++;
-            return s;
-        }
-
-        function updateBars(score) {
-            const bars = [document.getElementById('pb1'), document.getElementById('pb2'),
-                document.getElementById('pb3'), document.getElementById('pb4')];
-            bars.forEach(b => b.className = 's-bar');
-            const cls = score <= 1 ? 'weak' : score <= 2 ? 'fair' : 'strong';
-            for (let i = 0; i < score; i++) {
-                bars[i].classList.add(cls);
-            }
-        }
-
-        function clearPasswordErrors() {
-            if (errorCurrentPassword) {
-                errorCurrentPassword.style.display = 'none';
-                errorCurrentPassword.textContent = '';
-            }
-            if (errorNewPassword) {
-                errorNewPassword.style.display = 'none';
-                errorNewPassword.textContent = '';
-            }
-            if (errorPassword) {
-                errorPassword.style.display = 'none';
-                errorPassword.textContent = '';
-            }
-        }
-
-        if (inputCurrentPassword) {
-            inputCurrentPassword.addEventListener('input', function () {
-                if (errorCurrentPassword) {
-                    errorCurrentPassword.style.display = 'none';
-                    errorCurrentPassword.textContent = '';
-                }
-            });
-        }
-
-        inputNewPassword.addEventListener('input', function () {
-            if (errorNewPassword) {
-                errorNewPassword.style.display = 'none';
-                errorNewPassword.textContent = '';
-            }
-            const barsEl = document.getElementById('profileStrengthBars');
-            if (this.value.length > 0) {
-                barsEl.classList.add('show');
-                updateBars(passwordScore(this.value));
+            bioWordCounter.classList.remove('warning', 'danger');
+            if (count > 250) {
+                bioWordCounter.classList.add('danger');
+                showError('bioError', 'bioTextarea', 'Tiểu sử không được vượt quá 250 từ (hiện có ' + count + ' từ).');
+                return false;
+            } else if (count >= 200) {
+                bioWordCounter.classList.add('warning');
+                clearError('bioError', 'bioTextarea');
+                return true;
             } else {
-                barsEl.classList.remove('show');
+                clearError('bioError', 'bioTextarea');
+                return true;
             }
-        });
+        }
 
-        inputConfirmPassword.addEventListener('input', function () {
-            if (errorPassword) {
-                errorPassword.style.display = 'none';
-                errorPassword.textContent = '';
-            }
-        });
+        // Live bio counter
+        bioTextarea.addEventListener('input', updateBioWordCount);
+        updateBioWordCount();
 
-        btnSavePassword.addEventListener('click', function () {
-            clearPasswordErrors();
-
-            const pOld = inputCurrentPassword ? inputCurrentPassword.value : '';
-            const p1 = inputNewPassword.value;
-            const p2 = inputConfirmPassword.value;
-
-            if (!pOld) {
-                errorCurrentPassword.textContent = 'Vui lòng nhập mật khẩu hiện tại.';
-                errorCurrentPassword.style.display = 'block';
-                return;
-            }
-            if (!p1) {
-                errorNewPassword.textContent = 'Mật khẩu mới không được để trống.';
-                errorNewPassword.style.display = 'block';
-                return;
-            }
-            if (!STRONG_RE.test(p1)) {
-                errorNewPassword.textContent = 'Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.';
-                errorNewPassword.style.display = 'block';
-                return;
-            }
-            if (pOld === p1) {
-                errorNewPassword.textContent = 'Mật khẩu mới không được trùng với mật khẩu hiện tại.';
-                errorNewPassword.style.display = 'block';
-                return;
-            }
-            if (p1 !== p2) {
-                errorPassword.textContent = 'Mật khẩu xác nhận không khớp.';
-                errorPassword.style.display = 'block';
-                return;
-            }
-
-            const originalHtml = btnSavePassword.innerHTML;
-            btnSavePassword.disabled = true;
-            btnSavePassword.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Đang đổi mật khẩu...';
-
-            const params = new URLSearchParams();
-            params.append('currentPassword', pOld);
-            params.append('newPassword', p1);
-            params.append('confirmPassword', p2);
-
-            fetch(contextPath + '/profile/change-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                },
-                body: params.toString()
-            })
-            .then(res => res.json())
-            .then(data => {
-                btnSavePassword.disabled = false;
-                btnSavePassword.innerHTML = originalHtml;
-
-                if (data.success) {
-                    showAlert(data.message || 'Đổi mật khẩu thành công!', 'success');
-                    if (inputCurrentPassword) inputCurrentPassword.value = '';
-                    inputNewPassword.value = '';
-                    inputConfirmPassword.value = '';
-                    const barsEl = document.getElementById('profileStrengthBars');
-                    if (barsEl) barsEl.classList.remove('show');
-                } else {
-                    const msg = data.message || 'Đã có lỗi xảy ra khi đổi mật khẩu.';
-                    if (msg.includes('hiện tại') || msg.includes('mật khẩu cũ')) {
-                        errorCurrentPassword.textContent = msg;
-                        errorCurrentPassword.style.display = 'block';
-                    } else if (msg.includes('khớp') || msg.includes('xác nhận')) {
-                        errorPassword.textContent = msg;
-                        errorPassword.style.display = 'block';
-                    } else {
-                        errorNewPassword.textContent = msg;
-                        errorNewPassword.style.display = 'block';
-                    }
-                }
-            })
-            .catch(err => {
-                btnSavePassword.disabled = false;
-                btnSavePassword.innerHTML = originalHtml;
-                errorPassword.textContent = 'Lỗi kết nối máy chủ: ' + err.message;
-                errorPassword.style.display = 'block';
-            });
-        });
-        // 9. Avatar Upload Handler
-        const btnTriggerAvatar = document.getElementById('btnTriggerAvatar');
-        const avatarFileInput = document.getElementById('avatarFileInput');
-        const avatarFeedback = document.getElementById('avatarUploadFeedback');
-        const sidebarAvatarImg = document.getElementById('sidebarAvatarImg');
-        const sidebarAvatarInitial = document.getElementById('sidebarAvatarInitial');
-
-        btnTriggerAvatar.addEventListener('click', function () {
-            avatarFileInput.click();
-        });
-
-        avatarFileInput.addEventListener('change', function () {
-            avatarFeedback.style.display = 'none';
-            avatarFeedback.textContent = '';
-
-            const file = this.files[0];
+        // Live Avatar preview
+        avatarInput.addEventListener('change', function(e) {
+            const file = this.files && this.files[0];
             if (!file) return;
 
-            // Client-side size validation (< 15MB)
+            // Validate file size (15MB)
             if (file.size > 15 * 1024 * 1024) {
-                avatarFeedback.textContent = 'Dung lượng ảnh vượt quá 15MB.';
-                avatarFeedback.style.display = 'block';
+                showError('avatarError', 'avatarInput', 'Dung lượng ảnh vượt quá 15MB. Vui lòng chọn ảnh khác.');
                 this.value = '';
                 return;
             }
 
-            // Client-side extension validation
+            // Validate extension
             const ext = file.name.split('.').pop().toLowerCase();
             if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-                avatarFeedback.textContent = 'Chỉ chấp nhận file ảnh JPG, JPEG, PNG, WEBP.';
-                avatarFeedback.style.display = 'block';
+                showError('avatarError', 'avatarInput', 'Định dạng file không hỗ trợ. Chỉ chấp nhận JPG, PNG, WEBP.');
                 this.value = '';
                 return;
             }
 
-            // Send via AJAX FormData
-            btnTriggerAvatar.disabled = true;
-            btnTriggerAvatar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+            clearError('avatarError', 'avatarInput');
 
-            const formData = new FormData();
-            formData.append('avatar', file);
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                avatarPreviewImg.src = evt.target.result;
+                avatarPreviewImg.style.display = 'block';
+                if (avatarPreviewInitial) avatarPreviewInitial.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        });
 
-            fetch(contextPath + '/profile/avatar', {
+        function showError(errorId, inputId, message) {
+            const errEl = document.getElementById(errorId);
+            const inputEl = document.getElementById(inputId);
+            if (errEl) {
+                errEl.textContent = message;
+                errEl.style.display = 'block';
+            }
+            if (inputEl) {
+                inputEl.style.borderColor = '#DC2626';
+            }
+        }
+
+        function clearError(errorId, inputId) {
+            const errEl = document.getElementById(errorId);
+            const inputEl = document.getElementById(inputId);
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.style.display = 'none';
+            }
+            if (inputEl) {
+                inputEl.style.borderColor = '#CBD5E1';
+            }
+        }
+
+        fullNameInput.addEventListener('input', () => clearError('fullNameError', 'fullNameInput'));
+        usernameInput.addEventListener('input', () => clearError('usernameError', 'usernameInput'));
+        phoneInput.addEventListener('input', () => clearError('phoneError', 'phoneInput'));
+        birthDateInput.addEventListener('change', () => clearError('birthDateError', 'birthDateInput'));
+
+        // Client-side form validation before submission
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // 1. Full Name
+            const fullName = fullNameInput.value.trim();
+            if (!fullName) {
+                showError('fullNameError', 'fullNameInput', 'Họ và tên không được để trống.');
+                isValid = false;
+            } else if (fullName.length < 3 || fullName.length > 50) {
+                showError('fullNameError', 'fullNameInput', 'Họ và tên phải từ 3 đến 50 ký tự.');
+                isValid = false;
+            } else {
+                clearError('fullNameError', 'fullNameInput');
+            }
+
+            // 2. Username
+            const username = usernameInput.value.trim();
+            const usernameRe = /^[a-zA-Z0-9_]{4,30}$/;
+            if (!username) {
+                showError('usernameError', 'usernameInput', 'Tên đăng nhập không được để trống.');
+                isValid = false;
+            } else if (!usernameRe.test(username)) {
+                showError('usernameError', 'usernameInput', 'Tên đăng nhập phải từ 4-30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).');
+                isValid = false;
+            } else {
+                clearError('usernameError', 'usernameInput');
+            }
+
+            // 3. Phone (optional)
+            const phone = phoneInput.value.trim();
+            if (phone) {
+                const phoneCleaned = phone.replace(/\s+/g, '');
+                const vnPhoneRe = /^(0|\+84)(3[2-9]|5[25689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}$/;
+                if (!vnPhoneRe.test(phoneCleaned)) {
+                    showError('phoneError', 'phoneInput', 'Số điện thoại không hợp lệ (gồm 10 chữ số đầu mạng VN hợp lệ, bắt đầu bằng 0 hoặc +84).');
+                    isValid = false;
+                } else {
+                    clearError('phoneError', 'phoneInput');
+                }
+            } else {
+                clearError('phoneError', 'phoneInput');
+            }
+
+            // 4. Date of Birth (optional)
+            const birthDate = birthDateInput.value;
+            if (birthDate) {
+                const bDate = new Date(birthDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (bDate > today) {
+                    showError('birthDateError', 'birthDateInput', 'Ngày sinh không được ở tương lai.');
+                    isValid = false;
+                } else {
+                    let age = today.getFullYear() - bDate.getFullYear();
+                    const m = today.getMonth() - bDate.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < bDate.getDate())) {
+                        age--;
+                    }
+                    if (age < 10) {
+                        showError('birthDateError', 'birthDateInput', 'Độ tuổi tối thiểu là 10 tuổi.');
+                        isValid = false;
+                    } else if (age > 120) {
+                        showError('birthDateError', 'birthDateInput', 'Độ tuổi không hợp lệ (tối đa 120 tuổi).');
+                        isValid = false;
+                    } else {
+                        clearError('birthDateError', 'birthDateInput');
+                    }
+                }
+            } else {
+                clearError('birthDateError', 'birthDateInput');
+            }
+
+            // 5. Bio word count
+            if (!updateBioWordCount()) {
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                return;
+            }
+
+            // AJAX Submission with FormData
+            e.preventDefault();
+
+            btnSubmit.disabled = true;
+            btnSubmitText.textContent = 'Đang lưu...';
+
+            const formData = new FormData(form);
+
+            fetch('${pageContext.request.contextPath}/profile', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
             .then(res => res.json())
             .then(data => {
-                btnTriggerAvatar.disabled = false;
-                btnTriggerAvatar.innerHTML = '<i class="bi bi-camera-fill"></i>';
+                btnSubmit.disabled = false;
+                btnSubmitText.textContent = 'Save Changes';
 
                 if (data.success) {
-                    showAlert(data.message, 'success');
-
-                    // Update sidebar avatar
-                    sidebarAvatarImg.src = data.value;
-                    sidebarAvatarImg.style.display = 'block';
-                    if (sidebarAvatarInitial) {
-                        sidebarAvatarInitial.style.display = 'none';
+                    if (window.CoursonToast) {
+                        window.CoursonToast.show('success', data.message || 'Cập nhật thông tin hồ sơ thành công!', 8000);
                     }
-
-                    // Update navbar avatar (both desktop and mobile)
-                    document.querySelectorAll('.navbar-avatar-img').forEach(img => {
-                        img.src = data.value;
-                        img.style.display = 'inline-block';
-                    });
-                    document.querySelectorAll('.navbar-avatar-text').forEach(txt => {
-                        txt.style.display = 'none';
-                    });
+                    // Update header avatar or display name if available
+                    const headerUserName = document.querySelector('.cf-user-name');
+                    if (headerUserName) {
+                        headerUserName.textContent = fullNameInput.value.trim();
+                    }
                 } else {
-                    avatarFeedback.textContent = data.message || 'Lỗi khi upload ảnh.';
-                    avatarFeedback.style.display = 'block';
+                    if (data.field === 'fullName') {
+                        showError('fullNameError', 'fullNameInput', data.message);
+                    } else if (data.field === 'username') {
+                        showError('usernameError', 'usernameInput', data.message);
+                    } else if (data.field === 'phone') {
+                        showError('phoneError', 'phoneInput', data.message);
+                    } else if (data.field === 'birthDate') {
+                        showError('birthDateError', 'birthDateInput', data.message);
+                    } else if (data.field === 'bio') {
+                        showError('bioError', 'bioTextarea', data.message);
+                    } else if (data.field === 'avatar') {
+                        showError('avatarError', 'avatarInput', data.message);
+                    }
+                    if (window.CoursonToast) {
+                        window.CoursonToast.show('error', data.message || 'Cập nhật hồ sơ thất bại.', 8000);
+                    }
                 }
             })
             .catch(err => {
-                btnTriggerAvatar.disabled = false;
-                btnTriggerAvatar.innerHTML = '<i class="bi bi-camera-fill"></i>';
-                avatarFeedback.textContent = 'Lỗi kết nối máy chủ: ' + err.message;
-                avatarFeedback.style.display = 'block';
+                btnSubmit.disabled = false;
+                btnSubmitText.textContent = 'Save Changes';
+                // Fallback to normal form submit if fetch fails
+                form.submit();
             });
         });
-
-    })();
+    });
 </script>
+
+<jsp:include page="../common/footer.jsp" />

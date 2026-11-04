@@ -15,7 +15,7 @@ public class ProfileDao {
 
     private static final String SQL_FIND_PROFILE_BY_ID =
             "SELECT u.id, u.username, u.email, u.full_name, u.role_id, s.value as role_name, "
-            + "u.auth_provider, u.status, u.avatar_url, u.phone, u.birth_date "
+            + "u.auth_provider, u.status, u.avatar_url, u.phone, u.birth_date, u.bio "
             + "FROM users u "
             + "LEFT JOIN settings s ON u.role_id = s.id AND u.role_type = s.type "
             + "WHERE u.id = ?";
@@ -35,6 +35,11 @@ public class ProfileDao {
     private static final String SQL_UPDATE_BIRTH_DATE =
             "UPDATE users SET birth_date = ?, updated_at = NOW() WHERE id = ?";
 
+    private static final String SQL_UPDATE_BIO =
+            "UPDATE users SET bio = ?, updated_at = NOW() WHERE id = ?";
+
+    private static final String SQL_UPDATE_PROFILE =
+            "UPDATE users SET full_name = ?, username = ?, phone = ?, birth_date = ?, bio = ?, updated_at = NOW() WHERE id = ?";
     private static final String SQL_UPDATE_PASSWORD =
             "UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?";
 
@@ -62,6 +67,7 @@ public class ProfileDao {
                     dto.setPhone(rs.getString("phone"));
                     Date bDate = rs.getDate("birth_date");
                     dto.setBirthDate(bDate != null ? bDate.toLocalDate() : null);
+                    dto.setBio(rs.getString("bio"));
                     return Optional.of(dto);
                 }
             }
@@ -143,5 +149,28 @@ public class ProfileDao {
             }
         }
         return null;
+    }
+    public boolean updateBio(Connection con, long userId, String bio) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_BIO)) {
+            ps.setString(1, bio);
+            ps.setLong(2, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateProfile(Connection con, long userId, String fullName, String username, String phone, LocalDate birthDate, String bio) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_PROFILE)) {
+            ps.setString(1, fullName);
+            ps.setString(2, username);
+            ps.setString(3, phone);
+            if (birthDate != null) {
+                ps.setDate(4, Date.valueOf(birthDate));
+            } else {
+                ps.setNull(4, java.sql.Types.DATE);
+            }
+            ps.setString(5, bio);
+            ps.setLong(6, userId);
+            return ps.executeUpdate() > 0;
+        }
     }
 }

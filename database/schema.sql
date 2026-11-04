@@ -79,6 +79,7 @@ CREATE TABLE users (
     avatar_url     varchar(255),
     phone          varchar(20),
     birth_date     date,
+    bio            text,
     created_at     timestamptz  NOT NULL DEFAULT now(),
     updated_at     timestamptz  NOT NULL DEFAULT now(),
     CONSTRAINT uq_users_username UNIQUE (username),

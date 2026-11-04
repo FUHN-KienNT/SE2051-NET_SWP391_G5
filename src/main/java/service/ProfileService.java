@@ -208,4 +208,68 @@ public class ProfileService {
             throw new RuntimeException("Lỗi CSDL khi lưu ảnh đại diện: " + e.getMessage(), e);
         }
     }
+    public String updateBio(long userId, String bio) {
+        String error = ProfileValidator.validateBio(bio);
+        if (error != null) {
+            throw new IllegalArgumentException(error);
+        }
+        String cleanBio = (bio != null && !bio.trim().isEmpty()) ? bio.trim() : null;
+        try (Connection con = DbConnection.getConnection()) {
+            boolean ok = profileDao.updateBio(con, userId, cleanBio);
+            if (!ok) {
+                throw new IllegalStateException("Không thể cập nhật tiểu sử.");
+            }
+            return cleanBio;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi CSDL khi cập nhật tiểu sử: " + e.getMessage(), e);
+        }
+    }
+
+    public UserDto updateProfile(long userId, String fullName, String username, String phone, String birthDateStr, String bio) {
+        String errName = ProfileValidator.validateFullName(fullName);
+        if (errName != null) {
+            throw new IllegalArgumentException(errName);
+        }
+
+        String errUsername = ProfileValidator.validateUsername(username);
+        if (errUsername != null) {
+            throw new IllegalArgumentException(errUsername);
+        }
+
+        String errPhone = ProfileValidator.validatePhone(phone);
+        if (errPhone != null) {
+            throw new IllegalArgumentException(errPhone);
+        }
+
+        String errBirthDate = ProfileValidator.validateBirthDate(birthDateStr);
+        if (errBirthDate != null) {
+            throw new IllegalArgumentException(errBirthDate);
+        }
+
+        String errBio = ProfileValidator.validateBio(bio);
+        if (errBio != null) {
+            throw new IllegalArgumentException(errBio);
+        }
+
+        String cleanFullName = fullName.trim();
+        String cleanUsername = username.trim();
+        String normalizedPhone = ProfileValidator.normalizePhone(phone);
+        LocalDate birthDate = (birthDateStr != null && !birthDateStr.trim().isEmpty())
+                ? LocalDate.parse(birthDateStr.trim()) : null;
+        String cleanBio = (bio != null && !bio.trim().isEmpty()) ? bio.trim() : null;
+
+        try (Connection con = DbConnection.getConnection()) {
+            if (userDao.existsUsername(con, cleanUsername, userId)) {
+                throw new IllegalArgumentException("Tên đăng nhập đã được sử dụng bởi tài khoản khác.");
+            }
+            boolean ok = profileDao.updateProfile(con, userId, cleanFullName, cleanUsername, normalizedPhone, birthDate, cleanBio);
+            if (!ok) {
+                throw new IllegalStateException("Không thể cập nhật thông tin hồ sơ.");
+            }
+            return profileDao.findProfileById(con, userId)
+                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng."));
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi CSDL khi cập nhật hồ sơ: " + e.getMessage(), e);
+        }
+    }
 }

@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -36,6 +37,17 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
+        String pathInfo = req.getPathInfo();
+        if ("/change-password".equalsIgnoreCase(pathInfo) || "/password".equalsIgnoreCase(pathInfo)) {
+            showChangePassword(req, resp, currentUser);
+            return;
+        }
+
+        showProfile(req, resp, currentUser);
+    }
+
+    private void showProfile(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
+            throws ServletException, IOException {
         try {
             UserDto profile = profileService.getProfile(currentUser.getId());
             req.setAttribute("user", profile);
@@ -46,35 +58,116 @@ public class ProfileServlet extends HttpServlet {
         }
     }
 
+    private void showChangePassword(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
+            throws ServletException, IOException {
+        try {
+            UserDto profile = profileService.getProfile(currentUser.getId());
+            req.setAttribute("user", profile);
+            req.getRequestDispatcher("/WEB-INF/views/profile/change-password.jsp").forward(req, resp);
+        } catch (Exception e) {
+            req.setAttribute("error", "Lỗi khi tải trang đổi mật khẩu: " + e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/profile/change-password.jsp").forward(req, resp);
+        }
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
-            sendJsonResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, false, null, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", null);
+            if (isAjax(req)) {
+                sendJsonResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, false, null, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", null);
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/auth/login");
+            }
             return;
         }
 
         String pathInfo = req.getPathInfo();
-        String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : req.getParameter("action");
+        String action = req.getParameter("action");
+        if (action == null && pathInfo != null && pathInfo.length() > 1) {
+            action = pathInfo.substring(1);
+        }
         if (action == null) {
             action = "";
+        }
+
+        if ("/change-password".equalsIgnoreCase(pathInfo) || "/password".equalsIgnoreCase(pathInfo)
+                || "change-password".equalsIgnoreCase(action) || "password".equalsIgnoreCase(action)) {
+            handleChangePassword(req, resp, currentUser);
+            return;
         }
 
         switch (action) {
             case "avatar":
                 handleUpdateAvatar(req, resp, currentUser);
                 break;
-            case "change-password":
-            case "password":
-                handleChangePassword(req, resp, currentUser);
-                break;
             case "update-field":
-            case "":
                 handleUpdateField(req, resp, currentUser);
+                break;
+            case "update":
+            case "save":
+            case "":
+                if (req.getParameter("field") != null && !req.getParameter("field").trim().isEmpty()) {
+                    handleUpdateField(req, resp, currentUser);
+                } else {
+                    handleUpdateProfile(req, resp, currentUser);
+                }
                 break;
             default:
                 sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, null, "Thao tác không được hỗ trợ.", null);
                 break;
+        }
+    }
+
+    private void handleUpdateProfile(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
+            throws ServletException, IOException {
+        String fullName = req.getParameter("fullName");
+        String username = req.getParameter("username");
+        String phone = req.getParameter("phone");
+        String birthDate = req.getParameter("birthDate");
+        String bio = req.getParameter("bio");
+
+        boolean ajax = isAjax(req);
+
+        try {
+            // Check avatar upload
+            Part avatarPart = null;
+            try {
+                avatarPart = req.getPart("avatar");
+            } catch (Exception ignored) {
+            }
+
+            if (avatarPart != null && avatarPart.getSize() > 0) {
+                profileService.updateAvatar(currentUser.getId(), avatarPart);
+            }
+
+            UserDto updatedUser = profileService.updateProfile(currentUser.getId(), fullName, username, phone, birthDate, bio);
+
+            // Update session
+            SessionUtil.setCurrentUser(req, updatedUser);
+
+            if (ajax) {
+                sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "profile", "Cập nhật thông tin hồ sơ thành công!", null);
+            } else {
+                HttpSession session = req.getSession(true);
+                session.setAttribute("flashToastType", "success");
+                session.setAttribute("flashToastMessage", "Cập nhật thông tin hồ sơ thành công!");
+                resp.sendRedirect(req.getContextPath() + "/profile");
+            }
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            if (ajax) {
+                sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, "profile", e.getMessage(), null);
+            } else {
+                req.setAttribute("error", e.getMessage());
+                showProfile(req, resp, currentUser);
+            }
+        } catch (Exception e) {
+            if (ajax) {
+                sendJsonResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "profile", "Lỗi máy chủ khi cập nhật: " + e.getMessage(), null);
+            } else {
+                req.setAttribute("error", "Lỗi máy chủ khi cập nhật: " + e.getMessage());
+                showProfile(req, resp, currentUser);
+            }
         }
     }
 
@@ -103,7 +196,7 @@ public class ProfileServlet extends HttpServlet {
     }
 
     private void handleChangePassword(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
-            throws IOException {
+            throws ServletException, IOException {
         String currentPassword = req.getParameter("currentPassword");
         String newPassword = req.getParameter("newPassword");
         String confirmPassword = req.getParameter("confirmPassword");
@@ -112,15 +205,35 @@ public class ProfileServlet extends HttpServlet {
             newPassword = req.getParameter("value");
         }
 
+        boolean ajax = isAjax(req);
+
         try {
             profileService.changePassword(currentUser.getId(), currentPassword, newPassword, confirmPassword);
-            sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "password", "Đổi mật khẩu thành công!", null);
+            if (ajax) {
+                sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "password", "Đổi mật khẩu thành công!", null);
+            } else {
+                HttpSession session = req.getSession(true);
+                session.setAttribute("flashToastType", "success");
+                session.setAttribute("flashToastMessage", "Đổi mật khẩu thành công!");
+                resp.sendRedirect(req.getContextPath() + "/profile/change-password");
+            }
         } catch (IllegalArgumentException | IllegalStateException e) {
-            sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, "password", e.getMessage(), null);
+            if (ajax) {
+                sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, "password", e.getMessage(), null);
+            } else {
+                req.setAttribute("error", e.getMessage());
+                showChangePassword(req, resp, currentUser);
+            }
         } catch (Exception e) {
-            sendJsonResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "password", "Lỗi máy chủ khi đổi mật khẩu: " + e.getMessage(), null);
+            if (ajax) {
+                sendJsonResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "password", "Lỗi máy chủ khi đổi mật khẩu: " + e.getMessage(), null);
+            } else {
+                req.setAttribute("error", "Lỗi máy chủ khi đổi mật khẩu: " + e.getMessage());
+                showChangePassword(req, resp, currentUser);
+            }
         }
     }
+
     private void handleUpdateField(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
             throws IOException {
         String field = req.getParameter("field");
@@ -133,7 +246,7 @@ public class ProfileServlet extends HttpServlet {
 
         field = field.trim();
 
-        // 1. Strict security check: Email is NEVER allowed to be edited
+        // Strict security check: Email is NEVER allowed to be edited
         if ("email".equalsIgnoreCase(field)) {
             sendJsonResponse(resp, HttpServletResponse.SC_FORBIDDEN, false, "email", "Email là định danh tài khoản cố định, không được phép thay đổi.", null);
             return;
@@ -170,6 +283,13 @@ public class ProfileServlet extends HttpServlet {
                     sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "birthDate", "Cập nhật ngày sinh thành công!", dateStr);
                     break;
                 }
+                case "bio": {
+                    String updated = profileService.updateBio(currentUser.getId(), value);
+                    currentUser.setBio(updated);
+                    SessionUtil.setCurrentUser(req, currentUser);
+                    sendJsonResponse(resp, HttpServletResponse.SC_OK, true, "bio", "Cập nhật tiểu sử thành công!", updated != null ? updated : "");
+                    break;
+                }
                 case "password": {
                     handleChangePassword(req, resp, currentUser);
                     break;
@@ -183,6 +303,13 @@ public class ProfileServlet extends HttpServlet {
         } catch (Exception e) {
             sendJsonResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, field, "Lỗi máy chủ khi cập nhật: " + e.getMessage(), null);
         }
+    }
+
+    private boolean isAjax(HttpServletRequest req) {
+        String requestedWith = req.getHeader("X-Requested-With");
+        String accept = req.getHeader("Accept");
+        return "XMLHttpRequest".equalsIgnoreCase(requestedWith)
+                || (accept != null && accept.contains("application/json"));
     }
 
     private void sendJsonResponse(HttpServletResponse resp, int status, boolean success, String field, String message, String value) throws IOException {

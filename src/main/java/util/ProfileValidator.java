@@ -191,4 +191,25 @@ public final class ProfileValidator {
         }
         return fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
     }
+    public static int countWords(String text) {
+        if (text == null) {
+            return 0;
+        }
+        String trimmed = text.trim();
+        if (trimmed.isEmpty()) {
+            return 0;
+        }
+        return trimmed.split("\\s+").length;
+    }
+
+    public static String validateBio(String bio) {
+        if (bio == null || bio.trim().isEmpty()) {
+            return null;
+        }
+        int wordCount = countWords(bio);
+        if (wordCount > 250) {
+            return "Tiểu sử / Mô tả không được vượt quá 250 từ (hiện tại có " + wordCount + " từ).";
+        }
+        return null;
+    }
 }

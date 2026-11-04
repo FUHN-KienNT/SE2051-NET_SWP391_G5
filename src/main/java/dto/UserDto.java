@@ -16,6 +16,7 @@ public class UserDto {
     private String avatarUrl;
     private String phone;
     private LocalDate birthDate;
+    private String bio;
 
     public UserDto() {
     }
@@ -118,5 +119,12 @@ public class UserDto {
 
     public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
+    }
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 }
