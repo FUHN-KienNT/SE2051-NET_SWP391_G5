@@ -256,7 +256,6 @@
                     <!-- Action buttons -->
                     <div class="d-flex align-items-center gap-3 pt-2">
                         <button type="submit" id="btnSubmitPw" class="cf-btn-submit">
-                            <i class="bi bi-check-lg"></i>
                             <span id="btnSubmitPwText">Lưu mật khẩu mới</span>
                         </button>
                         <a href="${pageContext.request.contextPath}/profile" class="cf-btn-cancel">
