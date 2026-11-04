@@ -153,6 +153,15 @@ public class ProfileService {
         changePassword(userId, null, newPassword, confirmPassword);
     }
 
+    public boolean hasPassword(long userId) {
+        try (Connection con = DbConnection.getConnection()) {
+            String hash = profileDao.getPasswordHash(con, userId);
+            return hash != null && !hash.trim().isEmpty();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi CSDL khi kiểm tra mật khẩu: " + e.getMessage(), e);
+        }
+    }
+
     public String updateAvatar(long userId, Part filePart) {
         String error = ProfileValidator.validateAvatar(filePart);
         if (error != null) {

@@ -179,7 +179,8 @@ public class AuthService {
                 con.commit();
 
 
-                return new GoogleAuthResult(mapUser(user), authStatus);
+                boolean hasPassword = (user.getPasswordHash() != null && !user.getPasswordHash().trim().isEmpty());
+                return new GoogleAuthResult(mapUser(user), authStatus, hasPassword);
             } catch (Exception ex) {
                 DbConnection.rollbackQuietly(con);
                 throw ex;
@@ -214,6 +215,19 @@ public class AuthService {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lưu mật khẩu: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean hasPassword(long userId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Optional<User> uOpt = userDao.findById(con, userId);
+            if (uOpt.isPresent()) {
+                String hash = uOpt.get().getPasswordHash();
+                return hash != null && !hash.trim().isEmpty();
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra mật khẩu người dùng: " + e.getMessage(), e);
         }
     }
 

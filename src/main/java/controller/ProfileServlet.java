@@ -61,6 +61,10 @@ public class ProfileServlet extends HttpServlet {
     private void showChangePassword(HttpServletRequest req, HttpServletResponse resp, UserDto currentUser)
             throws ServletException, IOException {
         try {
+            if (!profileService.hasPassword(currentUser.getId())) {
+                resp.sendRedirect(req.getContextPath() + "/auth/set-password");
+                return;
+            }
             UserDto profile = profileService.getProfile(currentUser.getId());
             req.setAttribute("user", profile);
             req.getRequestDispatcher("/WEB-INF/views/profile/change-password.jsp").forward(req, resp);
@@ -223,6 +227,15 @@ public class ProfileServlet extends HttpServlet {
         }
 
         boolean ajax = isAjax(req);
+
+        if (!profileService.hasPassword(currentUser.getId())) {
+            if (ajax) {
+                sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, "password", "Tài khoản chưa thiết lập mật khẩu. Vui lòng thiết lập mật khẩu trước.", null);
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/auth/set-password");
+            }
+            return;
+        }
 
         try {
             profileService.changePassword(currentUser.getId(), currentPassword, newPassword, confirmPassword);

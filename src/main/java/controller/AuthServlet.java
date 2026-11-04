@@ -282,7 +282,7 @@ public class AuthServlet extends HttpServlet {
             SessionUtil.setCurrentUser(req, user);
 
             if (session == null) session = req.getSession(true);
-            if (result.getStatus() == GoogleAuthResult.Status.NEW_USER_CREATED) {
+            if (!result.hasPassword()) {
                 session.setAttribute("flashToastType", "success");
                 session.setAttribute("flashToastMessage",
                     "Đăng nhập bằng Google thành công! Bạn có thể sử dụng tài khoản Gmail này để đăng nhập các lần sau.");
@@ -336,6 +336,10 @@ public class AuthServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
+        if (authService.hasPassword(currentUser.getId())) {
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
+        }
         req.setAttribute("user", currentUser);
         req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
     }
@@ -345,6 +349,11 @@ public class AuthServlet extends HttpServlet {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        if (authService.hasPassword(currentUser.getId())) {
+            resp.sendRedirect(req.getContextPath() + "/profile/change-password");
             return;
         }
 
