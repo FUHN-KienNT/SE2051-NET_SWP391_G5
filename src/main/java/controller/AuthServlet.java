@@ -279,16 +279,20 @@ public class AuthServlet extends HttpServlet {
             String dynamicBaseUrl = getDynamicBaseUrl(req);
             GoogleAuthResult result = authService.authenticateGoogle(googleUser.getEmail(), googleUser.getName(), dynamicBaseUrl);
             UserDto user = result.getUser();
-            SessionUtil.setCurrentUser(req, user);
 
             if (session == null) session = req.getSession(true);
             if (!result.hasPassword()) {
+                session.setAttribute("PENDING_SET_PASSWORD_USER", user);
                 session.setAttribute("flashToastType", "success");
                 session.setAttribute("flashToastMessage",
                     "Đăng nhập bằng Google thành công! Bạn có thể sử dụng tài khoản Gmail này để đăng nhập các lần sau.");
                 resp.sendRedirect(ctx + "/auth/set-password");
                 return;
-            } else if (result.getStatus() == GoogleAuthResult.Status.UNVERIFIED_ACTIVATED) {
+            }
+
+            SessionUtil.setCurrentUser(req, user);
+
+            if (result.getStatus() == GoogleAuthResult.Status.UNVERIFIED_ACTIVATED) {
                 session.setAttribute("flashToastType", "success");
                 session.setAttribute("flashToastMessage",
                     "Đăng nhập Google thành công! Tài khoản của bạn đã được kích hoạt.");
@@ -331,29 +335,37 @@ public class AuthServlet extends HttpServlet {
     }
     private void showSetPassword(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        UserDto currentUser = SessionUtil.getCurrentUser(req);
-        if (currentUser == null) {
+        HttpSession session = req.getSession(false);
+        UserDto pendingUser = (session != null) ? (UserDto) session.getAttribute("PENDING_SET_PASSWORD_USER") : null;
+        if (pendingUser == null) {
+            UserDto currentUser = SessionUtil.getCurrentUser(req);
+            if (currentUser != null && !authService.hasPassword(currentUser.getId())) {
+                pendingUser = currentUser;
+            }
+        }
+
+        if (pendingUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
-        if (authService.hasPassword(currentUser.getId())) {
-            resp.sendRedirect(req.getContextPath() + "/home");
-            return;
-        }
-        req.setAttribute("user", currentUser);
+
+        req.setAttribute("user", pendingUser);
         req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
     }
 
     private void setPassword(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        UserDto currentUser = SessionUtil.getCurrentUser(req);
-        if (currentUser == null) {
-            resp.sendRedirect(req.getContextPath() + "/auth/login");
-            return;
+        HttpSession session = req.getSession(false);
+        UserDto pendingUser = (session != null) ? (UserDto) session.getAttribute("PENDING_SET_PASSWORD_USER") : null;
+        if (pendingUser == null) {
+            UserDto currentUser = SessionUtil.getCurrentUser(req);
+            if (currentUser != null && !authService.hasPassword(currentUser.getId())) {
+                pendingUser = currentUser;
+            }
         }
 
-        if (authService.hasPassword(currentUser.getId())) {
-            resp.sendRedirect(req.getContextPath() + "/profile/change-password");
+        if (pendingUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
 
@@ -361,18 +373,21 @@ public class AuthServlet extends HttpServlet {
         String confirmPassword = req.getParameter("confirmPassword");
 
         try {
-            authService.setPassword(currentUser.getId(), password, confirmPassword);
-            HttpSession session = req.getSession(true);
+            authService.setPassword(pendingUser.getId(), password, confirmPassword);
+            if (session == null) session = req.getSession(true);
+            session.removeAttribute("PENDING_SET_PASSWORD_USER");
+            SessionUtil.setCurrentUser(req, pendingUser);
+
             session.setAttribute("flashToastType", "success");
             session.setAttribute("flashToastMessage", "Thiết lập mật khẩu thành công! Chào mừng bạn đến với Courson LMS.");
-            redirectByRole(currentUser, req, resp);
+            redirectByRole(pendingUser, req, resp);
         } catch (IllegalArgumentException e) {
             req.setAttribute("error", e.getMessage());
-            req.setAttribute("user", currentUser);
+            req.setAttribute("user", pendingUser);
             req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
         } catch (Exception e) {
             req.setAttribute("error", "Không thể thiết lập mật khẩu: " + e.getMessage());
-            req.setAttribute("user", currentUser);
+            req.setAttribute("user", pendingUser);
             req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
         }
     }
