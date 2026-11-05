@@ -37,6 +37,7 @@ DROP TABLE IF EXISTS quizzes CASCADE;
 DROP TABLE IF EXISTS lessons CASCADE;
 DROP TABLE IF EXISTS modules CASCADE;
 DROP TABLE IF EXISTS courses CASCADE;
+DROP TABLE IF EXISTS password_reset_tokens CASCADE;
 DROP TABLE IF EXISTS email_verification_tokens CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS settings CASCADE;
@@ -108,6 +109,21 @@ CREATE TABLE email_verification_tokens (
 );
 CREATE UNIQUE INDEX uq_evt_token_hash ON email_verification_tokens (token_hash);
 CREATE INDEX idx_evt_user_id ON email_verification_tokens (user_id);
+
+-- ---------------------------------------------------------------------
+-- 2c. password_reset_tokens (Phục vụ đặt lại mật khẩu qua email)
+-- ---------------------------------------------------------------------
+CREATE TABLE password_reset_tokens (
+    id           bigserial    PRIMARY KEY,
+    user_id      bigint       NOT NULL,
+    token_hash   varchar(64)  NOT NULL,
+    expires_at   timestamptz  NOT NULL,
+    used         boolean      NOT NULL DEFAULT false,
+    created_at   timestamptz  NOT NULL DEFAULT now(),
+    CONSTRAINT fk_prt_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX uq_prt_token_hash ON password_reset_tokens (token_hash);
+CREATE INDEX idx_prt_user_id ON password_reset_tokens (user_id);
 
 -- ---------------------------------------------------------------------
 -- 3. courses (Hỗ trợ 4 trạng thái, đóng khóa học archive_at, archive_notice)
