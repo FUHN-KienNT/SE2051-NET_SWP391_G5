@@ -194,12 +194,7 @@
                 </div>
             </c:if>
 
-            <c:if test="${not empty successMessage}">
-                <div class="alert-server-success">
-                    <i class="bi bi-check-circle"></i>
-                    <span><c:out value="${successMessage}"/></span>
-                </div>
-            </c:if>
+
 
             <form id="forgotPasswordForm" action="${pageContext.request.contextPath}/auth/forgot-password" method="POST" novalidate>
                 <div class="field-group">

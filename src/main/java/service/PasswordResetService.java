@@ -91,6 +91,67 @@ public class PasswordResetService {
     }
 
     /**
+     * Resends password reset request with 30s rate limit protection.
+     */
+    public void resendResetRequest(String email, String dynamicBaseUrl) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng cung cấp địa chỉ email.");
+        }
+        String cleanEmail = email.trim();
+        if (!ValidationUtil.isEmail(cleanEmail)) {
+            throw new IllegalArgumentException("Định dạng email không hợp lệ.");
+        }
+
+        try (Connection con = DbConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Optional<User> userOpt = userDao.findByEmail(con, cleanEmail);
+                if (!userOpt.isPresent()) {
+                    throw new IllegalArgumentException("Không tìm thấy tài khoản với email này.");
+                }
+                User user = userOpt.get();
+
+                // Rate limiting check (30 seconds)
+                if (passwordResetTokenDao.isRateLimited(con, user.getId(), 30)) {
+                    throw new IllegalStateException("Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác thực.");
+                }
+
+                // Generate new secure token
+                String rawToken = TokenUtil.generateToken();
+                String tokenHash = TokenUtil.hashToken(rawToken);
+
+                // Invalidate old tokens
+                passwordResetTokenDao.invalidateTokensByUserId(con, user.getId());
+
+                // Insert new reset token valid for 24 hours
+                PasswordResetToken token = new PasswordResetToken(
+                    null,
+                    user.getId(),
+                    tokenHash,
+                    OffsetDateTime.now().plusHours(24),
+                    false,
+                    OffsetDateTime.now()
+                );
+                passwordResetTokenDao.insert(con, token);
+
+                con.commit();
+
+                // Send email asynchronously
+                MailUtil.sendPasswordResetEmailAsync(user.getEmail(), user.getFullName(), rawToken, dynamicBaseUrl);
+            } catch (SQLException e) {
+                con.rollback();
+                LOGGER.log(Level.SEVERE, "Lỗi cơ sở dữ liệu khi gửi lại email đặt lại mật khẩu", e);
+                throw new RuntimeException("Có lỗi xảy ra trên hệ thống, vui lòng thử lại sau.", e);
+            } finally {
+                con.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi kết nối cơ sở dữ liệu", e);
+            throw new RuntimeException("Không thể kết nối đến cơ sở dữ liệu.", e);
+        }
+    }
+
+    /**
      * Validates whether a reset token is valid and not used / expired.
      * Returns the corresponding User entity.
      */
