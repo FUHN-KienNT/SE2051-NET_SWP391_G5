@@ -1,5 +1,6 @@
 package controller;
 
+import dao.PasswordResetTokenDao;
 import dao.SettingDao;
 import dao.UserDao;
 import dto.GoogleAuthResult;
@@ -17,6 +18,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import service.AuthService;
 import service.InactiveAccountException;
+import service.PasswordResetService;
 import util.GoogleOAuthUtil;
 import util.SessionUtil;
 
@@ -24,12 +26,14 @@ import util.SessionUtil;
 public class AuthServlet extends HttpServlet {
 
     private AuthService authService;
+    private PasswordResetService passwordResetService;
 
     @Override
     public void init() throws ServletException {
         UserDao userDao = new UserDao();
         SettingDao settingDao = new SettingDao();
         this.authService = new AuthService(userDao, settingDao);
+        this.passwordResetService = new PasswordResetService(userDao, new PasswordResetTokenDao());
     }
 
     @Override
@@ -83,6 +87,20 @@ public class AuthServlet extends HttpServlet {
                     setPassword(req, resp);
                 } else {
                     showSetPassword(req, resp);
+                }
+                break;
+            case "forgot-password":
+                if ("POST".equalsIgnoreCase(method)) {
+                    handleForgotPassword(req, resp);
+                } else {
+                    showForgotPassword(req, resp);
+                }
+                break;
+            case "reset-password":
+                if ("POST".equalsIgnoreCase(method)) {
+                    handleResetPassword(req, resp);
+                } else {
+                    showResetPassword(req, resp);
                 }
                 break;
             default:
@@ -389,6 +407,80 @@ public class AuthServlet extends HttpServlet {
             req.setAttribute("error", "Không thể thiết lập mật khẩu: " + e.getMessage());
             req.setAttribute("user", pendingUser);
             req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
+        }
+    }
+
+    private void showForgotPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+    }
+
+    private void handleForgotPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String email = req.getParameter("email");
+        String scheme = req.getScheme();
+        String serverName = req.getServerName();
+        int serverPort = req.getServerPort();
+        String contextPath = req.getContextPath();
+        String dynamicBaseUrl = scheme + "://" + serverName + ((serverPort == 80 || serverPort == 443) ? "" : ":" + serverPort) + contextPath;
+
+        try {
+            passwordResetService.sendResetRequest(email, dynamicBaseUrl);
+            req.setAttribute("successMessage", "Chúng tôi đã gửi link xác thực để hỗ trợ bạn vào được tài khoản. Vui lòng kiểm tra hộp thư email của bạn.");
+            req.setAttribute("email", email != null ? email.trim() : "");
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+        } catch (IllegalArgumentException e) {
+            req.setAttribute("errorMessage", e.getMessage());
+            req.setAttribute("email", email != null ? email.trim() : "");
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+        } catch (Exception e) {
+            req.setAttribute("errorMessage", "Có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau.");
+            req.setAttribute("email", email != null ? email.trim() : "");
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+        }
+    }
+
+    private void showResetPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String token = req.getParameter("token");
+        if (token == null || token.trim().isEmpty()) {
+            req.setAttribute("invalidToken", true);
+            req.setAttribute("errorMessage", "Liên kết đặt lại mật khẩu không hợp lệ hoặc thiếu mã xác thực.");
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+            return;
+        }
+
+        try {
+            passwordResetService.validateToken(token.trim());
+            req.setAttribute("token", token.trim());
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+        } catch (IllegalArgumentException e) {
+            req.setAttribute("invalidToken", true);
+            req.setAttribute("errorMessage", e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+        } catch (Exception e) {
+            req.setAttribute("invalidToken", true);
+            req.setAttribute("errorMessage", "Có lỗi hệ thống khi kiểm tra liên kết đặt lại mật khẩu.");
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+        }
+    }
+
+    private void handleResetPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String token = req.getParameter("token");
+        String password = req.getParameter("password");
+        String confirmPassword = req.getParameter("confirmPassword");
+
+        try {
+            passwordResetService.resetPassword(token, password, confirmPassword);
+            HttpSession session = req.getSession(true);
+            session.setAttribute("flashToastType", "success");
+            session.setAttribute("flashToastMessage", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.");
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+        } catch (IllegalArgumentException e) {
+            req.setAttribute("token", token != null ? token.trim() : "");
+            req.setAttribute("errorMessage", e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+        } catch (Exception e) {
+            req.setAttribute("token", token != null ? token.trim() : "");
+            req.setAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật mật khẩu: " + e.getMessage());
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
         }
     }
 }
