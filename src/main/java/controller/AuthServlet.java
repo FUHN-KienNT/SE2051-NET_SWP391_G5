@@ -164,6 +164,11 @@ public class AuthServlet extends HttpServlet {
         try {
             UserDto user = authService.authenticate(dto);
             SessionUtil.setCurrentUser(req, user);
+
+            HttpSession session = req.getSession(true);
+            session.setAttribute("flashToastType", "success");
+            session.setAttribute("flashToastMessage", "Đăng nhập thành công! Chào mừng bạn quay trở lại.");
+
             redirectByRole(user, req, resp);
         } catch (InactiveAccountException e) {
             req.setAttribute("error", e.getMessage());
