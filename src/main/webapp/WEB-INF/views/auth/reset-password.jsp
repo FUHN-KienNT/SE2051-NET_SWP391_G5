@@ -262,19 +262,18 @@
                                        name="password"
                                        class="field-input"
                                        placeholder="Nhập mật khẩu mới"
-                                       required
-                                       autofocus
                                        autocomplete="new-password">
-                                <span class="toggle-icon" id="togglePassword" role="button" aria-label="Hiện mật khẩu">
-                                    <i class="bi bi-eye"></i>
+                                <span class="toggle-icon" id="togglePw" onclick="togglePass('password', 'pwIcon')">
+                                    <i class="bi bi-eye-slash" id="pwIcon"></i>
                                 </span>
                             </div>
                             <div class="strength-bars" id="strengthBars">
-                                <div class="s-bar" id="bar1"></div>
-                                <div class="s-bar" id="bar2"></div>
-                                <div class="s-bar" id="bar3"></div>
+                                <div class="s-bar" id="b1"></div>
+                                <div class="s-bar" id="b2"></div>
+                                <div class="s-bar" id="b3"></div>
+                                <div class="s-bar" id="b4"></div>
                             </div>
-                            <div class="field-hint">Từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.</div>
+                            <p class="field-hint">Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.</p>
                             <div class="field-error" id="passwordError"></div>
                         </div>
 
@@ -286,13 +285,12 @@
                                        name="confirmPassword"
                                        class="field-input"
                                        placeholder="Nhập lại mật khẩu mới"
-                                       required
                                        autocomplete="new-password">
-                                <span class="toggle-icon" id="toggleConfirm" role="button" aria-label="Hiện mật khẩu">
-                                    <i class="bi bi-eye"></i>
+                                <span class="toggle-icon" id="toggleCp" onclick="togglePass('confirmPassword', 'cpIcon')">
+                                    <i class="bi bi-eye-slash" id="cpIcon"></i>
                                 </span>
                             </div>
-                            <div class="field-error" id="confirmPasswordError"></div>
+                            <div class="field-error" id="confirmError"></div>
                         </div>
 
                         <button type="submit" id="submitBtn" class="btn-submit">Lưu mật khẩu mới</button>
@@ -310,115 +308,133 @@
 
         <c:if test="${not invalidToken}">
             <script>
-                (function () {
-                    const form = document.getElementById('resetPasswordForm');
-                    const pwd = document.getElementById('password');
-                    const confirmPwd = document.getElementById('confirmPassword');
-                    const pwdErr = document.getElementById('passwordError');
-                    const confirmErr = document.getElementById('confirmPasswordError');
-                    const togglePwd = document.getElementById('togglePassword');
-                    const toggleConfirm = document.getElementById('toggleConfirm');
-                    const bars = document.getElementById('strengthBars');
-                    const b1 = document.getElementById('bar1');
-                    const b2 = document.getElementById('bar2');
-                    const b3 = document.getElementById('bar3');
+                const pwInput = document.getElementById('password');
+                const togglePw = document.getElementById('togglePw');
+                const cpInput = document.getElementById('confirmPassword');
+                const toggleCp = document.getElementById('toggleCp');
+
+                pwInput.addEventListener('input', function () {
+                    togglePw.style.display = this.value.length > 0 ? 'inline-flex' : 'none';
+                    clearErr('passwordError', 'password');
+                });
+
+                cpInput.addEventListener('input', function () {
+                    toggleCp.style.display = this.value.length > 0 ? 'inline-flex' : 'none';
+                    clearErr('confirmError', 'confirmPassword');
+                });
+
+                function togglePass(fieldId, iconId) {
+                    const field = document.getElementById(fieldId);
+                    const icon = document.getElementById(iconId);
+                    if (field.type === 'password') {
+                        field.type = 'text';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        field.type = 'password';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    }
+                }
+
+                const STRONG_RE = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]).{8,32}$/;
+
+                function passwordScore(pw) {
+                    let s = 0;
+                    if (pw.length >= 8)
+                        s++;
+                    if (/[A-Z]/.test(pw))
+                        s++;
+                    if (/\d/.test(pw))
+                        s++;
+                    if (/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(pw))
+                        s++;
+                    return s;
+                }
+
+                function updateBars(score) {
+                    const bars = [document.getElementById('b1'), document.getElementById('b2'),
+                        document.getElementById('b3'), document.getElementById('b4')];
+                    bars.forEach(b => b.className = 's-bar');
+                    const cls = score <= 1 ? 'weak' : score <= 2 ? 'fair' : 'strong';
+                    for (let i = 0; i < score; i++) {
+                        bars[i].classList.add(cls);
+                    }
+                }
+
+                pwInput.addEventListener('input', function () {
+                    const barsEl = document.getElementById('strengthBars');
+                    if (this.value.length > 0) {
+                        barsEl.classList.add('show');
+                        updateBars(passwordScore(this.value));
+                    } else {
+                        barsEl.classList.remove('show');
+                    }
+                });
+
+                function showErr(errId, inputId, msg) {
+                    document.getElementById(errId).textContent = msg;
+                    if (inputId) document.getElementById(inputId).classList.add('field-err');
+                }
+
+                function clearErr(errId, inputId) {
+                    document.getElementById(errId).textContent = '';
+                    if (inputId) document.getElementById(inputId).classList.remove('field-err');
+                }
+
+                pwInput.addEventListener('blur', function () {
+                    const pw = this.value;
+                    if (!pw) {
+                        showErr('passwordError', 'password', 'Mật khẩu không được để trống.');
+                    } else if (!STRONG_RE.test(pw)) {
+                        showErr('passwordError', 'password',
+                                'Mật khẩu phải từ 8–32 ký tự, có ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.');
+                    } else {
+                        clearErr('passwordError', 'password');
+                    }
+                });
+
+                cpInput.addEventListener('blur', function () {
+                    if (!this.value) {
+                        showErr('confirmError', 'confirmPassword', 'Vui lòng xác nhận mật khẩu.');
+                    } else if (this.value !== pwInput.value) {
+                        showErr('confirmError', 'confirmPassword', 'Mật khẩu xác nhận không khớp.');
+                    } else {
+                        clearErr('confirmError', 'confirmPassword');
+                    }
+                });
+
+                document.getElementById('resetPasswordForm').addEventListener('submit', function (e) {
+                    let ok = true;
+
+                    const pw = pwInput.value;
+                    if (!pw) {
+                        showErr('passwordError', 'password', 'Mật khẩu không được để trống.');
+                        ok = false;
+                    } else if (!STRONG_RE.test(pw)) {
+                        showErr('passwordError', 'password',
+                                'Mật khẩu phải từ 8–32 ký tự, có ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.');
+                        ok = false;
+                    }
+
+                    const cp = cpInput.value;
+                    if (!cp) {
+                        showErr('confirmError', 'confirmPassword', 'Vui lòng xác nhận mật khẩu.');
+                        ok = false;
+                    } else if (cp !== pw) {
+                        showErr('confirmError', 'confirmPassword', 'Mật khẩu xác nhận không khớp.');
+                        ok = false;
+                    }
+
+                    if (!ok) {
+                        e.preventDefault();
+                        return;
+                    }
+
                     const submitBtn = document.getElementById('submitBtn');
-
-                    function setupToggle(input, toggleEl) {
-                        input.addEventListener('input', function () {
-                            toggleEl.style.display = input.value ? 'flex' : 'none';
-                        });
-                        toggleEl.addEventListener('click', function () {
-                            const isPassword = input.type === 'password';
-                            input.type = isPassword ? 'text' : 'password';
-                            toggleEl.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-                        });
-                    }
-                    setupToggle(pwd, togglePwd);
-                    setupToggle(confirmPwd, toggleConfirm);
-
-                    function evaluateStrength(v) {
-                        if (!v) return 0;
-                        let s = 0;
-                        if (v.length >= 8 && v.length <= 32) s++;
-                        if (/[A-Z]/.test(v) && /[0-9]/.test(v)) s++;
-                        if (/[^A-Za-z0-9]/.test(v)) s++;
-                        return s;
-                    }
-
-                    pwd.addEventListener('input', function () {
-                        const v = pwd.value;
-                        if (!v) {
-                            bars.classList.remove('show');
-                            b1.className = 's-bar';
-                            b2.className = 's-bar';
-                            b3.className = 's-bar';
-                            return;
-                        }
-                        bars.classList.add('show');
-                        const score = evaluateStrength(v);
-                        b1.className = 's-bar' + (score >= 1 ? ' weak' : '');
-                        b2.className = 's-bar' + (score >= 2 ? ' fair' : '');
-                        b3.className = 's-bar' + (score >= 3 ? ' strong' : '');
-                        if (pwd.classList.contains('field-err')) validatePassword();
-                        if (confirmPwd.value) validateConfirm();
-                    });
-
-                    confirmPwd.addEventListener('input', function () {
-                        if (confirmPwd.classList.contains('field-err')) validateConfirm();
-                    });
-
-                    function validatePassword() {
-                        const v = pwd.value;
-                        if (!v) {
-                            pwd.classList.add('field-err');
-                            pwdErr.textContent = 'Vui lòng nhập mật khẩu mới.';
-                            return false;
-                        }
-                        const valid = v.length >= 8 && v.length <= 32 &&
-                                /[A-Z]/.test(v) &&
-                                /[0-9]/.test(v) &&
-                                /[^A-Za-z0-9]/.test(v);
-                        if (!valid) {
-                            pwd.classList.add('field-err');
-                            pwdErr.textContent = 'Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.';
-                            return false;
-                        }
-                        pwd.classList.remove('field-err');
-                        pwdErr.textContent = '';
-                        return true;
-                    }
-
-                    function validateConfirm() {
-                        const v = confirmPwd.value;
-                        if (!v) {
-                            confirmPwd.classList.add('field-err');
-                            confirmErr.textContent = 'Vui lòng xác nhận mật khẩu mới.';
-                            return false;
-                        }
-                        if (v !== pwd.value) {
-                            confirmPwd.classList.add('field-err');
-                            confirmErr.textContent = 'Mật khẩu xác nhận không khớp.';
-                            return false;
-                        }
-                        confirmPwd.classList.remove('field-err');
-                        confirmErr.textContent = '';
-                        return true;
-                    }
-
-                    form.addEventListener('submit', function (e) {
-                        const ok1 = validatePassword();
-                        const ok2 = validateConfirm();
-                        if (!ok1 || !ok2) {
-                            e.preventDefault();
-                            if (!ok1) pwd.focus();
-                            else confirmPwd.focus();
-                            return;
-                        }
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = 'Đang lưu...';
-                    });
-                })();
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Đang lưu...';
+                });
             </script>
         </c:if>
     </body>
