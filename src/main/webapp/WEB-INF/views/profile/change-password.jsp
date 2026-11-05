@@ -203,9 +203,14 @@
 
                     <!-- Mật khẩu hiện tại -->
                     <div class="mb-3">
-                        <label class="cf-form-label" for="currentPassword">
-                            Mật khẩu hiện tại<span class="req-star">*</span>
-                        </label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="cf-form-label mb-0" for="currentPassword">
+                                Mật khẩu hiện tại<span class="req-star">*</span>
+                            </label>
+                            <a href="${pageContext.request.contextPath}/auth/forgot-password" class="text-decoration-none" style="font-size: 0.82rem; color: #F38020; font-weight: 500;">
+                                Quên mật khẩu?
+                            </a>
+                        </div>
                         <div class="cf-input-wrapper">
                             <input type="password" id="currentPassword" name="currentPassword" class="cf-form-control"
                                    placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password" required />

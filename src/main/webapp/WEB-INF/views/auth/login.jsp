@@ -670,7 +670,7 @@
                                 <input type="checkbox" id="rememberMe" name="rememberMe" class="custom-checkbox">
                                 <span>Ghi nhớ tài khoản</span>
                             </label>
-                            <a href="#" class="link-muted">Quên mật khẩu?</a>
+                            <a href="${pageContext.request.contextPath}/auth/forgot-password" class="link-muted">Quên mật khẩu?</a>
                         </div>
 
                         <div class="field-error" id="passwordError"></div>
