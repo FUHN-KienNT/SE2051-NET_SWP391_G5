@@ -424,9 +424,13 @@ body {
                                                     <i class="bi bi-archive me-1"></i>Lưu trữ
                                                 </button>
                                             </c:if>
-                                            <a href="${pageContext.request.contextPath}${rolePath}/course-detail?id=${c.id}" class="btn btn-outline-primary btn-sm fw-semibold rounded-pill px-2 py-1" style="font-size: 0.75rem;" title="View Details Link">
+                                            <a href="${pageContext.request.contextPath}${rolePath}/course-detail?id=${c.id}" class="btn btn-outline-primary btn-sm fw-semibold rounded-pill px-2 py-1 me-1" style="font-size: 0.75rem;" title="View Details Link">
                                                 Chi tiết
                                             </a>
+                                            <button type="button" class="btn btn-outline-danger btn-sm fw-semibold rounded-pill px-2 py-1" style="font-size: 0.75rem;" title="Xóa vĩnh viễn khóa học"
+                                                    onclick="confirmDeleteCourseAdmin('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}${rolePath}/delete-course?id=${c.id}')">
+                                                <i class="bi bi-trash3 me-1"></i>Xóa
+                                            </button>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -440,6 +444,29 @@ body {
 </main>
 
 <script>
+    function confirmDeleteCourseAdmin(title, url) {
+        if (typeof showConfirmModal === 'function') {
+            showConfirmModal({
+                title: 'Xóa vĩnh viễn khóa học (Quyền Admin)',
+                method: 'POST',
+                html: 'Bạn có chắc chắn muốn <strong class="text-danger">xóa vĩnh viễn</strong> khóa học "<strong>' + (title || '') + '</strong>"?<br><br>' +
+                      '<span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i>' +
+                      '<strong>CẢNH BÁO QUẢN TRỊ VIÊN:</strong> Toàn bộ chương học, bài giảng, bài thi và dữ liệu học tập liên quan sẽ bị xóa hoàn toàn khỏi cơ sở dữ liệu.<br>' +
+                      'Thao tác này <strong>không thể hoàn tác</strong>.</span>',
+                type: 'danger',
+                icon: 'bi bi-trash3-fill',
+                confirmText: 'Xác nhận xóa vĩnh viễn',
+                confirmIcon: 'bi bi-trash3 me-1',
+                confirmBtnClass: 'btn-danger fw-bold',
+                confirmUrl: url
+            });
+        } else {
+            if (confirm('CẢNH BÁO ADMIN: Bạn có chắc chắn muốn XÓA VĨNH VIỄN khóa học "' + title + '"? Toàn bộ dữ liệu bài học sẽ bị xóa sạch.')) {
+                submitAsPost(url);
+            }
+        }
+    }
+
     function confirmArchiveCourse(title, url) {
         if (typeof showConfirmModal === 'function') {
             showConfirmModal({
