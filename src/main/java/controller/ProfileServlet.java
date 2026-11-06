@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import service.ProfileService;
 import service.ValidationException;
 import util.SessionUtil;
+import util.WebUtil;
 
 @WebServlet(name = "ProfileServlet", urlPatterns = {"/profile", "/profile/*"})
 @MultipartConfig(
@@ -356,10 +357,7 @@ public class ProfileServlet extends HttpServlet {
     }
 
     private boolean isAjax(HttpServletRequest req) {
-        String requestedWith = req.getHeader("X-Requested-With");
-        String accept = req.getHeader("Accept");
-        return "XMLHttpRequest".equalsIgnoreCase(requestedWith)
-                || (accept != null && accept.contains("application/json"));
+        return WebUtil.isAjax(req);
     }
 
     private void sendJsonResponse(HttpServletResponse resp, int status, boolean success, String field, String message, String value) throws IOException {
@@ -383,15 +381,6 @@ public class ProfileServlet extends HttpServlet {
     }
 
     private String escapeJson(String text) {
-        if (text == null) {
-            return "";
-        }
-        return text.replace("\\", "\\\\")
-                   .replace("\"", "\\\"")
-                   .replace("\b", "\\b")
-                   .replace("\f", "\\f")
-                   .replace("\n", "\\n")
-                   .replace("\r", "\\r")
-                   .replace("\t", "\\t");
+        return WebUtil.escapeJson(text);
     }
 }

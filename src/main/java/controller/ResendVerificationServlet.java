@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import service.EmailVerificationService;
+import util.WebUtil;
 
 @WebServlet(name = "ResendVerificationServlet", urlPatterns = {"/auth/resend-verification"})
 public class ResendVerificationServlet extends HttpServlet {
@@ -39,14 +40,8 @@ public class ResendVerificationServlet extends HttpServlet {
             email = email.trim();
         }
 
-        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(req.getHeader("X-Requested-With"))
-                || (req.getHeader("Accept") != null && req.getHeader("Accept").contains("application/json"));
-
-        String scheme = req.getScheme();
-        String serverName = req.getServerName();
-        int serverPort = req.getServerPort();
-        String contextPath = req.getContextPath();
-        String dynamicBaseUrl = scheme + "://" + serverName + ((serverPort == 80 || serverPort == 443) ? "" : (":" + serverPort)) + contextPath;
+        boolean isAjax = WebUtil.isAjax(req);
+        String dynamicBaseUrl = WebUtil.getDynamicBaseUrl(req);
 
         try {
             emailVerificationService.resendVerification(email, dynamicBaseUrl);
@@ -63,7 +58,7 @@ public class ResendVerificationServlet extends HttpServlet {
             if (isAjax) {
                 resp.setStatus(429);
                 resp.setContentType("application/json;charset=UTF-8");
-                resp.getWriter().write("{\"success\":false,\"rateLimited\":true,\"message\":\"" + escapeJson(rateLimitEx.getMessage()) + "\"}");
+                resp.getWriter().write("{\"success\":false,\"rateLimited\":true,\"message\":\"" + WebUtil.escapeJson(rateLimitEx.getMessage()) + "\"}");
             } else {
                 resp.sendRedirect(req.getContextPath() + "/auth/check-email?email=" 
                         + (email != null ? URLEncoder.encode(email, StandardCharsets.UTF_8) : "") 
@@ -80,10 +75,5 @@ public class ResendVerificationServlet extends HttpServlet {
                         + "&error=system");
             }
         }
-    }
-
-    private String escapeJson(String text) {
-        if (text == null) return "";
-        return text.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 }

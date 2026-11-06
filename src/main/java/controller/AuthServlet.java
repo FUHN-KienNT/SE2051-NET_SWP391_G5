@@ -22,6 +22,7 @@ import service.PasswordResetService;
 import service.ValidationException;
 import util.GoogleOAuthUtil;
 import util.SessionUtil;
+import util.WebUtil;
 
 @WebServlet(name = "AuthServlet", urlPatterns = { "/auth/*" })
 public class AuthServlet extends HttpServlet {
@@ -199,12 +200,7 @@ public class AuthServlet extends HttpServlet {
     }
 
     private String getDynamicBaseUrl(HttpServletRequest req) {
-        String scheme = req.getScheme();
-        String serverName = req.getServerName();
-        int serverPort = req.getServerPort();
-        String contextPath = req.getContextPath();
-        return scheme + "://" + serverName
-                + ((serverPort == 80 || serverPort == 443) ? "" : (":" + serverPort)) + contextPath;
+        return WebUtil.getDynamicBaseUrl(req);
     }
 
     private void register(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -449,21 +445,12 @@ public class AuthServlet extends HttpServlet {
     }
 
     private void showForgotPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        UserDto currentUser = SessionUtil.getCurrentUser(req);
-        if (currentUser != null) {
-            redirectByRole(currentUser, req, resp);
-            return;
-        }
         req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
     }
 
     private void handleForgotPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String email = req.getParameter("email");
-        String scheme = req.getScheme();
-        String serverName = req.getServerName();
-        int serverPort = req.getServerPort();
-        String contextPath = req.getContextPath();
-        String dynamicBaseUrl = scheme + "://" + serverName + ((serverPort == 80 || serverPort == 443) ? "" : ":" + serverPort) + contextPath;
+        String dynamicBaseUrl = WebUtil.getDynamicBaseUrl(req);
 
         try {
             passwordResetService.sendResetRequest(email, dynamicBaseUrl);
@@ -500,14 +487,8 @@ public class AuthServlet extends HttpServlet {
             email = email.trim();
         }
 
-        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(req.getHeader("X-Requested-With"))
-                || (req.getHeader("Accept") != null && req.getHeader("Accept").contains("application/json"));
-
-        String scheme = req.getScheme();
-        String serverName = req.getServerName();
-        int serverPort = req.getServerPort();
-        String contextPath = req.getContextPath();
-        String dynamicBaseUrl = scheme + "://" + serverName + ((serverPort == 80 || serverPort == 443) ? "" : (":" + serverPort)) + contextPath;
+        boolean isAjax = WebUtil.isAjax(req);
+        String dynamicBaseUrl = WebUtil.getDynamicBaseUrl(req);
 
         try {
             passwordResetService.resendResetRequest(email, dynamicBaseUrl);
@@ -547,8 +528,7 @@ public class AuthServlet extends HttpServlet {
     }
 
     private String escapeJson(String text) {
-        if (text == null) return "";
-        return text.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
+        return WebUtil.escapeJson(text);
     }
 
     private void showResetPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -582,6 +562,7 @@ public class AuthServlet extends HttpServlet {
 
         try {
             passwordResetService.resetPassword(token, password, confirmPassword);
+            SessionUtil.invalidate(req);
             HttpSession session = req.getSession(true);
             session.setAttribute("flashToastType", "success");
             session.setAttribute("flashToastMessage", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.");
