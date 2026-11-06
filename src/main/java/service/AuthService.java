@@ -65,16 +65,10 @@ public class AuthService {
     }
 
     public UserDto register(RegisterDto dto, String dynamicBaseUrl) {
-        validateRegistration(dto);
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
-                if (userDao.existsUsername(con, dto.getUsername().trim(), null)) {
-                    throw new IllegalArgumentException("Tên đăng nhập đã được sử dụng.");
-                }
-                if (userDao.existsEmail(con, dto.getEmail().trim(), null)) {
-                    throw new IllegalArgumentException("Email đã được sử dụng.");
-                }
+                validateRegistration(con, dto);
 
                 Setting studentRole = resolveStudentRole();
 
@@ -197,15 +191,21 @@ public class AuthService {
     }
 
     public void setPassword(long userId, String password, String confirmPassword) {
+        java.util.Map<String, String> errors = new java.util.LinkedHashMap<>();
         if (password == null || password.isBlank()) {
-            throw new IllegalArgumentException("Mật khẩu không được để trống.");
+            errors.put("password", "Mật khẩu không được để trống.");
+        } else if (!ValidationUtil.isStrongPassword(password)) {
+            errors.put("password", "Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
         }
-        if (!ValidationUtil.isStrongPassword(password)) {
-            throw new IllegalArgumentException(
-                    "Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
+
+        if (confirmPassword == null || confirmPassword.isBlank()) {
+            errors.put("confirmPassword", "Vui lòng xác nhận mật khẩu.");
+        } else if (password != null && !password.equals(confirmPassword)) {
+            errors.put("confirmPassword", "Mật khẩu xác nhận không khớp.");
         }
-        if (!password.equals(confirmPassword)) {
-            throw new IllegalArgumentException("Xác nhận mật khẩu không khớp.");
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
         }
         try (Connection con = DbConnection.getConnection()) {
             String hash = PasswordUtil.hash(password);
@@ -241,44 +241,87 @@ public class AuthService {
         if (dto == null) {
             throw new IllegalArgumentException("Thông tin đăng nhập không được để trống.");
         }
-        ValidationUtil.requireText(dto.getLoginId(), "Tên đăng nhập hoặc Email");
-        ValidationUtil.requireText(dto.getPassword(), "Mật khẩu");
+        java.util.Map<String, String> errors = new java.util.LinkedHashMap<>();
+        if (dto.getLoginId() == null || dto.getLoginId().trim().isEmpty()) {
+            errors.put("loginId", "Vui lòng nhập tên đăng nhập hoặc email.");
+        }
+        if (dto.getPassword() == null || dto.getPassword().isEmpty()) {
+            errors.put("password", "Vui lòng nhập mật khẩu.");
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
     }
 
-    private void validateRegistration(RegisterDto dto) {
+    public void validateRegistration(RegisterDto dto) {
+        validateRegistration(null, dto);
+    }
+
+    public void validateRegistration(Connection con, RegisterDto dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Thông tin đăng ký không được để trống.");
         }
 
-        ValidationUtil.requireText(dto.getFullName(), "Họ và tên");
-        if (!ValidationUtil.isValidFullName(dto.getFullName())) {
-            throw new IllegalArgumentException("Họ và tên phải từ 3 đến 50 ký tự.");
+        java.util.Map<String, String> errors = new java.util.LinkedHashMap<>();
+
+        // 1. Họ và tên
+        if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
+            errors.put("fullName", "Họ và tên không được để trống.");
+        } else if (!ValidationUtil.isValidFullName(dto.getFullName())) {
+            errors.put("fullName", "Họ và tên phải từ 3 đến 50 ký tự.");
         }
 
-        ValidationUtil.requireText(dto.getUsername(), "Tên đăng nhập");
-        if (!ValidationUtil.isValidUsername(dto.getUsername())) {
-            throw new IllegalArgumentException(
-                    "Tên đăng nhập phải từ 4–30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).");
+        // 2. Tên người dùng
+        if (dto.getUsername() == null || dto.getUsername().trim().isEmpty()) {
+            errors.put("username", "Tên người dùng không được để trống.");
+        } else if (!ValidationUtil.isValidUsername(dto.getUsername())) {
+            errors.put("username", "Tên người dùng phải từ 4–30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).");
+        } else if (con != null) {
+            try {
+                if (userDao.existsUsername(con, dto.getUsername().trim(), null)) {
+                    errors.put("username", "Tên người dùng đã được sử dụng.");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
-        ValidationUtil.requireText(dto.getEmail(), "Email");
-        if (!ValidationUtil.isEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email không đúng định dạng.");
+        // 3. Email
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            errors.put("email", "Email không được để trống.");
+        } else if (!ValidationUtil.isEmail(dto.getEmail())) {
+            errors.put("email", "Email không đúng định dạng.");
+        } else if (con != null) {
+            try {
+                if (userDao.existsEmail(con, dto.getEmail().trim(), null)) {
+                    errors.put("email", "Email đã được sử dụng.");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
-        ValidationUtil.requireText(dto.getPassword(), "Mật khẩu");
-        if (!ValidationUtil.isStrongPassword(dto.getPassword())) {
-            throw new IllegalArgumentException(
-                    "Mật khẩu phải từ 8–32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
+        // 4. Mật khẩu
+        if (dto.getPassword() == null || dto.getPassword().isEmpty()) {
+            errors.put("password", "Mật khẩu không được để trống.");
+        } else if (!ValidationUtil.isStrongPassword(dto.getPassword())) {
+            errors.put("password", "Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
         }
 
-        // Xác nhận mật khẩu
-        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
-            throw new IllegalArgumentException("Xác nhận mật khẩu không khớp.");
+        // 5. Xác nhận mật khẩu
+        if (dto.getConfirmPassword() == null || dto.getConfirmPassword().isEmpty()) {
+            errors.put("confirmPassword", "Vui lòng xác nhận mật khẩu.");
+        } else if (dto.getPassword() != null && !dto.getPassword().equals(dto.getConfirmPassword())) {
+            errors.put("confirmPassword", "Mật khẩu xác nhận không khớp.");
         }
 
+        // 6. Điều khoản
         if (!dto.isAgreeTerms()) {
-            throw new IllegalArgumentException("Bạn phải đồng ý với điều khoản dịch vụ để tiếp tục.");
+            errors.put("terms", "Bạn phải đồng ý với điều khoản dịch vụ để tiếp tục.");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
         }
     }
 

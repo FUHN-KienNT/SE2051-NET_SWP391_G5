@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import service.AuthService;
 import service.InactiveAccountException;
 import service.PasswordResetService;
+import service.ValidationException;
 import util.GoogleOAuthUtil;
 import util.SessionUtil;
 
@@ -181,6 +182,10 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("flashToastMessage", "Đăng nhập thành công! Chào mừng bạn quay trở lại.");
 
             redirectByRole(user, req, resp);
+        } catch (ValidationException e) {
+            req.setAttribute("fieldErrors", e.getErrors());
+            req.setAttribute("loginId", loginId);
+            showLogin(req, resp);
         } catch (InactiveAccountException e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("inactiveEmail", e.getEmail());
@@ -217,6 +222,10 @@ public class AuthServlet extends HttpServlet {
             authService.register(dto, dynamicBaseUrl);
             String encodedEmail = URLEncoder.encode(dto.getEmail().trim(), StandardCharsets.UTF_8);
             resp.sendRedirect(req.getContextPath() + "/auth/check-email?email=" + encodedEmail);
+        } catch (ValidationException e) {
+            req.setAttribute("fieldErrors", e.getErrors());
+            req.setAttribute("registerDto", dto);
+            showRegister(req, resp);
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("registerDto", dto);
@@ -421,6 +430,10 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("flashToastType", "success");
             session.setAttribute("flashToastMessage", "Thiết lập mật khẩu thành công! Chào mừng bạn đến với Courson LMS.");
             redirectByRole(pendingUser, req, resp);
+        } catch (ValidationException e) {
+            req.setAttribute("fieldErrors", e.getErrors());
+            req.setAttribute("user", pendingUser);
+            req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
         } catch (IllegalArgumentException e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("user", pendingUser);
@@ -453,6 +466,10 @@ public class AuthServlet extends HttpServlet {
             passwordResetService.sendResetRequest(email, dynamicBaseUrl);
             resp.sendRedirect(req.getContextPath() + "/auth/forgot-password-check-email?email="
                     + (email != null ? URLEncoder.encode(email.trim(), StandardCharsets.UTF_8) : ""));
+        } catch (ValidationException e) {
+            req.setAttribute("fieldErrors", e.getErrors());
+            req.setAttribute("email", email != null ? email.trim() : "");
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
         } catch (IllegalArgumentException | IllegalStateException e) {
             req.setAttribute("errorMessage", e.getMessage());
             req.setAttribute("email", email != null ? email.trim() : "");
@@ -566,6 +583,10 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("flashToastType", "success");
             session.setAttribute("flashToastMessage", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.");
             resp.sendRedirect(req.getContextPath() + "/auth/login");
+        } catch (ValidationException e) {
+            req.setAttribute("token", token != null ? token.trim() : "");
+            req.setAttribute("fieldErrors", e.getErrors());
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
         } catch (IllegalArgumentException e) {
             req.setAttribute("token", token != null ? token.trim() : "");
             req.setAttribute("errorMessage", e.getMessage());

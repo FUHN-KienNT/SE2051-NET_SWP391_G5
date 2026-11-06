@@ -12,6 +12,7 @@ import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.time.LocalDate;
 import service.ProfileService;
+import service.ValidationException;
 import util.SessionUtil;
 
 @WebServlet(name = "ProfileServlet", urlPatterns = {"/profile", "/profile/*"})
@@ -246,6 +247,25 @@ public class ProfileServlet extends HttpServlet {
                 session.setAttribute("flashToastType", "success");
                 session.setAttribute("flashToastMessage", "Đổi mật khẩu thành công!");
                 resp.sendRedirect(req.getContextPath() + "/profile/change-password");
+            }
+        } catch (ValidationException e) {
+            if (ajax) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.setContentType("application/json;charset=UTF-8");
+                StringBuilder sb = new StringBuilder();
+                sb.append("{\"success\":false,\"message\":\"").append(escapeJson(e.getMessage())).append("\",\"fieldErrors\":{");
+                int idx = 0;
+                for (java.util.Map.Entry<String, String> entry : e.getErrors().entrySet()) {
+                    if (idx > 0) sb.append(",");
+                    sb.append("\"").append(escapeJson(entry.getKey())).append("\":\"").append(escapeJson(entry.getValue())).append("\"");
+                    idx++;
+                }
+                sb.append("}}");
+                resp.getWriter().write(sb.toString());
+            } else {
+                req.setAttribute("fieldErrors", e.getErrors());
+                req.setAttribute("error", e.getMessage());
+                showChangePassword(req, resp, currentUser);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             if (ajax) {

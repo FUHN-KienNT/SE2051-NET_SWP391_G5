@@ -96,6 +96,30 @@ public final class ProfileValidator {
         }
     }
 
+    public static java.util.Map<String, String> validatePasswordMulti(String currentPassword, String newPassword, String confirmPassword, String currentHash) {
+        java.util.Map<String, String> errors = new java.util.LinkedHashMap<>();
+        if (currentHash != null) {
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                errors.put("currentPassword", "Vui lòng nhập mật khẩu hiện tại.");
+            } else if (!PasswordUtil.verify(currentPassword, currentHash)) {
+                errors.put("currentPassword", "Mật khẩu hiện tại không chính xác.");
+            }
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            errors.put("newPassword", "Mật khẩu mới không được để trống.");
+        } else if (!ValidationUtil.isStrongPassword(newPassword)) {
+            errors.put("newPassword", "Mật khẩu mới phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
+        } else if (currentPassword != null && currentPassword.equals(newPassword)) {
+            errors.put("newPassword", "Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+        }
+        if (confirmPassword == null || confirmPassword.trim().isEmpty()) {
+            errors.put("confirmPassword", "Vui lòng xác nhận mật khẩu mới.");
+        } else if (newPassword != null && !newPassword.equals(confirmPassword)) {
+            errors.put("confirmPassword", "Mật khẩu xác nhận không khớp.");
+        }
+        return errors;
+    }
+
     public static String validatePassword(String currentPassword, String newPassword, String confirmPassword, String currentHash) {
         if (currentHash != null) {
             if (currentPassword == null || currentPassword.trim().isEmpty()) {

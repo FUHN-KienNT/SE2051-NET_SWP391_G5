@@ -135,9 +135,9 @@ public class ProfileService {
     public void changePassword(long userId, String currentPassword, String newPassword, String confirmPassword) {
         try (Connection con = DbConnection.getConnection()) {
             String currentHash = profileDao.getPasswordHash(con, userId);
-            String error = ProfileValidator.validatePassword(currentPassword, newPassword, confirmPassword, currentHash);
-            if (error != null) {
-                throw new IllegalArgumentException(error);
+            java.util.Map<String, String> errors = ProfileValidator.validatePasswordMulti(currentPassword, newPassword, confirmPassword, currentHash);
+            if (!errors.isEmpty()) {
+                throw new ValidationException(errors);
             }
             String hash = util.PasswordUtil.hash(newPassword);
             boolean ok = profileDao.updatePassword(con, userId, hash);

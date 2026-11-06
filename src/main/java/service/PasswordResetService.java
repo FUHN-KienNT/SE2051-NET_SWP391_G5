@@ -41,11 +41,11 @@ public class PasswordResetService {
      */
     public void sendResetRequest(String email, String dynamicBaseUrl) {
         if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng điền địa chỉ email của bạn.");
+            throw new ValidationException("email", "Vui lòng điền địa chỉ email của bạn.");
         }
         String cleanEmail = email.trim();
         if (!ValidationUtil.isEmail(cleanEmail)) {
-            throw new IllegalArgumentException("Định dạng email không hợp lệ.");
+            throw new ValidationException("email", "Email không đúng định dạng.");
         }
 
         try (Connection con = DbConnection.getConnection()) {
@@ -53,7 +53,7 @@ public class PasswordResetService {
             try {
                 Optional<User> userOpt = userDao.findByEmail(con, cleanEmail);
                 if (!userOpt.isPresent()) {
-                    throw new IllegalArgumentException("Không tìm thấy tài khoản với email này.");
+                    throw new ValidationException("email", "Không tìm thấy tài khoản với email này.");
                 }
                 User user = userOpt.get();
 
@@ -220,16 +220,21 @@ public class PasswordResetService {
             throw new IllegalArgumentException("Mã xác thực không hợp lệ.");
         }
 
+        java.util.Map<String, String> errors = new java.util.LinkedHashMap<>();
         if (newPassword == null || newPassword.trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng nhập mật khẩu mới.");
+            errors.put("password", "Vui lòng nhập mật khẩu mới.");
+        } else if (!ValidationUtil.isStrongPassword(newPassword)) {
+            errors.put("password", "Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
         }
 
-        if (!ValidationUtil.isStrongPassword(newPassword)) {
-            throw new IllegalArgumentException("Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.");
+        if (confirmPassword == null || confirmPassword.trim().isEmpty()) {
+            errors.put("confirmPassword", "Vui lòng xác nhận mật khẩu mới.");
+        } else if (newPassword != null && !newPassword.equals(confirmPassword)) {
+            errors.put("confirmPassword", "Mật khẩu xác nhận không khớp.");
         }
 
-        if (confirmPassword == null || !newPassword.equals(confirmPassword)) {
-            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp.");
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
         }
 
         String tokenHash = TokenUtil.hashToken(rawToken.trim());
