@@ -19,7 +19,7 @@ import util.TokenUtil;
 public class EmailVerificationService {
 
     private static final Logger LOGGER = Logger.getLogger(EmailVerificationService.class.getName());
-    private static final int RESEND_RATE_LIMIT_SECONDS = 60;
+    private static final int RESEND_RATE_LIMIT_SECONDS = 30;
     private static final int TOKEN_EXPIRY_HOURS = 24;
 
     private final VerificationTokenDao verificationTokenDao;
@@ -117,9 +117,9 @@ public class EmailVerificationService {
                 return;
             }
 
-            // Check rate limiting (1 email per 60 seconds)
+            // Check rate limiting (1 email per 30 seconds)
             if (verificationTokenDao.isRateLimited(con, user.getId(), RESEND_RATE_LIMIT_SECONDS)) {
-                throw new IllegalStateException("Vui lòng đợi 60 giây trước khi yêu cầu gửi lại email xác nhận.");
+                throw new IllegalStateException("Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác nhận.");
             }
 
             con.setAutoCommit(false);

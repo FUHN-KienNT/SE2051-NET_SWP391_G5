@@ -4,6 +4,8 @@ import dao.PasswordResetTokenDao;
 import dao.UserDao;
 import entity.PasswordResetToken;
 import entity.User;
+import entity.enums.UserStatus;
+import dao.VerificationTokenDao;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -54,6 +56,14 @@ public class PasswordResetService {
                     throw new IllegalArgumentException("Không tìm thấy tài khoản với email này.");
                 }
                 User user = userOpt.get();
+
+                if (user.getStatus() == UserStatus.BANNED) {
+                    throw new IllegalStateException("Tài khoản của bạn đã bị khóa.");
+                }
+
+                if (passwordResetTokenDao.isRateLimited(con, user.getId(), 30)) {
+                    throw new IllegalStateException("Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác thực.");
+                }
 
                 // Generate secure token
                 String rawToken = TokenUtil.generateToken();
@@ -110,6 +120,14 @@ public class PasswordResetService {
                     throw new IllegalArgumentException("Không tìm thấy tài khoản với email này.");
                 }
                 User user = userOpt.get();
+
+                if (user.getStatus() == UserStatus.BANNED) {
+                    throw new IllegalStateException("Tài khoản của bạn đã bị khóa.");
+                }
+
+                if (passwordResetTokenDao.isRateLimited(con, user.getId(), 30)) {
+                    throw new IllegalStateException("Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác thực.");
+                }
 
                 // Rate limiting check (30 seconds)
                 if (passwordResetTokenDao.isRateLimited(con, user.getId(), 30)) {
@@ -238,6 +256,13 @@ public class PasswordResetService {
                 boolean updated = userDao.updatePassword(con, token.getUserId(), passwordHash);
                 if (!updated) {
                     throw new RuntimeException("Cập nhật mật khẩu thất bại, không tìm thấy người dùng.");
+                }
+
+                // Kích hoạt tài khoản nếu đang ở trạng thái INACTIVE (đã xác thực qua email)
+                Optional<User> userOpt = userDao.findById(con, token.getUserId());
+                if (userOpt.isPresent() && userOpt.get().getStatus() == UserStatus.INACTIVE) {
+                    userDao.updateStatus(con, token.getUserId(), UserStatus.ACTIVE);
+                    new VerificationTokenDao().invalidateTokensByUserId(con, token.getUserId());
                 }
 
                 passwordResetTokenDao.markAsUsed(con, token.getId());

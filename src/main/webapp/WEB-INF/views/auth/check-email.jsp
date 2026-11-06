@@ -497,7 +497,7 @@
             const resendText = document.getElementById('resendText');
             const resendIcon = document.getElementById('resendIcon');
             const resendForm = document.getElementById('resendForm');
-            let countdown = 60;
+            let countdown = 30;
             let timerId = null;
 
             function startCountdown(seconds) {
@@ -530,12 +530,12 @@
             }
 
             // Start countdown immediately on arrival
-            startCountdown(60);
+            startCountdown(30);
             <c:if test="${param.resent == 'true'}">
             CoursonToast.show('success', 'Email xác thực mới đã được gửi đi! Vui lòng kiểm tra hộp thư của bạn.');
             </c:if>
             <c:if test="${param.error == 'ratelimit'}">
-            CoursonToast.show('warning', 'Vui lòng đợi 60 giây trước khi yêu cầu gửi lại email xác nhận.');
+            CoursonToast.show('warning', 'Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác nhận.');
             </c:if>
             <c:if test="${param.error == 'system'}">
             CoursonToast.show('error', 'Có lỗi xảy ra khi gửi lại email. Vui lòng thử lại sau.');
@@ -562,7 +562,7 @@
                         .then(response => {
                             if (response.status === 429) {
                                 return response.json().then(data => {
-                                    CoursonToast.show('warning', data.message || 'Vui lòng đợi 60 giây trước khi gửi lại.');
+                                    CoursonToast.show('warning', data.message || 'Vui lòng đợi 30 giây trước khi gửi lại.');
                                     startCountdown(countdown > 0 ? countdown : 30);
                                 });
                             }
@@ -571,7 +571,7 @@
                             }
                             return response.json().then(data => {
                                 CoursonToast.show('success', data.message || 'Đã gửi lại link xác thực! Vui lòng kiểm tra hộp thư.');
-                                startCountdown(60);
+                                startCountdown(30);
                             });
                         })
                         .catch(err => {

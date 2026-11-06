@@ -116,6 +116,12 @@ public class AuthServlet extends HttpServlet {
     }
 
     private void showLogin(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser != null) {
+            redirectByRole(currentUser, req, resp);
+            return;
+        }
+
         HttpSession session = req.getSession(false);
         if (session != null) {
             String flashToastType = (String) session.getAttribute("flashToastType");
@@ -148,6 +154,11 @@ public class AuthServlet extends HttpServlet {
     }
 
     private void showRegister(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser != null) {
+            redirectByRole(currentUser, req, resp);
+            return;
+        }
         req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(req, resp);
     }
 
@@ -422,6 +433,11 @@ public class AuthServlet extends HttpServlet {
     }
 
     private void showForgotPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser != null) {
+            redirectByRole(currentUser, req, resp);
+            return;
+        }
         req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
     }
 
@@ -437,7 +453,7 @@ public class AuthServlet extends HttpServlet {
             passwordResetService.sendResetRequest(email, dynamicBaseUrl);
             resp.sendRedirect(req.getContextPath() + "/auth/forgot-password-check-email?email="
                     + (email != null ? URLEncoder.encode(email.trim(), StandardCharsets.UTF_8) : ""));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             req.setAttribute("errorMessage", e.getMessage());
             req.setAttribute("email", email != null ? email.trim() : "");
             req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
