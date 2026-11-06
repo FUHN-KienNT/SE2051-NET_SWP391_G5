@@ -202,13 +202,13 @@
                     <input type="email"
                            id="email"
                            name="email"
-                           class="field-input"
+                           class="field-input ${not empty fieldErrors['email'] ? 'field-err' : ''}"
                            placeholder="Nhập địa chỉ email của bạn"
                            value="<c:out value='${email}'/>"
                            required
                            autofocus
                            autocomplete="email">
-                    <div class="field-error" id="emailError"></div>
+                    <div class="field-error" id="emailError"><c:out value="${fieldErrors['email']}"/></div>
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn-submit">Yêu cầu đặt lại mật khẩu</button>
@@ -223,44 +223,11 @@
 
         <script>
             (function () {
-                const form = document.getElementById('forgotPasswordForm');
                 const emailInput = document.getElementById('email');
                 const emailError = document.getElementById('emailError');
-                const submitBtn = document.getElementById('submitBtn');
-
-                const EMAIL_RE = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-
-                function validateEmail() {
-                    const val = emailInput.value.trim();
-                    if (!val) {
-                        emailInput.classList.add('field-err');
-                        emailError.textContent = 'Vui lòng nhập địa chỉ email.';
-                        return false;
-                    }
-                    if (!EMAIL_RE.test(val)) {
-                        emailInput.classList.add('field-err');
-                        emailError.textContent = 'Địa chỉ email không đúng định dạng.';
-                        return false;
-                    }
+                emailInput.addEventListener('input', function () {
                     emailInput.classList.remove('field-err');
                     emailError.textContent = '';
-                    return true;
-                }
-
-                emailInput.addEventListener('input', function () {
-                    if (emailInput.classList.contains('field-err')) {
-                        validateEmail();
-                    }
-                });
-
-                form.addEventListener('submit', function (e) {
-                    if (!validateEmail()) {
-                        e.preventDefault();
-                        emailInput.focus();
-                        return;
-                    }
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Đang xử lý...';
                 });
             })();
         </script>

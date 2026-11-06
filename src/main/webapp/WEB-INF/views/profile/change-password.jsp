@@ -218,7 +218,7 @@
                                 <i class="bi bi-eye-slash" id="iconCur"></i>
                             </span>
                         </div>
-                        <div id="currentPasswordError" class="field-error-text"></div>
+                        <div id="currentPasswordError" class="field-error-text" style="${not empty fieldErrors['currentPassword'] ? 'display:block;' : ''}"><c:out value="${fieldErrors['currentPassword']}"/></div>
                     </div>
 
                     <!-- Mật khẩu mới -->
@@ -240,7 +240,7 @@
                             <div class="s-bar" id="b4"></div>
                         </div>
                         <small class="form-text text-muted">Từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.</small>
-                        <div id="newPasswordError" class="field-error-text"></div>
+                        <div id="newPasswordError" class="field-error-text" style="${not empty fieldErrors['newPassword'] ? 'display:block;' : ''}"><c:out value="${fieldErrors['newPassword']}"/></div>
                     </div>
 
                     <!-- Xác nhận mật khẩu mới -->
@@ -255,7 +255,7 @@
                                 <i class="bi bi-eye-slash" id="iconCfm"></i>
                             </span>
                         </div>
-                        <div id="confirmPasswordError" class="field-error-text"></div>
+                        <div id="confirmPasswordError" class="field-error-text" style="${not empty fieldErrors['confirmPassword'] ? 'display:block;' : ''}"><c:out value="${fieldErrors['confirmPassword']}"/></div>
                     </div>
 
                     <!-- Action buttons -->
@@ -358,53 +358,17 @@
         }
 
         form.addEventListener('submit', function(e) {
-            let ok = true;
-            const cur = curInput.value;
-            const nw = newInput.value;
-            const cfm = cfmInput.value;
-
-            // 1. Current password
-            if (!cur) {
-                showError('currentPasswordError', 'currentPassword', 'Vui lòng nhập mật khẩu hiện tại.');
-                ok = false;
-            } else {
-                clearError('currentPasswordError', 'currentPassword');
-            }
-
-            // 2. New password
-            if (!nw) {
-                showError('newPasswordError', 'newPassword', 'Mật khẩu mới không được để trống.');
-                ok = false;
-            } else if (!STRONG_RE.test(nw)) {
-                showError('newPasswordError', 'newPassword', 'Mật khẩu mới phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.');
-                ok = false;
-            } else if (cur && cur === nw) {
-                showError('newPasswordError', 'newPassword', 'Mật khẩu mới không được trùng với mật khẩu hiện tại.');
-                ok = false;
-            } else {
-                clearError('newPasswordError', 'newPassword');
-            }
-
-            // 3. Confirm password
-            if (!cfm) {
-                showError('confirmPasswordError', 'confirmPassword', 'Vui lòng xác nhận mật khẩu mới.');
-                ok = false;
-            } else if (cfm !== nw) {
-                showError('confirmPasswordError', 'confirmPassword', 'Mật khẩu xác nhận không khớp.');
-                ok = false;
-            } else {
-                clearError('confirmPasswordError', 'confirmPassword');
-            }
-
-            if (!ok) {
-                e.preventDefault();
-                return;
-            }
-
-            // AJAX submit
             e.preventDefault();
             btnSubmit.disabled = true;
             btnSubmitText.textContent = 'Đang đổi mật khẩu...';
+
+            clearError('currentPasswordError', 'currentPassword');
+            clearError('newPasswordError', 'newPassword');
+            clearError('confirmPasswordError', 'confirmPassword');
+
+            const cur = curInput.value;
+            const nw = newInput.value;
+            const cfm = cfmInput.value;
 
             const params = new URLSearchParams();
             params.append('action', 'change-password');
@@ -437,15 +401,20 @@
                         window.location.href = '${pageContext.request.contextPath}/profile';
                     }, 1200);
                 } else {
-                    if (window.CoursonToast) {
-                        window.CoursonToast.show('error', data.message || 'Đổi mật khẩu thất bại.', 8000);
-                    }
-                    if (data.message && data.message.includes('hiện tại')) {
-                        showError('currentPasswordError', 'currentPassword', data.message);
-                    } else if (data.message && data.message.includes('khớp')) {
-                        showError('confirmPasswordError', 'confirmPassword', data.message);
-                    } else {
-                        showError('newPasswordError', 'newPassword', data.message);
+                    if (data.fieldErrors) {
+                        if (data.fieldErrors.currentPassword) {
+                            showError('currentPasswordError', 'currentPassword', data.fieldErrors.currentPassword);
+                        }
+                        if (data.fieldErrors.newPassword) {
+                            showError('newPasswordError', 'newPassword', data.fieldErrors.newPassword);
+                        }
+                        if (data.fieldErrors.confirmPassword) {
+                            showError('confirmPasswordError', 'confirmPassword', data.fieldErrors.confirmPassword);
+                        }
+                    } else if (data.message) {
+                        if (window.CoursonToast) {
+                            window.CoursonToast.show('error', data.message, 8000);
+                        }
                     }
                 }
             })

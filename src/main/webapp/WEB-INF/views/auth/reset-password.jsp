@@ -260,7 +260,7 @@
                                 <input type="password"
                                        id="password"
                                        name="password"
-                                       class="field-input"
+                                       class="field-input ${not empty fieldErrors['password'] ? 'field-err' : ''}"
                                        placeholder="Nhập mật khẩu mới"
                                        autocomplete="new-password">
                                 <span class="toggle-icon" id="togglePw" onclick="togglePass('password', 'pwIcon')">
@@ -274,7 +274,7 @@
                                 <div class="s-bar" id="b4"></div>
                             </div>
                             <p class="field-hint">Mật khẩu phải từ 8–32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.</p>
-                            <div class="field-error" id="passwordError"></div>
+                            <div class="field-error" id="passwordError"><c:out value="${fieldErrors['password']}"/></div>
                         </div>
 
                         <div class="field-group">
@@ -283,14 +283,14 @@
                                 <input type="password"
                                        id="confirmPassword"
                                        name="confirmPassword"
-                                       class="field-input"
+                                       class="field-input ${not empty fieldErrors['confirmPassword'] ? 'field-err' : ''}"
                                        placeholder="Nhập lại mật khẩu mới"
                                        autocomplete="new-password">
                                 <span class="toggle-icon" id="toggleCp" onclick="togglePass('confirmPassword', 'cpIcon')">
                                     <i class="bi bi-eye-slash" id="cpIcon"></i>
                                 </span>
                             </div>
-                            <div class="field-error" id="confirmError"></div>
+                            <div class="field-error" id="confirmError"><c:out value="${fieldErrors['confirmPassword']}"/></div>
                         </div>
 
                         <button type="submit" id="submitBtn" class="btn-submit">Lưu mật khẩu mới</button>
@@ -382,59 +382,6 @@
                     if (inputId) document.getElementById(inputId).classList.remove('field-err');
                 }
 
-                pwInput.addEventListener('blur', function () {
-                    const pw = this.value;
-                    if (!pw) {
-                        showErr('passwordError', 'password', 'Mật khẩu không được để trống.');
-                    } else if (!STRONG_RE.test(pw)) {
-                        showErr('passwordError', 'password',
-                                'Mật khẩu phải từ 8–32 ký tự, có ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.');
-                    } else {
-                        clearErr('passwordError', 'password');
-                    }
-                });
-
-                cpInput.addEventListener('blur', function () {
-                    if (!this.value) {
-                        showErr('confirmError', 'confirmPassword', 'Vui lòng xác nhận mật khẩu.');
-                    } else if (this.value !== pwInput.value) {
-                        showErr('confirmError', 'confirmPassword', 'Mật khẩu xác nhận không khớp.');
-                    } else {
-                        clearErr('confirmError', 'confirmPassword');
-                    }
-                });
-
-                document.getElementById('resetPasswordForm').addEventListener('submit', function (e) {
-                    let ok = true;
-
-                    const pw = pwInput.value;
-                    if (!pw) {
-                        showErr('passwordError', 'password', 'Mật khẩu không được để trống.');
-                        ok = false;
-                    } else if (!STRONG_RE.test(pw)) {
-                        showErr('passwordError', 'password',
-                                'Mật khẩu phải từ 8–32 ký tự, có ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.');
-                        ok = false;
-                    }
-
-                    const cp = cpInput.value;
-                    if (!cp) {
-                        showErr('confirmError', 'confirmPassword', 'Vui lòng xác nhận mật khẩu.');
-                        ok = false;
-                    } else if (cp !== pw) {
-                        showErr('confirmError', 'confirmPassword', 'Mật khẩu xác nhận không khớp.');
-                        ok = false;
-                    }
-
-                    if (!ok) {
-                        e.preventDefault();
-                        return;
-                    }
-
-                    const submitBtn = document.getElementById('submitBtn');
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Đang lưu...';
-                });
             </script>
         </c:if>
     </body>

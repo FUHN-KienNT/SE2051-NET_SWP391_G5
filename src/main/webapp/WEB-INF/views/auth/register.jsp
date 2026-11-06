@@ -282,32 +282,32 @@
 
                 <div class="field-group">
                     <label class="field-label" for="fullName">Họ Và Tên</label>
-                    <input type="text" id="fullName" name="fullName" class="field-input"
+                    <input type="text" id="fullName" name="fullName" class="field-input ${not empty fieldErrors['fullName'] ? 'field-err' : ''}"
                            value="<c:out value='${registerDto.fullName}'/>"
                            placeholder="Nhập họ và tên đầy đủ" autocomplete="name">
-                    <div class="field-error" id="fullNameError"></div>
+                    <div class="field-error" id="fullNameError"><c:out value="${fieldErrors['fullName']}"/></div>
                 </div>
 
                 <div class="field-group">
                     <label class="field-label" for="username">Tên người dùng</label>
-                    <input type="text" id="username" name="username" class="field-input"
+                    <input type="text" id="username" name="username" class="field-input ${not empty fieldErrors['username'] ? 'field-err' : ''}"
                            value="<c:out value='${registerDto.username}'/>"
                            placeholder="Nhập tên người dùng" autocomplete="username">
-                    <div class="field-error" id="usernameError"></div>
+                    <div class="field-error" id="usernameError"><c:out value="${fieldErrors['username']}"/></div>
                 </div>
 
                 <div class="field-group">
                     <label class="field-label" for="email">Email</label>
-                    <input type="email" id="email" name="email" class="field-input"
+                    <input type="email" id="email" name="email" class="field-input ${not empty fieldErrors['email'] ? 'field-err' : ''}"
                            value="<c:out value='${registerDto.email}'/>"
                            placeholder="Nhập email của bạn" autocomplete="email">
-                    <div class="field-error" id="emailError"></div>
+                    <div class="field-error" id="emailError"><c:out value="${fieldErrors['email']}"/></div>
                 </div>
 
                 <div class="field-group">
                     <label class="field-label" for="password">Mật khẩu</label>
                     <div class="input-wrapper">
-                        <input type="password" id="password" name="password" class="field-input"
+                        <input type="password" id="password" name="password" class="field-input ${not empty fieldErrors['password'] ? 'field-err' : ''}"
                                placeholder="Nhập mật khẩu" autocomplete="new-password">
                         <span class="toggle-icon" id="togglePw" onclick="togglePass('password', 'pwIcon')">
                             <i class="bi bi-eye-slash" id="pwIcon"></i>
@@ -319,23 +319,23 @@
                         <div class="s-bar" id="b3"></div>
                         <div class="s-bar" id="b4"></div>
                     </div>
-                    <div class="field-error" id="passwordError"></div>
+                    <div class="field-error" id="passwordError"><c:out value="${fieldErrors['password']}"/></div>
                 </div>
 
                 <div class="field-group">
                     <label class="field-label" for="confirmPassword">Xác nhận mật khẩu</label>
                     <div class="input-wrapper">
-                        <input type="password" id="confirmPassword" name="confirmPassword" class="field-input"
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="field-input ${not empty fieldErrors['confirmPassword'] ? 'field-err' : ''}"
                                placeholder="Nhập lại mật khẩu" autocomplete="new-password">
                         <span class="toggle-icon" id="toggleCp" onclick="togglePass('confirmPassword', 'cpIcon')">
                             <i class="bi bi-eye-slash" id="cpIcon"></i>
                         </span>
                     </div>
-                    <div class="field-error" id="confirmError"></div>
+                    <div class="field-error" id="confirmError"><c:out value="${fieldErrors['confirmPassword']}"/></div>
                 </div>
 
                 <div class="terms-row">
-                    <input type="checkbox" id="agreeTerms" name="agreeTerms" class="terms-check">
+                    <input type="checkbox" id="agreeTerms" name="agreeTerms" class="terms-check" ${registerDto.agreeTerms ? 'checked' : ''}>
                     <label for="agreeTerms" class="terms-label">
                         Bằng cách đăng ký, bạn đồng ý với
                         <a href="#">Điều khoản dịch vụ</a>,
@@ -343,7 +343,7 @@
                         <a href="#">Chính sách cookie</a> của Courson.
                     </label>
                 </div>
-                <div class="field-error" id="termsError"></div>
+                <div class="field-error" id="termsError"><c:out value="${fieldErrors['terms']}"/></div>
 
                 <button type="submit" class="btn-submit" id="submitBtn">Đăng ký</button>
             </form>
@@ -434,111 +434,14 @@
                     document.getElementById(inputId).classList.remove('field-err');
             }
 
-            const EMAIL_RE = /^[A-Za-z0-9+_.\-]+@[A-Za-z0-9.\-]+$/;
-            const USER_RE = /^[a-zA-Z0-9_]{4,30}$/;
-
-            document.getElementById('email').addEventListener('blur', function () {
-                const v = this.value.trim();
-                if (!v)
-                    showErr('emailError', 'email', 'Email không được để trống.');
-                else if (!EMAIL_RE.test(v))
-                    showErr('emailError', 'email', 'Email không đúng định dạng.');
-                else
-                    clearErr('emailError', 'email');
-            });
             document.getElementById('email').addEventListener('input', () => clearErr('emailError', 'email'));
-
-            pwInput.addEventListener('blur', function () {
-                const pw = this.value;
-                if (!pw)
-                    showErr('passwordError', 'password', 'Mật khẩu không được để trống.');
-                else if (!STRONG_RE.test(pw))
-                    showErr('passwordError', 'password',
-                            'Mật khẩu phải từ 8–32 ký tự, có ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.');
-                else
-                    clearErr('passwordError', 'password');
-            });
-
-            cpInput.addEventListener('blur', function () {
-                if (!this.value)
-                    showErr('confirmError', 'confirmPassword', 'Vui lòng xác nhận mật khẩu.');
-                else if (this.value !== pwInput.value)
-                    showErr('confirmError', 'confirmPassword', 'Mật khẩu xác nhận không khớp.');
-                else
-                    clearErr('confirmError', 'confirmPassword');
-            });
-
-            document.getElementById('fullName').addEventListener('blur', function () {
-                const v = this.value.trim();
-                if (!v)
-                    showErr('fullNameError', 'fullName', 'Họ và tên không được để trống.');
-                else if (v.length < 3 || v.length > 50)
-                    showErr('fullNameError', 'fullName', 'Họ và tên phải từ 3 đến 50 ký tự.');
-                else
-                    clearErr('fullNameError', 'fullName');
-            });
             document.getElementById('fullName').addEventListener('input', () => clearErr('fullNameError', 'fullName'));
-
-            document.getElementById('username').addEventListener('blur', function () {
-                const v = this.value.trim();
-                if (!v)
-                    showErr('usernameError', 'username', 'Tên người dùng không được để trống.');
-                else if (!USER_RE.test(v))
-                    showErr('usernameError', 'username',
-                            'Tên người dùng phải từ 4–30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).');
-                else
-                    clearErr('usernameError', 'username');
-            });
             document.getElementById('username').addEventListener('input', () => clearErr('usernameError', 'username'));
-
             document.getElementById('agreeTerms').addEventListener('change', function () {
-                if (this.checked)
-                    document.getElementById('termsError').textContent = '';
-            });
-
-            document.getElementById('registerForm').addEventListener('submit', function (e) {
-                let ok = true;
-
-                const email = document.getElementById('email').value.trim();
-                if (!email || !EMAIL_RE.test(email)) {
-                    showErr('emailError', 'email', 'Email không hợp lệ.');
-                    ok = false;
+                if (this.checked) {
+                    const tErr = document.getElementById('termsError');
+                    if (tErr) tErr.textContent = '';
                 }
-
-                const pw = pwInput.value;
-                if (!pw || !STRONG_RE.test(pw)) {
-                    showErr('passwordError', 'password',
-                            'Mật khẩu phải từ 8–32 ký tự, có ít nhất 1 chữ hoa, 1 chữ số và 1 ký tự đặc biệt.');
-                    ok = false;
-                }
-
-                const cp = cpInput.value;
-                if (cp !== pw) {
-                    showErr('confirmError', 'confirmPassword', 'Mật khẩu xác nhận không khớp.');
-                    ok = false;
-                }
-
-                const fn = document.getElementById('fullName').value.trim();
-                if (!fn || fn.length < 3 || fn.length > 50) {
-                    showErr('fullNameError', 'fullName', 'Họ và tên phải từ 3 đến 50 ký tự.');
-                    ok = false;
-                }
-
-                const un = document.getElementById('username').value.trim();
-                if (!un || !USER_RE.test(un)) {
-                    showErr('usernameError', 'username',
-                            'Tên người dùng phải từ 4–30 ký tự, chỉ gồm chữ cái, số hoặc dấu gạch dưới (_).');
-                    ok = false;
-                }
-
-                if (!document.getElementById('agreeTerms').checked) {
-                    document.getElementById('termsError').textContent =
-                            'Bạn phải đồng ý với điều khoản dịch vụ để đăng ký.';
-                    ok = false;
-                }
-
-                if (!ok)
-                    e.preventDefault();
             });
         </script>
 

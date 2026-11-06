@@ -645,18 +645,18 @@
                     <div class="field-group">
                         <label class="field-label" for="loginId">Tên đăng nhập hoặc Email</label>
                         <input type="text" id="loginId" name="loginId"
-                               class="field-input"
+                               class="field-input ${not empty fieldErrors['loginId'] ? 'field-err' : ''}"
                                value="<c:out value='${loginId}'/>"
                                placeholder="Nhập tên đăng nhập hoặc email"
                                autofocus autocomplete="username">
-                        <div class="field-error" id="loginIdError"></div>
+                        <div class="field-error" id="loginIdError"><c:out value="${fieldErrors['loginId']}"/></div>
                     </div>
 
                     <div class="field-group">
                         <label class="field-label" for="password">Mật khẩu</label>
                         <div class="field-wrap">
                             <input type="password" id="password" name="password"
-                                   class="field-input pw-input"
+                                   class="field-input pw-input ${not empty fieldErrors['password'] ? 'field-err' : ''}"
                                    placeholder="Nhập mật khẩu"
                                    autocomplete="current-password">
                             <button type="button" class="eye-btn" id="togglePw"
@@ -673,7 +673,7 @@
                             <a href="${pageContext.request.contextPath}/auth/forgot-password" class="link-muted">Quên mật khẩu?</a>
                         </div>
 
-                        <div class="field-error" id="passwordError"></div>
+                        <div class="field-error" id="passwordError"><c:out value="${fieldErrors['password']}"/></div>
                     </div>
 
                     <button type="submit" class="btn-submit">Đăng nhập</button>
@@ -728,29 +728,11 @@
                     }
 
                     document.getElementById('loginForm').addEventListener('submit', function (e) {
-                        let ok = true;
                         const loginIdVal = loginIdInput.value.trim();
-                        if (!loginIdVal) {
-                            document.getElementById('loginIdError').textContent = 'Vui lòng nhập tên đăng nhập hoặc email.';
-                            loginIdInput.classList.add('field-err');
-                            ok = false;
-                        }
-
-                        const pwVal = pwInput.value;
-                        if (!pwVal) {
-                            document.getElementById('passwordError').textContent = 'Vui lòng nhập mật khẩu.';
-                            pwInput.classList.add('field-err');
-                            ok = false;
-                        }
-
-                        if (ok) {
-                            if (rememberMeCheck.checked) {
-                                localStorage.setItem('courson_saved_login', loginIdVal);
-                            } else {
-                                localStorage.removeItem('courson_saved_login');
-                            }
-                        } else {
-                            e.preventDefault();
+                        if (loginIdVal && rememberMeCheck.checked) {
+                            localStorage.setItem('courson_saved_login', loginIdVal);
+                        } else if (!rememberMeCheck.checked) {
+                            localStorage.removeItem('courson_saved_login');
                         }
                     });
 
