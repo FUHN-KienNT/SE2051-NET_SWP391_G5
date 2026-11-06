@@ -54,7 +54,7 @@ public class AuthService {
             if (!PasswordUtil.verify(dto.getPassword(), user.getPasswordHash())) {
                 throw new IllegalArgumentException("Tài khoản hoặc mật khẩu không chính xác.");
             }
-            return mapUser(user);
+            return mapUser(con, user);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xác thực hệ thống: " + e.getMessage(), e);
         }
@@ -70,7 +70,7 @@ public class AuthService {
             try {
                 validateRegistration(con, dto);
 
-                Setting studentRole = resolveStudentRole();
+                Setting studentRole = resolveStudentRole(con);
 
                 User user = new User();
                 user.setUsername(dto.getUsername().trim());
@@ -85,12 +85,18 @@ public class AuthService {
                 long id = userDao.insert(con, user);
                 user.setId(id);
 
+                String rawToken = null;
                 if (emailVerificationService != null) {
-                    emailVerificationService.createAndSendToken(con, user, dynamicBaseUrl);
+                    rawToken = emailVerificationService.createVerificationToken(con, user);
                 }
 
+                UserDto resultDto = mapUser(con, user);
                 con.commit();
-                return mapUser(user);
+
+                if (rawToken != null) {
+                    util.MailUtil.sendVerificationEmailAsync(user.getEmail(), user.getFullName(), rawToken, dynamicBaseUrl);
+                }
+                return resultDto;
             } catch (Exception ex) {
                 DbConnection.rollbackQuietly(con);
                 throw ex;
@@ -140,13 +146,13 @@ public class AuthService {
 
                     // Nếu trước đây đăng ký LOCAL, cập nhật auth_provider → GOOGLE
                     if (user.getAuthProvider() == AuthProvider.LOCAL) {
-                        updateAuthProviderToGoogle(con, user.getId());
+                        userDao.updateAuthProvider(con, user.getId(), AuthProvider.GOOGLE);
                         user.setAuthProvider(AuthProvider.GOOGLE);
                     }
 
                 } else {
                     // ── 2b. Chưa có tài khoản → tạo mới ─────────────────────
-                    Setting studentRole = resolveStudentRole();
+                    Setting studentRole = resolveStudentRole(con);
 
                     // Tạo username từ phần trước @ của email (giữ nguyên logic chuẩn)
                     String baseUsername = sanitizeUsername(email.split("@")[0]);
@@ -170,11 +176,11 @@ public class AuthService {
                     authStatus = GoogleAuthResult.Status.NEW_USER_CREATED;
                 }
 
+                UserDto resultDto = mapUser(con, user);
                 con.commit();
 
-
                 boolean hasPassword = (user.getPasswordHash() != null && !user.getPasswordHash().trim().isEmpty());
-                return new GoogleAuthResult(mapUser(user), authStatus, hasPassword);
+                return new GoogleAuthResult(resultDto, authStatus, hasPassword);
             } catch (Exception ex) {
                 DbConnection.rollbackQuietly(con);
                 throw ex;
@@ -325,8 +331,8 @@ public class AuthService {
         }
     }
 
-    private Setting resolveStudentRole() {
-        try (Connection con = DbConnection.getConnection()) {
+    private Setting resolveStudentRole(Connection con) {
+        try {
             List<Setting> roles = settingDao.findByType(con, SettingType.USER_ROLE);
             for (Setting r : roles) {
                 if ("STUDENT".equalsIgnoreCase(r.getValue()) || "ROLE_STUDENT".equalsIgnoreCase(r.getName())) {
@@ -336,19 +342,6 @@ public class AuthService {
             return !roles.isEmpty() ? roles.get(0) : null;
         } catch (SQLException e) {
             return null;
-        }
-    }
-
-    /**
-     * Cập nhật cột auth_provider của user thành GOOGLE.
-     * Dùng khi user đã đăng ký bằng LOCAL sau đó đăng nhập bằng Google cùng email.
-     */
-    private void updateAuthProviderToGoogle(Connection con, long userId) throws java.sql.SQLException {
-        String sql = "UPDATE users SET auth_provider = 'GOOGLE', updated_at = ? WHERE id = ?";
-        try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setObject(1, java.time.OffsetDateTime.now());
-            ps.setLong(2, userId);
-            ps.executeUpdate();
         }
     }
 
@@ -388,7 +381,7 @@ public class AuthService {
         return base + System.currentTimeMillis();
     }
 
-    private UserDto mapUser(User user) {
+    private UserDto mapUser(Connection con, User user) {
         if (user == null) {
             return null;
         }
@@ -404,8 +397,8 @@ public class AuthService {
         dto.setPhone(user.getPhone());
         dto.setBirthDate(user.getBirthDate());
 
-        if (user.getRoleId() != null) {
-            try (Connection con = DbConnection.getConnection()) {
+        if (user.getRoleId() != null && con != null) {
+            try {
                 settingDao.findById(con, user.getRoleId()).ifPresent(s -> dto.setRoleName(s.getValue()));
             } catch (SQLException ignored) {
             }

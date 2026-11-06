@@ -323,6 +323,9 @@ public class AuthServlet extends HttpServlet {
             if (googleUser.getEmail() == null || googleUser.getEmail().isBlank()) {
                 throw new IllegalArgumentException("Không lấy được email từ tài khoản Google.");
             }
+            if (!googleUser.isEmailVerified()) {
+                throw new IllegalArgumentException("Địa chỉ email Google của bạn chưa được xác minh.");
+            }
 
             // ── Bước 2c: Đăng nhập hoặc tạo tài khoản ──
             String dynamicBaseUrl = getDynamicBaseUrl(req);

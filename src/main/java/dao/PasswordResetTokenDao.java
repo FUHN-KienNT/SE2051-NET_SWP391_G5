@@ -24,6 +24,9 @@ public class PasswordResetTokenDao {
     private static final String SQL_MARK_AS_USED =
         "UPDATE password_reset_tokens SET used = TRUE WHERE id = ?";
 
+    private static final String SQL_CONSUME_TOKEN =
+        "UPDATE password_reset_tokens SET used = TRUE WHERE token_hash = ? AND used = FALSE AND expires_at > NOW() RETURNING user_id";
+
     private static final String SQL_GET_LATEST_TOKEN_TIME =
         "SELECT created_at FROM password_reset_tokens WHERE user_id = ? ORDER BY id DESC LIMIT 1";
 
@@ -73,6 +76,21 @@ public class PasswordResetTokenDao {
             ps.setLong(1, tokenId);
             return ps.executeUpdate() > 0;
         }
+    }
+
+    public Optional<Long> verifyAndConsume(Connection con, String tokenHash) throws SQLException {
+        if (tokenHash == null || tokenHash.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        try (PreparedStatement ps = con.prepareStatement(SQL_CONSUME_TOKEN)) {
+            ps.setString(1, tokenHash.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(rs.getLong(1));
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     public boolean isRateLimited(Connection con, long userId, int windowSeconds) throws SQLException {

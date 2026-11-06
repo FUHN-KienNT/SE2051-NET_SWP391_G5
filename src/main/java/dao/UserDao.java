@@ -247,6 +247,16 @@ public class UserDao {
         }
     }
 
+    public boolean updateAuthProvider(Connection con, long id, AuthProvider authProvider) throws SQLException {
+        String sql = "UPDATE users SET auth_provider = ?, updated_at = ? WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, authProvider.getDbValue());
+            ps.setObject(2, OffsetDateTime.now());
+            ps.setLong(3, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     private User mapRow(ResultSet rs) throws SQLException {
         User u = new User();
         u.setId(rs.getLong("id"));

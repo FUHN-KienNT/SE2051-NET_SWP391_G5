@@ -31,10 +31,9 @@ public class EmailVerificationService {
     }
 
     /**
-     * Generates a new verification token, saves the SHA-256 hash in DB, and dispatches the email asynchronously.
-     * Can be invoked within an existing transaction.
+     * Generates a new verification token and saves the SHA-256 hash in DB within an existing transaction.
      */
-    public void createAndSendToken(Connection con, User user, String dynamicBaseUrl) throws SQLException {
+    public String createVerificationToken(Connection con, User user) throws SQLException {
         if (user == null || user.getId() == null) {
             throw new IllegalArgumentException("User và User ID không được để trống khi sinh token");
         }
@@ -54,8 +53,11 @@ public class EmailVerificationService {
         token.setCreatedAt(OffsetDateTime.now());
 
         verificationTokenDao.insert(con, token);
+        return rawToken;
+    }
 
-        // Dispatch email asynchronously
+    public void createAndSendToken(Connection con, User user, String dynamicBaseUrl) throws SQLException {
+        String rawToken = createVerificationToken(con, user);
         MailUtil.sendVerificationEmailAsync(user.getEmail(), user.getFullName(), rawToken, dynamicBaseUrl);
     }
 
@@ -96,7 +98,7 @@ public class EmailVerificationService {
 
     /**
      * Handles resending verification email.
-     * Throws IllegalStateException if rate limit (60s) is violated.
+     * Throws IllegalStateException if rate limit (30s) is violated.
      * For non-existent or already active users, completes silently without leaking user existence.
      */
     public void resendVerification(String emailOrUsername, String dynamicBaseUrl) {
@@ -123,8 +125,9 @@ public class EmailVerificationService {
             }
 
             con.setAutoCommit(false);
+            String rawToken;
             try {
-                createAndSendToken(con, user, dynamicBaseUrl);
+                rawToken = createVerificationToken(con, user);
                 con.commit();
             } catch (Exception ex) {
                 DbConnection.rollbackQuietly(con);
@@ -133,6 +136,9 @@ public class EmailVerificationService {
             } finally {
                 con.setAutoCommit(true);
             }
+
+            // Dispatch email asynchronously AFTER commit succeeds
+            MailUtil.sendVerificationEmailAsync(user.getEmail(), user.getFullName(), rawToken, dynamicBaseUrl);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi CSDL khi gửi lại email xác nhận", e);
             throw new RuntimeException("Lỗi hệ thống khi gửi lại email xác nhận.", e);

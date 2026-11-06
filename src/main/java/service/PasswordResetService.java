@@ -2,10 +2,10 @@ package service;
 
 import dao.PasswordResetTokenDao;
 import dao.UserDao;
+import dao.VerificationTokenDao;
 import entity.PasswordResetToken;
 import entity.User;
 import entity.enums.UserStatus;
-import dao.VerificationTokenDao;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -21,6 +21,8 @@ import util.ValidationUtil;
 public class PasswordResetService {
 
     private static final Logger LOGGER = Logger.getLogger(PasswordResetService.class.getName());
+    private static final int RATE_LIMIT_SECONDS = 30;
+    private static final int TOKEN_EXPIRY_HOURS = 24;
 
     private final UserDao userDao;
     private final PasswordResetTokenDao passwordResetTokenDao;
@@ -37,56 +39,72 @@ public class PasswordResetService {
 
     /**
      * Handles forgot password request.
-     * Throws IllegalArgumentException if email not provided or if account does not exist.
+     * Throws ValidationException if email is missing/invalid or account does not exist.
      */
     public void sendResetRequest(String email, String dynamicBaseUrl) {
+        createAndSendResetToken(email, dynamicBaseUrl, false);
+    }
+
+    /**
+     * Resends password reset request with 30s rate limit protection.
+     */
+    public void resendResetRequest(String email, String dynamicBaseUrl) {
+        createAndSendResetToken(email, dynamicBaseUrl, true);
+    }
+
+    private void createAndSendResetToken(String email, String dynamicBaseUrl, boolean isResend) {
         if (email == null || email.trim().isEmpty()) {
+            if (isResend) {
+                throw new IllegalArgumentException("Vui lòng cung cấp địa chỉ email.");
+            }
             throw new ValidationException("email", "Vui lòng điền địa chỉ email của bạn.");
         }
         String cleanEmail = email.trim();
         if (!ValidationUtil.isEmail(cleanEmail)) {
+            if (isResend) {
+                throw new IllegalArgumentException("Định dạng email không hợp lệ.");
+            }
             throw new ValidationException("email", "Email không đúng định dạng.");
         }
 
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
+            User user;
+            String rawToken;
             try {
                 Optional<User> userOpt = userDao.findByEmail(con, cleanEmail);
                 if (!userOpt.isPresent()) {
+                    if (isResend) {
+                        throw new IllegalArgumentException("Không tìm thấy tài khoản với email này.");
+                    }
                     throw new ValidationException("email", "Không tìm thấy tài khoản với email này.");
                 }
-                User user = userOpt.get();
+                user = userOpt.get();
 
                 if (user.getStatus() == UserStatus.BANNED) {
                     throw new IllegalStateException("Tài khoản của bạn đã bị khóa.");
                 }
 
-                if (passwordResetTokenDao.isRateLimited(con, user.getId(), 30)) {
+                if (passwordResetTokenDao.isRateLimited(con, user.getId(), RATE_LIMIT_SECONDS)) {
                     throw new IllegalStateException("Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác thực.");
                 }
 
-                // Generate secure token
-                String rawToken = TokenUtil.generateToken();
+                rawToken = TokenUtil.generateToken();
                 String tokenHash = TokenUtil.hashToken(rawToken);
 
-                // Invalidate previous tokens
                 passwordResetTokenDao.invalidateTokensByUserId(con, user.getId());
 
-                // Insert new reset token valid for 24 hours
                 PasswordResetToken token = new PasswordResetToken(
                     null,
                     user.getId(),
                     tokenHash,
-                    OffsetDateTime.now().plusHours(24),
+                    OffsetDateTime.now().plusHours(TOKEN_EXPIRY_HOURS),
                     false,
                     OffsetDateTime.now()
                 );
                 passwordResetTokenDao.insert(con, token);
 
                 con.commit();
-
-                // Send email asynchronously
-                MailUtil.sendPasswordResetEmailAsync(user.getEmail(), user.getFullName(), rawToken, dynamicBaseUrl);
             } catch (SQLException e) {
                 con.rollback();
                 LOGGER.log(Level.SEVERE, "Lỗi cơ sở dữ liệu khi tạo yêu cầu đặt lại mật khẩu", e);
@@ -94,75 +112,9 @@ public class PasswordResetService {
             } finally {
                 con.setAutoCommit(true);
             }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi kết nối cơ sở dữ liệu", e);
-            throw new RuntimeException("Không thể kết nối đến cơ sở dữ liệu.", e);
-        }
-    }
 
-    /**
-     * Resends password reset request with 30s rate limit protection.
-     */
-    public void resendResetRequest(String email, String dynamicBaseUrl) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng cung cấp địa chỉ email.");
-        }
-        String cleanEmail = email.trim();
-        if (!ValidationUtil.isEmail(cleanEmail)) {
-            throw new IllegalArgumentException("Định dạng email không hợp lệ.");
-        }
-
-        try (Connection con = DbConnection.getConnection()) {
-            con.setAutoCommit(false);
-            try {
-                Optional<User> userOpt = userDao.findByEmail(con, cleanEmail);
-                if (!userOpt.isPresent()) {
-                    throw new IllegalArgumentException("Không tìm thấy tài khoản với email này.");
-                }
-                User user = userOpt.get();
-
-                if (user.getStatus() == UserStatus.BANNED) {
-                    throw new IllegalStateException("Tài khoản của bạn đã bị khóa.");
-                }
-
-                if (passwordResetTokenDao.isRateLimited(con, user.getId(), 30)) {
-                    throw new IllegalStateException("Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác thực.");
-                }
-
-                // Rate limiting check (30 seconds)
-                if (passwordResetTokenDao.isRateLimited(con, user.getId(), 30)) {
-                    throw new IllegalStateException("Vui lòng đợi 30 giây trước khi yêu cầu gửi lại email xác thực.");
-                }
-
-                // Generate new secure token
-                String rawToken = TokenUtil.generateToken();
-                String tokenHash = TokenUtil.hashToken(rawToken);
-
-                // Invalidate old tokens
-                passwordResetTokenDao.invalidateTokensByUserId(con, user.getId());
-
-                // Insert new reset token valid for 24 hours
-                PasswordResetToken token = new PasswordResetToken(
-                    null,
-                    user.getId(),
-                    tokenHash,
-                    OffsetDateTime.now().plusHours(24),
-                    false,
-                    OffsetDateTime.now()
-                );
-                passwordResetTokenDao.insert(con, token);
-
-                con.commit();
-
-                // Send email asynchronously
-                MailUtil.sendPasswordResetEmailAsync(user.getEmail(), user.getFullName(), rawToken, dynamicBaseUrl);
-            } catch (SQLException e) {
-                con.rollback();
-                LOGGER.log(Level.SEVERE, "Lỗi cơ sở dữ liệu khi gửi lại email đặt lại mật khẩu", e);
-                throw new RuntimeException("Có lỗi xảy ra trên hệ thống, vui lòng thử lại sau.", e);
-            } finally {
-                con.setAutoCommit(true);
-            }
+            // Send email asynchronously AFTER transaction commit succeeds
+            MailUtil.sendPasswordResetEmailAsync(user.getEmail(), user.getFullName(), rawToken, dynamicBaseUrl);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi kết nối cơ sở dữ liệu", e);
             throw new RuntimeException("Không thể kết nối đến cơ sở dữ liệu.", e);
@@ -213,7 +165,7 @@ public class PasswordResetService {
     }
 
     /**
-     * Executes password reset for valid token.
+     * Executes password reset for valid token using atomic consume.
      */
     public void resetPassword(String rawToken, String newPassword, String confirmPassword) {
         if (rawToken == null || rawToken.trim().isEmpty()) {
@@ -242,35 +194,33 @@ public class PasswordResetService {
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
-                Optional<PasswordResetToken> tokenOpt = passwordResetTokenDao.findByTokenHash(con, tokenHash);
-                if (!tokenOpt.isPresent()) {
-                    throw new IllegalArgumentException("Liên kết đặt lại mật khẩu không tồn tại hoặc không hợp lệ.");
-                }
-
-                PasswordResetToken token = tokenOpt.get();
-                if (token.isUsed()) {
-                    throw new IllegalArgumentException("Liên kết đặt lại mật khẩu này đã được sử dụng.");
-                }
-
-                if (token.getExpiresAt() != null && token.getExpiresAt().isBefore(OffsetDateTime.now())) {
+                Optional<Long> consumedUserIdOpt = passwordResetTokenDao.verifyAndConsume(con, tokenHash);
+                if (!consumedUserIdOpt.isPresent()) {
+                    Optional<PasswordResetToken> tokenOpt = passwordResetTokenDao.findByTokenHash(con, tokenHash);
+                    if (!tokenOpt.isPresent()) {
+                        throw new IllegalArgumentException("Liên kết đặt lại mật khẩu không tồn tại hoặc không hợp lệ.");
+                    }
+                    PasswordResetToken token = tokenOpt.get();
+                    if (token.isUsed()) {
+                        throw new IllegalArgumentException("Liên kết đặt lại mật khẩu này đã được sử dụng.");
+                    }
                     throw new IllegalArgumentException("Liên kết đặt lại mật khẩu đã hết hạn. Vui lòng gửi yêu cầu mới.");
                 }
 
+                long userId = consumedUserIdOpt.get();
                 String passwordHash = PasswordUtil.hash(newPassword);
 
-                boolean updated = userDao.updatePassword(con, token.getUserId(), passwordHash);
+                boolean updated = userDao.updatePassword(con, userId, passwordHash);
                 if (!updated) {
                     throw new RuntimeException("Cập nhật mật khẩu thất bại, không tìm thấy người dùng.");
                 }
 
                 // Kích hoạt tài khoản nếu đang ở trạng thái INACTIVE (đã xác thực qua email)
-                Optional<User> userOpt = userDao.findById(con, token.getUserId());
+                Optional<User> userOpt = userDao.findById(con, userId);
                 if (userOpt.isPresent() && userOpt.get().getStatus() == UserStatus.INACTIVE) {
-                    userDao.updateStatus(con, token.getUserId(), UserStatus.ACTIVE);
-                    new VerificationTokenDao().invalidateTokensByUserId(con, token.getUserId());
+                    userDao.updateStatus(con, userId, UserStatus.ACTIVE);
+                    new VerificationTokenDao().invalidateTokensByUserId(con, userId);
                 }
-
-                passwordResetTokenDao.markAsUsed(con, token.getId());
 
                 con.commit();
             } catch (SQLException e) {

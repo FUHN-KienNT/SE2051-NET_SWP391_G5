@@ -13,6 +13,12 @@ public final class SessionUtil {
     public static void setCurrentUser(HttpServletRequest req, UserDto user) {
         if (req != null) {
             HttpSession session = req.getSession(true);
+            if (session.getAttribute(CURRENT_USER) == null && user != null) {
+                try {
+                    req.changeSessionId();
+                } catch (IllegalStateException ignored) {
+                }
+            }
             session.setAttribute(CURRENT_USER, user);
         }
     }

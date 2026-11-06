@@ -134,6 +134,8 @@ public final class DbConnection {
             st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url varchar(255); " +
                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone varchar(20); " +
                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date date;");
+            st.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users (LOWER(username)); " +
+                       "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));");
         } catch (Exception ex) {
             // Không chặn ứng dụng nếu tài khoản không đủ quyền DDL
         } finally {
