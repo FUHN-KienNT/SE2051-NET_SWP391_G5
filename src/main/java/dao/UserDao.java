@@ -21,7 +21,7 @@ public class UserDao {
     private static final String SQL_EXISTS_USERNAME = "SELECT COUNT(1) FROM users WHERE LOWER(username) = LOWER(?) AND (? IS NULL OR id != ?)";
     private static final String SQL_EXISTS_EMAIL = "SELECT COUNT(1) FROM users WHERE LOWER(email) = LOWER(?) AND (? IS NULL OR id != ?)";
     private static final String SQL_INSERT = "INSERT INTO users (username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
-    private static final String SQL_UPDATE = "UPDATE users SET full_name = ?, role_id = ?, role_type = ?, status = ?, password_hash = COALESCE(?, password_hash), updated_at = ? WHERE id = ?";
+    private static final String SQL_UPDATE = "UPDATE users SET full_name = ?, role_id = ?, role_type = ?, status = ?, password_hash = COALESCE(?, password_hash), phone = COALESCE(?, phone), updated_at = ? WHERE id = ?";
     private static final String SQL_UPDATE_STATUS = "UPDATE users SET status = ?, updated_at = ? WHERE id = ?";
 
     /**
@@ -33,6 +33,97 @@ public class UserDao {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Tìm kiếm, lọc và sắp xếp người dùng cho màn hình Admin User List (SRS 2.3.1).
+     */
+    public List<User> search(Connection con, Long roleId, String status, String keyword, String sortBy, String sortOrder) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, created_at, updated_at, avatar_url, phone, birth_date, bio FROM users WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (roleId != null && roleId > 0) {
+            sql.append(" AND role_id = ?");
+            params.add(roleId);
+        }
+
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
+            String norm = status.trim().toUpperCase();
+            if ("SUSPENDED".equals(norm) || "BANNED".equals(norm)) {
+                sql.append(" AND status = 'BANNED'");
+            } else if ("ACTIVE".equals(norm)) {
+                sql.append(" AND status = 'ACTIVE'");
+            } else if ("INACTIVE".equals(norm)) {
+                sql.append(" AND status = 'INACTIVE'");
+            } else {
+                sql.append(" AND status = ?");
+                params.add(norm);
+            }
+        }
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String kw = "%" + keyword.trim().toLowerCase() + "%";
+            sql.append(" AND (LOWER(full_name) LIKE ? OR LOWER(username) LIKE ? OR LOWER(email) LIKE ?)");
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        String orderCol = "id";
+        String dir = "DESC";
+
+        if (sortBy != null && !sortBy.trim().isEmpty()) {
+            switch (sortBy.trim().toLowerCase()) {
+                case "id":
+                    orderCol = "id";
+                    break;
+                case "name":
+                case "fullname":
+                    orderCol = "full_name";
+                    break;
+                case "username":
+                    orderCol = "username";
+                    break;
+                case "email":
+                    orderCol = "email";
+                    break;
+                case "role":
+                    orderCol = "role_id";
+                    break;
+                case "status":
+                    orderCol = "status";
+                    break;
+                case "created":
+                case "createddate":
+                case "created_at":
+                    orderCol = "created_at";
+                    break;
+                default:
+                    orderCol = "id";
+                    break;
+            }
+        }
+
+        if ("asc".equalsIgnoreCase(sortOrder)) {
+            dir = "ASC";
+        } else if ("desc".equalsIgnoreCase(sortOrder)) {
+            dir = "DESC";
+        }
+
+        sql.append(" ORDER BY ").append(orderCol).append(" ").append(dir);
+
+        List<User> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
             }
         }
         return list;
@@ -98,13 +189,8 @@ public class UserDao {
 
     /**
      * Tìm ID của Manager đang ACTIVE khả dụng nhất để phân công cho khóa học mới.
-     * Thuật toán:
-     * 1. Ưu tiên: Manager đang ACTIVE có ít khóa học được phân công nhất (cân bằng tải).
-     * 2. Dự phòng 1: Admin đang ACTIVE nếu hệ thống chưa có Manager nào.
-     * 3. Dự phòng 2: Bất kỳ người dùng nào đang ACTIVE đầu tiên trong hệ thống.
      */
     public Optional<Long> findDefaultManagerId(Connection con) throws SQLException {
-        // 1. Tìm Manager đang ACTIVE có ít khóa học được gán nhất
         String sqlManager = "SELECT u.id FROM users u " +
                             "JOIN settings s ON u.role_id = s.id AND u.role_type = s.type " +
                             "LEFT JOIN courses c ON c.manager_id = u.id " +
@@ -118,7 +204,6 @@ public class UserDao {
             }
         }
 
-        // 2. Dự phòng 1: Admin đang ACTIVE
         String sqlAdmin = "SELECT u.id FROM users u " +
                           "JOIN settings s ON u.role_id = s.id AND u.role_type = s.type " +
                           "WHERE s.type = 'USER_ROLE' AND UPPER(s.value) = 'ADMIN' AND u.status = 'ACTIVE' " +
@@ -130,7 +215,6 @@ public class UserDao {
             }
         }
 
-        // 3. Dự phòng 2: Bất kỳ User nào đang ACTIVE
         String sqlAny = "SELECT id FROM users WHERE status = 'ACTIVE' ORDER BY id ASC LIMIT 1";
         try (PreparedStatement ps = con.prepareStatement(sqlAny);
              ResultSet rs = ps.executeQuery()) {
@@ -219,8 +303,9 @@ public class UserDao {
             ps.setString(3, entity.getRoleType() != null ? entity.getRoleType().getDbValue() : SettingType.USER_ROLE.getDbValue());
             ps.setString(4, entity.getStatus() != null ? entity.getStatus().getDbValue() : UserStatus.ACTIVE.getDbValue());
             ps.setString(5, entity.getPasswordHash());
-            ps.setObject(6, OffsetDateTime.now());
-            ps.setLong(7, entity.getId());
+            ps.setString(6, entity.getPhone());
+            ps.setObject(7, OffsetDateTime.now());
+            ps.setLong(8, entity.getId());
             return ps.executeUpdate() > 0;
         }
     }
@@ -253,6 +338,71 @@ public class UserDao {
             ps.setString(1, authProvider.getDbValue());
             ps.setObject(2, OffsetDateTime.now());
             ps.setLong(3, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Đếm số lượng khóa học người dùng đã đăng ký (Bảng registrations).
+     */
+    public int countUserRegistrations(Connection con, long userId) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM registrations WHERE user_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Đếm số lượng khóa học Chuyên gia đang được phân công phụ trách (Bảng courses).
+     */
+    public int countExpertCourses(Connection con, long userId) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM courses WHERE expert_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Đếm số lượng khóa học Quản lý đang phụ trách (Bảng courses).
+     */
+    public int countManagerCourses(Connection con, long userId) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM courses WHERE manager_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Đếm số lượng Quản trị viên (Admin - role_id = 5) đang hoạt động (ACTIVE).
+     */
+    public int countActiveAdmins(Connection con) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM users WHERE role_id = 5 AND status = 'ACTIVE'";
+        try (PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    /**
+     * Xóa tài khoản người dùng khỏi bảng 'users'.
+     */
+    public boolean delete(Connection con, long id) throws SQLException {
+        String sql = "DELETE FROM users WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, id);
             return ps.executeUpdate() > 0;
         }
     }
