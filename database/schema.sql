@@ -345,7 +345,7 @@ CREATE TABLE quiz_answers (
     CONSTRAINT fk_quiz_answers_attempt  FOREIGN KEY (quiz_attempt_id)     REFERENCES quiz_attempts (id) ON DELETE CASCADE,
     CONSTRAINT fk_quiz_answers_question FOREIGN KEY (question_id)        REFERENCES questions (id) ON DELETE CASCADE,
     CONSTRAINT fk_quiz_answers_option   FOREIGN KEY (selected_option_id) REFERENCES answer_options (id) ON DELETE SET NULL,
-    CONSTRAINT uq_quiz_answers_attempt_question UNIQUE (quiz_attempt_id, question_id)
+    CONSTRAINT uq_quiz_answers_attempt_question_option UNIQUE (quiz_attempt_id, question_id, selected_option_id)
 );
 CREATE INDEX idx_quiz_answers_attempt_id  ON quiz_answers (quiz_attempt_id);
 CREATE INDEX idx_quiz_answers_question_id ON quiz_answers (question_id);

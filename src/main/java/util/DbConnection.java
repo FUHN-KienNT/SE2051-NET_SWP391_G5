@@ -129,6 +129,9 @@ public final class DbConnection {
                        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false; " +
                        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
                        "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
+                       "ALTER TABLE quiz_answers DROP CONSTRAINT IF EXISTS uq_quiz_answers_attempt_question; " +
+                       "ALTER TABLE quiz_answers DROP CONSTRAINT IF EXISTS uq_quiz_answers_attempt_question_option; " +
+                       "ALTER TABLE quiz_answers ADD CONSTRAINT uq_quiz_answers_attempt_question_option UNIQUE (quiz_attempt_id, question_id, selected_option_id); " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text; " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(); " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();");

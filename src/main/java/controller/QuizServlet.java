@@ -792,15 +792,31 @@ public class QuizServlet extends HttpServlet {
                 pointsStr != null && !pointsStr.trim().isEmpty() ? new BigDecimal(pointsStr.trim()) : BigDecimal.ONE);
 
         String[] optionTexts = req.getParameterValues("optionText");
-        String correctIndexStr = req.getParameter("correctOption");
-        int correctIndex = (correctIndexStr != null && !correctIndexStr.trim().isEmpty())
-                ? Integer.parseInt(correctIndexStr)
-                : -1;
+        String[] correctOptions = req.getParameterValues("correctOption");
+        java.util.Set<Integer> correctSet = new java.util.HashSet<>();
+        if (correctOptions != null) {
+            for (String s : correctOptions) {
+                if (s != null && !s.trim().isEmpty()) {
+                    try {
+                        correctSet.add(Integer.parseInt(s.trim()));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
 
         if (optionTexts != null) {
-            for (int i = 0; i < optionTexts.length; i++) {
-                boolean isCorrect = (i == correctIndex);
-                dto.getOptions().add(new AnswerOptionDto(null, dto.getId(), optionTexts[i], isCorrect, i + 1));
+            int maxOptions = (dto.getQuestionType() == QuestionType.TRUE_FALSE) ? Math.min(2, optionTexts.length) : optionTexts.length;
+            int orderIndex = 1;
+            for (int i = 0; i < maxOptions; i++) {
+                String rawText = optionTexts[i];
+                String text = rawText != null ? rawText.trim() : "";
+                boolean isCorrect = correctSet.contains(i);
+                if (isCorrect && text.isEmpty()) {
+                    throw new IllegalArgumentException("Đáp án được chọn là đáp án đúng không được để trống nội dung.");
+                }
+                if (!text.isEmpty()) {
+                    dto.getOptions().add(new AnswerOptionDto(null, dto.getId(), text, isCorrect, orderIndex++));
+                }
             }
         }
         return dto;
@@ -819,11 +835,24 @@ public class QuizServlet extends HttpServlet {
         if (questionIds != null) {
             for (String qIdStr : questionIds) {
                 long qId = Long.parseLong(qIdStr);
-                String selectedOptStr = req.getParameter("question_" + qId);
-                Long selectedOpt = (selectedOptStr != null && !selectedOptStr.trim().isEmpty())
-                        ? Long.parseLong(selectedOptStr)
-                        : null;
-                dto.getAnswers().add(new QuizAnswerDto(qId, selectedOpt, false, BigDecimal.ZERO));
+                String[] selectedOpts = req.getParameterValues("question_" + qId);
+                List<Long> optList = new ArrayList<>();
+                if (selectedOpts != null) {
+                    for (String val : selectedOpts) {
+                        if (val != null && !val.trim().isEmpty()) {
+                            try {
+                                optList.add(Long.parseLong(val.trim()));
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                }
+                QuizAnswerDto ansDto = new QuizAnswerDto();
+                ansDto.setQuestionId(qId);
+                ansDto.setSelectedOptionIds(optList);
+                if (!optList.isEmpty()) {
+                    ansDto.setSelectedOptionId(optList.get(0));
+                }
+                dto.getAnswers().add(ansDto);
             }
         }
         return dto;

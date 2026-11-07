@@ -1477,8 +1477,8 @@
                                             <select name="questionType" id="newQuestionTypeSelect"
                                                 class="form-select saas-form-control"
                                                 onchange="handleQuestionTypeChange(this.value)">
-                                                <option value="SINGLE_CHOICE" selected>Trắc nghiệm 1 đáp án (Single
-                                                    Choice)</option>
+                                                <option value="SINGLE_CHOICE" selected>Trắc nghiệm 1 đáp án (Single Choice)</option>
+                                                <option value="MULTI_CHOICE">Trắc nghiệm nhiều đáp án (Multiple Choice)</option>
                                                 <option value="TRUE_FALSE">Đúng / Sai (True / False)</option>
                                             </select>
                                         </div>
@@ -1498,9 +1498,9 @@
                                     </div>
 
                                     <!-- Options Area -->
-                                    <label class="saas-form-label text-primary mb-2 d-flex align-items-center gap-1">
-                                        <i class="bi bi-ui-radios"></i>
-                                        <span>Các phương án trả lời (Tích chọn radio vào đáp án đúng):</span>
+                                    <label class="saas-form-label text-primary mb-2 d-flex align-items-center justify-content-between">
+                                        <span><i class="bi bi-ui-radios me-1"></i>Các phương án trả lời:</span>
+                                        <span class="text-muted fw-normal small" id="newCorrectOptionHint">Chọn nút tròn vào đáp án đúng</span>
                                     </label>
 
                                     <div id="optionsContainer">
@@ -1661,8 +1661,8 @@
                                             <select name="questionType" id="editQType"
                                                 class="form-select saas-form-control"
                                                 onchange="handleEditQTypeChange(this.value)">
-                                                <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án (Single Choice)
-                                                </option>
+                                                <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án (Single Choice)</option>
+                                                <option value="MULTI_CHOICE">Trắc nghiệm nhiều đáp án (Multiple Choice)</option>
                                                 <option value="TRUE_FALSE">Đúng / Sai (True / False)</option>
                                             </select>
                                         </div>
@@ -1682,9 +1682,9 @@
                                     </div>
 
                                     <!-- Options -->
-                                    <label class="saas-form-label text-primary mb-2 d-flex align-items-center gap-1">
-                                        <i class="bi bi-ui-radios"></i>
-                                        <span>Các phương án trả lời (Tích chọn radio vào đáp án đúng):</span>
+                                    <label class="saas-form-label text-primary mb-2 d-flex align-items-center justify-content-between">
+                                        <span><i class="bi bi-ui-radios me-1"></i>Các phương án trả lời:</span>
+                                        <span class="text-muted fw-normal small" id="editCorrectOptionHint">Chọn nút tròn vào đáp án đúng</span>
                                     </label>
 
                                     <div id="editQOptionsContainer">
@@ -1808,19 +1808,42 @@
                         });
                     });
 
-                    // 3. Dynamic adjustment for New Question Modal (Single Choice vs True/False)
+                    // 3. Dynamic adjustment for New Question Modal (Single Choice vs Multi Choice vs True/False)
                     function handleQuestionTypeChange(type) {
                         const optC = document.getElementById('optGroupC');
                         const optD = document.getElementById('optGroupD');
                         const textA = document.getElementById('optTextA');
                         const textB = document.getElementById('optTextB');
+                        const inputs = document.querySelectorAll('#newQuestionForm input[name="correctOption"]');
+                        const hint = document.getElementById('newCorrectOptionHint');
 
-                        if (type === 'TRUE_FALSE') {
+                        if (type === 'MULTI_CHOICE') {
+                            inputs.forEach(input => {
+                                input.type = 'checkbox';
+                                input.title = 'Chọn làm đáp án đúng (có thể chọn nhiều đáp án)';
+                            });
+                            if (hint) hint.textContent = 'Chọn các ô vuông để chỉ định đáp án đúng (chọn >= 1)';
+                            if (optC) optC.style.display = 'flex';
+                            if (optD) optD.style.display = 'flex';
+                            if (textA && textA.value === 'Đúng (True)') textA.value = '';
+                            if (textB && textB.value === 'Sai (False)') textB.value = '';
+                        } else if (type === 'TRUE_FALSE') {
+                            inputs.forEach(input => {
+                                input.type = 'radio';
+                                input.title = 'Chọn làm đáp án đúng';
+                            });
+                            if (hint) hint.textContent = 'Chọn nút tròn vào đáp án đúng';
                             if (optC) optC.style.display = 'none';
                             if (optD) optD.style.display = 'none';
-                            if (textA) textA.value = 'Đúng (True)';
-                            if (textB) textB.value = 'Sai (False)';
+                            if (textA && !textA.value) textA.value = 'Đúng (True)';
+                            if (textB && !textB.value) textB.value = 'Sai (False)';
                         } else {
+                            // SINGLE_CHOICE
+                            inputs.forEach(input => {
+                                input.type = 'radio';
+                                input.title = 'Chọn làm đáp án đúng';
+                            });
+                            if (hint) hint.textContent = 'Chọn nút tròn vào đáp án đúng';
                             if (optC) optC.style.display = 'flex';
                             if (optD) optD.style.display = 'flex';
                             if (textA && textA.value === 'Đúng (True)') textA.value = '';
@@ -1938,6 +1961,85 @@
                         });
                     }
 
+                    function validateQuestionOptionsForm(form) {
+                        const qTypeSelect = form.querySelector('[name="questionType"]');
+                        const qType = qTypeSelect ? qTypeSelect.value : 'SINGLE_CHOICE';
+
+                        const optTextInputs = Array.from(form.querySelectorAll('[name="optionText"]'));
+                        const correctInputs = Array.from(form.querySelectorAll('[name="correctOption"]'));
+
+                        const maxCheck = (qType === 'TRUE_FALSE') ? 2 : optTextInputs.length;
+
+                        // 1. Phải điền đầy đủ A và B
+                        if (optTextInputs[0] && !optTextInputs[0].value.trim()) {
+                            alert('Vui lòng nhập nội dung cho phương án A.');
+                            optTextInputs[0].focus();
+                            return false;
+                        }
+                        if (optTextInputs[1] && !optTextInputs[1].value.trim()) {
+                            alert('Vui lòng nhập nội dung cho phương án B.');
+                            optTextInputs[1].focus();
+                            return false;
+                        }
+
+                        let validTexts = [];
+                        let correctCount = 0;
+                        let hasSelectedEmpty = false;
+
+                        for (let i = 0; i < maxCheck; i++) {
+                            const textVal = optTextInputs[i] ? optTextInputs[i].value.trim() : '';
+                            const isChecked = correctInputs[i] ? correctInputs[i].checked : false;
+
+                            if (isChecked) {
+                                correctCount++;
+                                if (!textVal) {
+                                    hasSelectedEmpty = true;
+                                }
+                            }
+                            if (textVal) {
+                                validTexts.push({ index: i, text: textVal.toLowerCase() });
+                            }
+                        }
+
+                        // 2. Không được tích chọn đáp án đúng vào ô trống
+                        if (hasSelectedEmpty) {
+                            alert('Phương án được chọn làm đáp án đúng không được để trống nội dung.');
+                            return false;
+                        }
+
+                        // 3. Tối thiểu 2 phương án có nội dung
+                        if (validTexts.length < 2) {
+                            alert('Câu hỏi phải có ít nhất 2 phương án trả lời có nội dung.');
+                            return false;
+                        }
+
+                        // 4. Kiểm tra trùng lặp nội dung
+                        const uniqueSet = new Set();
+                        for (let item of validTexts) {
+                            if (uniqueSet.has(item.text)) {
+                                alert('Các phương án trả lời không được trùng lặp nội dung.');
+                                if (optTextInputs[item.index]) optTextInputs[item.index].focus();
+                                return false;
+                            }
+                            uniqueSet.add(item.text);
+                        }
+
+                        // 5. Kiểm tra số lượng đáp án đúng
+                        if (qType === 'MULTI_CHOICE') {
+                            if (correctCount < 1) {
+                                alert('Câu hỏi nhiều đáp án: Vui lòng đánh dấu ít nhất 1 đáp án đúng.');
+                                return false;
+                            }
+                        } else {
+                            if (correctCount !== 1) {
+                                alert('Vui lòng chọn duy nhất 1 đáp án đúng.');
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
+
                     const newQForm = document.getElementById('newQuestionForm');
                     if (newQForm) {
                         newQForm.addEventListener('submit', function (e) {
@@ -1947,7 +2049,29 @@
                                 if (isNaN(pts) || pts <= 0) {
                                     e.preventDefault();
                                     alert('Điểm số của câu hỏi phải lớn hơn 0.');
+                                    return;
                                 }
+                            }
+                            if (!validateQuestionOptionsForm(newQForm)) {
+                                e.preventDefault();
+                            }
+                        });
+                    }
+
+                    const editQForm = document.getElementById('editQuestionForm');
+                    if (editQForm) {
+                        editQForm.addEventListener('submit', function (e) {
+                            const ptsInput = document.getElementById('editQPoints');
+                            if (ptsInput) {
+                                const pts = parseFloat(ptsInput.value);
+                                if (isNaN(pts) || pts <= 0) {
+                                    e.preventDefault();
+                                    alert('Điểm số của câu hỏi phải lớn hơn 0.');
+                                    return;
+                                }
+                            }
+                            if (!validateQuestionOptionsForm(editQForm)) {
+                                e.preventDefault();
                             }
                         });
                     }
@@ -1959,7 +2083,7 @@
                         const qId = card.getAttribute('data-q-id');
                         const qText = card.getAttribute('data-q-text');
                         const qPoints = card.getAttribute('data-q-points');
-                        const qType = card.getAttribute('data-q-type');
+                        const qType = card.getAttribute('data-q-type') || 'SINGLE_CHOICE';
 
                         // Fill hidden & fields
                         document.getElementById('editQId').value = qId;
@@ -1968,21 +2092,21 @@
                         const typeEl = document.getElementById('editQType');
                         if (typeEl) typeEl.value = qType;
 
+                        // Apply type-specific display BEFORE setting checked states
+                        handleEditQTypeChange(qType);
+
                         // Fill options A-D from DOM
                         const optItems = card.querySelectorAll('.q-opt-item');
                         const optTextIds = ['editOptTextA', 'editOptTextB', 'editOptTextC', 'editOptTextD'];
-                        const radios = document.querySelectorAll('#editQuestionForm input[name="correctOption"]');
+                        const inputs = document.querySelectorAll('#editQuestionForm input[name="correctOption"]');
                         optTextIds.forEach((id, i) => {
                             const el = document.getElementById(id);
                             if (!el) return;
                             const optItem = optItems[i];
                             el.value = optItem ? (optItem.getAttribute('data-text') || '') : '';
                             const isCorrect = optItem ? (optItem.getAttribute('data-correct') === 'true') : (i === 0);
-                            if (radios[i]) radios[i].checked = isCorrect;
+                            if (inputs[i]) inputs[i].checked = isCorrect;
                         });
-
-                        // Apply type-specific display
-                        handleEditQTypeChange(qType);
 
                         // Show modal
                         bootstrap.Modal.getOrCreateInstance(document.getElementById('editQuestionModal')).show();
@@ -1993,6 +2117,19 @@
                         const optD = document.getElementById('editOptGroupD');
                         const textA = document.getElementById('editOptTextA');
                         const textB = document.getElementById('editOptTextB');
+                        const inputs = document.querySelectorAll('#editQuestionForm input[name="correctOption"]');
+                        const hint = document.getElementById('editCorrectOptionHint');
+                        const isMulti = (type === 'MULTI_CHOICE');
+
+                        inputs.forEach(input => {
+                            input.type = isMulti ? 'checkbox' : 'radio';
+                            input.title = isMulti ? 'Đánh dấu ô vuông cho đáp án đúng (có thể chọn nhiều)' : 'Chọn làm đáp án đúng';
+                        });
+
+                        if (hint) {
+                            hint.textContent = isMulti ? 'Đánh dấu ô vuông vào tất cả đáp án đúng' : 'Chọn nút tròn vào đáp án đúng';
+                        }
+
                         if (type === 'TRUE_FALSE') {
                             if (optC) optC.style.display = 'none';
                             if (optD) optD.style.display = 'none';

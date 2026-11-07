@@ -21,6 +21,7 @@ import entity.QuizAnswer;
 import entity.QuizAttempt;
 import entity.QuizQuestion;
 import entity.Registration;
+import entity.enums.QuestionType;
 import entity.enums.RegistrationStatus;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -30,9 +31,13 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import util.DbConnection;
 import util.ValidationUtil;
@@ -630,9 +635,11 @@ public class QuizService {
                             }
                         }
                     }
-                    QuizAnswer graded = gradeAnswer(con, question, submittedAns, qq.getPoints());
-                    gradedAnswers.add(graded);
-                    totalScore = totalScore.add(graded.getScore());
+                    List<QuizAnswer> gradedList = gradeAnswersForQuestion(con, question, submittedAns, qq.getPoints());
+                    gradedAnswers.addAll(gradedList);
+                    for (QuizAnswer g : gradedList) {
+                        totalScore = totalScore.add(g.getScore());
+                    }
                 }
             }
 
@@ -686,8 +693,47 @@ public class QuizService {
             throw new IllegalArgumentException("Dữ liệu câu hỏi trống.");
         }
         ValidationUtil.requireText(dto.getQuestionText(), "Nội dung câu hỏi");
+        if (dto.getQuestionText().trim().length() > 2000) {
+            throw new IllegalArgumentException("Nội dung câu hỏi không được vượt quá 2000 ký tự.");
+        }
         if (dto.getQuestionType() == null) {
             throw new IllegalArgumentException("Loại câu hỏi không được để trống.");
+        }
+        if (dto.getOptions() == null || dto.getOptions().size() < 2) {
+            throw new IllegalArgumentException("Câu hỏi phải có ít nhất 2 phương án trả lời có nội dung.");
+        }
+
+        if (dto.getQuestionType() == QuestionType.TRUE_FALSE && dto.getOptions().size() != 2) {
+            throw new IllegalArgumentException("Câu hỏi Đúng / Sai chỉ được có đúng 2 phương án trả lời.");
+        }
+
+        Set<String> uniqueOptions = new HashSet<>();
+        long correctCount = 0;
+
+        for (AnswerOptionDto opt : dto.getOptions()) {
+            if (opt.getOptionText() == null || opt.getOptionText().trim().isEmpty()) {
+                throw new IllegalArgumentException("Nội dung của phương án trả lời không được để trống.");
+            }
+            if (opt.getOptionText().trim().length() > 500) {
+                throw new IllegalArgumentException("Nội dung phương án trả lời không được vượt quá 500 ký tự.");
+            }
+            String normalized = opt.getOptionText().trim().toLowerCase();
+            if (!uniqueOptions.add(normalized)) {
+                throw new IllegalArgumentException("Các phương án trả lời không được trùng lặp nội dung.");
+            }
+            if (opt.isCorrect()) {
+                correctCount++;
+            }
+        }
+
+        if (dto.getQuestionType() == QuestionType.MULTI_CHOICE) {
+            if (correctCount < 1) {
+                throw new IllegalArgumentException("Câu hỏi nhiều đáp án phải có ít nhất 1 đáp án đúng.");
+            }
+        } else {
+            if (correctCount != 1) {
+                throw new IllegalArgumentException("Câu hỏi trắc nghiệm một đáp án phải có đúng 1 đáp án đúng.");
+            }
         }
     }
 
@@ -705,24 +751,46 @@ public class QuizService {
         }
     }
 
-    private QuizAnswer gradeAnswer(Connection con, Question question, QuizAnswerDto submitted, BigDecimal assignedPoints) throws SQLException {
-        QuizAnswer answer = new QuizAnswer();
-        answer.setQuestionId(question.getId());
-        answer.setScore(BigDecimal.ZERO);
-        answer.setCorrect(false);
+    private List<QuizAnswer> gradeAnswersForQuestion(Connection con, Question question, QuizAnswerDto submitted, BigDecimal assignedPoints) throws SQLException {
+        List<QuizAnswer> list = new ArrayList<>();
+        List<AnswerOption> options = questionDao.findOptions(con, question.getId());
+        Set<Long> correctOptionIds = options.stream()
+                .filter(AnswerOption::isCorrect)
+                .map(AnswerOption::getId)
+                .collect(Collectors.toSet());
 
-        if (submitted != null && submitted.getSelectedOptionId() != null) {
-            answer.setSelectedOptionId(submitted.getSelectedOptionId());
-            List<AnswerOption> options = questionDao.findOptions(con, question.getId());
-            for (AnswerOption opt : options) {
-                if (opt.getId().equals(submitted.getSelectedOptionId()) && opt.isCorrect()) {
-                    answer.setCorrect(true);
-                    answer.setScore(assignedPoints != null ? assignedPoints : question.getDefaultPoints());
-                    break;
-                }
+        Set<Long> studentOptionIds = new LinkedHashSet<>();
+        if (submitted != null) {
+            if (submitted.getSelectedOptionIds() != null && !submitted.getSelectedOptionIds().isEmpty()) {
+                studentOptionIds.addAll(submitted.getSelectedOptionIds());
+            } else if (submitted.getSelectedOptionId() != null) {
+                studentOptionIds.add(submitted.getSelectedOptionId());
             }
         }
-        return answer;
+
+        BigDecimal questionScore = assignedPoints != null ? assignedPoints : question.getDefaultPoints();
+        boolean isAllCorrect = !studentOptionIds.isEmpty() && studentOptionIds.equals(correctOptionIds);
+
+        if (studentOptionIds.isEmpty()) {
+            QuizAnswer a = new QuizAnswer();
+            a.setQuestionId(question.getId());
+            a.setSelectedOptionId(null);
+            a.setCorrect(false);
+            a.setScore(BigDecimal.ZERO);
+            list.add(a);
+        } else {
+            boolean first = true;
+            for (Long optId : studentOptionIds) {
+                QuizAnswer a = new QuizAnswer();
+                a.setQuestionId(question.getId());
+                a.setSelectedOptionId(optId);
+                a.setCorrect(isAllCorrect);
+                a.setScore(first && isAllCorrect ? questionScore : BigDecimal.ZERO);
+                list.add(a);
+                first = false;
+            }
+        }
+        return list;
     }
 
     private QuizResultDto calculateResult(QuizAttempt attempt, List<QuizAnswer> answers, String quizTitle, BigDecimal maxScore) {
@@ -737,11 +805,27 @@ public class QuizService {
         result.setPercentage(percentage);
         result.setPassStatus(attempt.isPassStatus());
 
-        List<QuizAnswerDto> answerDtos = new ArrayList<>();
+        Map<Long, QuizAnswerDto> grouped = new LinkedHashMap<>();
         for (QuizAnswer a : answers) {
-            answerDtos.add(new QuizAnswerDto(a.getQuestionId(), a.getSelectedOptionId(), a.isCorrect(), a.getScore()));
+            QuizAnswerDto dto = grouped.get(a.getQuestionId());
+            if (dto == null) {
+                dto = new QuizAnswerDto();
+                dto.setQuestionId(a.getQuestionId());
+                dto.setSelectedOptionId(a.getSelectedOptionId());
+                dto.setCorrect(a.isCorrect());
+                dto.setScore(a.getScore());
+                grouped.put(a.getQuestionId(), dto);
+            } else {
+                if (a.getSelectedOptionId() != null && !dto.getSelectedOptionIds().contains(a.getSelectedOptionId())) {
+                    dto.getSelectedOptionIds().add(a.getSelectedOptionId());
+                }
+                dto.setScore(dto.getScore().add(a.getScore()));
+                if (a.isCorrect()) {
+                    dto.setCorrect(true);
+                }
+            }
         }
-        result.setAnswers(answerDtos);
+        result.setAnswers(new ArrayList<>(grouped.values()));
         return result;
     }
 
