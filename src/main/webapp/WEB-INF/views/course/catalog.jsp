@@ -81,7 +81,8 @@
             <c:otherwise>
                 <div class="row row-cols-1 row-cols-md-3 g-4">
                     <c:forEach var="c" items="${courses}">
-                        <c:set var="targetCourseUrl" value="${pageContext.request.contextPath}/courses/detail?id=${c.id}" />
+                        <c:set var="publicDetailUrl" value="${pageContext.request.contextPath}/courses/detail?id=${c.id}" />
+                        <c:set var="targetCourseUrl" value="${publicDetailUrl}" />
                         <c:set var="targetCourseCta" value="Xem khóa học" />
                         <c:set var="targetBtnClass" value="btn-primary" />
                         <c:if test="${sessionScope.CURRENT_USER.roleName == 'EXPERT'}">
@@ -97,7 +98,7 @@
 
                         <div class="col">
                             <div class="card h-100 shadow-sm border-0 overflow-hidden">
-                                <a href="${targetCourseUrl}" class="d-block position-relative">
+                                <a href="${publicDetailUrl}" class="d-block position-relative">
                                     <img src="${c.thumbnailUrl}" class="card-img-top" alt="<c:out value='${c.title}'/>" style="height: 190px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
                                     <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75 text-white">
                                         <i class="bi bi-play-circle me-1"></i>${c.totalLessons} bài học
@@ -116,7 +117,7 @@
                                         </span>
                                     </div>
                                     <h5 class="card-title fw-bold text-truncate" title="<c:out value='${c.title}'/>">
-                                        <a href="${targetCourseUrl}" class="text-dark text-decoration-none"><c:out value="${c.title}"/></a>
+                                        <a href="${publicDetailUrl}" class="text-dark text-decoration-none"><c:out value="${c.title}"/></a>
                                     </h5>
                                     <p class="card-text text-muted small flex-grow-1 mb-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                         <c:out value="${c.description != null ? c.description : 'Chưa có mô tả chi tiết.'}"/>
