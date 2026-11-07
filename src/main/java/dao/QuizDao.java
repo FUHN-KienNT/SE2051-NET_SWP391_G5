@@ -56,6 +56,19 @@ public class QuizDao {
         return list;
     }
 
+    public int countByCourseId(Connection con, long courseId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM quizzes q JOIN modules m ON q.module_id = m.id WHERE m.course_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
     public Optional<Quiz> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);

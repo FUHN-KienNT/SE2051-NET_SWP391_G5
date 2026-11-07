@@ -121,6 +121,16 @@ public class QuestionDao {
         }
     }
 
+    public int countByCourseId(Connection con, long courseId) throws SQLException {
+        String sql = "SELECT COUNT(1) FROM questions q JOIN modules m ON q.module_id = m.id WHERE m.course_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
     public Map<Long, Integer> findAnswerCountsByCourse(Connection con, long courseId) throws SQLException {
         String sql = "SELECT qa.question_id, COUNT(1) AS cnt "
                 + "FROM quiz_answers qa "

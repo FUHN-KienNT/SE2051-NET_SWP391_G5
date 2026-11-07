@@ -823,11 +823,10 @@ body {
                         </div>
 
                         <div class="d-grid gap-2 mt-4 pt-3 border-top">
-                            <c:url var="courseQuestionsUrl" value="/quizzes/list">
+                            <c:url var="courseQuestionsUrl" value="/quizzes/questions">
                                 <c:if test="${not empty courseId}">
                                     <c:param name="courseId" value="${courseId}"/>
                                 </c:if>
-                                <c:param name="tab" value="questions"/>
                             </c:url>
                             <a href="${courseQuestionsUrl}" class="btn-saas-outline justify-content-start py-2">
                                 <i class="bi bi-database me-2 text-primary"></i>Xem Ngân hàng câu hỏi

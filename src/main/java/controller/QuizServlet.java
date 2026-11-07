@@ -72,6 +72,7 @@ public class QuizServlet extends HttpServlet {
         // [SECURITY DEFENSE]: Chặn triệt để Student truy cập vào các chức năng quản lý bài thi,
         // xem danh sách câu hỏi / đáp án đúng hoặc sửa đề thi.
         boolean isManagementAction = "list".equals(action) || "detail".equals(action)
+                || "questions".equals(action)
                 || "save".equals(action) || "delete".equals(action)
                 || "save-question".equals(action) || "delete-question".equals(action)
                 || "assign-question".equals(action) || "remove-question".equals(action);
@@ -91,6 +92,9 @@ public class QuizServlet extends HttpServlet {
         switch (action) {
             case "list":
                 showQuizList(req, resp);
+                break;
+            case "questions":
+                showQuestionBank(req, resp);
                 break;
             case "detail":
                 showQuizDetail(req, resp);
@@ -166,13 +170,81 @@ public class QuizServlet extends HttpServlet {
             }
         }
 
+        String tab = req.getParameter("tab");
+        if ("questions".equalsIgnoreCase(tab)) {
+            resp.sendRedirect(req.getContextPath() + "/quizzes/questions?"
+                    + (courseId != null ? "courseId=" + courseId : (moduleIdStr != null ? "moduleId=" + moduleIdStr : "")));
+            return;
+        }
+
         if (courseId != null) {
             try {
-                CourseDto course = quizService.getQuizManagementCourse(courseId);
+                // Tải nhẹ: Chỉ tải thông tin Quiz và Modules, không tải toàn bộ câu hỏi và đáp án
+                CourseDto course = quizService.getQuizListCourse(courseId);
                 req.setAttribute("course", course);
                 req.setAttribute("courseId", courseId);
 
-                // Questions đã được nhóm sẵn vào từng module.questions bởi service
+                int totalQuizzes = course != null ? course.getTotalQuizzes() : 0;
+                req.setAttribute("totalQuizzes", totalQuizzes);
+
+                int totalQuestions = quizService.countQuestionsByCourse(courseId);
+                req.setAttribute("totalQuestions", totalQuestions);
+            } catch (Exception e) {
+                req.setAttribute("error", "Lỗi tải thông tin bài thi: " + e.getMessage());
+            }
+        }
+
+        req.getRequestDispatcher("/WEB-INF/views/quiz/list.jsp").forward(req, resp);
+    }
+
+    private void showQuestionBank(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String courseIdStr = req.getParameter("courseId");
+        String moduleIdStr = req.getParameter("moduleId");
+
+        Long courseId = null;
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            try {
+                courseId = Long.parseLong(courseIdStr.trim());
+            } catch (NumberFormatException e) {
+                req.setAttribute("error", "Mã khóa học không hợp lệ: " + courseIdStr);
+            }
+        } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
+            try {
+                long modId = Long.parseLong(moduleIdStr.trim());
+                try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                    java.util.Optional<entity.Module> modOpt = moduleDao.findById(con, modId);
+                    if (modOpt.isPresent()) {
+                        courseId = modOpt.get().getCourseId();
+                    }
+                }
+            } catch (NumberFormatException e) {
+                req.setAttribute("error", "Mã chương học không hợp lệ: " + moduleIdStr);
+            } catch (Exception e) {
+                req.setAttribute("error", "Lỗi khi tìm khóa học từ chương: " + e.getMessage());
+            }
+        }
+
+        if (courseId == null) {
+            try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                List<entity.Course> allCourses = courseDao.findAll(con);
+                if (!allCourses.isEmpty()) {
+                    courseId = allCourses.get(0).getId();
+                }
+            } catch (Exception e) {
+                req.setAttribute("error", "Không thể tải danh sách khóa học: " + e.getMessage());
+            }
+        }
+
+        if (courseId != null) {
+            try {
+                // Tải chuyên biệt cho Ngân hàng câu hỏi: nạp câu hỏi và đáp án theo module
+                CourseDto course = quizService.getQuestionBankCourse(courseId);
+                req.setAttribute("course", course);
+                req.setAttribute("courseId", courseId);
+
+                int totalQuizzes = quizService.countQuizzesByCourse(courseId);
+                req.setAttribute("totalQuizzes", totalQuizzes);
+
                 int totalQuestions = 0;
                 if (course != null && course.getModules() != null) {
                     for (ModuleDto m : course.getModules()) {
@@ -181,11 +253,11 @@ public class QuizServlet extends HttpServlet {
                 }
                 req.setAttribute("totalQuestions", totalQuestions);
             } catch (Exception e) {
-                req.setAttribute("error", "Lỗi tải thông tin bài thi: " + e.getMessage());
+                req.setAttribute("error", "Lỗi tải ngân hàng câu hỏi: " + e.getMessage());
             }
         }
 
-        req.getRequestDispatcher("/WEB-INF/views/quiz/list.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/quiz/questions.jsp").forward(req, resp);
     }
 
     private void showQuizDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -346,13 +418,13 @@ public class QuizServlet extends HttpServlet {
             long questionId = quizService.saveQuestion(dto);
             boolean isNewQuestion = (dto.getId() == null || dto.getId() <= 0);
 
-            // Nếu đến từ trang danh sách (questionlist), luôn redirect về trang list tab questions
-            if ("list".equalsIgnoreCase(from)) {
-                String target = req.getContextPath() + "/quizzes/list?";
+            // Nếu đến từ trang câu hỏi hoặc danh sách, redirect về trang ngân hàng câu hỏi
+            if ("questions".equalsIgnoreCase(from) || "list".equalsIgnoreCase(from)) {
+                String target = req.getContextPath() + "/quizzes/questions?";
                 if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                    target += "courseId=" + courseIdStr.trim() + "&tab=questions";
+                    target += "courseId=" + courseIdStr.trim();
                 } else if (dto.getModuleId() != null) {
-                    target += "moduleId=" + dto.getModuleId() + "&tab=questions";
+                    target += "moduleId=" + dto.getModuleId();
                 }
                 resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "success=question_saved");
                 return;
@@ -375,22 +447,22 @@ public class QuizServlet extends HttpServlet {
                 return;
             }
 
-            // Mặc định về trang list tab questions
+            // Mặc định về trang ngân hàng câu hỏi
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim()
-                        + "&tab=questions&success=question_saved");
+                resp.sendRedirect(req.getContextPath() + "/quizzes/questions?courseId=" + courseIdStr.trim()
+                        + "&success=question_saved");
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + dto.getModuleId()
-                    + "&tab=questions&success=question_saved");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/questions?moduleId=" + dto.getModuleId()
+                    + "&success=question_saved");
         } catch (Exception e) {
-            if ("list".equalsIgnoreCase(from)) {
-                String target = req.getContextPath() + "/quizzes/list?";
+            if ("questions".equalsIgnoreCase(from) || "list".equalsIgnoreCase(from)) {
+                String target = req.getContextPath() + "/quizzes/questions?";
                 if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                    target += "courseId=" + courseIdStr.trim() + "&tab=questions";
+                    target += "courseId=" + courseIdStr.trim();
                 } else {
                     String modParam = (dto != null && dto.getModuleId() != null) ? String.valueOf(dto.getModuleId()) : req.getParameter("moduleId");
-                    target += "moduleId=" + modParam + "&tab=questions";
+                    target += "moduleId=" + modParam;
                 }
                 resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "error="
                         + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi khi lưu câu hỏi.", java.nio.charset.StandardCharsets.UTF_8));
@@ -407,13 +479,13 @@ public class QuizServlet extends HttpServlet {
             }
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 resp.sendRedirect(
-                        req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim() + "&tab=questions&error="
+                        req.getContextPath() + "/quizzes/questions?courseId=" + courseIdStr.trim() + "&error="
                                 + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi khi lưu câu hỏi.", java.nio.charset.StandardCharsets.UTF_8));
                 return;
             }
             String modParam = (dto != null && dto.getModuleId() != null) ? String.valueOf(dto.getModuleId()) : req.getParameter("moduleId");
             resp.sendRedirect(
-                    req.getContextPath() + "/quizzes/list?moduleId=" + modParam + "&tab=questions&error="
+                    req.getContextPath() + "/quizzes/questions?moduleId=" + modParam + "&error="
                             + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi khi lưu câu hỏi.", java.nio.charset.StandardCharsets.UTF_8));
         }
     }
@@ -427,18 +499,18 @@ public class QuizServlet extends HttpServlet {
                 quizService.deleteQuestion(Long.parseLong(qIdStr.trim()));
             }
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                resp.sendRedirect(req.getContextPath() + "/quizzes/list?courseId=" + courseIdStr.trim()
-                        + "&tab=questions&success=question_deleted");
+                resp.sendRedirect(req.getContextPath() + "/quizzes/questions?courseId=" + courseIdStr.trim()
+                        + "&success=question_deleted");
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr
-                    + "&tab=questions&success=question_deleted");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/questions?moduleId=" + moduleIdStr
+                    + "&success=question_deleted");
         } catch (Exception e) {
-            String redirectUrl = req.getContextPath() + "/quizzes/list?";
+            String redirectUrl = req.getContextPath() + "/quizzes/questions?";
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                redirectUrl += "courseId=" + courseIdStr.trim() + "&tab=questions";
+                redirectUrl += "courseId=" + courseIdStr.trim();
             } else {
-                redirectUrl += "moduleId=" + moduleIdStr + "&tab=questions";
+                redirectUrl += "moduleId=" + moduleIdStr;
             }
             resp.sendRedirect(redirectUrl + "&error="
                     + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi khi xóa câu hỏi.", java.nio.charset.StandardCharsets.UTF_8));
