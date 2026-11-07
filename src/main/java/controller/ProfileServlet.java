@@ -9,14 +9,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import service.ProfileService;
 import service.ValidationException;
 import util.SessionUtil;
 import util.WebUtil;
 
-@WebServlet(name = "ProfileServlet", urlPatterns = {"/profile", "/profile/*"})
+@WebServlet(name = "ProfileServlet", urlPatterns = {"/profile", "/profile/*", "/uploads/*"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,        // 1MB
         maxFileSize = 15L * 1024L * 1024L,      // 15MB
@@ -25,14 +28,24 @@ import util.WebUtil;
 public class ProfileServlet extends HttpServlet {
 
     private ProfileService profileService;
+    private File avatarStorageDir;
 
     @Override
     public void init() throws ServletException {
         this.profileService = new ProfileService();
+        this.avatarStorageDir = ProfileService.resolveDefaultAvatarDir();
+        if (!this.avatarStorageDir.exists()) {
+            this.avatarStorageDir.mkdirs();
+        }
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if ("/uploads".equalsIgnoreCase(req.getServletPath())) {
+            serveAvatar(req, resp);
+            return;
+        }
+
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -382,5 +395,58 @@ public class ProfileServlet extends HttpServlet {
 
     private String escapeJson(String text) {
         return WebUtil.escapeJson(text);
+    }
+
+    private void serveAvatar(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.trim().isEmpty() || pathInfo.equals("/")) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        // Expected format: /avatar/{fileName}
+        String normalized = pathInfo.replace('\\', '/');
+        if (normalized.contains("..")) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        File targetFile;
+        if (normalized.startsWith("/avatar/")) {
+            String fileName = normalized.substring("/avatar/".length());
+            targetFile = new File(avatarStorageDir, fileName);
+        } else {
+            String fileName = normalized.startsWith("/") ? normalized.substring(1) : normalized;
+            targetFile = new File(avatarStorageDir, fileName);
+        }
+
+        if (!targetFile.exists() || !targetFile.isFile()) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        String name = targetFile.getName().toLowerCase();
+        String contentType = "application/octet-stream";
+        if (name.endsWith(".png")) {
+            contentType = "image/png";
+        } else if (name.endsWith(".jpg") || name.endsWith(".jpeg")) {
+            contentType = "image/jpeg";
+        } else if (name.endsWith(".webp")) {
+            contentType = "image/webp";
+        }
+
+        resp.setContentType(contentType);
+        resp.setContentLengthLong(targetFile.length());
+        resp.setHeader("Cache-Control", "public, max-age=86400");
+
+        try (FileInputStream in = new FileInputStream(targetFile);
+             OutputStream out = resp.getOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+            out.flush();
+        }
     }
 }
