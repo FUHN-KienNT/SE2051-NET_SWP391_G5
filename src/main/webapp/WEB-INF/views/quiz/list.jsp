@@ -557,7 +557,7 @@ body {
                         <!-- Modern SaaS Breadcrumb Navigation -->
                         <nav class="saas-breadcrumb" aria-label="breadcrumb">
                             <a href="${pageContext.request.contextPath}/expert/dashboard">
-                                <i class="bi bi-speedometer2 me-1"></i>Expert Dashboard
+                                <i class="bi bi-mortarboard-fill me-1 text-primary"></i>Expert Studio
                             </a>
                             <span class="separator">/</span>
                             <c:if test="${not empty course}">
@@ -611,7 +611,10 @@ body {
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <c:if test="${not empty course}">
-                                    
+                                    <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"
+                                        class="btn-saas-outline" title="Quay về danh sách bài học">
+                                        <i class="bi bi-journal-text text-primary me-1"></i>Quản lý bài học
+                                    </a>
                                     <button type="button"
                                         class="btn-saas-primary"
                                         data-bs-toggle="modal" data-bs-target="#quizModal"
@@ -715,48 +718,71 @@ body {
                                         </div>
                                     </c:when>
                                     <c:otherwise>
-                                        <!-- Thanh công cụ tìm kiếm & lọc Tab 1 -->
-                                        <div class="saas-toolbar">
-                                            <div class="row g-2 align-items-center justify-content-between">
-                                                <div class="col-md-7 col-12">
+                                        <c:set var="isSearching" value="${not empty keyword or not empty filterModuleId or (not empty filterMode and filterMode != 'all')}" />
+
+                                        <!-- Thanh công cụ tìm kiếm & lọc Tab 1 (Server-side Filtering) -->
+                                        <form id="quizFilterForm" action="${pageContext.request.contextPath}/quizzes/list" method="GET" class="saas-toolbar">
+                                            <input type="hidden" name="courseId" value="${course.id}">
+                                            <div class="row g-2 align-items-center">
+                                                <div class="col-md-5 col-12">
                                                     <div class="input-group input-group-sm">
                                                         <span class="input-group-text bg-light border-end-0 text-muted">
                                                             <i class="bi bi-search"></i>
                                                         </span>
-                                                        <input type="text" id="quizSearchInput"
+                                                        <input type="text" name="keyword" id="quizSearchInput"
                                                             class="form-control border-start-0 bg-light"
-                                                            placeholder="Tìm kiếm bài thi theo tên hoặc chương...">
-                                                        <button
-                                                            class="btn btn-outline-secondary border-start-0 bg-light text-muted d-none"
-                                                            type="button" id="clearQuizSearchBtn">
-                                                            <i class="bi bi-x-circle"></i>
+                                                            placeholder="Tìm kiếm bài thi theo tên..."
+                                                            value="<c:out value='${keyword}'/>">
+                                                        <c:if test="${not empty keyword}">
+                                                            <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}&filterModuleId=${filterModuleId}&filterMode=${filterMode}"
+                                                                class="btn btn-outline-secondary border-start-0 bg-light text-muted"
+                                                                title="Xóa từ khóa">
+                                                                <i class="bi bi-x-circle"></i>
+                                                            </a>
+                                                        </c:if>
+                                                        <button class="btn btn-dark btn-sm px-3" type="submit">
+                                                            <i class="bi bi-search me-1"></i>Tìm
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-5 col-12 d-flex justify-content-md-end align-items-center gap-2">
-                                                    <div class="btn-group btn-group-sm w-100 w-md-auto" role="group"
-                                                        aria-label="Filter modules">
-                                                        <button type="button"
-                                                            class="module-filter-btn active"
-                                                            data-filter="all">
-                                                            Tất cả (${course.totalModules})
-                                                        </button>
-                                                        <button type="button"
-                                                            class="module-filter-btn"
-                                                            data-filter="has-quiz">
-                                                            Có Quiz (${course.modulesWithQuizCount})
-                                                        </button>
-                                                    </div>
+
+                                                <div class="col-md-4 col-sm-6 col-12">
+                                                    <select id="quizModuleFilter" name="filterModuleId"
+                                                        class="form-select form-select-sm bg-light" onchange="document.getElementById('quizFilterForm').submit()">
+                                                        <option value="">Tất cả chương học</option>
+                                                        <c:forEach var="moduleItem" items="${allModules}">
+                                                            <option value="${moduleItem.id}" ${filterModuleId == moduleItem.id ? 'selected' : ''}>
+                                                                Chương ${moduleItem.orderIndex}: <c:out value="${moduleItem.title}" />
+                                                            </option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-3 col-sm-6 col-12 d-flex align-items-center gap-2">
+                                                    <select id="quizModeFilter" name="filterMode"
+                                                        class="form-select form-select-sm bg-light" onchange="document.getElementById('quizFilterForm').submit()">
+                                                        <option value="all" ${empty filterMode or filterMode == 'all' ? 'selected' : ''}>Tất cả chương</option>
+                                                        <option value="has-quiz" ${filterMode == 'has-quiz' ? 'selected' : ''}>Chỉ chương có Quiz</option>
+                                                    </select>
+
+                                                    <c:if test="${isSearching}">
+                                                        <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}"
+                                                            class="btn btn-sm btn-link text-danger text-decoration-none text-nowrap p-0" title="Đặt lại bộ lọc">
+                                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Đặt lại
+                                                        </a>
+                                                    </c:if>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </form>
 
-                                        <!-- Meta bar: Thông tin số lượng & nút text Thu gọn / Mở rộng tất cả -->
                                         <!-- Meta bar: Thông tin số lượng & nút text Thu gọn / Mở rộng tất cả -->
                                         <div class="curriculum-meta-bar">
                                             <span class="small text-muted fw-semibold">
                                                 <i class="bi bi-layers-half text-secondary me-1"></i>${course.totalModules}
-                                                chương &bull; ${course.totalQuizzes} bài thi
+                                                chương &bull; Hiển thị <strong class="text-dark">${filteredQuizzesCount}</strong> / ${totalQuizzes} bài thi
+                                                <c:if test="${isSearching}">
+                                                    <span class="badge bg-primary-subtle text-primary border ms-2">Đang lọc</span>
+                                                </c:if>
                                             </span>
                                             <button type="button" class="btn-text-toggle" id="toggleAllQuizBtn"
                                                 onclick="toggleAllQuizSections()">
@@ -765,13 +791,17 @@ body {
                                         </div>
 
                                         <!-- Thông báo khi filter không tìm thấy quiz nào -->
-                                        <div id="quizTabNoResult"
-                                            class="saas-card p-5 text-center d-none mb-3">
-                                            <div class="text-muted mb-2"><i class="bi bi-search fs-2"></i></div>
-                                            <h6 class="fw-bold text-dark mb-1">Không tìm thấy bài Quiz nào phù hợp</h6>
-                                            <p class="small text-muted mb-0">Thử tìm kiếm với từ khóa khác hoặc chọn
-                                                "Tất cả".</p>
-                                        </div>
+                                        <c:if test="${empty course.modules or (isSearching and filteredQuizzesCount == 0)}">
+                                            <div id="quizTabNoResult" class="saas-card p-5 text-center mb-3">
+                                                <div class="text-muted mb-2"><i class="bi bi-funnel fs-2"></i></div>
+                                                <h6 class="fw-bold text-dark mb-1">Không tìm thấy bài Quiz nào phù hợp</h6>
+                                                <p class="small text-muted mb-3">Thử thay đổi từ khóa tìm kiếm hoặc chọn lại các bộ lọc.</p>
+                                                <a href="${pageContext.request.contextPath}/quizzes/list?courseId=${course.id}"
+                                                    class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Xóa tất cả bộ lọc
+                                                </a>
+                                            </div>
+                                        </c:if>
 
                                         <!-- Danh sách Modules & Quizzes dạng SaaS Module Cards -->
                                         <div class="udemy-curriculum-container mb-4" id="quizCurriculumContainer">
@@ -782,11 +812,11 @@ body {
                                                     data-module-title="${fn:toLowerCase(m.title)}">
 
                                                     <!-- Header: Click khu vực tiêu đề để toggle collapse, nút Tạo Quiz nằm riêng biệt -->
-                                                    <div class="udemy-section-header collapsed" id="quiz-header-${m.id}">
-                                                        <div class="udemy-header-toggle d-flex align-items-center gap-2 flex-grow-1 overflow-hidden collapsed"
+                                                    <div class="udemy-section-header ${isSearching ? '' : 'collapsed'}" id="quiz-header-${m.id}">
+                                                        <div class="udemy-header-toggle d-flex align-items-center gap-2 flex-grow-1 overflow-hidden ${isSearching ? '' : 'collapsed'}"
                                                             data-bs-toggle="collapse"
                                                             data-bs-target="#quiz-collapse-${m.id}"
-                                                            aria-expanded="false"
+                                                            aria-expanded="${isSearching ? 'true' : 'false'}"
                                                             role="button">
                                                             <i class="bi bi-chevron-down udemy-chevron"></i>
                                                             <span class="badge bg-light text-dark border fw-semibold flex-shrink-0">
@@ -818,8 +848,8 @@ body {
                                                         </div>
                                                     </div>
 
-                                                    <!-- Body: Collapsible (Closed by default) -->
-                                                    <div class="collapse udemy-section-body"
+                                                    <!-- Body: Collapsible (Closed by default, opened when searching) -->
+                                                    <div class="collapse udemy-section-body ${isSearching ? 'show' : ''}"
                                                         id="quiz-collapse-${m.id}">
                                                         <c:choose>
                                                             <c:when test="${not mHasQuizzes}">
@@ -1125,88 +1155,6 @@ body {
                                 ? '<i class="bi bi-arrows-collapse me-1"></i><span>Thu gọn tất cả</span>'
                                 : '<i class="bi bi-arrows-expand me-1"></i><span>Mở rộng tất cả</span>';
                         }
-
-                        // Tab 1: Live search & Module filter (All vs Has-Quiz)
-                        const quizSearch = document.getElementById('quizSearchInput');
-                        const clearQuizBtn = document.getElementById('clearQuizSearchBtn');
-                        const moduleFilterBtns = document.querySelectorAll('.module-filter-btn');
-                        let currentModuleFilter = 'all';
-
-                        function applyQuizTabFilter() {
-                            const kw = quizSearch ? quizSearch.value.trim().toLowerCase() : '';
-                            if (clearQuizBtn) {
-                                clearQuizBtn.classList.toggle('d-none', kw === '');
-                            }
-                            const moduleSections = document.querySelectorAll('#quizCurriculumContainer .udemy-section-item');
-                            let anyVisible = false;
-
-                            moduleSections.forEach(function (sec) {
-                                const hasQuizzes = sec.getAttribute('data-has-quizzes') === 'true';
-                                const moduleTitle = sec.getAttribute('data-module-title') || '';
-
-                                if (currentModuleFilter === 'has-quiz' && !hasQuizzes) {
-                                    sec.classList.add('d-none');
-                                    return;
-                                }
-
-                                if (kw === '') {
-                                    sec.classList.remove('d-none');
-                                    sec.querySelectorAll('.quiz-row').forEach(r => r.classList.remove('d-none'));
-                                    anyVisible = true;
-                                } else {
-                                    let matchInQuizzes = false;
-                                    const rows = sec.querySelectorAll('.quiz-row');
-                                    rows.forEach(function (row) {
-                                        const title = row.getAttribute('data-quiz-title') || '';
-                                        if (title.includes(kw)) {
-                                            row.classList.remove('d-none');
-                                            matchInQuizzes = true;
-                                        } else {
-                                            row.classList.add('d-none');
-                                        }
-                                    });
-
-                                    if (matchInQuizzes || moduleTitle.includes(kw)) {
-                                        sec.classList.remove('d-none');
-                                        if (moduleTitle.includes(kw)) {
-                                            rows.forEach(r => r.classList.remove('d-none'));
-                                        }
-                                        // Tự động mở rộng section khi có kết quả tìm kiếm
-                                        const collapseEl = sec.querySelector('.collapse');
-                                        if (collapseEl && !collapseEl.classList.contains('show')) {
-                                            bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
-                                        }
-                                        anyVisible = true;
-                                    } else {
-                                        sec.classList.add('d-none');
-                                    }
-                                }
-                            });
-
-                            const noResultEl = document.getElementById('quizTabNoResult');
-                            if (noResultEl) {
-                                noResultEl.classList.toggle('d-none', anyVisible);
-                            }
-                        }
-
-                        if (quizSearch) {
-                            quizSearch.addEventListener('input', applyQuizTabFilter);
-                        }
-                        if (clearQuizBtn) {
-                            clearQuizBtn.addEventListener('click', function () {
-                                quizSearch.value = '';
-                                applyQuizTabFilter();
-                                quizSearch.focus();
-                            });
-                        }
-                        moduleFilterBtns.forEach(function (btn) {
-                            btn.addEventListener('click', function () {
-                                moduleFilterBtns.forEach(b => b.classList.remove('active'));
-                                this.classList.add('active');
-                                currentModuleFilter = this.getAttribute('data-filter');
-                                applyQuizTabFilter();
-                            });
-                        });
                     });
 
                     // 2. Modal Quản lý Quiz

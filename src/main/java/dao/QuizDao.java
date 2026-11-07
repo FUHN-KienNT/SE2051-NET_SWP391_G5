@@ -42,11 +42,35 @@ public class QuizDao {
     }
 
     public List<Quiz> findByCourseId(Connection con, long courseId) throws SQLException {
-        String sql = "SELECT q.id, q.module_id, q.title, q.pass_score, q.time_limit_minutes, q.order_index, q.created_at, q.updated_at "
-                + "FROM quizzes q JOIN modules m ON q.module_id = m.id WHERE m.course_id = ? ORDER BY m.order_index ASC, q.order_index ASC";
+        return search(con, courseId, null, null);
+    }
+
+    public List<Quiz> search(Connection con, long courseId, Long moduleId, String keyword) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT q.id, q.module_id, q.title, q.pass_score, q.time_limit_minutes, q.order_index, q.created_at, q.updated_at "
+                + "FROM quizzes q JOIN modules m ON q.module_id = m.id "
+                + "WHERE m.course_id = ?"
+        );
+        List<Object> params = new ArrayList<>();
+        params.add(courseId);
+
+        if (moduleId != null && moduleId > 0) {
+            sql.append(" AND q.module_id = ?");
+            params.add(moduleId);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (LOWER(q.title) LIKE ? OR LOWER(m.title) LIKE ?)");
+            String pattern = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(pattern);
+            params.add(pattern);
+        }
+        sql.append(" ORDER BY m.order_index ASC, q.order_index ASC");
+
         List<Quiz> list = new ArrayList<>();
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setLong(1, courseId);
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapQuiz(rs));

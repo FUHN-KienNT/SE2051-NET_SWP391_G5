@@ -61,23 +61,6 @@ public class QuizService {
         this.moduleDao = moduleDao;
     }
 
-    //chi lay thong tin quiz
-    public List<QuizDto> getQuizzes(long moduleId) {
-        try (Connection con = DbConnection.getConnection()) {
-            List<Quiz> quizzes = quizDao.findByModuleId(con, moduleId);
-            List<QuizDto> dtos = new ArrayList<>();
-            for (Quiz q : quizzes) {
-                dtos.add(new QuizDto(
-                        q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
-                        q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>()
-                ));
-            }
-            return dtos;
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi lấy danh sách bài thi: " + e.getMessage(), e);
-        }
-    }
-
     //toan bo quiz tree
     public QuizDto getQuizDetail(long quizId) {
         try (Connection con = DbConnection.getConnection()) {
@@ -220,15 +203,6 @@ public class QuizService {
         }
     }
 
-    public List<QuestionDto> getQuestionsByCourse(long courseId) {
-        try (Connection con = DbConnection.getConnection()) {
-            List<Question> list = questionDao.findByCourseId(con, courseId);
-            return mapQuestionsWithOptions(con, list);
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi lấy danh sách câu hỏi của khóa học: " + e.getMessage(), e);
-        }
-    }
-
     private List<QuestionDto> mapQuestionsWithOptions(Connection con, List<Question> list) throws SQLException {
         List<QuestionDto> dtos = new ArrayList<>();
         if (list == null || list.isEmpty()) {
@@ -266,6 +240,13 @@ public class QuizService {
      * Tải thông tin danh sách bài thi Quiz (nhẹ, tối ưu, không nạp câu hỏi và đáp án).
      */
     public CourseDto getQuizListCourse(long courseId) {
+        return searchQuizListCourse(courseId, null, null, null);
+    }
+
+    /**
+     * Tìm kiếm và lọc danh sách bài thi Quiz phía Server (Server-side Filtering)
+     */
+    public CourseDto searchQuizListCourse(long courseId, Long moduleId, String keyword, String filterMode) {
         try (Connection con = DbConnection.getConnection()) {
             entity.Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
@@ -275,7 +256,7 @@ public class QuizService {
             dto.setTitle(course.getTitle());
 
             List<entity.Module> modules = moduleDao.findByCourseId(con, courseId);
-            List<Quiz> quizzes = quizDao.findByCourseId(con, courseId);
+            List<Quiz> quizzes = quizDao.search(con, courseId, moduleId, keyword);
             Map<Long, Integer> attemptCounts = quizDao.findAttemptCountsByCourse(con, courseId);
             Map<Long, List<QuizDto>> quizzesByModuleId = new HashMap<>();
             for (Quiz q : quizzes) {
@@ -287,13 +268,27 @@ public class QuizService {
                 quizzesByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
             }
 
+            boolean isFiltering = (moduleId != null && moduleId > 0)
+                    || (keyword != null && !keyword.trim().isEmpty());
+            boolean filterHasQuizOnly = "has-quiz".equalsIgnoreCase(filterMode);
+
             for (entity.Module m : modules) {
+                if (moduleId != null && moduleId > 0 && m.getId() != moduleId) {
+                    continue;
+                }
+                List<QuizDto> modQuizzes = quizzesByModuleId.getOrDefault(m.getId(), Collections.emptyList());
+                if (filterHasQuizOnly && modQuizzes.isEmpty()) {
+                    continue;
+                }
+                if (isFiltering && modQuizzes.isEmpty()) {
+                    continue;
+                }
                 ModuleDto mDto = new ModuleDto();
                 mDto.setId(m.getId());
                 mDto.setCourseId(m.getCourseId());
                 mDto.setTitle(m.getTitle());
                 mDto.setOrderIndex(m.getOrderIndex());
-                mDto.getQuizzes().addAll(quizzesByModuleId.getOrDefault(m.getId(), Collections.emptyList()));
+                mDto.getQuizzes().addAll(modQuizzes);
                 dto.getModules().add(mDto);
             }
             return dto;
@@ -398,74 +393,6 @@ public class QuizService {
             return quizDao.countByCourseId(con, courseId);
         } catch (SQLException e) {
             return 0;
-        }
-    }
-
-    public CourseDto getQuizManagementCourse(long courseId) {
-        try (Connection con = DbConnection.getConnection()) {
-            entity.Course course = courseDao.findById(con, courseId)
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
-
-            CourseDto dto = new CourseDto();
-            dto.setId(course.getId());
-            dto.setTitle(course.getTitle());
-
-            List<entity.Module> modules = moduleDao.findByCourseId(con, courseId);
-
-            // Load và nhóm quizzes theo module (giống pattern cũ)
-            List<Quiz> quizzes = quizDao.findByCourseId(con, courseId);
-            Map<Long, Integer> attemptCounts = quizDao.findAttemptCountsByCourse(con, courseId);
-            Map<Long, List<QuizDto>> quizzesByModuleId = new HashMap<>();
-            for (Quiz q : quizzes) {
-                QuizDto qDto = new QuizDto(
-                        q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
-                        q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>()
-                );
-                qDto.setAttemptCount(attemptCounts.getOrDefault(q.getId(), 0));
-                quizzesByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
-            }
-
-            // Load và nhóm questions theo module (cùng connection, cùng pattern với quizzes)
-            List<Question> allQuestions = questionDao.findByCourseId(con, courseId);
-            Map<Long, Integer> answerCounts = questionDao.findAnswerCountsByCourse(con, courseId);
-            Map<Long, Integer> assignmentCounts = questionDao.findAssignmentCountsByCourse(con, courseId);
-            Map<Long, List<QuestionDto>> questionsByModuleId = new HashMap<>();
-            if (!allQuestions.isEmpty()) {
-                List<Long> qIds = allQuestions.stream().map(Question::getId).collect(Collectors.toList());
-                Map<Long, List<AnswerOption>> optionsMap = questionDao.findOptionsByQuestionIds(con, qIds);
-                for (Question q : allQuestions) {
-                    QuestionDto qDto = new QuestionDto();
-                    qDto.setId(q.getId());
-                    qDto.setModuleId(q.getModuleId());
-                    qDto.setQuestionText(q.getQuestionText());
-                    qDto.setQuestionType(q.getQuestionType());
-                    qDto.setDefaultPoints(q.getDefaultPoints());
-                    qDto.setAnswerCount(answerCounts.getOrDefault(q.getId(), 0));
-                    qDto.setAssignmentCount(assignmentCounts.getOrDefault(q.getId(), 0));
-                    List<AnswerOption> options = optionsMap.getOrDefault(q.getId(), Collections.emptyList());
-                    for (AnswerOption opt : options) {
-                        qDto.getOptions().add(new AnswerOptionDto(
-                                opt.getId(), opt.getQuestionId(), opt.getOptionText(),
-                                opt.isCorrect(), opt.getOrderIndex()
-                        ));
-                    }
-                    questionsByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
-                }
-            }
-
-            for (entity.Module m : modules) {
-                ModuleDto mDto = new ModuleDto();
-                mDto.setId(m.getId());
-                mDto.setCourseId(m.getCourseId());
-                mDto.setTitle(m.getTitle());
-                mDto.setOrderIndex(m.getOrderIndex());
-                mDto.getQuizzes().addAll(quizzesByModuleId.getOrDefault(m.getId(), Collections.emptyList()));
-                mDto.getQuestions().addAll(questionsByModuleId.getOrDefault(m.getId(), Collections.emptyList()));
-                dto.getModules().add(mDto);
-            }
-            return dto;
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi lấy thông tin quản lý bài thi của khóa học: " + e.getMessage(), e);
         }
     }
 

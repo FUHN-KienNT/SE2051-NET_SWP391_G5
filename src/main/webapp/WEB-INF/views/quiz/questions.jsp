@@ -517,16 +517,30 @@ body {
     background: #ecfdf5;
     border: 1px solid #d1fae5;
     border-radius: 6px;
-    padding: 0.2rem 0.5rem;
+    padding: 0.25rem 0.55rem;
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
     max-width: 100%;
+    word-break: break-word;
 }
 .btn-xs {
     font-size: 0.75rem;
     padding: 0.2rem 0.5rem;
     border-radius: 0.375rem;
+}
+.question-text-title {
+    font-size: 0.9125rem;
+    font-weight: 500;
+    color: var(--saas-text-heading);
+    line-height: 1.5;
+    word-break: break-word;
+}
+.option-item-preview {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.option-item-preview:hover {
+    border-color: #cbd5e1;
 }
 </style>
 
@@ -536,7 +550,7 @@ body {
         <!-- Modern SaaS Breadcrumb Navigation -->
         <nav class="saas-breadcrumb" aria-label="breadcrumb">
             <a href="${pageContext.request.contextPath}/expert/dashboard">
-                <i class="bi bi-speedometer2 me-1"></i>Expert Dashboard
+                <i class="bi bi-mortarboard-fill me-1 text-primary"></i>Expert Studio
             </a>
             <span class="separator">/</span>
             <c:if test="${not empty course}">
@@ -590,6 +604,10 @@ body {
             </div>
             <div class="d-flex align-items-center gap-2">
                 <c:if test="${not empty course}">
+                    <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"
+                        class="btn-saas-outline" title="Quay về danh sách bài học">
+                        <i class="bi bi-journal-text text-primary me-1"></i>Quản lý bài học
+                    </a>
                     <button type="button"
                         class="btn-saas-outline-emerald"
                         data-bs-toggle="modal" data-bs-target="#questionModal"
@@ -684,8 +702,14 @@ body {
                             <i class="bi bi-folder-x fs-2"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-1">Khóa học này chưa có chương học nào!</h5>
-                        <p class="text-muted small mb-0">Bạn cần tạo ít nhất một chương học để quản
+                        <p class="text-muted small mb-3">Bạn cần tạo ít nhất một chương học để quản
                             lý ngân hàng câu hỏi.</p>
+                        <div>
+                            <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"
+                                class="btn-saas-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Tạo chương học ngay
+                            </a>
+                        </div>
                     </div>
                 </c:when>
                 <c:otherwise>
@@ -694,7 +718,7 @@ body {
                     <!-- Toolbar lọc & tìm kiếm câu hỏi phía Server (Server-side Filtering) -->
                     <form action="${pageContext.request.contextPath}/quizzes/questions" method="GET" class="saas-toolbar mb-3" id="questionFilterForm">
                         <input type="hidden" name="courseId" value="${course.id}">
-                        <div class="row g-2 align-items-center justify-content-between">
+                        <div class="row g-2 align-items-center">
                             <div class="col-md-5 col-12">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-end-0 text-muted">
@@ -717,7 +741,7 @@ body {
                                 </div>
                             </div>
 
-                            <div class="col-md-3 col-sm-6 col-12">
+                            <div class="col-md-4 col-sm-6 col-12">
                                 <select id="questionModuleFilter" name="filterModuleId"
                                     class="form-select form-select-sm bg-light" onchange="document.getElementById('questionFilterForm').submit()">
                                     <option value="">Tất cả chương học</option>
@@ -729,23 +753,21 @@ body {
                                 </select>
                             </div>
 
-                            <div class="col-md-2 col-sm-6 col-12">
+                            <div class="col-md-3 col-sm-6 col-12 d-flex align-items-center gap-2">
                                 <select id="questionTypeFilter" name="questionType"
                                     class="form-select form-select-sm bg-light" onchange="document.getElementById('questionFilterForm').submit()">
                                     <option value="all" ${empty questionType or questionType == 'all' ? 'selected' : ''}>Tất cả loại câu</option>
                                     <option value="SINGLE_CHOICE" ${questionType == 'SINGLE_CHOICE' ? 'selected' : ''}>Trắc nghiệm</option>
                                     <option value="TRUE_FALSE" ${questionType == 'TRUE_FALSE' ? 'selected' : ''}>Đúng / Sai</option>
                                 </select>
-                            </div>
 
-                            <c:if test="${isSearching}">
-                                <div class="col-auto">
+                                <c:if test="${isSearching}">
                                     <a href="${pageContext.request.contextPath}/quizzes/questions?courseId=${course.id}"
-                                        class="btn btn-sm btn-link text-danger text-decoration-none p-0" title="Đặt lại bộ lọc">
+                                        class="btn btn-sm btn-link text-danger text-decoration-none text-nowrap p-0" title="Đặt lại bộ lọc">
                                         <i class="bi bi-arrow-counterclockwise me-1"></i>Đặt lại
                                     </a>
-                                </div>
-                            </c:if>
+                                </c:if>
+                            </div>
                         </div>
                     </form>
 
@@ -766,7 +788,7 @@ body {
                     </div>
 
                     <!-- Thông báo khi filter không tìm thấy câu hỏi nào -->
-                    <c:if test="${empty course.modules or filteredQuestionsCount == 0}">
+                    <c:if test="${empty course.modules or (isSearching and filteredQuestionsCount == 0)}">
                         <div id="questionEmptyFilter" class="saas-card p-5 text-center mb-3">
                             <div class="text-muted mb-2"><i class="bi bi-funnel fs-2"></i></div>
                             <h6 class="fw-bold text-dark mb-1">Không tìm thấy câu hỏi nào phù hợp</h6>
@@ -794,9 +816,6 @@ body {
                                         data-bs-target="#q-collapse-${m.id}"
                                         aria-expanded="${isSearching ? 'true' : 'false'}"
                                         role="button">
-                                        data-bs-target="#q-collapse-${m.id}"
-                                        aria-expanded="false"
-                                        role="button">
                                         <i class="bi bi-chevron-down udemy-chevron"></i>
                                         <span class="badge bg-light text-dark border fw-semibold flex-shrink-0">
                                             Chương ${m.orderIndex}
@@ -819,7 +838,7 @@ body {
                                     <!-- Nút thêm câu hỏi: Hoàn toàn tách biệt khỏi collapse trigger -->
                                     <div class="flex-shrink-0" onclick="event.stopPropagation();">
                                         <button type="button"
-                                            class="btn-saas-outline-emerald py-1 px-2.5 small"
+                                            class="btn-saas-outline-emerald"
                                             onclick="event.stopPropagation(); openCreateQuestionModal('${m.id}')"
                                             data-bs-toggle="modal" data-bs-target="#questionModal">
                                             <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi
@@ -881,7 +900,7 @@ body {
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <div class="fw-medium text-dark mb-1">
+                                                                    <div class="question-text-title mb-1">
                                                                         <c:out value="${q.questionText}" />
                                                                     </div>
 
@@ -914,7 +933,7 @@ body {
 
                                                                         <c:if test="${not empty q.options}">
                                                                             <button type="button"
-                                                                                class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill"
+                                                                                class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill text-decoration-none"
                                                                                 data-bs-toggle="collapse"
                                                                                 data-bs-target="#options-collapse-${q.id}"
                                                                                 title="Xem danh sách tất cả các phương án">
@@ -929,14 +948,14 @@ body {
                                                                             <div class="p-2.5 rounded-3 bg-light border row g-2 small">
                                                                                 <c:forEach var="opt" items="${q.options}" varStatus="optStatus">
                                                                                     <div class="col-md-6 col-12">
-                                                                                        <div class="d-flex align-items-start gap-2 p-1.5 rounded-2 ${opt.correct ? 'bg-success-subtle text-success fw-semibold border border-success-subtle' : 'bg-white border text-secondary'}">
+                                                                                        <div class="option-item-preview d-flex align-items-start gap-2 p-1.5 rounded-2 ${opt.correct ? 'bg-success-subtle text-success fw-semibold border border-success-subtle' : 'bg-white border text-secondary'}">
                                                                                             <span class="badge ${opt.correct ? 'bg-success text-white' : 'bg-secondary-subtle text-secondary'} rounded-circle px-1.5 py-1"
                                                                                                 style="font-size: 0.7rem; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
                                                                                                 ${optStatus.index == 0 ? 'A' : (optStatus.index == 1 ? 'B' : (optStatus.index == 2 ? 'C' : 'D'))}
                                                                                             </span>
                                                                                             <span class="text-break"><c:out value="${opt.optionText}" /></span>
                                                                                             <c:if test="${opt.correct}">
-                                                                                                <i class="bi bi-check2 text-success ms-auto flex-shrink-0"></i>
+                                                                                                 <i class="bi bi-check2 text-success ms-auto flex-shrink-0"></i>
                                                                                             </c:if>
                                                                                         </div>
                                                                                     </div>
@@ -946,15 +965,21 @@ body {
                                                                     </c:if>
                                                                 </td>
                                                                 <td class="text-center">
-                                                                    <span class="saas-badge saas-badge-draft">
-                                                                        <c:choose>
-                                                                            <c:when test="${q.questionType == 'TRUE_FALSE'}">Đúng / Sai</c:when>
-                                                                            <c:otherwise>Trắc nghiệm</c:otherwise>
-                                                                        </c:choose>
-                                                                    </span>
+                                                                    <c:choose>
+                                                                        <c:when test="${q.questionType == 'TRUE_FALSE'}">
+                                                                            <span class="saas-badge saas-badge-pending">
+                                                                                <span class="badge-dot"></span>Đúng / Sai
+                                                                            </span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <span class="saas-badge saas-badge-blue">
+                                                                                <span class="badge-dot"></span>Trắc nghiệm
+                                                                            </span>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
                                                                 </td>
-                                                                <td class="text-center fw-semibold text-secondary">
-                                                                    ${q.defaultPoints} đ
+                                                                <td class="text-center">
+                                                                    <span class="badge bg-light text-dark border px-2 py-1">${q.defaultPoints} đ</span>
                                                                 </td>
                                                                 <td class="text-end pe-3 text-nowrap">
                                                                     <div class="d-inline-flex align-items-center gap-1">
@@ -982,12 +1007,14 @@ body {
                                                                                 </button>
                                                                             </c:when>
                                                                             <c:otherwise>
-                                                                                <a href="${pageContext.request.contextPath}/quizzes/delete-question?id=${q.id}&courseId=${course.id}"
+                                                                                <button type="button"
                                                                                     class="btn-icon-action text-danger"
-                                                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi?');"
+                                                                                    onclick="openDeleteQuestionModal('${q.id}', '${fn:escapeXml(fn:substring(q.questionText, 0, 80))}', '${course.id}')"
+                                                                                    data-bs-toggle="modal"
+                                                                                    data-bs-target="#deleteQuestionModal"
                                                                                     title="Xóa câu hỏi">
                                                                                     <i class="bi bi-trash3"></i>
-                                                                                </a>
+                                                                                </button>
                                                                             </c:otherwise>
                                                                         </c:choose>
                                                                     </div>
@@ -1078,14 +1105,13 @@ body {
 
                         <!-- Option A -->
                         <div class="input-group mb-2 shadow-xs">
-                            <div class="input-group-text bg-light border-end-0">
-                                <input class="form-check-input mt-0" type="radio"
+                            <label class="input-group-text bg-light border-end-0 mb-0" for="radioOptA" style="cursor: pointer;">
+                                <input class="form-check-input mt-0" type="radio" id="radioOptA"
                                     name="correctOption" value="0" checked
-                                    title="Chọn làm đáp án đúng">
-                            </div>
-                            <span
-                                class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0"
-                                style="min-width: 40px; justify-content: center;">A</span>
+                                    title="Chọn làm đáp án đúng" style="cursor: pointer;">
+                            </label>
+                            <label class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0 mb-0" for="radioOptA"
+                                style="min-width: 40px; justify-content: center; cursor: pointer;">A</label>
                             <input type="text" name="optionText" id="modalQOptA"
                                 class="form-control border-start-0"
                                 placeholder="Nội dung đáp án A..." required>
@@ -1093,14 +1119,13 @@ body {
 
                         <!-- Option B -->
                         <div class="input-group mb-2 shadow-xs">
-                            <div class="input-group-text bg-light border-end-0">
-                                <input class="form-check-input mt-0" type="radio"
+                            <label class="input-group-text bg-light border-end-0 mb-0" for="radioOptB" style="cursor: pointer;">
+                                <input class="form-check-input mt-0" type="radio" id="radioOptB"
                                     name="correctOption" value="1"
-                                    title="Chọn làm đáp án đúng">
-                            </div>
-                            <span
-                                class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0"
-                                style="min-width: 40px; justify-content: center;">B</span>
+                                    title="Chọn làm đáp án đúng" style="cursor: pointer;">
+                            </label>
+                            <label class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0 mb-0" for="radioOptB"
+                                style="min-width: 40px; justify-content: center; cursor: pointer;">B</label>
                             <input type="text" name="optionText" id="modalQOptB"
                                 class="form-control border-start-0"
                                 placeholder="Nội dung đáp án B..." required>
@@ -1108,14 +1133,13 @@ body {
 
                         <!-- Option C -->
                         <div class="input-group mb-2 shadow-xs" id="modalQOptGroupC">
-                            <div class="input-group-text bg-light border-end-0">
-                                <input class="form-check-input mt-0" type="radio"
+                            <label class="input-group-text bg-light border-end-0 mb-0" for="radioOptC" style="cursor: pointer;">
+                                <input class="form-check-input mt-0" type="radio" id="radioOptC"
                                     name="correctOption" value="2"
-                                    title="Chọn làm đáp án đúng">
-                            </div>
-                            <span
-                                class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0"
-                                style="min-width: 40px; justify-content: center;">C</span>
+                                    title="Chọn làm đáp án đúng" style="cursor: pointer;">
+                            </label>
+                            <label class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0 mb-0" for="radioOptC"
+                                style="min-width: 40px; justify-content: center; cursor: pointer;">C</label>
                             <input type="text" name="optionText" id="modalQOptC"
                                 class="form-control border-start-0"
                                 placeholder="Đáp án C (tùy chọn)...">
@@ -1123,14 +1147,13 @@ body {
 
                         <!-- Option D -->
                         <div class="input-group mb-2 shadow-xs" id="modalQOptGroupD">
-                            <div class="input-group-text bg-light border-end-0">
-                                <input class="form-check-input mt-0" type="radio"
+                            <label class="input-group-text bg-light border-end-0 mb-0" for="radioOptD" style="cursor: pointer;">
+                                <input class="form-check-input mt-0" type="radio" id="radioOptD"
                                     name="correctOption" value="3"
-                                    title="Chọn làm đáp án đúng">
-                            </div>
-                            <span
-                                class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0"
-                                style="min-width: 40px; justify-content: center;">D</span>
+                                    title="Chọn làm đáp án đúng" style="cursor: pointer;">
+                            </label>
+                            <label class="input-group-text bg-light fw-bold text-secondary border-start-0 border-end-0 mb-0" for="radioOptD"
+                                style="min-width: 40px; justify-content: center; cursor: pointer;">D</label>
                             <input type="text" name="optionText" id="modalQOptD"
                                 class="form-control border-start-0"
                                 placeholder="Đáp án D (tùy chọn)...">
@@ -1147,6 +1170,34 @@ body {
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- MODAL: XÁC NHẬN XÓA CÂU HỎI                            -->
+<!-- ======================================================= -->
+<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content saas-modal">
+            <div class="modal-body text-center p-4">
+                <div class="bg-danger-subtle text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                    style="width: 52px; height: 52px; font-size: 1.35rem;">
+                    <i class="bi bi-trash3-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Xác nhận xóa câu hỏi?</h5>
+                <p class="small text-muted mb-4" id="deleteQuestionSnippet">
+                    Câu hỏi này sẽ bị xóa khỏi ngân hàng câu hỏi của khóa học.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn-saas-outline"
+                        data-bs-dismiss="modal">Hủy</button>
+                    <a href="#" id="confirmDeleteQuestionLink"
+                        class="btn btn-danger btn-sm fw-semibold rounded-3 px-3">
+                        <i class="bi bi-trash3 me-1"></i>Xóa câu hỏi
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1309,12 +1360,27 @@ body {
         const titleEl = document.getElementById('questionModalTitle');
         if (titleEl) titleEl.textContent = 'Chỉnh sửa câu hỏi #' + qId;
         const submitBtn = document.getElementById('questionModalSubmitBtn');
-        if (submitBtn) submitBtn.className = 'btn btn-primary btn-sm fw-semibold rounded-3 px-3 shadow-sm';
+        if (submitBtn) submitBtn.className = 'btn-saas-primary';
         const submitText = document.getElementById('questionModalSubmitText');
         if (submitText) submitText.textContent = 'Lưu thay đổi';
 
         const modalEl = document.getElementById('questionModal');
         if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function openDeleteQuestionModal(id, textSnippet, courseId) {
+        const textEl = document.getElementById('deleteQuestionSnippet');
+        if (textEl) {
+            textEl.textContent = 'Bạn có chắc chắn muốn xóa câu hỏi: "' + textSnippet + '"?';
+        }
+        const link = document.getElementById('confirmDeleteQuestionLink');
+        if (link) {
+            link.href = '${pageContext.request.contextPath}/quizzes/delete-question?id=' + id + (courseId ? '&courseId=' + courseId : '');
+        }
+        const modalEl = document.getElementById('deleteQuestionModal');
+        if (modalEl) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
 </script>
 
