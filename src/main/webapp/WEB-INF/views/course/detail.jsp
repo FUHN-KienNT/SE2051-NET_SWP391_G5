@@ -81,7 +81,6 @@
                             <p class="text-muted small mb-0">Nội dung khóa học được phân chia rõ ràng theo từng chương học</p>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <input type="text" id="lessonSearchInput" class="form-control form-control-sm" placeholder="Tìm tên bài học..." style="max-width: 220px;" onkeyup="filterLessonList()">
                             <span class="badge bg-primary-subtle text-primary border">${fn:length(course.modules)} chương &bull; ${course.totalLessons} bài</span>
                         </div>
                     </div>
@@ -177,27 +176,6 @@
                         </c:otherwise>
                     </c:choose>
                 </div>
-
-                <script>
-                    function filterLessonList() {
-                        const input = document.getElementById('lessonSearchInput').value.toLowerCase().trim();
-                        const sections = document.querySelectorAll('#directLessonList .module-section');
-                        sections.forEach(function(section) {
-                            const rows = section.querySelectorAll('.lesson-row');
-                            let visibleCount = 0;
-                            rows.forEach(function(row) {
-                                const title = row.getAttribute('data-title') || '';
-                                if (!input || title.includes(input)) {
-                                    row.style.display = '';
-                                    visibleCount++;
-                                } else {
-                                    row.style.display = 'none';
-                                }
-                            });
-                            section.style.display = (!input || visibleCount > 0) ? '' : 'none';
-                        });
-                    }
-                </script>
             </div>
 
             <!-- Action Sidebar (Role-based CTAs) -->

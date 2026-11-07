@@ -5,459 +5,465 @@
 <jsp:include page="../common/header.jsp" />
 
 <style>
-/* ==========================================================================
-   MODERN SAAS DESIGN SYSTEM (Cohesive with Expert Dashboard)
-   ========================================================================== */
-:root {
-    --saas-bg: #f8fafc;
-    --saas-card-bg: #ffffff;
-    --saas-border: #e2e8f0;
-    --saas-border-subtle: #f1f5f9;
-    --saas-text-heading: #0f172a;
-    --saas-text-body: #334155;
-    --saas-text-muted: #64748b;
-    --saas-primary: #0f172a;
-    --saas-primary-hover: #1e293b;
-    --saas-accent: #2563eb;
-    --saas-accent-hover: #1d4ed8;
-    --saas-radius-sm: 6px;
-    --saas-radius-md: 10px;
-    --saas-radius-lg: 14px;
-    --saas-radius-xl: 18px;
-    --saas-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-    --saas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-    --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-}
+    /* ==========================================================================
+       MODERN SAAS DESIGN SYSTEM (Cohesive with Expert Dashboard)
+       ========================================================================== */
+    :root {
+        --saas-bg: #f8fafc;
+        --saas-card-bg: #ffffff;
+        --saas-border: #e2e8f0;
+        --saas-border-subtle: #f1f5f9;
+        --saas-text-heading: #0f172a;
+        --saas-text-body: #334155;
+        --saas-text-muted: #64748b;
+        --saas-primary: #0f172a;
+        --saas-primary-hover: #1e293b;
+        --saas-accent: #2563eb;
+        --saas-accent-hover: #1d4ed8;
+        --saas-radius-sm: 6px;
+        --saas-radius-md: 10px;
+        --saas-radius-lg: 14px;
+        --saas-radius-xl: 18px;
+        --saas-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+        --saas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+        --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    }
 
-body {
-    background-color: var(--saas-bg);
-    color: var(--saas-text-body);
-}
+    body {
+        background-color: var(--saas-bg);
+        color: var(--saas-text-body);
+    }
 
 
-/* Breadcrumbs */
-.saas-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.8125rem;
-    color: var(--saas-text-muted);
-    margin-bottom: 16px;
-}
-.saas-breadcrumb a {
-    color: var(--saas-text-muted);
-    text-decoration: none;
-    transition: color 0.15s ease;
-}
-.saas-breadcrumb a:hover {
-    color: var(--saas-text-heading);
-}
-.saas-breadcrumb .separator {
-    color: #cbd5e1;
-    font-size: 0.75rem;
-}
-.saas-breadcrumb .current {
-    color: var(--saas-text-heading);
-    font-weight: 500;
-}
+    /* Breadcrumbs */
+    .saas-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8125rem;
+        color: var(--saas-text-muted);
+        margin-bottom: 16px;
+    }
+    .saas-breadcrumb a {
+        color: var(--saas-text-muted);
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+    .saas-breadcrumb a:hover {
+        color: var(--saas-text-heading);
+    }
+    .saas-breadcrumb .separator {
+        color: #cbd5e1;
+        font-size: 0.75rem;
+    }
+    .saas-breadcrumb .current {
+        color: var(--saas-text-heading);
+        font-weight: 500;
+    }
 
-/* Page Header */
-.saas-header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.saas-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    color: var(--saas-text-heading);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.saas-subtitle {
-    font-size: 0.875rem;
-    color: var(--saas-text-muted);
-    margin-top: 4px;
-    margin-bottom: 0;
-}
+    /* Page Header */
+    .saas-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .saas-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--saas-text-heading);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .saas-subtitle {
+        font-size: 0.875rem;
+        color: var(--saas-text-muted);
+        margin-top: 4px;
+        margin-bottom: 0;
+    }
 
-/* Status Badges */
-.saas-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-}
-.badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-}
-.saas-badge-published {
-    background: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-}
-.saas-badge-published .badge-dot { background: #10b981; }
+    /* Status Badges */
+    .saas-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+    .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+    .saas-badge-published {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+    .saas-badge-published .badge-dot {
+        background: #10b981;
+    }
 
-.saas-badge-pending {
-    background: #fffbeb;
-    color: #92400e;
-    border: 1px solid #fde68a;
-}
-.saas-badge-pending .badge-dot { background: #f59e0b; }
+    .saas-badge-pending {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+    .saas-badge-pending .badge-dot {
+        background: #f59e0b;
+    }
 
-.saas-badge-draft {
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #cbd5e1;
-}
-.saas-badge-draft .badge-dot { background: #64748b; }
+    .saas-badge-draft {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+    .saas-badge-draft .badge-dot {
+        background: #64748b;
+    }
 
-/* Buttons */
-.btn-saas-primary {
-    background: #0f172a;
-    color: #ffffff;
-    border: 1px solid #0f172a;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    padding: 7px 14px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    box-shadow: var(--saas-shadow-xs);
-}
-.btn-saas-primary:hover {
-    background: #1e293b;
-    color: #ffffff;
-    border-color: #1e293b;
-}
+    /* Buttons */
+    .btn-saas-primary {
+        background: #0f172a;
+        color: #ffffff;
+        border: 1px solid #0f172a;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 7px 14px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        box-shadow: var(--saas-shadow-xs);
+    }
+    .btn-saas-primary:hover {
+        background: #1e293b;
+        color: #ffffff;
+        border-color: #1e293b;
+    }
 
-.btn-saas-outline {
-    background: #ffffff;
-    color: #334155;
-    border: 1px solid var(--saas-border);
-    font-weight: 500;
-    font-size: 0.8125rem;
-    padding: 7px 14px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    box-shadow: var(--saas-shadow-xs);
-}
-.btn-saas-outline:hover {
-    background: #f8fafc;
-    color: #0f172a;
-    border-color: #cbd5e1;
-}
+    .btn-saas-outline {
+        background: #ffffff;
+        color: #334155;
+        border: 1px solid var(--saas-border);
+        font-weight: 500;
+        font-size: 0.8125rem;
+        padding: 7px 14px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        box-shadow: var(--saas-shadow-xs);
+    }
+    .btn-saas-outline:hover {
+        background: #f8fafc;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
 
-.btn-saas-outline-emerald {
-    background: #ffffff;
-    color: #059669;
-    border: 1px solid #a7f3d0;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    padding: 7px 14px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-}
-.btn-saas-outline-emerald:hover {
-    background: #ecfdf5;
-    color: #047857;
-    border-color: #6ee7b7;
-}
+    .btn-saas-outline-emerald {
+        background: #ffffff;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 7px 14px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .btn-saas-outline-emerald:hover {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #6ee7b7;
+    }
 
-.btn-saas-outline-amber {
-    background: #ffffff;
-    color: #d97706;
-    border: 1px solid #fde68a;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    padding: 7px 14px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-}
-.btn-saas-outline-amber:hover {
-    background: #fffbeb;
-    color: #b45309;
-    border-color: #fcd34d;
-}
+    .btn-saas-outline-amber {
+        background: #ffffff;
+        color: #d97706;
+        border: 1px solid #fde68a;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 7px 14px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .btn-saas-outline-amber:hover {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fcd34d;
+    }
 
-.btn-icon-action {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--saas-border);
-    background: #ffffff;
-    color: #64748b;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    font-size: 0.9rem;
-    text-decoration: none;
-}
-.btn-icon-action:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-    border-color: #cbd5e1;
-}
+    .btn-icon-action {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--saas-border);
+        background: #ffffff;
+        color: #64748b;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+    .btn-icon-action:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
 
-/* Module Cards */
-.saas-module-card {
-    background: var(--saas-card-bg);
-    border: 1px solid var(--saas-border);
-    border-radius: var(--saas-radius-lg);
-    box-shadow: var(--saas-shadow-sm);
-    overflow: hidden;
-    margin-bottom: 20px;
-    transition: border-color 0.15s ease;
-}
-.saas-module-card:hover {
-    border-color: #cbd5e1;
-}
-.saas-module-header {
-    background: #ffffff;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--saas-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-.saas-module-header:hover {
-    background-color: #f8fafc;
-}
-.saas-module-header.collapsed {
-    border-bottom-color: transparent;
-}
-.module-chevron {
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    font-size: 0.95rem;
-    color: #64748b;
-    display: inline-block;
-}
-.saas-module-header.collapsed .module-chevron {
-    transform: rotate(-90deg);
-}
-.saas-module-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--saas-text-heading);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+    /* Module Cards */
+    .saas-module-card {
+        background: var(--saas-card-bg);
+        border: 1px solid var(--saas-border);
+        border-radius: var(--saas-radius-lg);
+        box-shadow: var(--saas-shadow-sm);
+        overflow: hidden;
+        margin-bottom: 20px;
+        transition: border-color 0.15s ease;
+    }
+    .saas-module-card:hover {
+        border-color: #cbd5e1;
+    }
+    .saas-module-header {
+        background: #ffffff;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--saas-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .saas-module-header:hover {
+        background-color: #f8fafc;
+    }
+    .saas-module-header.collapsed {
+        border-bottom-color: transparent;
+    }
+    .module-chevron {
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        font-size: 0.95rem;
+        color: #64748b;
+        display: inline-block;
+    }
+    .saas-module-header.collapsed .module-chevron {
+        transform: rotate(-90deg);
+    }
+    .saas-module-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--saas-text-heading);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-/* Lesson Items */
-.saas-lesson-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--saas-border-subtle);
-    background: #ffffff;
-    transition: background-color 0.15s ease;
-    gap: 16px;
-}
-.saas-lesson-item:last-child {
-    border-bottom: none;
-}
-.saas-lesson-item:hover {
-    background-color: #f8fafc;
-}
-.lesson-drag-handle {
-    cursor: grab;
-    color: #94a3b8;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: all 0.15s ease;
-    display: flex;
-    align-items: center;
-    user-select: none;
-}
-.lesson-drag-handle:hover {
-    color: #1e293b;
-    background: #f1f5f9;
-}
-.saas-lesson-item.dragging {
-    opacity: 0.45;
-    background: #eff6ff !important;
-    border: 2px dashed #3b82f6 !important;
-}
-.saas-lesson-item.drag-over {
-    border-top: 2px solid #2563eb !important;
-}
-.lesson-thumb-box {
-    width: 84px;
-    height: 52px;
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: #0f172a;
-    border: 1px solid var(--saas-border);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-.lesson-thumb-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+    /* Lesson Items */
+    .saas-lesson-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--saas-border-subtle);
+        background: #ffffff;
+        transition: background-color 0.15s ease;
+        gap: 16px;
+    }
+    .saas-lesson-item:last-child {
+        border-bottom: none;
+    }
+    .saas-lesson-item:hover {
+        background-color: #f8fafc;
+    }
+    .lesson-drag-handle {
+        cursor: grab;
+        color: #94a3b8;
+        padding: 2px 4px;
+        border-radius: 4px;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        user-select: none;
+    }
+    .lesson-drag-handle:hover {
+        color: #1e293b;
+        background: #f1f5f9;
+    }
+    .saas-lesson-item.dragging {
+        opacity: 0.45;
+        background: #eff6ff !important;
+        border: 2px dashed #3b82f6 !important;
+    }
+    .saas-lesson-item.drag-over {
+        border-top: 2px solid #2563eb !important;
+    }
+    .lesson-thumb-box {
+        width: 84px;
+        height: 52px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #0f172a;
+        border: 1px solid var(--saas-border);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .lesson-thumb-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
-/* Pills & Tags */
-.pill-neutral {
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #e2e8f0;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 3px 8px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-.pill-video {
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 2px 7px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-.pill-doc {
-    background: #f0fdfa;
-    color: #0f766e;
-    border: 1px solid #ccfbf1;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 2px 7px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
+    /* Pills & Tags */
+    .pill-neutral {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .pill-video {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .pill-doc {
+        background: #f0fdfa;
+        color: #0f766e;
+        border: 1px solid #ccfbf1;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
 
-/* Modals (shadcn inspired) */
-.modal-content.saas-modal {
-    border-radius: 16px;
-    border: 1px solid var(--saas-border);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-}
-.modal-header.saas-modal-header {
-    background: #ffffff;
-    border-bottom: 1px solid var(--saas-border);
-    padding: 20px 24px;
-}
-.modal-footer.saas-modal-footer {
-    background: #f8fafc;
-    border-top: 1px solid var(--saas-border);
-    padding: 16px 24px;
-}
-.saas-form-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #334155;
-    margin-bottom: 6px;
-}
-.saas-form-control {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    padding: 9px 12px;
-    transition: all 0.15s ease;
-}
-.saas-form-control:focus {
-    border-color: var(--saas-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
+    /* Modals (shadcn inspired) */
+    .modal-content.saas-modal {
+        border-radius: 16px;
+        border: 1px solid var(--saas-border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+    .modal-header.saas-modal-header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--saas-border);
+        padding: 20px 24px;
+    }
+    .modal-footer.saas-modal-footer {
+        background: #f8fafc;
+        border-top: 1px solid var(--saas-border);
+        padding: 16px 24px;
+    }
+    .saas-form-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+    .saas-form-control {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        padding: 9px 12px;
+        transition: all 0.15s ease;
+    }
+    .saas-form-control:focus {
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
 
-/* Alerts */
-.saas-alert {
-    border-radius: var(--saas-radius-md);
-    padding: 14px 18px;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    box-shadow: var(--saas-shadow-xs);
-}
-.saas-alert-success {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #166534;
-}
-.saas-alert-danger {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-}
+    /* Alerts */
+    .saas-alert {
+        border-radius: var(--saas-radius-md);
+        padding: 14px 18px;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        box-shadow: var(--saas-shadow-xs);
+    }
+    .saas-alert-success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+    .saas-alert-danger {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
 
-/* Pagination styling */
-.pagination .page-link {
-    color: var(--saas-text-secondary);
-    border: 1px solid var(--saas-border);
-    padding: 0.35rem 0.65rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    border-radius: 6px;
-    background: #ffffff;
-    transition: all 0.15s ease;
-}
-.pagination .page-link:hover {
-    color: var(--saas-accent);
-    background-color: #eff6ff;
-    border-color: #bfdbfe;
-}
-.pagination .page-item.active .page-link {
-    background-color: var(--saas-accent);
-    border-color: var(--saas-accent);
-    color: #ffffff;
-    font-weight: 600;
-}
-.pagination .page-item.disabled .page-link {
-    color: var(--saas-text-muted);
-    background-color: transparent;
-    border-color: var(--saas-border-subtle);
-    opacity: 0.6;
-}
+    /* Pagination styling */
+    .pagination .page-link {
+        color: var(--saas-text-secondary);
+        border: 1px solid var(--saas-border);
+        padding: 0.35rem 0.65rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border-radius: 6px;
+        background: #ffffff;
+        transition: all 0.15s ease;
+    }
+    .pagination .page-link:hover {
+        color: var(--saas-accent);
+        background-color: #eff6ff;
+        border-color: #bfdbfe;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: var(--saas-accent);
+        border-color: var(--saas-accent);
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: var(--saas-text-muted);
+        background-color: transparent;
+        border-color: var(--saas-border-subtle);
+        opacity: 0.6;
+    }
 </style>
 
 <main class="main-content py-4">
@@ -587,19 +593,19 @@ body {
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <c:choose>
                     <c:when test="${course.status == 'DRAFT'}">
+                        <!-- #m_duyet [TRẠM 1/4 - GIAO DIỆN]: Nút Gửi duyệt. Bấm xác nhận sẽ gửi POST /expert/request-publish?courseId=... -->
                         <button type="button"
-                           class="btn btn-saas-outline-emerald"
-                           <!-- #m_duyet [TRẠM 1/4 - GIAO DIỆN]: Nút Gửi duyệt. Bấm xác nhận sẽ gửi POST /expert/request-publish?courseId=... -->
-onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons')"
-                           title="Gửi duyệt khóa học">
+                                class="btn btn-saas-outline-emerald"
+                                onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/request-publish?courseId=${course.id}&from=lessons')"
+                                title="Gửi duyệt khóa học">
                             <i class="bi bi-send-check"></i>Gửi duyệt
                         </button>
                     </c:when>
                     <c:when test="${course.status == 'PENDING_REVIEW'}">
                         <button type="button"
-                           class="btn btn-warning text-dark fw-semibold"
-                           onclick="confirmCancelPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons')"
-                           title="Thu hồi yêu cầu xuất bản về Bản nháp">
+                                class="btn btn-warning text-dark fw-semibold"
+                                onclick="confirmCancelPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.request.contextPath}/expert/cancel-request-publish?courseId=${course.id}&from=lessons')"
+                                title="Thu hồi yêu cầu xuất bản về Bản nháp">
                             <i class="bi bi-arrow-counterclockwise me-1"></i>Thu hồi về Bản nháp để sửa
                         </button>
                     </c:when>
@@ -637,7 +643,7 @@ onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.re
             </c:when>
             <c:otherwise>
                                     <!-- #m_cay [TRẠM 4/4 - HIỂN THỊ JSP]: 2 vòng lặp lồng nhau: Vòng ngoài duyệt ${course.modules} in ra Chương, vòng trong duyệt ${m.lessons} in ra từng Bài học -->
-<c:forEach var="m" items="${course.modules}">
+                <c:forEach var="m" items="${course.modules}">
                     <div class="saas-module-card mb-3" id="moduleCard-${m.id}">
                         <!-- Module Header -->
                         <div class="saas-module-header">
@@ -692,9 +698,9 @@ onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.re
                                 <c:otherwise>
                                     <c:forEach var="l" items="${m.lessons}" varStatus="lStatus">
                                         <div class="saas-lesson-item ${!l.active ? 'opacity-75 bg-light-subtle' : ''}" id="lessonRow-${l.id}"
-                                                 data-lesson-id="${l.id}" data-module-id="${m.id}"
-                                                 draggable="${course.status != 'PENDING_REVIEW'}"
-                                                 style="transition: all 0.25s ease;">
+                                             data-lesson-id="${l.id}" data-module-id="${m.id}"
+                                             draggable="${course.status != 'PENDING_REVIEW'}"
+                                             style="transition: all 0.25s ease;">
                                             <div class="d-flex align-items-center gap-3 min-w-0">
                                                 <c:if test="${course.status != 'PENDING_REVIEW'}">
                                                     <div class="lesson-drag-handle me-1" style="cursor: grab;" title="Kéo thả để sắp xếp vị trí bài học">
@@ -915,7 +921,7 @@ onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.re
         });
     }
 
-        // ==========================================
+    // ==========================================
     // 3. KÉO THẢ SẮP XẾP BÀI HỌC (DRAG & DROP REORDERING)
     // ==========================================
     let draggedLesson = null;
@@ -955,7 +961,8 @@ onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.re
     }
 
     function handleDragOverItem(e) {
-        if (!draggedLesson || draggedLesson === this) return;
+        if (!draggedLesson || draggedLesson === this)
+            return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         this.classList.add('drag-over');
@@ -965,15 +972,17 @@ onclick="confirmPublishCourse('${fn:escapeXml(course.title)}', '${pageContext.re
         this.classList.remove('drag-over');
     }
 
-        // #m_keotha [TRẠM 1/4 - GIAO DIỆN JS]: Tính tọa độ chuột (rect.top + rect.height/2) chèn trên/dưới, rồi gọi AJAX gửi orderedLessonIds sang Servlet
-function handleDropOnItem(e) {
-        if (!draggedLesson || draggedLesson === this) return;
+    // #m_keotha [TRẠM 1/4 - GIAO DIỆN JS]: Tính tọa độ chuột (rect.top + rect.height/2) chèn trên/dưới, rồi gọi AJAX gửi orderedLessonIds sang Servlet
+    function handleDropOnItem(e) {
+        if (!draggedLesson || draggedLesson === this)
+            return;
         e.preventDefault();
         e.stopPropagation();
         this.classList.remove('drag-over');
 
         const targetList = this.closest('.module-lesson-list');
-        if (!targetList) return;
+        if (!targetList)
+            return;
 
         // Determine if drop is above or below middle of target
         const rect = this.getBoundingClientRect();
@@ -988,13 +997,15 @@ function handleDropOnItem(e) {
     }
 
     function handleDragOverList(e) {
-        if (!draggedLesson) return;
+        if (!draggedLesson)
+            return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
     }
 
     function handleDropOnList(e) {
-        if (!draggedLesson) return;
+        if (!draggedLesson)
+            return;
         e.preventDefault();
         const targetList = this;
         if (!targetList.contains(draggedLesson)) {
@@ -1005,7 +1016,8 @@ function handleDropOnItem(e) {
 
     function finalizeReorder(targetList) {
         const targetModuleId = targetList.dataset.moduleId;
-        if (!targetModuleId) return;
+        if (!targetModuleId)
+            return;
 
         // Re-number badges in target module
         updateModuleBadges(targetList);
@@ -1027,7 +1039,8 @@ function handleDropOnItem(e) {
             }
         });
 
-        if (lessonIds.length === 0) return;
+        if (lessonIds.length === 0)
+            return;
 
         // Send AJAX request to reorder endpoint
         const formData = new URLSearchParams();
@@ -1043,22 +1056,23 @@ function handleDropOnItem(e) {
             },
             body: formData.toString()
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showFloatingToast(data.message || 'Đã cập nhật vị trí bài học thành công!', 'success');
-            } else {
-                showFloatingToast(data.message || 'Lỗi cập nhật vị trí bài học.', 'danger');
-            }
-        })
-        .catch(err => {
-            console.error('Lỗi lưu thứ tự bài học:', err);
-            showFloatingToast('Không thể kết nối máy chủ để lưu thứ tự bài học.', 'danger');
-        });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showFloatingToast(data.message || 'Đã cập nhật vị trí bài học thành công!', 'success');
+                    } else {
+                        showFloatingToast(data.message || 'Lỗi cập nhật vị trí bài học.', 'danger');
+                    }
+                })
+                .catch(err => {
+                    console.error('Lỗi lưu thứ tự bài học:', err);
+                    showFloatingToast('Không thể kết nối máy chủ để lưu thứ tự bài học.', 'danger');
+                });
     }
 
     function updateModuleBadges(listContainer) {
-        if (!listContainer) return;
+        if (!listContainer)
+            return;
         const badges = listContainer.querySelectorAll('.lesson-order-badge');
         badges.forEach((b, idx) => {
             b.textContent = 'Bài ' + (idx + 1);
@@ -1066,9 +1080,11 @@ function handleDropOnItem(e) {
     }
 
     function updateModuleLessonCount(listContainer) {
-        if (!listContainer) return;
+        if (!listContainer)
+            return;
         const card = listContainer.closest('.saas-module-card');
-        if (!card) return;
+        if (!card)
+            return;
         const countBadge = card.querySelector('.saas-module-header .pill-neutral');
         const items = listContainer.querySelectorAll('.saas-lesson-item');
         if (countBadge) {
@@ -1076,7 +1092,7 @@ function handleDropOnItem(e) {
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         initLessonDragAndDrop();
     });
 
@@ -1095,7 +1111,7 @@ function handleDropOnItem(e) {
         const inner = document.getElementById('floatingToastInner');
         inner.className = 'toast align-items-center text-white border-0 shadow rounded-3 ' + (type === 'success' ? 'bg-success' : 'bg-danger');
         document.getElementById('floatingToastMsg').textContent = message;
-        const bsToast = new bootstrap.Toast(inner, { delay: 3500 });
+        const bsToast = new bootstrap.Toast(inner, {delay: 3000});
         bsToast.show();
     }
 

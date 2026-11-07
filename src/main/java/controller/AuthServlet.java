@@ -3,10 +3,12 @@ package controller;
 import dao.PasswordResetTokenDao;
 import dao.SettingDao;
 import dao.UserDao;
+import dao.VerificationTokenDao;
 import dto.GoogleAuthResult;
 import dto.LoginDto;
 import dto.RegisterDto;
 import dto.UserDto;
+import entity.enums.VerifyResult;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import service.AuthService;
+import service.EmailVerificationService;
 import service.InactiveAccountException;
 import service.PasswordResetService;
 import service.ValidationException;
@@ -24,32 +27,39 @@ import util.GoogleOAuthUtil;
 import util.SessionUtil;
 import util.WebUtil;
 
-@WebServlet(name = "AuthServlet", urlPatterns = { "/auth/*" })
+@WebServlet(name = "AuthServlet", urlPatterns = { "/auth/*", "/verify" })
 public class AuthServlet extends HttpServlet {
 
     private AuthService authService;
+    private EmailVerificationService emailVerificationService;
     private PasswordResetService passwordResetService;
 
     @Override
     public void init() throws ServletException {
         UserDao userDao = new UserDao();
         SettingDao settingDao = new SettingDao();
+        VerificationTokenDao verificationTokenDao = new VerificationTokenDao();
         this.authService = new AuthService(userDao, settingDao);
+        this.emailVerificationService = new EmailVerificationService(verificationTokenDao, userDao);
         this.passwordResetService = new PasswordResetService(userDao, new PasswordResetTokenDao());
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-        String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "login";
-        processAction(action, req, resp);
+        processAction(resolveAction(req), req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        processAction(resolveAction(req), req, resp);
+    }
+
+    private String resolveAction(HttpServletRequest req) {
+        if ("/verify".equalsIgnoreCase(req.getServletPath())) {
+            return "verify";
+        }
         String pathInfo = req.getPathInfo();
-        String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "login";
-        processAction(action, req, resp);
+        return pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "login";
     }
 
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
@@ -72,6 +82,12 @@ public class AuthServlet extends HttpServlet {
                 break;
             case "check-email":
                 showCheckEmail(req, resp);
+                break;
+            case "verify":
+                handleVerifyEmail(req, resp);
+                break;
+            case "resend-verification":
+                handleResendVerification(req, resp);
                 break;
             case "logout":
                 logout(req, resp);
@@ -579,6 +595,83 @@ public class AuthServlet extends HttpServlet {
             req.setAttribute("token", token != null ? token.trim() : "");
             req.setAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật mật khẩu: " + e.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+        }
+    }
+
+    private void handleVerifyEmail(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String token = req.getParameter("token");
+        VerifyResult result = emailVerificationService.verifyEmail(token);
+
+        HttpSession session = req.getSession(true);
+        String targetStatus;
+
+        switch (result) {
+            case SUCCESS:
+                session.setAttribute("flashToastType", "success");
+                session.setAttribute("flashToastMessage", "Xác thực tài khoản thành công! Hãy đăng nhập để bắt đầu học tập.");
+                targetStatus = "verified";
+                break;
+            case ALREADY_VERIFIED:
+                session.setAttribute("flashToastType", "info");
+                session.setAttribute("flashToastMessage", "Tài khoản đã được xác thực trước đó, hãy đăng nhập.");
+                targetStatus = "already";
+                break;
+            case INVALID_OR_EXPIRED:
+            default:
+                session.setAttribute("flashToastType", "error");
+                session.setAttribute("flashToastMessage", "Liên kết xác thực không hợp lệ hoặc đã hết hạn. Bạn có thể yêu cầu gửi lại email xác nhận.");
+                targetStatus = "invalid";
+                break;
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/auth/login?status=" + targetStatus);
+    }
+
+    private void handleResendVerification(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String email = req.getParameter("email");
+        if (email != null) {
+            email = email.trim();
+        }
+
+        if ("GET".equalsIgnoreCase(req.getMethod()) && (email == null || email.isEmpty())) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        boolean isAjax = WebUtil.isAjax(req);
+        String dynamicBaseUrl = WebUtil.getDynamicBaseUrl(req);
+
+        try {
+            emailVerificationService.resendVerification(email, dynamicBaseUrl);
+
+            if (isAjax) {
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().write("{\"success\":true,\"message\":\"Email xác thực mới đã được gửi đi.\"}");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/auth/check-email?email="
+                        + (email != null ? URLEncoder.encode(email, StandardCharsets.UTF_8) : "")
+                        + "&resent=true");
+            }
+        } catch (IllegalStateException rateLimitEx) {
+            if (isAjax) {
+                resp.setStatus(429);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().write("{\"success\":false,\"rateLimited\":true,\"message\":\"" + escapeJson(rateLimitEx.getMessage()) + "\"}");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/auth/check-email?email="
+                        + (email != null ? URLEncoder.encode(email, StandardCharsets.UTF_8) : "")
+                        + "&error=ratelimit");
+            }
+        } catch (Exception ex) {
+            if (isAjax) {
+                resp.setStatus(500);
+                resp.setContentType("application/json;charset=UTF-8");
+                resp.getWriter().write("{\"success\":false,\"message\":\"Có lỗi xảy ra khi gửi lại email. Vui lòng thử lại sau.\"}");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/auth/check-email?email="
+                        + (email != null ? URLEncoder.encode(email, StandardCharsets.UTF_8) : "")
+                        + "&error=system");
+            }
         }
     }
 }

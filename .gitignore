@@ -45,3 +45,6 @@ Thumbs.db
 # Test documents (managed on Google Drive)
 *.xlsm
 *.xlsx
+
+# Local scratch scripts
+scratch/

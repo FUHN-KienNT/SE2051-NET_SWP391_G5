@@ -134,7 +134,7 @@ public class CourseServlet extends HttpServlet {
             throws ServletException, IOException {
         String idStr = req.getParameter("id");
         if (idStr == null || idStr.trim().isEmpty()) {
-            SessionUtil.setFlashError(req, "Thiếu mã khóa học.");
+            SessionUtil.setFlashError(req, "Mã khóa học không hợp lệ.");
             resp.sendRedirect(req.getContextPath() + "/courses/catalog");
             return;
         }
@@ -192,7 +192,7 @@ public class CourseServlet extends HttpServlet {
             req.setAttribute("userRegistrationId", userRegId);
         }
         req.setAttribute("course", course);
-        req.getRequestDispatcher("/WEB-INF/views/course/detail.jsp").forward(req, resp);
+        req.setAttribute("categories", courseService.getCategories());        req.getRequestDispatcher("/WEB-INF/views/course/detail.jsp").forward(req, resp);
     }
 
     private void showLearningContent(HttpServletRequest req, HttpServletResponse resp)
@@ -203,20 +203,32 @@ public class CourseServlet extends HttpServlet {
             return;
         }
         String regIdStr = req.getParameter("registrationId");
-        if (regIdStr != null) {
-            long regId = Long.parseLong(regIdStr);
-            CourseDto course;
-            try {
-                course = courseService.getLearningContent(regId, currentUser.getId());
-            } catch (SecurityException e) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
-                return;
-            } catch (IllegalStateException e) {
-                SessionUtil.setFlashError(req, e.getMessage());
-                resp.sendRedirect(req.getContextPath() + "/registrations/my");
-                return;
-            }
+        if (regIdStr == null || regIdStr.trim().isEmpty()) {
+            SessionUtil.setFlashError(req, "Mã đăng ký không hợp lệ.");
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            return;
+        }
+        long regId;
+        try {
+            regId = Long.parseLong(regIdStr.trim());
+        } catch (NumberFormatException e) {
+            SessionUtil.setFlashError(req, "Mã đăng ký không hợp lệ.");
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            return;
+        }
+        CourseDto course;
+        try {
+            course = courseService.getLearningContent(regId, currentUser.getId());
+        } catch (SecurityException e) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+            return;
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, "Không thể tải nội dung học: " + e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            return;
+        }
             req.setAttribute("course", course);
+            req.setAttribute("categories", courseService.getCategories());
             req.setAttribute("registrationId", regId);
 
             String sessionKey = "active_learning_lesson_" + regId;
@@ -282,7 +294,6 @@ public class CourseServlet extends HttpServlet {
                 courseService.touchLessonProgress(regId, currentUser.getId(), finalLessonId);
                 req.setAttribute("currentLessonId", String.valueOf(finalLessonId));
             }
-        }
         req.getRequestDispatcher("/WEB-INF/views/course/learn.jsp").forward(req, resp);
     }
 

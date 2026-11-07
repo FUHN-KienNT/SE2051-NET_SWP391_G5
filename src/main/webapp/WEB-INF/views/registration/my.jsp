@@ -432,7 +432,7 @@
                              data-title="${r.courseTitle}"
                              data-expert="${r.expertName}"
                              data-category="${r.categoryName}"
-                             data-status="${r.courseStatus == 'DRAFT' ? 'LOCKED' : ((r.status == 'COMPLETED' or (r.totalLessons > 0 and r.completedLessons >= r.totalLessons)) ? 'COMPLETED' : (r.status == 'PENDING' ? 'PENDING' : 'IN_PROGRESS'))}"
+                             data-status="${(r.status == 'COMPLETED' or (r.totalLessons > 0 and r.completedLessons >= r.totalLessons)) ? 'COMPLETED' : (r.status == 'PENDING' ? 'PENDING' : 'IN_PROGRESS')}"
                              data-progress="${r.progressPercentage}">
                             
                             <div class="course-grid-card">
@@ -447,11 +447,6 @@
 
                                     <!-- Status Pill -->
                                     <c:choose>
-                                        <c:when test="${r.courseStatus == 'DRAFT'}">
-                                            <span class="card-status-badge bg-secondary text-white">
-                                                <i class="bi bi-lock-fill me-1"></i>Tạm khóa cập nhật
-                                            </span>
-                                        </c:when>
                                         <c:when test="${r.status == 'COMPLETED' or (r.totalLessons > 0 and r.completedLessons >= r.totalLessons)}">
                                             <span class="card-status-badge bg-success text-white">
                                                 <i class="bi bi-check-circle-fill me-1"></i>Đã hoàn thành
@@ -486,21 +481,13 @@
                                         <span class="text-truncate">${not empty r.expertName ? r.expertName : 'Giảng viên Courson'}</span>
                                     </div>
 
-                                    <!-- Archive / Draft Notice if applicable -->
-                                    <c:choose>
-                                        <c:when test="${r.courseStatus == 'DRAFT'}">
-                                            <div class="alert alert-secondary py-1 px-2 small mb-3 d-flex align-items-center gap-1 rounded-2">
-                                                <i class="bi bi-lock-fill text-secondary me-1"></i>
-                                                <span style="font-size: 0.76rem;">Khóa học đang tạm thời bảo trì nội dung, tạm khóa mở bài</span>
-                                            </div>
-                                        </c:when>
-                                        <c:when test="${r.archived}">
-                                            <div class="alert alert-warning py-1 px-2 small mb-3 d-flex align-items-center gap-1 rounded-2">
-                                                <i class="bi bi-archive-fill text-warning me-1"></i>
-                                                <span style="font-size: 0.76rem;">Khóa học đã lưu trữ (vẫn học bình thường)</span>
-                                            </div>
-                                        </c:when>
-                                    </c:choose>
+                                    <!-- Archive Notice if applicable -->
+                                    <c:if test="${r.archived}">
+                                        <div class="alert alert-warning py-1 px-2 small mb-3 d-flex align-items-center gap-1 rounded-2">
+                                            <i class="bi bi-archive-fill text-warning me-1"></i>
+                                            <span style="font-size: 0.76rem;">Khóa học đã lưu trữ (vẫn học bình thường)</span>
+                                        </div>
+                                    </c:if>
 
                                     <!-- 4. TIẾN ĐỘ HOÀN THÀNH KHÓA HỌC (Feature 4 - Progress Bar & Lesson Counter) -->
                                     <div class="my-auto py-2">
@@ -521,12 +508,6 @@
                                     <!-- Action Button Footer -->
                                     <div class="mt-3 pt-3 border-top">
                                         <c:choose>
-                                            <c:when test="${r.courseStatus == 'DRAFT'}">
-                                                <button type="button" class="btn btn-secondary w-100 fw-semibold rounded-pill py-2 d-flex align-items-center justify-content-center" disabled title="Khóa học đang được cập nhật nội dung">
-                                                    <i class="bi bi-lock-fill me-2 fs-5 lh-1"></i>
-                                                    <span>Tạm khóa cập nhật</span>
-                                                </button>
-                                            </c:when>
                                             <c:when test="${r.status == 'ACTIVE' || r.status == 'COMPLETED'}">
                                                 <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${r.id}${not empty r.lastLessonId ? '&lessonId=' : ''}${r.lastLessonId}" 
                                                    class="btn btn-primary w-100 fw-semibold rounded-pill py-2 d-flex align-items-center justify-content-center">
@@ -539,6 +520,9 @@
                                                         </c:choose>
                                                     </span>
                                                 </a>
+                                                <a href="${pageContext.request.contextPath}/registrations/detail?id=${r.id}" class="btn btn-link text-decoration-none text-muted w-100 py-1 text-center small mt-1" style="font-size: 0.8rem;">
+                                                    <i class="bi bi-list-check me-1 text-primary"></i>Chi tiết tiến độ khóa học &rarr;
+                                                </a>
 
                                                 <!-- Recent studied lesson hint -->
                                                 <c:if test="${not empty r.lastLessonTitle}">
@@ -548,8 +532,16 @@
                                                 </c:if>
                                             </c:when>
                                             <c:otherwise>
-                                                <div class="alert alert-warning py-2 px-3 small mb-0 text-center rounded-pill fw-medium">
-                                                    <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận (${r.paymentCode})
+                                                <a href="${pageContext.request.contextPath}/registrations/payment?courseId=${r.courseId}" 
+                                                   class="btn btn-warning w-100 fw-bold rounded-pill py-2 d-flex align-items-center justify-content-center text-dark shadow-sm">
+                                                    <i class="bi bi-credit-card-2-front-fill me-2 fs-5 lh-1"></i>
+                                                    <span>Thanh toán ngay</span>
+                                                </a>
+                                                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+                                                    <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.72rem;">${r.paymentCode}</span>
+                                                    <a href="${pageContext.request.contextPath}/registrations/detail?id=${r.id}" class="text-decoration-none text-muted small" style="font-size: 0.8rem;">
+                                                        <i class="bi bi-info-circle me-1"></i>Chi tiết đơn &rarr;
+                                                    </a>
                                                 </div>
                                             </c:otherwise>
                                         </c:choose>

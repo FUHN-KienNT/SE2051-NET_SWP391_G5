@@ -126,7 +126,10 @@ public class AdminCourseServlet extends HttpServlet {
                 courseService.updateCourseStatus(courseId, newStatus, moderationNote);
             } catch (Exception ignored) {}
         }
-        if ("true".equalsIgnoreCase(fromDashboard)) {
+        String fromDetail = req.getParameter("fromDetail");
+        if ("true".equalsIgnoreCase(fromDetail)) {
+            resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + idStr);
+        } else if ("true".equalsIgnoreCase(fromDashboard)) {
             resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/dashboard?success=status_updated");
         } else {
             resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?success=status_updated");
@@ -236,9 +239,14 @@ public class AdminCourseServlet extends HttpServlet {
     private void showCourseDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
-            long courseId = Long.parseLong(idStr.trim());
-            CourseDto course = courseService.getCourseDetail(courseId);
-            req.setAttribute("course", course);
+            try {
+                long courseId = Long.parseLong(idStr.trim());
+                CourseDto course = courseService.getCourseDetail(courseId);
+                req.setAttribute("course", course);
+            } catch (Exception e) {
+                resp.sendRedirect(req.getContextPath() + "/admin/courses?error=invalid_course");
+                return;
+            }
         }
         List<UserDto> experts = courseService.getExperts();
         List<SettingDto> categories = settingService.getByType(SettingType.COURSE_CATEGORY);

@@ -1,0 +1,285 @@
+{
+  "results": [
+    {
+      "user": "guest",
+      "route": "/home",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/home",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "Học Ứng Dụng - Thầy Viên Minh\nCao tử Đông\n3 modules • 17 bài học\nMiễn phí\nXem khóa học\nHỌC THEO CÁCH CỦA BẠN\nTối ưu từng bước học tập\n\nTừ bài học đầu tiên đến thực hành tự tin với hệ thống học tập toàn diện.\n\nHọc theo tiến độ riêng\n\nChủ động học mọi bài giảng video chất lượng cao bất kỳ khi nào phù hợp với lịch trình bận rộn của bạn.\n\nLuyện tập thực chiến\n\nHệ thống kiểm tra trắc nghiệm Quiz trực tiếp sau mỗi module giúp đánh giá và củng cố kiến thức vững chắc.\n\nTheo dõi tiến trình\n\nDễ dàng kiểm soát tỉ lệ hoàn thành từng chương học và sẵn sàng tự tin bước vào môi trường doanh nghiệp.\n\nSẵn sàng bắt đầu chưa?\n\nTìm khóa học ưng ý và nâng tầm kỹ năng lập trình của bạn ngay hôm nay.\n\nKhám phá khóa học\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "guest",
+      "route": "/courses/catalog",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/courses/catalog",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": " tạo Nhân tướng học Tử Vi & Phong Thủy Chiêm tinh học\n 37 bài học\nTử Vi & Phong Thủy 299000.00 VNĐ\n[TVK6] Nhập Môn Tử Vi Đẩu Số & Học Thuyết Ngũ Hành\n\nKhóa học [TVK6] cung cấp kiến thức nền tảng vững chắc về lá số Tử Vi, cơ cấu 12 cung bản mệnh, quy luật can chi, âm dương ngũ hành và phương pháp giải đoán lá số logic, khoa học.\n\nCao tử Đông Xem khóa học\n 17 bài học\nNhân tướng học Miễn phí\nNhân Tướng Học Ứng Dụng - Thầy Viên Minh\n\nKhóa học chuyên sâu về Nhân Tướng Học do Thầy Viên Minh giảng dạy. Hướng dẫn toàn diện phương pháp quan sát diện mạo, ngũ quan, thần thái, cốt cách, tam đình lục phủ để thấu hiểu bản thân và đối nhân xử thế hiệu quả trong công việc và cuộc sống.\n\nCao tử Đông Xem khóa học\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "guest",
+      "route": "/courses/detail?id=1",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/courses/detail?id=1",
+      "title": "Nhân Tướng Học Ứng Dụng - Thầy Viên Minh - Public Course Detail",
+      "excerpt": "hầy Viên Minh Giải Mã Ngũ Quan & Diện Mạo • Video bài giảng\nKhóa\n#16\nBài 16: Buổi 2 Nhân tướng học thầy Viên Minh Giải Mã Ngũ Quan & Diện Mạo • Video bài giảng\nKhóa\nKiểm tra trắc nghiệm: Giải Mã Ngũ Quan & Diện Mạo Chương: Giải Mã Ngũ Quan & Diện Mạo • Điểm đạt: 80.00% • Thời gian: 15 phút\nBài kiểm tra\n#17\nBài 17: Buổi 1 Nhân tướng học thầy Viên Minh Khí Sắc, Tâm Tướng & Ứng Dụng Đời Sống • Video bài giảng\nKhóa\nKiểm tra trắc nghiệm: Khí Sắc, Tâm Tướng & Ứng Dụng Đời Sống Chương: Khí Sắc, Tâm Tướng & Ứng Dụng Đời Sống • Điểm đạt: 80.00% • Thời gian: 15 phút\nBài kiểm tra\nMiễn phí\nĐăng ký học ngay\nTruy cập trọn đời tất cả tài liệu\nHọc theo tiến độ cá nhân linh hoạt\nCấp chứng nhận hoàn thành khóa học\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "guest",
+      "route": "/courses/detail?id=abc",
+      "status": 500,
+      "url": "http://localhost:18080/Courson/courses/detail?id=abc",
+      "title": "HTTP Status 500 – Internal Server Error",
+      "excerpt": "ception: For input string: \"abc\"\n\tjava.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)\n\tjava.base/java.lang.Long.parseLong(Long.java:711)\n\tjava.base/java.lang.Long.parseLong(Long.java:836)\n\tcontroller.CourseServlet.showCourseDetail(CourseServlet.java:112)\n\tcontroller.CourseServlet.processAction(CourseServlet.java:72)\n\tcontroller.CourseServlet.doGet(CourseServlet.java:46)\n\tjakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tjakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\torg.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tfilter.AuthorizationFilter.doFilter(AuthorizationFilter.java:53)\n\tfilter.AuthenticationFilter.doFilter(AuthenticationFilter.java:54)\n\tfilter.EncodingFilter.doFilter(EncodingFilter.java:29)\n\n\nNote The full stack trace of the root cause is available in the server logs.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "guest",
+      "route": "/courses/detail?id=999999",
+      "status": 500,
+      "url": "http://localhost:18080/Courson/courses/detail?id=999999",
+      "title": "HTTP Status 500 – Internal Server Error",
+      "excerpt": "ìm thấy khóa học ID: 999999\n\tservice.CourseService.lambda$getCourseDetail$1(CourseService.java:159)\n\tjava.base/java.util.Optional.orElseThrow(Optional.java:403)\n\tservice.CourseService.getCourseDetail(CourseService.java:159)\n\tcontroller.CourseServlet.showCourseDetail(CourseServlet.java:113)\n\tcontroller.CourseServlet.processAction(CourseServlet.java:72)\n\tcontroller.CourseServlet.doGet(CourseServlet.java:46)\n\tjakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tjakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\torg.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tfilter.AuthorizationFilter.doFilter(AuthorizationFilter.java:53)\n\tfilter.AuthenticationFilter.doFilter(AuthenticationFilter.java:54)\n\tfilter.EncodingFilter.doFilter(EncodingFilter.java:29)\n\n\nNote The full stack trace of the root cause is available in the server logs.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "guest",
+      "route": "/profile",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/auth/login",
+      "title": "Đăng nhập - Courson LMS",
+      "excerpt": "Học tập không giới hạn.\nKiến tạo tương lai.\n\nHệ thống quản lý học tập thông minh, đồng hành cùng bạn trên mọi nấc thang tri thức và phát triển sự nghiệp.\n\nChương trình chuẩn đại học & quốc tế\n\nGiáo trình chất lượng cao được biên soạn bởi các chuyên gia.\n\nLộ trình học tập cá nhân hóa\n\nTheo dõi tiến độ, làm bài kiểm tra và cấp chứng chỉ trực tiếp.\n\nCộng đồng học thuật gắn kết\n\nTrao đổi, thảo luận và kết nối trực tiếp cùng giảng viên.\n\n50+\nKhóa học chuyên sâu\n1.2K+\nHọc viên tin tưởng\n4.9★\nĐánh giá xuất sắc\nĐăng nhập vào Courson\n\nChào mừng bạn quay trở lại.\n\nTên đăng nhập hoặc Email\nMật khẩu\nGhi nhớ tài khoản\nQuên mật khẩu?\nĐăng nhập\nhoặc\nĐăng nhập bằng Google\nChưa có tài khoản? Đăng ký\n© 2026 Courson LMS. Hệ thống quản lý học tập đại học và tổ chức đào tạo chuyên nghiệp."
+    },
+    {
+      "user": "guest",
+      "route": "/registrations/my",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/auth/login",
+      "title": "Đăng nhập - Courson LMS",
+      "excerpt": "Học tập không giới hạn.\nKiến tạo tương lai.\n\nHệ thống quản lý học tập thông minh, đồng hành cùng bạn trên mọi nấc thang tri thức và phát triển sự nghiệp.\n\nChương trình chuẩn đại học & quốc tế\n\nGiáo trình chất lượng cao được biên soạn bởi các chuyên gia.\n\nLộ trình học tập cá nhân hóa\n\nTheo dõi tiến độ, làm bài kiểm tra và cấp chứng chỉ trực tiếp.\n\nCộng đồng học thuật gắn kết\n\nTrao đổi, thảo luận và kết nối trực tiếp cùng giảng viên.\n\n50+\nKhóa học chuyên sâu\n1.2K+\nHọc viên tin tưởng\n4.9★\nĐánh giá xuất sắc\nĐăng nhập vào Courson\n\nChào mừng bạn quay trở lại.\n\nTên đăng nhập hoặc Email\nMật khẩu\nGhi nhớ tài khoản\nQuên mật khẩu?\nĐăng nhập\nhoặc\nĐăng nhập bằng Google\nChưa có tài khoản? Đăng ký\n© 2026 Courson LMS. Hệ thống quản lý học tập đại học và tổ chức đào tạo chuyên nghiệp."
+    },
+    {
+      "user": "student1",
+      "login": "http://localhost:18080/Courson/home"
+    },
+    {
+      "user": "student1",
+      "route": "/home",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/home",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "Học Ứng Dụng - Thầy Viên Minh\nCao tử Đông\n3 modules • 17 bài học\nMiễn phí\nXem khóa học\nHỌC THEO CÁCH CỦA BẠN\nTối ưu từng bước học tập\n\nTừ bài học đầu tiên đến thực hành tự tin với hệ thống học tập toàn diện.\n\nHọc theo tiến độ riêng\n\nChủ động học mọi bài giảng video chất lượng cao bất kỳ khi nào phù hợp với lịch trình bận rộn của bạn.\n\nLuyện tập thực chiến\n\nHệ thống kiểm tra trắc nghiệm Quiz trực tiếp sau mỗi module giúp đánh giá và củng cố kiến thức vững chắc.\n\nTheo dõi tiến trình\n\nDễ dàng kiểm soát tỉ lệ hoàn thành từng chương học và sẵn sàng tự tin bước vào môi trường doanh nghiệp.\n\nSẵn sàng bắt đầu chưa?\n\nTìm khóa học ưng ý và nâng tầm kỹ năng lập trình của bạn ngay hôm nay.\n\nKhám phá khóa học\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "student1",
+      "route": "/courses/catalog",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/courses/catalog",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": " tạo Nhân tướng học Tử Vi & Phong Thủy Chiêm tinh học\n 37 bài học\nTử Vi & Phong Thủy 299000.00 VNĐ\n[TVK6] Nhập Môn Tử Vi Đẩu Số & Học Thuyết Ngũ Hành\n\nKhóa học [TVK6] cung cấp kiến thức nền tảng vững chắc về lá số Tử Vi, cơ cấu 12 cung bản mệnh, quy luật can chi, âm dương ngũ hành và phương pháp giải đoán lá số logic, khoa học.\n\nCao tử Đông Xem khóa học\n 17 bài học\nNhân tướng học Miễn phí\nNhân Tướng Học Ứng Dụng - Thầy Viên Minh\n\nKhóa học chuyên sâu về Nhân Tướng Học do Thầy Viên Minh giảng dạy. Hướng dẫn toàn diện phương pháp quan sát diện mạo, ngũ quan, thần thái, cốt cách, tam đình lục phủ để thấu hiểu bản thân và đối nhân xử thế hiệu quả trong công việc và cuộc sống.\n\nCao tử Đông Xem khóa học\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "student1",
+      "route": "/registrations/my",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/registrations/my",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": " bài 0.00%\nTiếp tục học ngay\nHọc gần nhất: 06/11/2026 12:27\nTất cả 2 Đang học 1 Đã hoàn thành 0\n \nTất cả danh mục\nChiêm tinh học\nNhân tướng học\nMới nhất\nTiến độ cao\nTiến độ thấp\nTên A-Z\nChiêm tinh học\nTạm khóa cập nhật\nBí Mật Tính Cách 12 Cung Hoàng Đạo\nCao tử Đông\nKhóa học đang tạm thời bảo trì nội dung, tạm khóa mở bài\nTiến độ 0 / 62 bài (0.00%)\nTạm khóa cập nhật\nNhân tướng học\nĐang học\nNhân Tướng Học Ứng Dụng - Thầy Viên Minh\nCao tử Đông\nTiến độ 0 / 17 bài (0.00%)\nVào học ngay Chi tiết tiến độ khóa học →\nBài gần nhất: Buổi 10.2 Nhân tướng học thầy Viên Minh\nKhông tìm thấy khóa học nào phù hợp\n\nVui lòng thử tìm kiếm với từ khóa khác hoặc điều chỉnh lại bộ lọc trạng thái và danh mục.\n\nXóa bộ lọc\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "student1",
+      "route": "/profile",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/profile",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "COURSON. LMS\n \nTrang chủ\nKhóa học\nKhóa học của tôi\nCtrl K\nH\nCOURSON. LMS\n \nTrang chủ Khóa học\nKhu vực chức năng\nKhóa học của tôi\nH\nHọc viên Nguyễn Văn A\nSTUDENT\nHồ sơ cá nhân Đăng xuất\nTrang chủ\nHồ sơ cá nhân\nHồ sơ cá nhân\n\nQuản lý và cập nhật thông tin tài khoản cá nhân của bạn trên Courson LMS\n\nĐổi mật khẩu\nH\nDung lượng tối đa: 15MB. Định dạng hỗ trợ: JPG, PNG hoặc WEBP.\nTải ảnh lên\nXóa ảnh\nHọ và tên\nTên người dùng\nEmail\n Email định danh tài khoản cố định, không được phép thay đổi.\nSố điện thoại\nNgày sinh\nVai trò\nHỌC VIÊN\nTiểu sử\n0 / 250 từ\nGiới hạn tối đa 250 từ.\nLưu thay đổi\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "student1",
+      "route": "/users",
+      "status": 403,
+      "url": "http://localhost:18080/Courson/users",
+      "title": "HTTP Status 403 – Forbidden",
+      "excerpt": "HTTP Status 403 – Forbidden\n\nType Status Report\n\nMessage Access Denied: You do not have permission to access this resource.\n\nDescription The server understood the request but refuses to authorize it.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "student1",
+      "route": "/admin/courses",
+      "status": 403,
+      "url": "http://localhost:18080/Courson/admin/courses",
+      "title": "HTTP Status 403 – Forbidden",
+      "excerpt": "HTTP Status 403 – Forbidden\n\nType Status Report\n\nMessage Access Denied: You do not have permission to access this resource.\n\nDescription The server understood the request but refuses to authorize it.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "student1",
+      "route": "/expert/dashboard",
+      "status": 403,
+      "url": "http://localhost:18080/Courson/expert/dashboard",
+      "title": "HTTP Status 403 – Forbidden",
+      "excerpt": "HTTP Status 403 – Forbidden\n\nType Status Report\n\nMessage Access Denied: You do not have permission to access this resource.\n\nDescription The server understood the request but refuses to authorize it.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "student1",
+      "route": "/quizzes/list?courseId=1",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/quizzes/list?courseId=1",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": " Tâm Tướng & Ứng Dụng Đời Sống\nTên bài kiểm tra * \nĐiểm đạt tối thiểu (%) *\n %\nThời lượng (Phút)\n phút\nThứ tự hiển thị * \nSố thứ tự phải không trùng với bài Quiz khác trong cùng chương.\nHủy \nLưu bài thi\nXác nhận xóa bài thi?\n\nThao tác này sẽ xóa bài kiểm tra khỏi khóa học. Các câu hỏi trong ngân hàng vẫn được giữ nguyên.\n\nHủy Xóa bài thi\nTạo câu hỏi mới vào Ngân hàng\nThuộc chương học * \nChương 1: Căn Bản Nhân Tướng & Tam Đình Ngũ Nhạc\nChương 2: Giải Mã Ngũ Quan & Diện Mạo\nChương 3: Khí Sắc, Tâm Tướng & Ứng Dụng Đời Sống\nNội dung câu hỏi * \nLoại câu hỏi \nTrắc nghiệm 1 đáp án\nĐúng / Sai\nĐiểm mặc định *\n điểm\nCác phương án trả lời (Tích chọn radio vào đáp án đúng):\nA \nB \nC \nD \nHủy \nLưu vào ngân hàng\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "student1",
+      "route": "/quizzes/detail?id=1",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/quizzes/detail?id=1",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "hỏi *\n điểm\nĐiểm số phải lớn hơn 0 (ví dụ: 1.0, 2.0).\nCác phương án trả lời (Tích chọn radio vào đáp án đúng):\nA \nB \nC \nD \nHủy \nTạo câu hỏi và gán vào bài thi\nXác nhận xóa bài thi?\n\nThao tác này sẽ xóa bài thi \"Kiểm tra trắc nghiệm: Căn Bản Nhân Tướng & Tam Đình Ngũ Nhạc\". Các câu hỏi trong ngân hàng vẫn được giữ nguyên an toàn.\n\nHủy Xóa bài thi\nChỉnh sửa câu hỏi\nThay đổi sẽ cập nhật câu hỏi trong ngân hàng và đồng bộ với bài thi này.\nNội dung câu hỏi * \nLoại câu hỏi \nTrắc nghiệm 1 đáp án (Single Choice)\nĐúng / Sai (True / False)\nĐiểm mặc định *\n điểm\nĐiểm cưỡng bức sẽ được giữ nguyên trong bài thi này.\nCác phương án trả lời (Tích chọn radio vào đáp án đúng):\nA \nB \nC \nD \nHủy \nLưu thay đổi câu hỏi\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "student1",
+      "route": "/registrations/list?courseId=1",
+      "status": 403,
+      "url": "http://localhost:18080/Courson/registrations/list?courseId=1",
+      "title": "HTTP Status 403 – Forbidden",
+      "excerpt": "HTTP Status 403 – Forbidden\n\nType Status Report\n\nMessage Bạn không có quyền xem danh sách đăng ký của khóa học này.\n\nDescription The server understood the request but refuses to authorize it.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "student1",
+      "route": "/courses/detail?id=abc",
+      "status": 500,
+      "url": "http://localhost:18080/Courson/courses/detail?id=abc",
+      "title": "HTTP Status 500 – Internal Server Error",
+      "excerpt": "ception: For input string: \"abc\"\n\tjava.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)\n\tjava.base/java.lang.Long.parseLong(Long.java:711)\n\tjava.base/java.lang.Long.parseLong(Long.java:836)\n\tcontroller.CourseServlet.showCourseDetail(CourseServlet.java:112)\n\tcontroller.CourseServlet.processAction(CourseServlet.java:72)\n\tcontroller.CourseServlet.doGet(CourseServlet.java:46)\n\tjakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tjakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\torg.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tfilter.AuthorizationFilter.doFilter(AuthorizationFilter.java:53)\n\tfilter.AuthenticationFilter.doFilter(AuthenticationFilter.java:54)\n\tfilter.EncodingFilter.doFilter(EncodingFilter.java:29)\n\n\nNote The full stack trace of the root cause is available in the server logs.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "student1",
+      "route": "/registrations/checkout?courseId=999999",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/registrations/checkout?courseId=999999",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "COURSON. LMS\n \nTrang chủ\nKhóa học\nKhóa học của tôi\nCtrl K\nH\nCOURSON. LMS\n \nTrang chủ Khóa học\nKhu vực chức năng\nKhóa học của tôi\nH\nHọc viên Nguyễn Văn A\nSTUDENT\nHồ sơ cá nhân Đăng xuất\nXác nhận đăng ký khóa học (Course Checkout)\n\nKiểm tra thông tin chi tiết đơn hàng trước khi tiến hành thanh toán (Màn hình II.3.1)\n\nThông tin khóa học đã chọn\n\nVNĐ\nNgười mua: Học viên Nguyễn Văn A\nEmail: student@courson.edu.vn\nThời hạn truy cập: Trọn đời\nChứng nhận: Có (Sau khi hoàn thành)\nChi tiết học phí\nGiá niêm yết 0 VNĐ\nGiảm giá / Ưu đãi - 0 VNĐ\nTổng thanh toán: Miễn phí\nQuay lại Tiếp tục thanh toán (Payment)\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "expert1",
+      "login": "http://localhost:18080/Courson/expert/dashboard"
+    },
+    {
+      "user": "expert1",
+      "route": "/expert/dashboard",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/expert/dashboard",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "tin\nXem trước khóa học\nXóa vĩnh viễn (Nháp)\n\n4\t\n[TVK6] Nhập Môn Tử Vi Đẩu Số & Học Thuyết Ngũ Hành\n#2\n•\n37 bài học\n\t\nTử Vi & Phong Thủy\n299000.00 VNĐ\n\t\n37 bài học\n4 chương • 4 quiz\n\t\nĐã công khai\t\nSoạn bài\nLưu trữ / Ẩn khóa học\nQuản lý Quiz (4)\nChỉnh sửa thông tin\nXem trước khóa học\nChỉ Admin có quyền xóa hoàn toàn\n\n5\t\nNhân Tướng Học Ứng Dụng - Thầy Viên Minh\n#1\n•\n17 bài học\n\t\nNhân tướng học\nMiễn phí\n\t\n17 bài học\n3 chương • 3 quiz\n\t\nĐã công khai\t\nSoạn bài\nLưu trữ / Ẩn khóa học\nQuản lý Quiz (3)\nChỉnh sửa thông tin\nXem trước khóa học\nChỉ Admin có quyền xóa hoàn toàn\nChỉnh sửa Khóa học\n\nCập nhật thông tin tiêu đề, danh mục và học phí\n\nĐang tải thông tin khóa học...\nXóa khóa học này\nHủy \nLưu thay đổi\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "expert1",
+      "route": "/expert/lessons?courseId=1",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/expert/lessons?courseId=1",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "ên Minh\n \n \nBài 2 \nVideo Hiển thị\nBuổi 6 Nhân tướng học thầy Viên Minh\n \n \nBài 3 \nVideo Hiển thị\nBuổi 5 Nhân tướng học thầy Viên Minh\n \n \nBài 4 \nVideo Hiển thị\nBuổi 4.2 Nhân tướng học thầy Viên Minh\n \n \nBài 5 \nVideo Hiển thị\nBuổi 4.1 Nhân tướng học thầy Viên Minh\n \n \nBài 6 \nVideo Hiển thị\nBuổi 4.3 Nhân tướng học thầy Viên Minh\n \n \nBài 7 \nVideo Hiển thị\nBuổi 3 Nhân tướng học thầy Viên Minh\n \n \nBài 8 \nVideo Hiển thị\nBuổi 2 Nhân tướng học thầy Viên Minh\n \n \nChương 3: Khí Sắc, Tâm Tướng & Ứng Dụng Đời Sống\n1 bài học\nThêm bài học \n \nBài 1 \nVideo Hiển thị\nBuổi 1 Nhân tướng học thầy Viên Minh\n \n \nThêm Chương học mới\nTên chương học * \nHủy Tạo chương\nChỉnh sửa Chương học\nTên chương học * \nHủy Lưu thay đổi\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "expert1",
+      "route": "/quizzes/list?courseId=1",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/quizzes/list?courseId=1",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": " Tâm Tướng & Ứng Dụng Đời Sống\nTên bài kiểm tra * \nĐiểm đạt tối thiểu (%) *\n %\nThời lượng (Phút)\n phút\nThứ tự hiển thị * \nSố thứ tự phải không trùng với bài Quiz khác trong cùng chương.\nHủy \nLưu bài thi\nXác nhận xóa bài thi?\n\nThao tác này sẽ xóa bài kiểm tra khỏi khóa học. Các câu hỏi trong ngân hàng vẫn được giữ nguyên.\n\nHủy Xóa bài thi\nTạo câu hỏi mới vào Ngân hàng\nThuộc chương học * \nChương 1: Căn Bản Nhân Tướng & Tam Đình Ngũ Nhạc\nChương 2: Giải Mã Ngũ Quan & Diện Mạo\nChương 3: Khí Sắc, Tâm Tướng & Ứng Dụng Đời Sống\nNội dung câu hỏi * \nLoại câu hỏi \nTrắc nghiệm 1 đáp án\nĐúng / Sai\nĐiểm mặc định *\n điểm\nCác phương án trả lời (Tích chọn radio vào đáp án đúng):\nA \nB \nC \nD \nHủy \nLưu vào ngân hàng\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "expert1",
+      "route": "/profile",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/profile",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "COURSON. LMS\n \nTrang chủ\nKhóa học\nExpert Studio\nCtrl K\nC\nCOURSON. LMS\n \nTrang chủ Khóa học\nKhu vực chức năng\nExpert Studio\nC\nCao tử Đông\nEXPERT\nHồ sơ cá nhân Đăng xuất\nTrang chủ\nHồ sơ cá nhân\nHồ sơ cá nhân\n\nQuản lý và cập nhật thông tin tài khoản cá nhân của bạn trên Courson LMS\n\nĐổi mật khẩu\nC\nDung lượng tối đa: 15MB. Định dạng hỗ trợ: JPG, PNG hoặc WEBP.\nTải ảnh lên\nXóa ảnh\nHọ và tên\nTên người dùng\nEmail\n Email định danh tài khoản cố định, không được phép thay đổi.\nSố điện thoại\nNgày sinh\nVai trò\nCHUYÊN GIA\nTiểu sử\n0 / 250 từ\nGiới hạn tối đa 250 từ.\nLưu thay đổi\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "manager1",
+      "login": "http://localhost:18080/Courson/manager/dashboard"
+    },
+    {
+      "user": "manager1",
+      "route": "/manager/dashboard",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/manager/dashboard",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": " PHỤ TRÁCH\n4\nĐang được giao quyền quản lý\nLƯỢT ĐĂNG KÝ HỌC\n2\nHọc viên đã đăng ký khóa\nDOANH THU TẠM TÍNH\nVND0\nTừ các đơn đã thanh toán\nKHÓA HỌC CHỜ DUYỆT\n0\nChờ duyệt xuất bản\nGiao dịch đăng ký gần đây\n10 lượt mới nhất\nMÃ ĐK\tKHÓA HỌC\tTIẾN ĐỘ\tTRẠNG THÁI\tTHỜI GIAN\n#3\t\nBí Mật Tính Cách 12 Cung Hoàng Đạo\n\t\n0.00%\n\t\nThành công\t30/09/2026 07:34\n#1\t\nNhân Tướng Học Ứng Dụng - Thầy Viên Minh\n\t\n0.00%\n\t\nThành công\t30/09/2026 07:34\nKhóa học phụ trách\nXem tất cả\nTest Clean Course 2026 \nNháp\nLập trình #57\nBí Mật Tính Cách 12 Cung Hoàng Đạo \nNháp\nChiêm tinh học #3\n[TVK6] Nhập Môn Tử Vi Đẩu Số & Học Thuyết Ngũ Hành \nĐã duyệt\nTử Vi & Phong Thủy #2\nNhân Tướng Học Ứng Dụng - Thầy Viên Minh \nĐã duyệt\nNhân tướng học #1\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "manager1",
+      "route": "/admin/courses",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/admin/courses",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "o tử Đông\tMiễn phí\t\nĐã duyệt\tLưu trữ Chi tiết Xóa\nTạo khóa học mới & Phân công\nTên khóa học * \nHọc phí (VNĐ, 0 là Miễn phí) \nDanh mục khóa học * \nLập trình\nKhoa học Dữ liệu & AI\nThiết kế\nKinh doanh\nMarketing\nNgoại ngữ\nKỹ năng mềm\nTài chính\nNghệ thuật & Sáng tạo\nNhân tướng học\nTử Vi & Phong Thủy\nChiêm tinh học\nPhân công Chuyên gia phụ trách (Assign Expert) * \n-- Chọn Chuyên gia (Expert) phụ trách nội dung --\nCao tử Đông (@expert1) - expert@courson.edu.vn\nChuyên gia được chọn sẽ có quyền tạo bài học (Lesson) và bài kiểm tra (Quiz) cho khóa học này.\nTrạng thái ban đầu\nBản nháp (Draft) Mặc định riêng tư để Chuyên gia hoàn thiện giáo trình trước khi duyệt xuất bản.\nMô tả khóa học \nHủy \nLưu & Phân công\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "manager1",
+      "route": "/registrations/course?courseId=1",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/registrations/course?courseId=1",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "COURSON. LMS\n \nTrang chủ\nKhóa học\nQuản trị hệ thống\nDashboard Quản trị\nQuản lý Khóa học\nCtrl K\nQ\nCOURSON. LMS\n \nTrang chủ Khóa học\nKhu vực chức năng\nDashboard Quản trị Quản lý Khóa học\nQ\nQuản lý Khóa học\nMANAGER\nHồ sơ cá nhân Đăng xuất\nQuay lại Dashboard\nRegistration List\n\nDanh sách học viên đăng ký khóa học Nhân Tướng Học Ứng Dụng - Thầy Viên Minh.\n\n1 đăng ký\n#\tHọc viên\tNgày đăng ký\tTiến độ\tThanh toán\tTrạng thái\tThao tác\n#1\tHọc viên Nguyễn Văn A\t30/09/2026 07:34\t\n0.00%\n\tFREE\tACTIVE\tChi tiết\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "manager1",
+      "route": "/profile",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/profile",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "COURSON. LMS\n \nTrang chủ\nKhóa học\nQuản trị hệ thống\nDashboard Quản trị\nQuản lý Khóa học\nCtrl K\nQ\nCOURSON. LMS\n \nTrang chủ Khóa học\nKhu vực chức năng\nDashboard Quản trị Quản lý Khóa học\nQ\nQuản lý Khóa học\nMANAGER\nHồ sơ cá nhân Đăng xuất\nTrang chủ\nHồ sơ cá nhân\nHồ sơ cá nhân\n\nQuản lý và cập nhật thông tin tài khoản cá nhân của bạn trên Courson LMS\n\nĐổi mật khẩu\nQ\nDung lượng tối đa: 15MB. Định dạng hỗ trợ: JPG, PNG hoặc WEBP.\nTải ảnh lên\nXóa ảnh\nHọ và tên\nTên người dùng\nEmail\n Email định danh tài khoản cố định, không được phép thay đổi.\nSố điện thoại\nNgày sinh\nVai trò\nQUẢN LÝ\nTiểu sử\n0 / 250 từ\nGiới hạn tối đa 250 từ.\nLưu thay đổi\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "manager1",
+      "route": "/users",
+      "status": 403,
+      "url": "http://localhost:18080/Courson/users",
+      "title": "HTTP Status 403 – Forbidden",
+      "excerpt": "HTTP Status 403 – Forbidden\n\nType Status Report\n\nMessage Access Denied: You do not have permission to access this resource.\n\nDescription The server understood the request but refuses to authorize it.\n\nApache Tomcat/10.1.17"
+    },
+    {
+      "user": "admin",
+      "login": "http://localhost:18080/Courson/admin/dashboard"
+    },
+    {
+      "user": "admin",
+      "route": "/admin/dashboard",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/admin/dashboard",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "chờ duyệt xuất bản\n0 khóa chờ quyết định\nID\tKHÓA HỌC\tCHUYÊN GIA\tNỘI DUNG\tHỌC PHÍ\tQUYẾT ĐỊNH DUYỆT\n\nTuyệt vời! Hiện không có khóa học nào ở trạng thái chờ duyệt.\nPhân hệ Quản trị & Lối tắt điều hướng\nQuyền Quản trị viên (Admin)\nQuản lý Người dùng\nTài khoản & Phân quyền\nQuản lý Khóa học\nPhân công Expert & Manager\nCấu hình Hệ thống (Settings)\nMaster data (Role, Category)\nThêm Cấu hình Mới\nTạo Role hoặc Danh mục mới\nMôi trường & Công nghệ\nSẵn sàng\nKiến trúc dự án: MVC Layered Architecture\nWeb Server: Apache Tomcat 10.1 (Jakarta EE 10)\nHệ quản trị CSDL: PostgreSQL 18 (JDBC Driver)\nBảo mật phân quyền: Filter RBAC & Session Management\nCourson LMS • Dự án SWP391 • Nhóm SE2051-NET Group 5 (FPT University)\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "admin",
+      "route": "/users",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/users",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "\nKhóa học\nQuản trị hệ thống\nDashboard Quản trị\nQuản lý Khóa học\nQuản lý Người dùng\nCấu hình hệ thống\nCtrl K\nQ\nCOURSON. LMS\n \nTrang chủ Khóa học\nKhu vực chức năng\nDashboard Quản trị Quản lý Khóa học Quản lý Người dùng Cấu hình hệ thống\nQ\nQuản trị viên Hệ thống\nADMIN\nHồ sơ cá nhân Đăng xuất\nQuản lý người dùng\n\nDanh sách tài khoản và phân quyền trong hệ thống\n\nID\tTên đăng nhập\tHọ và tên\tEmail\tVai trò\tTrạng thái\tHành động\n#4\tstudent1\tHọc viên Nguyễn Văn A\tstudent@courson.edu.vn\tSTUDENT\tACTIVE\tKhóa\n#3\texpert1\tCao tử Đông\texpert@courson.edu.vn\tEXPERT\tACTIVE\tKhóa\n#2\tmanager1\tQuản lý Khóa học\tmanager@courson.edu.vn\tMANAGER\tACTIVE\tKhóa\n#1\tadmin\tQuản trị viên Hệ thống\tadmin@courson.edu.vn\tADMIN\tACTIVE\tKhóa\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "admin",
+      "route": "/settings",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/settings",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "hám phá bí mật 12 cung hoàng đạo và chiêm tinh học\n\tCOURSE_CATEGORY\tASTROLOGY\t12\t\nActive\t\nSửa \nTắt\n\n#18\tThiết kế\nThiết kế đồ họa, UI/UX, mỹ thuật số\n\tCOURSE_CATEGORY\tDESIGN\t3\t\nActive\t\nSửa \nTắt\n\n#19\tMarketing\nMarketing số, truyền thông, tiếp thị\n\tCOURSE_CATEGORY\tMARKETING\t5\t\nActive\t\nSửa \nTắt\n\n#20\tKinh doanh\nQuản trị kinh doanh, khởi nghiệp, lãnh đạo\n\tCOURSE_CATEGORY\tBUSINESS\t4\t\nActive\t\nSửa \nTắt\n\n#21\tNgoại ngữ\nTiếng Anh, Nhật, Hàn, Hoa và luyện thi\n\tCOURSE_CATEGORY\tLANGUAGES\t6\t\nActive\t\nSửa \nTắt\n\n#22\tTài chính\nTài chính cá nhân, đầu tư\n\tCOURSE_CATEGORY\tFINANCE\t8\t\nActive\t\nSửa \nTắt\n\n#23\tNghệ thuật & Sáng tạo\nNhiếp ảnh, quay dựng video, âm nhạc, hội họa\n\tCOURSE_CATEGORY\tART_CREATIVE\t9\t\nActive\t\nSửa \nTắt\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "admin",
+      "route": "/admin/courses",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/admin/courses",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "o tử Đông\tMiễn phí\t\nĐã duyệt\tLưu trữ Chi tiết Xóa\nTạo khóa học mới & Phân công\nTên khóa học * \nHọc phí (VNĐ, 0 là Miễn phí) \nDanh mục khóa học * \nLập trình\nKhoa học Dữ liệu & AI\nThiết kế\nKinh doanh\nMarketing\nNgoại ngữ\nKỹ năng mềm\nTài chính\nNghệ thuật & Sáng tạo\nNhân tướng học\nTử Vi & Phong Thủy\nChiêm tinh học\nPhân công Chuyên gia phụ trách (Assign Expert) * \n-- Chọn Chuyên gia (Expert) phụ trách nội dung --\nCao tử Đông (@expert1) - expert@courson.edu.vn\nChuyên gia được chọn sẽ có quyền tạo bài học (Lesson) và bài kiểm tra (Quiz) cho khóa học này.\nTrạng thái ban đầu\nBản nháp (Draft) Mặc định riêng tư để Chuyên gia hoàn thiện giáo trình trước khi duyệt xuất bản.\nMô tả khóa học \nHủy \nLưu & Phân công\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    },
+    {
+      "user": "admin",
+      "route": "/profile",
+      "status": 200,
+      "url": "http://localhost:18080/Courson/profile",
+      "title": "Courson LMS - Nền tảng học trực tuyến",
+      "excerpt": "\nTrang chủ\nKhóa học\nQuản trị hệ thống\nDashboard Quản trị\nQuản lý Khóa học\nQuản lý Người dùng\nCấu hình hệ thống\nCtrl K\nQ\nCOURSON. LMS\n \nTrang chủ Khóa học\nKhu vực chức năng\nDashboard Quản trị Quản lý Khóa học Quản lý Người dùng Cấu hình hệ thống\nQ\nQuản trị viên Hệ thống\nADMIN\nHồ sơ cá nhân Đăng xuất\nTrang chủ\nHồ sơ cá nhân\nHồ sơ cá nhân\n\nQuản lý và cập nhật thông tin tài khoản cá nhân của bạn trên Courson LMS\n\nĐổi mật khẩu\nQ\nDung lượng tối đa: 15MB. Định dạng hỗ trợ: JPG, PNG hoặc WEBP.\nTải ảnh lên\nXóa ảnh\nHọ và tên\nTên người dùng\nEmail\n Email định danh tài khoản cố định, không được phép thay đổi.\nSố điện thoại\nNgày sinh\nVai trò\nQUẢN TRỊ VIÊN\nTiểu sử\n0 / 250 từ\nGiới hạn tối đa 250 từ.\nLưu thay đổi\n COURSON. LMS • Hệ thống quản lý học tập\n© 2026 Courson LMS. Tất cả các quyền được bảo lưu.\nTrang chủ Khóa học\nXác nhận thao tác\nBạn có chắc chắn muốn thực hiện thao tác này?\nHủy bỏ Xác nhận xóa"
+    }
+  ],
+  "errors": []
+}

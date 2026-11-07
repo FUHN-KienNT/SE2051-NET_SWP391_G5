@@ -34,6 +34,56 @@ public class EdgeCaseTestSuite {
     private static int totalFailed = 0;
     private static final List<String> failures = new ArrayList<>();
 
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("Bộ kiểm thử Nghiệp vụ Khóa học & Biên giới Edge Cases")
+    public void testEdgeCaseSuite() {
+        totalPassed = 0;
+        totalFailed = 0;
+        failures.clear();
+
+        UserDto expertUser = new UserDto();
+        expertUser.setId(3L);
+        expertUser.setEmail("expert@courson.edu.vn");
+        expertUser.setRoleName("Expert");
+        expertUser.setRoleId(4L);
+
+        UserDto otherExpert = new UserDto();
+        otherExpert.setId(999L);
+        otherExpert.setEmail("other@courson.edu.vn");
+        otherExpert.setRoleName("Expert");
+        otherExpert.setRoleId(4L);
+
+        long testCourseId = 0;
+        try {
+            testCourseId = createTestCourse(expertUser.getId(), "Khóa học Kiểm thử Edge Cases");
+            testDirectionalMoveEarlierToTarget(testCourseId, expertUser);
+            testDirectionalMoveLaterToTarget(testCourseId, expertUser);
+            testMoveToEmptyModule(testCourseId, expertUser);
+            testMoveWithGapsInExistingOrders(testCourseId, expertUser);
+            testRapidConsecutiveMoves(testCourseId, expertUser);
+            testReverseReorderLessons(testCourseId, expertUser);
+            testCrossModuleDragAndDrop(testCourseId, expertUser);
+            testDeleteModuleContainingLessonsBlocked(testCourseId, expertUser);
+            testDeleteEmptyModuleSucceeds(testCourseId, expertUser);
+            testDeleteLessonDraftCourseHardDelete(testCourseId, expertUser);
+            testDeleteLessonPublishedCourseSoftDelete(expertUser);
+            testCrossCourseMoveLessonBlocked(testCourseId, expertUser);
+            testIDORCourseOwnershipCheck(testCourseId, otherExpert);
+            testPublishEmptyCourseBlocked(expertUser);
+            testLockEditingDuringPendingReview(testCourseId, expertUser);
+        } catch (Exception e) {
+            totalFailed++; failures.add("Lỗi ngoại lệ: " + e.getMessage());
+        } finally {
+            if (testCourseId > 0) {
+                cleanUpTestCourse(testCourseId);
+            }
+        }
+
+        if (totalFailed > 0) {
+            org.junit.jupiter.api.Assertions.fail("Có " + totalFailed + " ca kiểm thử thất bại: " + String.join(", ", failures));
+        }
+    }
+
     public static void main(String[] args) {
         System.out.println("======================================================================");
         System.out.println("       COURSON LMS - TOÀN DIỆN KIỂM THỬ TÍNH NĂNG VÀ EDGE CASES       ");

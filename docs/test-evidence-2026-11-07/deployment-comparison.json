@@ -1,0 +1,18 @@
+[
+  {
+    "File": "controller/AuthServlet.class",
+    "MatchesDiskDeployment": true
+  },
+  {
+    "File": "controller/RegistrationServlet.class",
+    "MatchesDiskDeployment": true
+  },
+  {
+    "File": "controller/DevSeedServlet.class",
+    "MatchesDiskDeployment": true
+  },
+  {
+    "File": "controller/CourseServlet.class",
+    "MatchesDiskDeployment": true
+  }
+]

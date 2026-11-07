@@ -1,0 +1,12 @@
+ id | user_id | course_id | status  | payment_status | payment_amount | payment_code  
+----+---------+-----------+---------+----------------+----------------+---------------
+ 12 |       4 |         5 | PENDING | PENDING        |      269100.00 | AUDIT-FAKE
+ 15 |       4 |         6 | ACTIVE  | FREE           |           0.00 | FREE-64E32DB4
+(2 rows)
+
+ id |                   title                    
+----+--------------------------------------------
+  1 | Trắc nghiệm: Kiến thức Nền tảng Nhân tướng
+(1 row)
+
+UPDATE 1
