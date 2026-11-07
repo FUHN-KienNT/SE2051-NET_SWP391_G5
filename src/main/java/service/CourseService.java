@@ -33,6 +33,8 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Objects;
 import util.DbConnection;
@@ -46,6 +48,8 @@ public class CourseService {
     private final LessonProgressDao lessonProgressDao;
     private final RegistrationDao registrationDao;
     private final QuizDao quizDao = new QuizDao();
+    private final SettingDao settingDao = new SettingDao();
+    private final UserDao userDao = new UserDao();
 
     public CourseService(CourseDao courseDao, ModuleDao moduleDao, LessonDao lessonDao,
             LessonProgressDao lessonProgressDao, RegistrationDao registrationDao) {
@@ -58,25 +62,34 @@ public class CourseService {
 
     public List<CourseDto> searchPublished(String keyword, Long categoryId) {
         try (Connection con = DbConnection.getConnection()) {
-            List<Course> list = courseDao.searchPublished(con, keyword, categoryId);
-            List<CourseDto> dtos = new ArrayList<>();
-            for (Course c : list) {
-                dtos.add(buildCourseTree(c));
-            }
-            return dtos;
+            return courseDao.searchPublishedSummaries(con, keyword, categoryId, null, null);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tìm kiếm khóa học: " + e.getMessage(), e);
         }
     }
 
+    public int countPublishedCourses(String keyword, Long categoryId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return courseDao.countPublished(con, keyword, categoryId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi đếm số lượng khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public List<CourseDto> searchPublishedPaginated(String keyword, Long categoryId, int page, int pageSize) {
+        int safePage = Math.max(1, page);
+        int safeSize = pageSize > 0 ? pageSize : 9;
+        int offset = (safePage - 1) * safeSize;
+        try (Connection con = DbConnection.getConnection()) {
+            return courseDao.searchPublishedSummaries(con, keyword, categoryId, safeSize, offset);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm kiếm khóa học phân trang: " + e.getMessage(), e);
+        }
+    }
+
     public List<CourseDto> getFeaturedCourses(int limit) {
         try (Connection con = DbConnection.getConnection()) {
-            List<Course> list = courseDao.findFeatured(con, limit);
-            List<CourseDto> dtos = new ArrayList<>();
-            for (Course c : list) {
-                dtos.add(buildCourseTree(c));
-            }
-            return dtos;
+            return courseDao.findFeaturedSummaries(con, limit);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy danh sách khóa học nổi bật: " + e.getMessage(), e);
         }
@@ -141,7 +154,7 @@ public class CourseService {
             List<Course> list = courseDao.searchAdmin(con, keyword, categoryId, managerId, status);
             List<CourseDto> dtos = new ArrayList<>();
             for (Course c : list) {
-                dtos.add(buildCourseTree(c));
+                dtos.add(buildCourseTree(con, c));
             }
             return dtos;
         } catch (SQLException e) {
@@ -157,10 +170,45 @@ public class CourseService {
         try (Connection con = DbConnection.getConnection()) {
             Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
-            return buildCourseTree(course);
+            return buildCourseTree(con, course);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xem chi tiết khóa học: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Lấy chi tiết khóa học công khai (Public Course Detail).
+     * Vẫn giữ đầy đủ cấu trúc chương, tiêu đề bài học, bài kiểm tra và ảnh thumbnail,
+     * nhưng xóa các trường nhạy cảm (videoUrl, documentUrl, content) của bài học trả phí.
+     */
+    public CourseDto getPublicCourseDetail(long courseId) {
+        CourseDto dto = getCourseDetail(courseId);
+        if (dto != null) {
+            dto.setCustomThumbnailUrl(dto.getThumbnailUrl());
+            if (dto.getModules() != null) {
+                for (ModuleDto m : dto.getModules()) {
+                    if (m.getLessons() != null) {
+                        for (LessonDto l : m.getLessons()) {
+                            l.setCustomThumbnailUrl(l.getThumbnailUrl());
+                            l.setVideoUrl(null);
+                            l.setDocumentUrl(null);
+                            l.setContent(null);
+                        }
+                    }
+                }
+            }
+        }
+        return dto;
+    }
+
+    public boolean isPrivilegedCourseViewer(UserDto user, CourseDto course) {
+        if (user == null || course == null) {
+            return false;
+        }
+        String role = user.getRoleName();
+        return "ADMIN".equalsIgnoreCase(role)
+                || "MANAGER".equalsIgnoreCase(role)
+                || (course.getExpertId() != null && course.getExpertId().equals(user.getId()));
     }
 
     /**
@@ -352,7 +400,7 @@ public List<CourseDto> getManagedCourses(long userId) {
             List<Course> list = courseDao.findByManagerOrExpert(con, userId);
             List<CourseDto> dtos = new ArrayList<>();
             for (Course c : list) {
-                dtos.add(buildCourseTree(c));
+                dtos.add(buildCourseTree(con, c));
             }
             return dtos;
         } catch (SQLException e) {
@@ -365,7 +413,7 @@ public List<CourseDto> getManagedCourses(long userId) {
             List<Course> list = courseDao.findAll(con);
             List<CourseDto> dtos = new ArrayList<>();
             for (Course c : list) {
-                dtos.add(buildCourseTree(c));
+                dtos.add(buildCourseTree(con, c));
             }
             return dtos;
         } catch (SQLException e) {
@@ -1773,7 +1821,7 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
                 }
             }
 
-            CourseDto courseDto = buildCourseTree(course);
+            CourseDto courseDto = buildCourseTree(con, course);
 
             // Populate progress for each lesson
             List<LessonProgress> progresses = lessonProgressDao.findByRegistrationId(con, registrationId);
@@ -1890,9 +1938,19 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
     }
 
         // #m_cay [TRẠM 2/4 - SERVICE GOM CÂY DỮ LIỆU]: 1. Lấy Course -> 2. ModuleDao lấy modules -> 3. LessonDao lấy lessons từng module -> Gắn thành cây CourseDto
-private CourseDto buildCourseTree(Course course) {
-        if (course == null)
+    private CourseDto buildCourseTree(Course course) {
+        if (course == null) return null;
+        try (Connection con = DbConnection.getConnection()) {
+            return buildCourseTree(con, course);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải cấu trúc khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    private CourseDto buildCourseTree(Connection con, Course course) throws SQLException {
+        if (course == null) {
             return null;
+        }
         CourseDto dto = new CourseDto();
         dto.setId(course.getId());
         dto.setTitle(course.getTitle());
@@ -1907,50 +1965,53 @@ private CourseDto buildCourseTree(Course course) {
         dto.setModerationNote(course.getModerationNote());
         dto.setFeatured(course.isFeatured());
 
-        try (Connection con = DbConnection.getConnection()) {
-            if (course.getCategoryId() != null) {
-                SettingDao sDao = new SettingDao();
-                sDao.findById(con, course.getCategoryId()).ifPresent(s -> dto.setCategoryName(s.getName()));
-            }
-            UserDao uDao = new UserDao();
-            if (course.getManagerId() != null) {
-                uDao.findById(con, course.getManagerId()).ifPresent(u -> dto.setManagerName(u.getFullName()));
-            }
-            if (course.getExpertId() != null) {
-                uDao.findById(con, course.getExpertId()).ifPresent(u -> dto.setExpertName(u.getFullName()));
-            }
-
-            // Build modules & lessons
-            List<Module> modules = moduleDao.findByCourseId(con, course.getId());
-            QuizDao quizDao = new QuizDao();
-            for (Module m : modules) {
-                ModuleDto mDto = new ModuleDto();
-                mDto.setId(m.getId());
-                mDto.setCourseId(m.getCourseId());
-                mDto.setTitle(m.getTitle());
-                mDto.setOrderIndex(m.getOrderIndex());
-
-                List<Lesson> lessons = lessonDao.findByModuleId(con, m.getId());
-                for (Lesson l : lessons) {
-                    LessonDto lDto = new LessonDto(
-                            l.getId(), l.getModuleId(), l.getTitle(), l.getContent(),
-                            l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(), LessonProgressStatus.NOT_STARTED);
-                    lDto.setActive(l.isActive());
-                    mDto.getLessons().add(lDto);
-                }
-
-                List<Quiz> quizzes = quizDao.findByModuleId(con, m.getId());
-                for (Quiz q : quizzes) {
-                    QuizDto qDto = new QuizDto(
-                            q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
-                            q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>());
-                    mDto.getQuizzes().add(qDto);
-                }
-
-                dto.getModules().add(mDto);
-            }
-        } catch (SQLException ignored) {
+        if (course.getCategoryId() != null) {
+            settingDao.findById(con, course.getCategoryId()).ifPresent(s -> dto.setCategoryName(s.getName()));
         }
+        if (course.getManagerId() != null) {
+            userDao.findById(con, course.getManagerId()).ifPresent(u -> dto.setManagerName(u.getFullName()));
+        }
+        if (course.getExpertId() != null) {
+            userDao.findById(con, course.getExpertId()).ifPresent(u -> dto.setExpertName(u.getFullName()));
+        }
+
+        // Batch-load all modules, lessons, and quizzes for this course in 3 flat queries (no N+1 per module)
+        List<Module> modules = moduleDao.findByCourseId(con, course.getId());
+        List<Lesson> allLessons = lessonDao.findByCourseId(con, course.getId());
+        List<Quiz> allQuizzes = quizDao.findByCourseId(con, course.getId());
+
+        Map<Long, ModuleDto> moduleMap = new HashMap<>();
+        for (Module m : modules) {
+            ModuleDto mDto = new ModuleDto();
+            mDto.setId(m.getId());
+            mDto.setCourseId(m.getCourseId());
+            mDto.setTitle(m.getTitle());
+            mDto.setOrderIndex(m.getOrderIndex());
+            dto.getModules().add(mDto);
+            moduleMap.put(m.getId(), mDto);
+        }
+
+        for (Lesson l : allLessons) {
+            ModuleDto mDto = moduleMap.get(l.getModuleId());
+            if (mDto != null) {
+                LessonDto lDto = new LessonDto(
+                        l.getId(), l.getModuleId(), l.getTitle(), l.getContent(),
+                        l.getVideoUrl(), l.getDocumentUrl(), l.getOrderIndex(), LessonProgressStatus.NOT_STARTED);
+                lDto.setActive(l.isActive());
+                mDto.getLessons().add(lDto);
+            }
+        }
+
+        for (Quiz q : allQuizzes) {
+            ModuleDto mDto = moduleMap.get(q.getModuleId());
+            if (mDto != null) {
+                QuizDto qDto = new QuizDto(
+                        q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
+                        q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>());
+                mDto.getQuizzes().add(qDto);
+            }
+        }
+
         return dto;
     }
 

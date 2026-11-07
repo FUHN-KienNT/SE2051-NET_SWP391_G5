@@ -494,12 +494,22 @@ public RecentLearningDto getRecentLearning(long userId) {
     }
 
     public boolean hasCourseAccess(long userId, long courseId) {
+        return findActiveRegistrationId(userId, courseId) != null;
+    }
+
+    public Long findActiveRegistrationId(long userId, long courseId) {
         try (Connection con = DbConnection.getConnection()) {
             Optional<Registration> regOpt = registrationDao.findByUserAndCourse(con, userId, courseId);
-            return regOpt.isPresent() && (regOpt.get().getStatus() == RegistrationStatus.ACTIVE
-                    || regOpt.get().getStatus() == RegistrationStatus.COMPLETED);
+            if (regOpt.isPresent()) {
+                Registration reg = regOpt.get();
+                if (reg.getStatus() == RegistrationStatus.ACTIVE
+                        || reg.getStatus() == RegistrationStatus.COMPLETED) {
+                    return reg.getId();
+                }
+            }
+            return null;
         } catch (SQLException e) {
-            return false;
+            return null;
         }
     }
 

@@ -31,6 +31,23 @@ public class LessonDao {
         return list;
     }
 
+    public List<Lesson> findByCourseId(Connection con, long courseId) throws SQLException {
+        String sql = "SELECT l.id, l.module_id, l.title, l.content, l.video_url, l.document_url, l.order_index, l.is_active, l.created_at, l.updated_at "
+                + "FROM lessons l JOIN modules m ON l.module_id = m.id "
+                + "WHERE m.course_id = ? "
+                + "ORDER BY m.order_index ASC, l.order_index ASC";
+        List<Lesson> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public Optional<Lesson> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {
             ps.setLong(1, id);

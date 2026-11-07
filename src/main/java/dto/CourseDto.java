@@ -24,6 +24,8 @@ public class CourseDto {
     private String archiveNotice;
     private String moderationNote;
     private boolean isFeatured;
+    private Integer totalLessonsCount;
+    private String customThumbnailUrl;
 
     public CourseDto() {
     }
@@ -139,7 +141,14 @@ public class CourseDto {
         this.modules = modules != null ? modules : new ArrayList<>();
     }
 
+    public void setTotalLessonsCount(Integer totalLessonsCount) {
+        this.totalLessonsCount = totalLessonsCount;
+    }
+
     public int getTotalLessons() {
+        if (totalLessonsCount != null) {
+            return totalLessonsCount;
+        }
         if (modules == null) return 0;
         int count = 0;
         for (ModuleDto m : modules) {
@@ -191,7 +200,14 @@ public class CourseDto {
         return count;
     }
 
+    public void setCustomThumbnailUrl(String customThumbnailUrl) {
+        this.customThumbnailUrl = customThumbnailUrl;
+    }
+
     public String getThumbnailUrl() {
+        if (customThumbnailUrl != null && !customThumbnailUrl.trim().isEmpty()) {
+            return customThumbnailUrl;
+        }
         if (modules != null) {
             for (ModuleDto m : modules) {
                 if (m.getLessons() != null) {

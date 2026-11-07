@@ -1,5 +1,7 @@
 package dao;
 
+import dto.CourseDto;
+import dto.LessonDto;
 import entity.Course;
 import entity.enums.CourseStatus;
 import entity.enums.SettingType;
@@ -60,6 +62,132 @@ public class CourseDao {
             }
         }
         return list;
+    }
+
+    public int countPublished(Connection con, String keyword, Long categoryId) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(1) FROM courses c WHERE c.status = 'PUBLISHED' AND (c.archive_at IS NULL OR c.archive_at > NOW())");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (LOWER(c.title) LIKE ? OR LOWER(c.description) LIKE ?)");
+            String kw = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+        if (categoryId != null) {
+            sql.append(" AND c.category_id = ?");
+            params.add(categoryId);
+        }
+
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public List<CourseDto> searchPublishedSummaries(Connection con, String keyword, Long categoryId, Integer limit, Integer offset) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.id, c.title, c.category_id, c.description, c.price, c.status, "
+                + "c.manager_id, c.expert_id, c.archive_at, c.archive_notice, c.moderation_note, c.is_featured, "
+                + "s.name AS category_name, mgr.full_name AS manager_name, exp.full_name AS expert_name, "
+                + "(SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = c.id AND l.is_active = TRUE) AS total_lessons, "
+                + "(SELECT l2.video_url FROM lessons l2 JOIN modules m2 ON l2.module_id = m2.id WHERE m2.course_id = c.id AND l2.is_active = TRUE AND l2.video_url IS NOT NULL AND TRIM(l2.video_url) <> '' ORDER BY m2.order_index ASC, l2.order_index ASC LIMIT 1) AS first_video_url "
+                + "FROM courses c "
+                + "LEFT JOIN settings s ON c.category_id = s.id "
+                + "LEFT JOIN users mgr ON c.manager_id = mgr.id "
+                + "LEFT JOIN users exp ON c.expert_id = exp.id "
+                + "WHERE c.status = 'PUBLISHED' AND (c.archive_at IS NULL OR c.archive_at > NOW())"
+        );
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (LOWER(c.title) LIKE ? OR LOWER(c.description) LIKE ?)");
+            String kw = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+        if (categoryId != null) {
+            sql.append(" AND c.category_id = ?");
+            params.add(categoryId);
+        }
+        sql.append(" ORDER BY c.id DESC");
+        if (limit != null && limit > 0) {
+            sql.append(" LIMIT ?");
+            params.add(limit);
+        }
+        if (offset != null && offset >= 0) {
+            sql.append(" OFFSET ?");
+            params.add(offset);
+        }
+
+        List<CourseDto> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapSummaryDto(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<CourseDto> findFeaturedSummaries(Connection con, int limit) throws SQLException {
+        String sql = "SELECT c.id, c.title, c.category_id, c.description, c.price, c.status, "
+                + "c.manager_id, c.expert_id, c.archive_at, c.archive_notice, c.moderation_note, c.is_featured, "
+                + "s.name AS category_name, mgr.full_name AS manager_name, exp.full_name AS expert_name, "
+                + "(SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = c.id AND l.is_active = TRUE) AS total_lessons, "
+                + "(SELECT l2.video_url FROM lessons l2 JOIN modules m2 ON l2.module_id = m2.id WHERE m2.course_id = c.id AND l2.is_active = TRUE AND l2.video_url IS NOT NULL AND TRIM(l2.video_url) <> '' ORDER BY m2.order_index ASC, l2.order_index ASC LIMIT 1) AS first_video_url "
+                + "FROM courses c "
+                + "LEFT JOIN settings s ON c.category_id = s.id "
+                + "LEFT JOIN users mgr ON c.manager_id = mgr.id "
+                + "LEFT JOIN users exp ON c.expert_id = exp.id "
+                + "WHERE c.status = 'PUBLISHED' AND c.is_featured = TRUE AND (c.archive_at IS NULL OR c.archive_at > NOW()) "
+                + "ORDER BY c.updated_at DESC, c.id DESC LIMIT ?";
+        List<CourseDto> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, limit > 0 ? limit : 6);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapSummaryDto(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    private CourseDto mapSummaryDto(ResultSet rs) throws SQLException {
+        CourseDto dto = new CourseDto();
+        dto.setId(rs.getLong("id"));
+        dto.setTitle(rs.getString("title"));
+        long catId = rs.getLong("category_id");
+        dto.setCategoryId(rs.wasNull() ? null : catId);
+        dto.setCategoryName(rs.getString("category_name"));
+        dto.setDescription(rs.getString("description"));
+        dto.setPrice(rs.getBigDecimal("price"));
+        dto.setStatus(CourseStatus.fromDb(rs.getString("status")));
+        long mId = rs.getLong("manager_id");
+        dto.setManagerId(rs.wasNull() ? null : mId);
+        dto.setManagerName(rs.getString("manager_name"));
+        long eId = rs.getLong("expert_id");
+        dto.setExpertId(rs.wasNull() ? null : eId);
+        dto.setExpertName(rs.getString("expert_name"));
+        dto.setArchiveAt(rs.getObject("archive_at", OffsetDateTime.class));
+        dto.setArchiveNotice(rs.getString("archive_notice"));
+        dto.setModerationNote(rs.getString("moderation_note"));
+        dto.setFeatured(rs.getBoolean("is_featured"));
+        dto.setTotalLessonsCount(rs.getInt("total_lessons"));
+        dto.setCustomThumbnailUrl(LessonDto.extractYoutubeThumbnail(rs.getString("first_video_url"), true));
+        return dto;
     }
 
     /**

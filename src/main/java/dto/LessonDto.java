@@ -14,6 +14,7 @@ public class LessonDto {
     private Long courseId;
     private String userNote;
     private boolean isActive = true;
+    private String customThumbnailUrl;
 
     public LessonDto() {
     }
@@ -102,31 +103,39 @@ public class LessonDto {
         this.progressStatus = progressStatus;
     }
 
-    public String getThumbnailUrl() {
+    public void setCustomThumbnailUrl(String customThumbnailUrl) {
+        this.customThumbnailUrl = customThumbnailUrl;
+    }
+
+    public static String extractYoutubeThumbnail(String videoUrl, boolean highQuality) {
         if (videoUrl != null && !videoUrl.trim().isEmpty()) {
             String url = videoUrl.trim();
+            String vid = null;
             if (url.contains("embed/")) {
-                String vid = url.substring(url.indexOf("embed/") + 6);
+                vid = url.substring(url.indexOf("embed/") + 6);
                 if (vid.contains("?")) vid = vid.substring(0, vid.indexOf("?"));
                 if (vid.contains("&")) vid = vid.substring(0, vid.indexOf("&"));
-                if (!vid.isEmpty()) {
-                    return "https://img.youtube.com/vi/" + vid + "/mqdefault.jpg";
-                }
             } else if (url.contains("v=")) {
-                String vid = url.substring(url.indexOf("v=") + 2);
+                vid = url.substring(url.indexOf("v=") + 2);
                 if (vid.contains("&")) vid = vid.substring(0, vid.indexOf("&"));
-                if (!vid.isEmpty()) {
-                    return "https://img.youtube.com/vi/" + vid + "/mqdefault.jpg";
-                }
             } else if (url.contains("youtu.be/")) {
-                String vid = url.substring(url.indexOf("youtu.be/") + 9);
+                vid = url.substring(url.indexOf("youtu.be/") + 9);
                 if (vid.contains("?")) vid = vid.substring(0, vid.indexOf("?"));
-                if (!vid.isEmpty()) {
-                    return "https://img.youtube.com/vi/" + vid + "/mqdefault.jpg";
-                }
+            }
+            if (vid != null && !vid.isEmpty()) {
+                return "https://img.youtube.com/vi/" + vid + (highQuality ? "/hqdefault.jpg" : "/mqdefault.jpg");
             }
         }
-        return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&auto=format&fit=crop&q=60";
+        return highQuality
+                ? "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60"
+                : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&auto=format&fit=crop&q=60";
+    }
+
+    public String getThumbnailUrl() {
+        if (customThumbnailUrl != null && !customThumbnailUrl.trim().isEmpty()) {
+            return customThumbnailUrl;
+        }
+        return extractYoutubeThumbnail(this.videoUrl, false);
     }
 
     public String getUserNote() {
@@ -136,6 +145,7 @@ public class LessonDto {
     public void setUserNote(String userNote) {
         this.userNote = userNote;
     }
+
     public boolean isActive() {
         return isActive;
     }

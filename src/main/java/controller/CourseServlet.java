@@ -26,6 +26,7 @@ import util.SessionUtil;
 
 @WebServlet(name = "CourseServlet", urlPatterns = { "/courses/*" })
 public class CourseServlet extends HttpServlet {
+    private static final int CATALOG_PAGE_SIZE = 9;
     private CourseService courseService;
     private RegistrationService registrationService;
 
@@ -88,6 +89,10 @@ public class CourseServlet extends HttpServlet {
 
     private void showCatalog(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String keyword = req.getParameter("keyword");
+        if (keyword != null) {
+            keyword = keyword.trim();
+        }
+
         String categoryIdStr = req.getParameter("categoryId");
         Long categoryId = null;
         if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
@@ -96,74 +101,97 @@ public class CourseServlet extends HttpServlet {
             } catch (NumberFormatException ignored) {
             }
         }
-        List<CourseDto> list = courseService.searchPublished(keyword, categoryId);
-        List<SettingDto> categories = courseService.getActiveCategories();
+
+        int currentPage = 1;
+        String pageStr = req.getParameter("page");
+        if (pageStr != null && !pageStr.trim().isEmpty()) {
+            try {
+                currentPage = Integer.parseInt(pageStr.trim());
+                if (currentPage < 1) {
+                    currentPage = 1;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        int totalCourses = courseService.countPublishedCourses(keyword, categoryId);
+        int totalPages = totalCourses > 0 ? (int) Math.ceil((double) totalCourses / CATALOG_PAGE_SIZE) : 1;
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        List<CourseDto> list = courseService.searchPublishedPaginated(keyword, categoryId, currentPage, CATALOG_PAGE_SIZE);
         req.setAttribute("courses", list);
-        req.setAttribute("categories", categories);
         req.setAttribute("keyword", keyword);
         req.setAttribute("selectedCategoryId", categoryId);
+        req.setAttribute("currentPage", currentPage);
+        req.setAttribute("totalPages", totalPages);
+        req.setAttribute("totalCourses", totalCourses);
         req.getRequestDispatcher("/WEB-INF/views/course/catalog.jsp").forward(req, resp);
     }
 
     private void showCourseDetail(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         String idStr = req.getParameter("id");
-        if (idStr != null) {
-            long courseId = Long.parseLong(idStr);
-            CourseDto course = courseService.getCourseDetail(courseId);
-
-            UserDto currentUser = SessionUtil.getCurrentUser(req);
-            boolean hasAccess = false;
-            boolean isPrivileged = false;
-            Long userRegId = null;
-
-            if (currentUser != null) {
-                String role = currentUser.getRoleName();
-                isPrivileged = "ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role)
-                        || (course.getExpertId() != null && course.getExpertId().equals(currentUser.getId()));
-                if (isPrivileged) {
-                    hasAccess = true;
-                } else {
-                    hasAccess = registrationService.hasCourseAccess(currentUser.getId(), courseId);
-                    if (hasAccess) {
-                        List<RegistrationDto> myRegs = registrationService.getByUser(currentUser.getId());
-                        for (RegistrationDto r : myRegs) {
-                            if (r.getCourseId().equals(courseId)
-                                    && (r.getStatus() == RegistrationStatus.ACTIVE || r.getStatus() == RegistrationStatus.COMPLETED)) {
-                                userRegId = r.getId();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Quy tắc: Khóa học DRAFT hoặc PENDING_REVIEW chỉ người quản lý / giảng viên mới được xem Preview
-            if (course.getStatus() == entity.enums.CourseStatus.DRAFT || course.getStatus() == entity.enums.CourseStatus.PENDING_REVIEW) {
-                if (!isPrivileged) {
-                    SessionUtil.setFlashError(req, "Khóa học này đang ở trạng thái Nháp hoặc chờ duyệt và chưa được công bố công khai.");
-                    resp.sendRedirect(req.getContextPath() + "/courses/catalog");
-                    return;
-                }
-                req.setAttribute("isPreviewDraft", true);
-            }
-
-            // Quy tắc: Ai chưa mua sẽ không nhìn thấy khóa học khi đã ẩn (Archived)
-            if (course.isArchived()) {
-                if (!hasAccess) {
-                    SessionUtil.setFlashError(req, "Khóa học này đã được chuyển sang chế độ Lưu trữ và không còn hiển thị công khai.");
-                    resp.sendRedirect(req.getContextPath() + "/courses/catalog");
-                    return;
-                }
-                req.setAttribute("isPurchasedArchived", true);
-            }
-
-            req.setAttribute("hasCourseAccess", hasAccess);
-            if (userRegId != null) {
-                req.setAttribute("userRegistrationId", userRegId);
-            }
-            req.setAttribute("course", course);
+        if (idStr == null || idStr.trim().isEmpty()) {
+            SessionUtil.setFlashError(req, "Thiếu mã khóa học.");
+            resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+            return;
         }
+
+        long courseId;
+        try {
+            courseId = Long.parseLong(idStr.trim());
+        } catch (NumberFormatException e) {
+            SessionUtil.setFlashError(req, "Mã khóa học không hợp lệ.");
+            resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+            return;
+        }
+
+        CourseDto course;
+        try {
+            course = courseService.getPublicCourseDetail(courseId);
+        } catch (IllegalArgumentException e) {
+            SessionUtil.setFlashError(req, "Không tìm thấy khóa học bạn yêu cầu.");
+            resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+            return;
+        }
+
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        boolean isPrivileged = courseService.isPrivilegedCourseViewer(currentUser, course);
+        boolean hasAccess = isPrivileged;
+        Long userRegId = null;
+
+        if (currentUser != null && !isPrivileged) {
+            userRegId = registrationService.findActiveRegistrationId(currentUser.getId(), courseId);
+            hasAccess = (userRegId != null);
+        }
+
+        // Quy tắc: Khóa học DRAFT hoặc PENDING_REVIEW chỉ người quản lý / giảng viên mới được xem Preview
+        if (course.getStatus() == entity.enums.CourseStatus.DRAFT || course.getStatus() == entity.enums.CourseStatus.PENDING_REVIEW) {
+            if (!isPrivileged) {
+                SessionUtil.setFlashError(req, "Khóa học này đang ở trạng thái Nháp hoặc chờ duyệt và chưa được công bố công khai.");
+                resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+                return;
+            }
+            req.setAttribute("isPreviewDraft", true);
+        }
+
+        // Quy tắc: Ai chưa mua sẽ không nhìn thấy khóa học khi đã ẩn (Archived)
+        if (course.isArchived()) {
+            if (!hasAccess) {
+                SessionUtil.setFlashError(req, "Khóa học này đã được chuyển sang chế độ Lưu trữ và không còn hiển thị công khai.");
+                resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+                return;
+            }
+            req.setAttribute("isPurchasedArchived", true);
+        }
+
+        req.setAttribute("hasCourseAccess", hasAccess);
+        if (userRegId != null) {
+            req.setAttribute("userRegistrationId", userRegId);
+        }
+        req.setAttribute("course", course);
         req.getRequestDispatcher("/WEB-INF/views/course/detail.jsp").forward(req, resp);
     }
 
