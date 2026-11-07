@@ -4,6 +4,7 @@ import dao.CourseDao;
 import entity.Course;
 import dao.RegistrationDao;
 import dto.RecentLearningDto;
+import dto.StudentAiRecommendationDto;
 import dto.RegistrationDto;
 import dto.UserDto;
 import entity.enums.PaymentStatus;
@@ -438,9 +439,11 @@ public class RegistrationServlet extends HttpServlet {
         }
 
         RecentLearningDto recentLearning = registrationService.getRecentLearning(currentUser.getId());
+        StudentAiRecommendationDto aiRecommendation = registrationService.getStudentAiRecommendations(currentUser.getId(), list);
 
         req.setAttribute("registrations", list);
         req.setAttribute("recentLearning", recentLearning);
+        req.setAttribute("aiRecommendation", aiRecommendation);
         req.setAttribute("totalCourses", totalCourses);
         req.setAttribute("inProgressCourses", inProgressCourses);
         req.setAttribute("completedCourses", completedCourses);
