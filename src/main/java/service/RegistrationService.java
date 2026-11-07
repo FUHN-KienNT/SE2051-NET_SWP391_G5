@@ -5,6 +5,10 @@ import dao.LessonProgressDao;
 import dao.RegistrationDao;
 import dto.CourseDto;
 import dto.RecentLearningDto;
+import dto.StudentAiRecommendationDto;
+import java.util.HashSet;
+import java.util.Set;
+import util.GeminiAiUtil;
 import dto.RegistrationDto;
 import dto.UserDto;
 import entity.Course;
@@ -338,6 +342,98 @@ public RecentLearningDto getRecentLearning(long userId) {
             return null;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy bài học gần nhất: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gợi ý khóa học thông minh cho học sinh dựa trên lịch sử học tập bằng Google Gemini AI (kèm Fallback Heuristic):
+     * - Tìm các khóa học đã xuất bản (PUBLISHED) trên hệ thống mà học viên chưa đăng ký.
+     * - Nếu có cấu hình Gemini API: gửi lịch sử khóa học và danh mục để AI phân tích lộ trình và gợi ý.
+     * - Nếu Gemini không phản hồi hoặc chưa cấu hình API Key: ưu tiên gợi ý các khóa học cùng danh mục hoặc khóa học nổi bật (Featured).
+     */
+    public StudentAiRecommendationDto getStudentAiRecommendations(long userId, List<RegistrationDto> myRegistrations) {
+        try (Connection con = DbConnection.getConnection()) {
+            Set<Long> registeredCourseIds = new HashSet<>();
+            List<String> enrolledTitles = new ArrayList<>();
+            List<String> enrolledCategories = new ArrayList<>();
+
+            if (myRegistrations != null) {
+                for (RegistrationDto r : myRegistrations) {
+                    registeredCourseIds.add(r.getCourseId());
+                    if (r.getCourseTitle() != null && !r.getCourseTitle().trim().isEmpty()) {
+                        enrolledTitles.add(r.getCourseTitle().trim());
+                    }
+                    if (r.getCategoryName() != null && !r.getCategoryName().trim().isEmpty()) {
+                        if (!enrolledCategories.contains(r.getCategoryName().trim())) {
+                            enrolledCategories.add(r.getCategoryName().trim());
+                        }
+                    }
+                }
+            }
+
+            List<CourseDto> publishedCourses = courseDao.searchPublishedSummaries(con, null, null, 25, 0);
+            List<CourseDto> candidates = new ArrayList<>();
+            for (CourseDto cItem : publishedCourses) {
+                if (!registeredCourseIds.contains(cItem.getId())) {
+                    candidates.add(cItem);
+                }
+            }
+
+            if (candidates.isEmpty()) {
+                return new StudentAiRecommendationDto(Collections.emptyList(), null, false);
+            }
+
+            // 1. Thử gọi Google Gemini AI nếu khả dụng
+            if (GeminiAiUtil.isAvailable()) {
+                GeminiAiUtil.StudentRecommendationResult aiResult =
+                        GeminiAiUtil.recommendCoursesForStudent(enrolledTitles, enrolledCategories, candidates);
+                if (aiResult != null && !aiResult.getRecommendedCourseIds().isEmpty()) {
+                    List<CourseDto> recommended = new ArrayList<>();
+                    for (Long recId : aiResult.getRecommendedCourseIds()) {
+                        for (CourseDto cItem : candidates) {
+                            if (cItem.getId() == recId.longValue() && !recommended.contains(cItem)) {
+                                recommended.add(cItem);
+                                break;
+                            }
+                        }
+                    }
+                    if (!recommended.isEmpty()) {
+                        String advice = (aiResult.getAdvice() != null && !aiResult.getAdvice().trim().isEmpty())
+                                ? aiResult.getAdvice().trim()
+                                : "Dựa trên sở thích học tập của bạn, Courson AI gợi ý các khóa học này giúp bạn phát triển năng lực toàn diện.";
+                        return new StudentAiRecommendationDto(recommended, advice, true);
+                    }
+                }
+            }
+
+            // 2. Fallback Heuristic nếu Gemini chưa cấu hình hoặc không khả dụng
+            List<CourseDto> fallbackList = new ArrayList<>();
+            if (!enrolledCategories.isEmpty()) {
+                for (CourseDto cItem : candidates) {
+                    if (cItem.getCategoryName() != null && enrolledCategories.contains(cItem.getCategoryName().trim())) {
+                        if (!fallbackList.contains(cItem)) {
+                            fallbackList.add(cItem);
+                        }
+                    }
+                    if (fallbackList.size() >= 3) break;
+                }
+            }
+            if (fallbackList.size() < 3) {
+                for (CourseDto cItem : candidates) {
+                    if (!fallbackList.contains(cItem)) {
+                        fallbackList.add(cItem);
+                    }
+                    if (fallbackList.size() >= 3) break;
+                }
+            }
+
+            String fallbackAdvice = !enrolledTitles.isEmpty()
+                    ? "Dựa trên các chủ đề bạn đang theo học, Courson gợi ý những khóa học phù hợp nhất giúp bạn mở rộng kiến thức và hoàn thiện kỹ năng."
+                    : "Chào mừng bạn đến với Courson! Dưới đây là những khóa học tiêu biểu được đánh giá cao nhất dành cho người mới bắt đầu.";
+
+            return new StudentAiRecommendationDto(fallbackList, fallbackAdvice, false);
+        } catch (SQLException e) {
+            return new StudentAiRecommendationDto(Collections.emptyList(), null, false);
         }
     }
 

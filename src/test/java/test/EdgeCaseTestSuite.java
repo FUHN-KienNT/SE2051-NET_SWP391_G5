@@ -29,6 +29,8 @@ public class EdgeCaseTestSuite {
     private static final RegistrationDao registrationDao = new RegistrationDao();
     private static final CourseService courseService = new CourseService(
             courseDao, moduleDao, lessonDao, lessonProgressDao, registrationDao);
+    private static final service.RegistrationService registrationService = new service.RegistrationService(
+            registrationDao, courseDao);
 
     private static int totalPassed = 0;
     private static int totalFailed = 0;
@@ -71,6 +73,8 @@ public class EdgeCaseTestSuite {
             testIDORCourseOwnershipCheck(testCourseId, otherExpert);
             testPublishEmptyCourseBlocked(expertUser);
             testLockEditingDuringPendingReview(testCourseId, expertUser);
+            testStudentAiRecommendations();
+            testStudentAiRecommendations();
         } catch (Exception e) {
             totalFailed++; failures.add("Lỗi ngoại lệ: " + e.getMessage());
         } finally {
@@ -514,6 +518,14 @@ public class EdgeCaseTestSuite {
 
         assertTrue("EdgeCase 5.3: Khóa học ở trạng thái PENDING_REVIEW bị khóa chỉnh sửa nội dung hoàn toàn",
                 blocked, "Khóa học Chờ duyệt không bị khóa chỉnh sửa");
+    }
+
+    private static void testStudentAiRecommendations() {
+        dto.StudentAiRecommendationDto rec = registrationService.getStudentAiRecommendations(1L, java.util.Collections.emptyList());
+        assertTrue("EdgeCase 6.1: Student Dashboard nhận được đối tượng gợi ý AI không null", rec != null, "Gợi ý AI bị null");
+        assertTrue("EdgeCase 6.2: Gợi ý AI cung cấp danh sách khóa học đề xuất hợp lệ", rec.getRecommendedCourses() != null, "Danh sách đề xuất bị null");
+        assertTrue("EdgeCase 6.3: Lời khuyên học tập từ AI hoặc Heuristic không được rỗng",
+                rec.getAdvice() != null && !rec.getAdvice().trim().isEmpty(), "Lời khuyên học tập bị rỗng");
     }
 
     // -------------------------------------------------------------------------

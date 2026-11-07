@@ -338,6 +338,88 @@
             </div>
         </c:if>
 
+        <!-- 2.5. GỢI Ý KHÓA HỌC TỪ GOOGLE GEMINI AI (Student Dashboard AI Recommendations) -->
+        <c:if test="${not empty aiRecommendation and not empty aiRecommendation.recommendedCourses}">
+            <div class="card border-0 rounded-4 shadow-sm mb-5 overflow-hidden" style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #bfdbfe !important;">
+                <div class="card-body p-4 p-md-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary bg-gradient text-white px-3 py-2 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-stars fs-6"></i>
+                                <c:choose>
+                                    <c:when test="${aiRecommendation.aiPowered}">
+                                        Gợi ý từ Google Gemini AI
+                                    </c:when>
+                                    <c:otherwise>
+                                        Gợi ý lộ trình cho bạn
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
+                            <span class="fw-bold text-dark fs-5">Khóa học đề xuất cho lộ trình tiếp theo</span>
+                        </div>
+                        <a href="${pageContext.request.contextPath}/courses/catalog" class="text-primary text-decoration-none small fw-semibold">
+                            Xem tất cả khóa học <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <c:if test="${not empty aiRecommendation.advice}">
+                        <div class="p-3 bg-white rounded-3 border mb-4 d-flex align-items-start gap-2 shadow-sm">
+                            <i class="bi bi-lightbulb-fill text-warning fs-5 flex-shrink-0 mt-1"></i>
+                            <div class="text-secondary small fst-italic">
+                                <strong class="text-dark fst-normal">Lời khuyên học tập:</strong> "${aiRecommendation.advice}"
+                            </div>
+                        </div>
+                    </c:if>
+
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                        <c:forEach var="rec" items="${aiRecommendation.recommendedCourses}">
+                            <div class="col">
+                                <div class="card h-100 border-0 rounded-4 shadow-sm overflow-hidden bg-white course-rec-card" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                                    <div class="position-relative" style="height: 150px; overflow: hidden; background: #0f172a;">
+                                        <img src="${rec.thumbnailUrl}" class="w-100 h-100" style="object-fit: cover;" alt="${rec.title}" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
+                                        <c:if test="${not empty rec.categoryName}">
+                                            <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill small">
+                                                <i class="bi bi-tag-fill me-1"></i>${rec.categoryName}
+                                            </span>
+                                        </c:if>
+                                    </div>
+                                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-1 line-clamp-2" title="${rec.title}">
+                                                ${rec.title}
+                                            </h6>
+                                            <c:if test="${not empty rec.expertName}">
+                                                <p class="text-muted small mb-2">
+                                                    <i class="bi bi-person me-1"></i>${rec.expertName}
+                                                </p>
+                                            </c:if>
+                                        </div>
+                                        <div class="pt-2 border-top d-flex justify-content-between align-items-center mt-2">
+                                            <div>
+                                                <c:choose>
+                                                    <c:when test="${rec.price != null and rec.price > 0}">
+                                                        <span class="text-danger fw-bold">
+                                                            <fmt:formatNumber value="${rec.price}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="text-success fw-bold">Miễn phí</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                            <a href="${pageContext.request.contextPath}/courses/detail?id=${rec.id}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold">
+                                                Xem khóa học
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </div>
+            </div>
+        </c:if>
+
         <!-- 5. TÌM KIẾM, LỌC KHÓA HỌC (Feature 5 - Filter & Search Toolbar) -->
         <c:choose>
             <c:when test="${empty registrations}">

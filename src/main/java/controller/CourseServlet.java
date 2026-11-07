@@ -44,6 +44,14 @@ public class CourseServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "catalog";
+
+        // [Security Defense]: Chặn tuyệt đối HTTP GET đối với các action thay đổi trạng thái (tránh CSRF / prefetch)
+        if ("update-progress".equals(action) || "save-lesson-note".equals(action)) {
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                    "Phương thức GET không được hỗ trợ cho thao tác này. Vui lòng sử dụng POST.");
+            return;
+        }
+
         processAction(action, req, resp);
     }
 
@@ -51,6 +59,13 @@ public class CourseServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "catalog";
+
+        if (!"update-progress".equals(action) && !"save-lesson-note".equals(action)) {
+            // Không hỗ trợ POST cho các trang tĩnh / chỉ đọc
+            resp.sendRedirect(req.getContextPath() + "/courses/" + action);
+            return;
+        }
+
         processAction(action, req, resp);
     }
 
@@ -298,13 +313,33 @@ public class CourseServlet extends HttpServlet {
     }
 
     private void updateLessonProgress(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (!"POST".equalsIgnoreCase(req.getMethod())) {
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Chỉ hỗ trợ phương thức POST để cập nhật tiến độ học tập.");
+            return;
+        }
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
-        long regId = Long.parseLong(req.getParameter("registrationId"));
-        long lessonId = Long.parseLong(req.getParameter("lessonId"));
+
+        String regIdStr = req.getParameter("registrationId");
+        String lessonIdStr = req.getParameter("lessonId");
+        if (regIdStr == null || regIdStr.trim().isEmpty() || lessonIdStr == null || lessonIdStr.trim().isEmpty()) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thiếu tham số registrationId hoặc lessonId.");
+            return;
+        }
+
+        long regId;
+        long lessonId;
+        try {
+            regId = Long.parseLong(regIdStr.trim());
+            lessonId = Long.parseLong(lessonIdStr.trim());
+        } catch (NumberFormatException nfe) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tham số registrationId hoặc lessonId không hợp lệ.");
+            return;
+        }
+
         String statusStr = req.getParameter("status");
         LessonProgressStatus status = (statusStr != null) ? LessonProgressStatus.fromDb(statusStr)
                 : LessonProgressStatus.COMPLETED;
@@ -314,24 +349,51 @@ public class CourseServlet extends HttpServlet {
         } catch (SecurityException e) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
             return;
+        } catch (IllegalArgumentException e) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            return;
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi cập nhật tiến độ: " + e.getMessage());
+            return;
         }
         resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId + "&lessonId=" + lessonId);
     }
 
     private void saveLessonNote(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        UserDto currentUser = SessionUtil.getCurrentUser(req);
         resp.setContentType("application/json;charset=UTF-8");
+        if (!"POST".equalsIgnoreCase(req.getMethod())) {
+            resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Chỉ hỗ trợ phương thức POST để lưu ghi chú.\"}");
+            return;
+        }
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             resp.getWriter().write("{\"success\":false,\"message\":\"Vui lòng đăng nhập lại.\"}");
             return;
         }
+
+        String regIdStr = req.getParameter("registrationId");
+        String lessonIdStr = req.getParameter("lessonId");
+        if (regIdStr == null || regIdStr.trim().isEmpty() || lessonIdStr == null || lessonIdStr.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu tham số registrationId hoặc lessonId.\"}");
+            return;
+        }
+
         try {
-            long regId = Long.parseLong(req.getParameter("registrationId"));
-            long lessonId = Long.parseLong(req.getParameter("lessonId"));
+            long regId = Long.parseLong(regIdStr.trim());
+            long lessonId = Long.parseLong(lessonIdStr.trim());
             String note = req.getParameter("note");
             courseService.saveLessonNote(regId, currentUser.getId(), lessonId, note);
             resp.getWriter().write("{\"success\":true,\"message\":\"Đã lưu ghi chú thành công!\"}");
+        } catch (NumberFormatException nfe) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Tham số registrationId hoặc lessonId không hợp lệ.\"}");
+        } catch (SecurityException se) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            String safeMsg = se.getMessage() != null ? se.getMessage().replace("\"", "\\\"").replace("\n", " ") : "Bị từ chối truy cập";
+            resp.getWriter().write("{\"success\":false,\"message\":\"" + safeMsg + "\"}");
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             String safeMsg = e.getMessage() != null ? e.getMessage().replace("\"", "\\\"").replace("\n", " ") : "Lỗi không xác định";

@@ -600,21 +600,36 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
         CourseDto dto = new CourseDto();
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
-            long courseId = Long.parseLong(idStr.trim());
+            long courseId;
+            try {
+                courseId = Long.parseLong(idStr.trim());
+            } catch (NumberFormatException nfe) {
+                SessionUtil.setFlashError(req, "ID khóa học không hợp lệ.");
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                return;
+            }
             try {
                 // [IDOR Defense]: Kiểm tra quyền sở hữu khóa học trước khi sửa
                 courseService.checkCourseOwnership(courseId, currentUser);
+                // [Edit Lock]: Khóa học đang ở PENDING_REVIEW không được phép sửa
                 courseService.checkCourseEditable(courseId);
+                CourseDto existing = courseService.getCourseDetail(courseId);
+                if (existing == null) {
+                    SessionUtil.setFlashError(req, "Khóa học không tồn tại.");
+                    resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                    return;
+                }
                 dto.setId(courseId);
-                CourseDto existing = courseService.getCourseDetail(dto.getId());
                 dto.setStatus(existing.getStatus());
                 dto.setManagerId(existing.getManagerId());
-            } catch (SecurityException se) {
-                SessionUtil.setFlashError(req, se.getMessage());
+            } catch (SecurityException | IllegalStateException | IllegalArgumentException ex) {
+                SessionUtil.setFlashError(req, ex.getMessage());
                 resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
                 return;
-            } catch (Exception ignored) {
-                dto.setStatus(entity.enums.CourseStatus.DRAFT);
+            } catch (Exception ex) {
+                SessionUtil.setFlashError(req, "Không thể cập nhật khóa học: " + ex.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                return;
             }
         } else {
             // Khóa học mới tạo bởi Expert luôn ở trạng thái DRAFT để chờ Quản lý duyệt
