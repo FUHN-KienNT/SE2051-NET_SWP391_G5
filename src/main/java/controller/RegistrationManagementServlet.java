@@ -70,62 +70,38 @@ public class RegistrationManagementServlet extends HttpServlet {
             return;
         }
 
+        if (!"MANAGER".equalsIgnoreCase(currentUser.getRoleName()) && !"ADMIN".equalsIgnoreCase(currentUser.getRoleName())) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem danh sách đăng ký.");
+            return;
+        }
+
         String courseIdStr = req.getParameter("courseId");
         String search = req.getParameter("search");
         String paymentStatus = req.getParameter("paymentStatus");
         String status = req.getParameter("status");
 
-        List<RegistrationDto> rawList;
+        Long courseId = null;
         CourseDto course = null;
 
-        try {
-            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-                long courseId = Long.parseLong(courseIdStr.trim());
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            try {
+                courseId = Long.parseLong(courseIdStr.trim());
                 if (!registrationService.canViewCourseRegistrations(courseId, currentUser)) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem danh sách đăng ký của khóa học này.");
                     return;
                 }
                 course = registrationService.getCourseSummary(courseId);
-                rawList = registrationService.getByCourse(courseId);
-            } else {
-                if (!"MANAGER".equalsIgnoreCase(currentUser.getRoleName()) && !"ADMIN".equalsIgnoreCase(currentUser.getRoleName())) {
-                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem danh sách đăng ký.");
-                    return;
-                }
-                rawList = registrationService.getAll();
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Mã khóa học không hợp lệ.");
+                return;
             }
-        } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Mã khóa học không hợp lệ.");
-            return;
         }
 
-        List<RegistrationDto> filteredList = new ArrayList<>();
-        String searchTrim = (search != null) ? search.trim().toLowerCase() : null;
-        for (RegistrationDto r : rawList) {
-            if (searchTrim != null && !searchTrim.isEmpty()) {
-                boolean matchId = String.valueOf(r.getId()).equals(searchTrim);
-                boolean matchUser = r.getUserName() != null && r.getUserName().toLowerCase().contains(searchTrim);
-                boolean matchCourse = r.getCourseTitle() != null && r.getCourseTitle().toLowerCase().contains(searchTrim);
-                boolean matchCode = r.getPaymentCode() != null && r.getPaymentCode().toLowerCase().contains(searchTrim);
-                if (!matchId && !matchUser && !matchCourse && !matchCode) {
-                    continue;
-                }
-            }
-            if (paymentStatus != null && !paymentStatus.trim().isEmpty()) {
-                if (r.getPaymentStatus() == null || !r.getPaymentStatus().name().equalsIgnoreCase(paymentStatus.trim())) {
-                    continue;
-                }
-            }
-            if (status != null && !status.trim().isEmpty()) {
-                if (r.getStatus() == null || !r.getStatus().name().equalsIgnoreCase(status.trim())) {
-                    continue;
-                }
-            }
-            filteredList.add(r);
-        }
+        // 1 lần tìm kiếm = 1 lần query xuống Database (Server-side search)
+        List<RegistrationDto> list = registrationService.searchRegistrations(courseId, search, paymentStatus, status);
 
         req.setAttribute("course", course);
-        req.setAttribute("registrations", filteredList);
+        req.setAttribute("registrations", list);
         req.setAttribute("courseList", registrationService.getCoursesForManager(currentUser));
         req.getRequestDispatcher("/WEB-INF/views/registration/list.jsp").forward(req, resp);
     }

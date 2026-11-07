@@ -437,22 +437,21 @@ public RecentLearningDto getRecentLearning(long userId) {
         }
     }
 
-    public List<RegistrationDto> getByCourse(long courseId) {
+    public List<RegistrationDto> searchRegistrations(Long courseId, String keyword, String paymentStatus, String status) {
         try (Connection con = DbConnection.getConnection()) {
-            List<Registration> list = registrationDao.findByCourseId(con, courseId);
-            List<RegistrationDto> dtoList = new ArrayList<>();
-            for (Registration r : list) {
-                dtoList.add(mapRegistration(r));
-            }
-            return dtoList;
+            return registrationDao.search(con, courseId, keyword, paymentStatus, status);
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi lấy danh sách học viên khóa học: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi tìm kiếm danh sách đăng ký: " + e.getMessage(), e);
         }
+    }
+
+    public List<RegistrationDto> getByCourse(long courseId) {
+        return searchRegistrations(courseId, null, null, null);
     }
 
     public RegistrationDto getById(long registrationId) {
         try (Connection con = DbConnection.getConnection()) {
-            return registrationDao.findById(con, registrationId).map(this::mapRegistration).orElse(null);
+            return registrationDao.findDtoById(con, registrationId).orElse(null);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy chi tiết đăng ký: " + e.getMessage(), e);
         }
@@ -495,16 +494,7 @@ public RecentLearningDto getRecentLearning(long userId) {
     }
 
     public List<RegistrationDto> getAll() {
-        try (Connection con = DbConnection.getConnection()) {
-            List<Registration> list = registrationDao.findAll(con);
-            List<RegistrationDto> dtoList = new ArrayList<>();
-            for (Registration r : list) {
-                dtoList.add(mapRegistration(r));
-            }
-            return dtoList;
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi lấy danh sách toàn bộ đăng ký: " + e.getMessage(), e);
-        }
+        return searchRegistrations(null, null, null, null);
     }
 
     public List<CourseDto> getCoursesForManager(UserDto user) {

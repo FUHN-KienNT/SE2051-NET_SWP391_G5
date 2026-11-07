@@ -1,5 +1,6 @@
 package dao;
 
+import dto.RegistrationDto;
 import entity.Registration;
 import entity.enums.PaymentMethod;
 import entity.enums.PaymentStatus;
@@ -239,6 +240,108 @@ public class RegistrationDao {
             }
         }
         return 0;
+    }
+
+    /**
+     * Tìm kiếm và lọc danh sách đăng ký cho Manager & Admin (1 lần query duy nhất).
+     */
+    public List<RegistrationDto> search(Connection con, Long courseId, String keyword, String paymentStatus, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+            "SELECT r.id, r.user_id, u.full_name AS user_name, r.course_id, c.title AS course_title, " +
+            "       r.registration_date, r.progress_percentage, r.status, r.payment_method, " +
+            "       r.payment_code, r.payment_amount, r.payment_status, r.paid_at " +
+            "FROM registrations r " +
+            "LEFT JOIN users u ON r.user_id = u.id " +
+            "LEFT JOIN courses c ON r.course_id = c.id " +
+            "WHERE 1=1"
+        );
+        List<Object> params = new ArrayList<>();
+
+        if (courseId != null && courseId > 0) {
+            sql.append(" AND r.course_id = ?");
+            params.add(courseId);
+        }
+        if (paymentStatus != null && !paymentStatus.trim().isEmpty()) {
+            sql.append(" AND r.payment_status = ?");
+            params.add(paymentStatus.trim().toUpperCase());
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND r.status = ?");
+            params.add(status.trim().toUpperCase());
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String kw = "%" + keyword.trim().toLowerCase() + "%";
+            sql.append(" AND (CAST(r.id AS TEXT) = ? OR LOWER(u.full_name) LIKE ? OR LOWER(c.title) LIKE ? OR LOWER(r.payment_code) LIKE ?)");
+            params.add(keyword.trim());
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        sql.append(" ORDER BY r.id DESC");
+
+        List<RegistrationDto> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapDtoRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Lấy chi tiết đơn đăng ký kèm tên học viên và khóa học (1 query duy nhất).
+     */
+    public Optional<RegistrationDto> findDtoById(Connection con, long id) throws SQLException {
+        String sql = "SELECT r.id, r.user_id, u.full_name AS user_name, r.course_id, c.title AS course_title, " +
+                     "       r.registration_date, r.progress_percentage, r.status, r.payment_method, " +
+                     "       r.payment_code, r.payment_amount, r.payment_status, r.paid_at " +
+                     "FROM registrations r " +
+                     "LEFT JOIN users u ON r.user_id = u.id " +
+                     "LEFT JOIN courses c ON r.course_id = c.id " +
+                     "WHERE r.id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapDtoRow(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    public RegistrationDto mapDtoRow(ResultSet rs) throws SQLException {
+        RegistrationDto dto = new RegistrationDto();
+        dto.setId(rs.getLong("id"));
+        dto.setUserId(rs.getLong("user_id"));
+        dto.setUserName(rs.getString("user_name"));
+        dto.setCourseId(rs.getLong("course_id"));
+        dto.setCourseTitle(rs.getString("course_title"));
+        dto.setRegistrationDate(rs.getObject("registration_date", OffsetDateTime.class));
+        dto.setProgressPercentage(rs.getBigDecimal("progress_percentage"));
+
+        String statusStr = rs.getString("status");
+        if (statusStr != null) {
+            dto.setStatus(RegistrationStatus.fromDb(statusStr));
+        }
+        String pm = rs.getString("payment_method");
+        if (pm != null) {
+            dto.setPaymentMethod(PaymentMethod.fromDb(pm));
+        }
+        dto.setPaymentCode(rs.getString("payment_code"));
+        dto.setPaymentAmount(rs.getBigDecimal("payment_amount"));
+        String ps = rs.getString("payment_status");
+        if (ps != null) {
+            dto.setPaymentStatus(PaymentStatus.fromDb(ps));
+        }
+        dto.setPaidAt(rs.getObject("paid_at", OffsetDateTime.class));
+        return dto;
     }
 
     private Registration mapRow(ResultSet rs) throws SQLException {
