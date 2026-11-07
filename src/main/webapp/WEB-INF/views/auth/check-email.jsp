@@ -410,7 +410,7 @@
                     info: 'bi-info-circle-fill'
                 };
                 const CoursonToast = {
-                    show: function (type, message, duration = 3000) {
+                    show: function (type, message, duration = 5000) {
                         if (!message)
                             return;
                         const c = getOrCreateContainer();
@@ -453,7 +453,7 @@
                             if (duration > 0) {
                                 timer = setTimeout(() => {
                                     dismissToast(toast);
-                                }, 1200);
+                                }, 2000);
                             }
                         };
                         return toast;

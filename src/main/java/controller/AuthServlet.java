@@ -394,8 +394,7 @@ public class AuthServlet extends HttpServlet {
         } else if ("INSTRUCTOR".equalsIgnoreCase(role)) {
             resp.sendRedirect(ctx + "/admin/courses");
         } else {
-            // Mặc định đối với vai trò Student (Học viên) chuyển thẳng đến Student Dashboard (/registrations/my)
-            resp.sendRedirect(ctx + "/registrations/my");
+            resp.sendRedirect(ctx + "/home");
         }
     }
     private void showSetPassword(HttpServletRequest req, HttpServletResponse resp)
