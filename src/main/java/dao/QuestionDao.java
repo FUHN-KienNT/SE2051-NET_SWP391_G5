@@ -41,9 +41,37 @@ public class QuestionDao {
     }
 
     public List<Question> findByCourseId(Connection con, long courseId) throws SQLException {
+        return search(con, courseId, null, null, null);
+    }
+
+    public List<Question> search(Connection con, long courseId, Long moduleId, String questionType, String keyword) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT q.id, q.module_id, q.question_text, q.question_type, q.default_points, q.created_at "
+                + "FROM questions q JOIN modules m ON q.module_id = m.id "
+                + "WHERE m.course_id = ?"
+        );
+        List<Object> params = new ArrayList<>();
+        params.add(courseId);
+
+        if (moduleId != null && moduleId > 0) {
+            sql.append(" AND q.module_id = ?");
+            params.add(moduleId);
+        }
+        if (questionType != null && !questionType.trim().isEmpty() && !"all".equalsIgnoreCase(questionType.trim())) {
+            sql.append(" AND q.question_type = ?");
+            params.add(questionType.trim().toUpperCase());
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND LOWER(q.question_text) LIKE ?");
+            params.add("%" + keyword.trim().toLowerCase() + "%");
+        }
+        sql.append(" ORDER BY m.order_index ASC, q.id ASC");
+
         List<Question> list = new ArrayList<>();
-        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_COURSE)) {
-            ps.setLong(1, courseId);
+        try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapQuestion(rs));

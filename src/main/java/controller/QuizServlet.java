@@ -237,21 +237,53 @@ public class QuizServlet extends HttpServlet {
 
         if (courseId != null) {
             try {
-                // Tải chuyên biệt cho Ngân hàng câu hỏi: nạp câu hỏi và đáp án theo module
-                CourseDto course = quizService.getQuestionBankCourse(courseId);
+                String keyword = req.getParameter("keyword");
+                if (keyword != null) {
+                    keyword = keyword.trim();
+                }
+                String filterModuleIdStr = req.getParameter("filterModuleId");
+                Long filterModuleId = null;
+                if (filterModuleIdStr != null && !filterModuleIdStr.trim().isEmpty() && !"all".equalsIgnoreCase(filterModuleIdStr.trim())) {
+                    try {
+                        filterModuleId = Long.parseLong(filterModuleIdStr.trim());
+                    } catch (NumberFormatException ignored) {}
+                }
+                String questionType = req.getParameter("questionType");
+                if (questionType != null) {
+                    questionType = questionType.trim();
+                    if ("all".equalsIgnoreCase(questionType)) {
+                        questionType = null;
+                    }
+                }
+
+                // Tải chuyên biệt cho Ngân hàng câu hỏi qua Server-side Filtering
+                CourseDto course = quizService.searchQuestionBankCourse(courseId, filterModuleId, questionType, keyword);
                 req.setAttribute("course", course);
                 req.setAttribute("courseId", courseId);
+
+                // Danh sách toàn bộ chương để render vào dropdown bộ lọc
+                List<entity.Module> allModules = quizService.getModulesByCourse(courseId);
+                req.setAttribute("allModules", allModules);
 
                 int totalQuizzes = quizService.countQuizzesByCourse(courseId);
                 req.setAttribute("totalQuizzes", totalQuizzes);
 
-                int totalQuestions = 0;
+                int totalQuestions = quizService.countQuestionsByCourse(courseId);
+                req.setAttribute("totalQuestions", totalQuestions);
+
+                // Đếm tổng số câu hỏi khớp với kết quả tìm kiếm hiện tại
+                int filteredQuestionsCount = 0;
                 if (course != null && course.getModules() != null) {
                     for (ModuleDto m : course.getModules()) {
-                        totalQuestions += m.getQuestionCount();
+                        filteredQuestionsCount += m.getQuestionCount();
                     }
                 }
-                req.setAttribute("totalQuestions", totalQuestions);
+                req.setAttribute("filteredQuestionsCount", filteredQuestionsCount);
+
+                // Lưu lại các tham số filter để giữ trạng thái trên form
+                req.setAttribute("keyword", keyword);
+                req.setAttribute("filterModuleId", filterModuleId);
+                req.setAttribute("questionType", req.getParameter("questionType"));
             } catch (Exception e) {
                 req.setAttribute("error", "Lỗi tải ngân hàng câu hỏi: " + e.getMessage());
             }

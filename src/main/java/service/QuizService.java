@@ -306,6 +306,13 @@ public class QuizService {
      * Tải thông tin Ngân hàng câu hỏi (chỉ nạp câu hỏi và đáp án khi vào trang Ngân hàng câu hỏi).
      */
     public CourseDto getQuestionBankCourse(long courseId) {
+        return searchQuestionBankCourse(courseId, null, null, null);
+    }
+
+    /**
+     * Tìm kiếm và lọc ngân hàng câu hỏi phía Server (Server-side Filtering)
+     */
+    public CourseDto searchQuestionBankCourse(long courseId, Long moduleId, String questionType, String keyword) {
         try (Connection con = DbConnection.getConnection()) {
             entity.Course course = courseDao.findById(con, courseId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
@@ -315,15 +322,15 @@ public class QuizService {
             dto.setTitle(course.getTitle());
 
             List<entity.Module> modules = moduleDao.findByCourseId(con, courseId);
-            List<Question> allQuestions = questionDao.findByCourseId(con, courseId);
+            List<Question> matchingQuestions = questionDao.search(con, courseId, moduleId, questionType, keyword);
             Map<Long, Integer> answerCounts = questionDao.findAnswerCountsByCourse(con, courseId);
             Map<Long, Integer> assignmentCounts = questionDao.findAssignmentCountsByCourse(con, courseId);
             Map<Long, List<QuestionDto>> questionsByModuleId = new HashMap<>();
 
-            if (!allQuestions.isEmpty()) {
-                List<Long> qIds = allQuestions.stream().map(Question::getId).collect(Collectors.toList());
+            if (!matchingQuestions.isEmpty()) {
+                List<Long> qIds = matchingQuestions.stream().map(Question::getId).collect(Collectors.toList());
                 Map<Long, List<AnswerOption>> optionsMap = questionDao.findOptionsByQuestionIds(con, qIds);
-                for (Question q : allQuestions) {
+                for (Question q : matchingQuestions) {
                     QuestionDto qDto = new QuestionDto();
                     qDto.setId(q.getId());
                     qDto.setModuleId(q.getModuleId());
@@ -343,18 +350,38 @@ public class QuizService {
                 }
             }
 
+            boolean isFiltering = (moduleId != null && moduleId > 0)
+                    || (questionType != null && !questionType.trim().isEmpty() && !"all".equalsIgnoreCase(questionType.trim()))
+                    || (keyword != null && !keyword.trim().isEmpty());
+
             for (entity.Module m : modules) {
+                if (moduleId != null && moduleId > 0 && m.getId() != moduleId) {
+                    continue;
+                }
+                List<QuestionDto> modQuestions = questionsByModuleId.getOrDefault(m.getId(), Collections.emptyList());
+                // Khi đang lọc tìm kiếm, ẩn các chương không có câu hỏi khớp để kết quả tập trung
+                if (isFiltering && modQuestions.isEmpty()) {
+                    continue;
+                }
                 ModuleDto mDto = new ModuleDto();
                 mDto.setId(m.getId());
                 mDto.setCourseId(m.getCourseId());
                 mDto.setTitle(m.getTitle());
                 mDto.setOrderIndex(m.getOrderIndex());
-                mDto.getQuestions().addAll(questionsByModuleId.getOrDefault(m.getId(), Collections.emptyList()));
+                mDto.getQuestions().addAll(modQuestions);
                 dto.getModules().add(mDto);
             }
             return dto;
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi lấy thông tin ngân hàng câu hỏi của khóa học: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi tìm kiếm ngân hàng câu hỏi của khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public List<entity.Module> getModulesByCourse(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return moduleDao.findByCourseId(con, courseId);
+        } catch (SQLException e) {
+            return Collections.emptyList();
         }
     }
 

@@ -689,52 +689,75 @@ body {
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <!-- Toolbar lọc & tìm kiếm câu hỏi -->
-                    <div class="saas-toolbar">
+                    <c:set var="isSearching" value="${not empty keyword or not empty filterModuleId or (not empty questionType and questionType != 'all')}" />
+
+                    <!-- Toolbar lọc & tìm kiếm câu hỏi phía Server (Server-side Filtering) -->
+                    <form action="${pageContext.request.contextPath}/quizzes/questions" method="GET" class="saas-toolbar mb-3" id="questionFilterForm">
+                        <input type="hidden" name="courseId" value="${course.id}">
                         <div class="row g-2 align-items-center justify-content-between">
                             <div class="col-md-5 col-12">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light border-end-0 text-muted">
                                         <i class="bi bi-search"></i>
                                     </span>
-                                    <input type="text" id="questionSearchInput"
+                                    <input type="text" name="keyword" id="questionSearchInput"
                                         class="form-control border-start-0 bg-light"
+                                        value="<c:out value='${keyword}'/>"
                                         placeholder="Tìm kiếm nội dung câu hỏi...">
-                                    <button
-                                        class="btn btn-outline-secondary border-start-0 bg-light text-muted d-none"
-                                        type="button" id="clearQuestionSearchBtn">
-                                        <i class="bi bi-x-circle"></i>
+                                    <c:if test="${not empty keyword}">
+                                        <a href="${pageContext.request.contextPath}/quizzes/questions?courseId=${course.id}&filterModuleId=${filterModuleId}&questionType=${questionType}"
+                                            class="btn btn-outline-secondary border-start-0 bg-light text-muted"
+                                            title="Xóa từ khóa">
+                                            <i class="bi bi-x-circle"></i>
+                                        </a>
+                                    </c:if>
+                                    <button class="btn btn-dark btn-sm px-3" type="submit">
+                                        <i class="bi bi-search me-1"></i>Tìm
                                     </button>
                                 </div>
                             </div>
 
                             <div class="col-md-3 col-sm-6 col-12">
-                                <select id="questionModuleFilter"
-                                    class="form-select form-select-sm bg-light">
-                                    <option value="all">Tất cả chương học</option>
-                                    <c:forEach var="moduleItem" items="${course.modules}">
-                                        <option value="${moduleItem.id}"><c:out value="${moduleItem.displayTitle}" /></option>
+                                <select id="questionModuleFilter" name="filterModuleId"
+                                    class="form-select form-select-sm bg-light" onchange="document.getElementById('questionFilterForm').submit()">
+                                    <option value="">Tất cả chương học</option>
+                                    <c:forEach var="moduleItem" items="${allModules}">
+                                        <option value="${moduleItem.id}" ${filterModuleId == moduleItem.id ? 'selected' : ''}>
+                                            Chương ${moduleItem.orderIndex}: <c:out value="${moduleItem.title}" />
+                                        </option>
                                     </c:forEach>
                                 </select>
                             </div>
 
                             <div class="col-md-2 col-sm-6 col-12">
-                                <select id="questionTypeFilter"
-                                    class="form-select form-select-sm bg-light">
-                                    <option value="all">Tất cả loại câu</option>
-                                    <option value="SINGLE_CHOICE">Trắc nghiệm</option>
-                                    <option value="TRUE_FALSE">Đúng / Sai</option>
+                                <select id="questionTypeFilter" name="questionType"
+                                    class="form-select form-select-sm bg-light" onchange="document.getElementById('questionFilterForm').submit()">
+                                    <option value="all" ${empty questionType or questionType == 'all' ? 'selected' : ''}>Tất cả loại câu</option>
+                                    <option value="SINGLE_CHOICE" ${questionType == 'SINGLE_CHOICE' ? 'selected' : ''}>Trắc nghiệm</option>
+                                    <option value="TRUE_FALSE" ${questionType == 'TRUE_FALSE' ? 'selected' : ''}>Đúng / Sai</option>
                                 </select>
                             </div>
+
+                            <c:if test="${isSearching}">
+                                <div class="col-auto">
+                                    <a href="${pageContext.request.contextPath}/quizzes/questions?courseId=${course.id}"
+                                        class="btn btn-sm btn-link text-danger text-decoration-none p-0" title="Đặt lại bộ lọc">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Đặt lại
+                                    </a>
+                                </div>
+                            </c:if>
                         </div>
-                    </div>
+                    </form>
 
                     <!-- Meta bar -->
                     <div class="curriculum-meta-bar">
                         <span class="small text-muted fw-semibold">
                             <i class="bi bi-layers-half text-secondary me-1"></i>${course.totalModules}
                             chương &bull; Hiển thị <strong id="questionVisibleCount"
-                                class="text-dark">${totalQuestions}</strong> / ${totalQuestions} câu hỏi
+                                class="text-dark">${filteredQuestionsCount}</strong> / ${totalQuestions} câu hỏi
+                            <c:if test="${isSearching}">
+                                <span class="badge bg-primary-subtle text-primary border ms-2">Đang lọc</span>
+                            </c:if>
                         </span>
                         <button type="button" class="btn-text-toggle" id="toggleAllQuestionBtn"
                             onclick="toggleAllQuestionSections()">
@@ -743,12 +766,17 @@ body {
                     </div>
 
                     <!-- Thông báo khi filter không tìm thấy câu hỏi nào -->
-                    <div id="questionEmptyFilter"
-                        class="saas-card p-5 text-center d-none mb-3">
-                        <div class="text-muted mb-2"><i class="bi bi-funnel fs-2"></i></div>
-                        <h6 class="fw-bold text-dark mb-1">Không tìm thấy câu hỏi nào phù hợp</h6>
-                        <p class="small text-muted mb-0">Thử thay đổi từ khóa tìm kiếm hoặc chọn lại các bộ lọc.</p>
-                    </div>
+                    <c:if test="${empty course.modules or filteredQuestionsCount == 0}">
+                        <div id="questionEmptyFilter" class="saas-card p-5 text-center mb-3">
+                            <div class="text-muted mb-2"><i class="bi bi-funnel fs-2"></i></div>
+                            <h6 class="fw-bold text-dark mb-1">Không tìm thấy câu hỏi nào phù hợp</h6>
+                            <p class="small text-muted mb-3">Thử thay đổi từ khóa tìm kiếm hoặc chọn lại các bộ lọc.</p>
+                            <a href="${pageContext.request.contextPath}/quizzes/questions?courseId=${course.id}"
+                                class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Xóa tất cả bộ lọc
+                            </a>
+                        </div>
+                    </c:if>
 
                     <!-- Danh sách câu hỏi theo từng chương dạng SaaS Module Cards -->
                     <div class="udemy-curriculum-container mb-4" id="questionCurriculumContainer">
@@ -760,9 +788,12 @@ body {
                                 data-module-title="${fn:toLowerCase(m.title)}">
 
                                 <!-- Header Chương: Click khu vực tiêu đề để đóng/mở, nút Thêm câu hỏi nằm riêng biệt -->
-                                <div class="udemy-section-header collapsed" id="q-header-${m.id}">
-                                    <div class="udemy-header-toggle d-flex align-items-center gap-2 flex-grow-1 overflow-hidden collapsed"
+                                <div class="udemy-section-header ${isSearching ? '' : 'collapsed'}" id="q-header-${m.id}">
+                                    <div class="udemy-header-toggle d-flex align-items-center gap-2 flex-grow-1 overflow-hidden ${isSearching ? '' : 'collapsed'}"
                                         data-bs-toggle="collapse"
+                                        data-bs-target="#q-collapse-${m.id}"
+                                        aria-expanded="${isSearching ? 'true' : 'false'}"
+                                        role="button">
                                         data-bs-target="#q-collapse-${m.id}"
                                         aria-expanded="false"
                                         role="button">
@@ -796,8 +827,8 @@ body {
                                     </div>
                                 </div>
 
-                                <!-- Body Chương: Danh sách câu hỏi (Closed by default) -->
-                                <div class="collapse udemy-section-body"
+                                <!-- Body Chương: Danh sách câu hỏi (Tự động mở khi tìm kiếm) -->
+                                <div class="collapse udemy-section-body ${isSearching ? 'show' : ''}"
                                     id="q-collapse-${m.id}">
                                     <c:choose>
                                         <c:when test="${not mHasQuestions}">
@@ -1183,92 +1214,6 @@ body {
                 : '<i class="bi bi-arrows-expand me-1"></i><span>Mở rộng tất cả</span>';
         }
 
-        // Live search, Module filter & Question Type filter
-        const qSearch = document.getElementById('questionSearchInput');
-        const clearQSearchBtn = document.getElementById('clearQuestionSearchBtn');
-        const qModFilter = document.getElementById('questionModuleFilter');
-        const qTypeFilter = document.getElementById('questionTypeFilter');
-        const qVisibleCountEl = document.getElementById('questionVisibleCount');
-        const qEmptyFilterEl = document.getElementById('questionEmptyFilter');
-
-        function filterQuestions() {
-            const kw = qSearch ? qSearch.value.trim().toLowerCase() : '';
-            if (clearQSearchBtn) {
-                clearQSearchBtn.classList.toggle('d-none', kw === '');
-            }
-            const modId = qModFilter ? qModFilter.value : 'all';
-            const type = qTypeFilter ? qTypeFilter.value : 'all';
-
-            const moduleSections = document.querySelectorAll('#questionCurriculumContainer .question-module-section');
-            let totalVisibleQuestions = 0;
-            let anySectionVisible = false;
-
-            moduleSections.forEach(function (sec) {
-                const secModId = sec.getAttribute('data-module-id') || '';
-                const secTitle = sec.getAttribute('data-module-title') || '';
-
-                if (modId !== 'all' && modId !== secModId) {
-                    sec.classList.add('d-none');
-                    return;
-                }
-
-                const rows = sec.querySelectorAll('.question-row');
-                let secVisibleQuestions = 0;
-
-                rows.forEach(function (row) {
-                    const rowText = row.getAttribute('data-text') || '';
-                    const rowType = row.getAttribute('data-type') || '';
-
-                    const matchKw = (kw === '' || rowText.includes(kw) || secTitle.includes(kw));
-                    const matchType = (type === 'all' || type === rowType);
-                    const visible = matchKw && matchType;
-
-                    row.classList.toggle('d-none', !visible);
-                    if (visible) {
-                        secVisibleQuestions++;
-                        totalVisibleQuestions++;
-                    }
-                });
-
-                if (kw === '' && type === 'all') {
-                    sec.classList.remove('d-none');
-                    anySectionVisible = true;
-                } else {
-                    if (secVisibleQuestions > 0) {
-                        sec.classList.remove('d-none');
-                        anySectionVisible = true;
-                        const collapseEl = sec.querySelector('.collapse');
-                        if (collapseEl && !collapseEl.classList.contains('show')) {
-                            bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
-                        }
-                    } else {
-                        sec.classList.add('d-none');
-                    }
-                }
-            });
-
-            if (qVisibleCountEl) qVisibleCountEl.textContent = totalVisibleQuestions;
-            if (qEmptyFilterEl && qContainer) {
-                if (!anySectionVisible) {
-                    qEmptyFilterEl.classList.remove('d-none');
-                    qContainer.classList.add('d-none');
-                } else {
-                    qEmptyFilterEl.classList.add('d-none');
-                    qContainer.classList.remove('d-none');
-                }
-            }
-        }
-
-        if (qSearch) qSearch.addEventListener('input', filterQuestions);
-        if (clearQSearchBtn) {
-            clearQSearchBtn.addEventListener('click', function () {
-                qSearch.value = '';
-                filterQuestions();
-                qSearch.focus();
-            });
-        }
-        if (qModFilter) qModFilter.addEventListener('change', filterQuestions);
-        if (qTypeFilter) qTypeFilter.addEventListener('change', filterQuestions);
     });
 
     function handleModalQTypeChange(type) {
@@ -1374,3 +1319,4 @@ body {
 </script>
 
 <jsp:include page="../common/footer.jsp" />
+
