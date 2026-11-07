@@ -49,7 +49,7 @@
                     <div class="col-md-6">
                         <div class="text-muted small text-uppercase fw-semibold mb-1">Khóa học</div>
                         <div class="fs-5 fw-semibold text-primary">
-                            <a href="${pageContext.request.contextPath}/course/detail?id=${registration.courseId}" class="text-decoration-none hover-primary">
+                            <a href="${pageContext.request.contextPath}/admin/course-detail?id=${registration.courseId}" class="text-decoration-none hover-primary" title="Xem chi tiết quản trị khóa học #${registration.courseId}">
                                 ${registration.courseTitle}
                             </a>
                         </div>

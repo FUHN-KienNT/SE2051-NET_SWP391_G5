@@ -423,15 +423,11 @@ body {
                                         <c:forEach var="reg" items="${recentRegistrations}">
                                             <tr>
                                                 <td class="ps-3">
-                                                    <a href="${pageContext.request.contextPath}/registrations/detail?id=${reg.id}" class="text-decoration-none" title="Xem chi tiết đơn #${reg.id}">
-                                                        <span class="saas-badge saas-badge-secondary">#${reg.id}</span>
-                                                    </a>
+                                                    <span class="saas-badge saas-badge-secondary">#${reg.id}</span>
                                                 </td>
                                                 <td>
-                                                    <div class="text-truncate fw-semibold" style="max-width: 280px;" title="${reg.courseTitle}">
-                                                        <a href="${pageContext.request.contextPath}/course/detail?id=${reg.courseId}" class="text-decoration-none text-dark hover-primary">
-                                                            ${reg.courseTitle}
-                                                        </a>
+                                                    <div class="text-truncate fw-semibold text-dark" style="max-width: 280px;" title="${reg.courseTitle}">
+                                                        ${reg.courseTitle}
                                                     </div>
                                                 </td>
                                                 <td>
