@@ -137,6 +137,11 @@ public class RegistrationManagementServlet extends HttpServlet {
             return;
         }
 
+        if (!"MANAGER".equalsIgnoreCase(currentUser.getRoleName()) && !"ADMIN".equalsIgnoreCase(currentUser.getRoleName())) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem chi tiết đơn đăng ký.");
+            return;
+        }
+
         String idStr = req.getParameter("id");
         if (idStr == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thiếu mã đăng ký.");

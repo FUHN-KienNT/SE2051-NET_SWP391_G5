@@ -477,8 +477,7 @@ public RecentLearningDto getRecentLearning(long userId) {
         if (registration == null || user == null || user.getRoleName() == null) {
             return false;
         }
-        return Long.valueOf(user.getId()).equals(registration.getUserId())
-                || "ADMIN".equalsIgnoreCase(user.getRoleName())
+        return "ADMIN".equalsIgnoreCase(user.getRoleName())
                 || "MANAGER".equalsIgnoreCase(user.getRoleName());
     }
 

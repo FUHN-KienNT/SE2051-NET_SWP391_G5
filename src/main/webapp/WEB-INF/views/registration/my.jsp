@@ -602,9 +602,6 @@
                                                         </c:choose>
                                                     </span>
                                                 </a>
-                                                <a href="${pageContext.request.contextPath}/registrations/detail?id=${r.id}" class="btn btn-link text-decoration-none text-muted w-100 py-1 text-center small mt-1" style="font-size: 0.8rem;">
-                                                    <i class="bi bi-list-check me-1 text-primary"></i>Chi tiết tiến độ khóa học &rarr;
-                                                </a>
 
                                                 <!-- Recent studied lesson hint -->
                                                 <c:if test="${not empty r.lastLessonTitle}">
@@ -619,11 +616,8 @@
                                                     <i class="bi bi-credit-card-2-front-fill me-2 fs-5 lh-1"></i>
                                                     <span>Thanh toán ngay</span>
                                                 </a>
-                                                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
-                                                    <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.72rem;">${r.paymentCode}</span>
-                                                    <a href="${pageContext.request.contextPath}/registrations/detail?id=${r.id}" class="text-decoration-none text-muted small" style="font-size: 0.8rem;">
-                                                        <i class="bi bi-info-circle me-1"></i>Chi tiết đơn &rarr;
-                                                    </a>
+                                                <div class="text-center mt-2 px-1">
+                                                    <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.72rem;">Mã ĐK: #${r.id} | ${r.paymentCode}</span>
                                                 </div>
                                             </c:otherwise>
                                         </c:choose>
