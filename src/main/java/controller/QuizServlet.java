@@ -25,6 +25,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 import service.QuizService;
+import dto.UserDto;
+import util.SessionUtil;
 
 @WebServlet(name = "QuizServlet", urlPatterns = { "/quizzes/*" })
 public class QuizServlet extends HttpServlet {
@@ -55,8 +57,37 @@ public class QuizServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
+    private boolean isStaffOrExpert(UserDto user) {
+        if (user == null) return false;
+        String role = user.getRoleName();
+        if (role == null) return false;
+        role = role.trim().toUpperCase();
+        return "ADMIN".equals(role) || "MANAGER".equals(role) || "EXPERT".equals(role);
+    }
+
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+
+        // [SECURITY DEFENSE]: Chặn triệt để Student truy cập vào các chức năng quản lý bài thi,
+        // xem danh sách câu hỏi / đáp án đúng hoặc sửa đề thi.
+        boolean isManagementAction = "list".equals(action) || "detail".equals(action)
+                || "save".equals(action) || "delete".equals(action)
+                || "save-question".equals(action) || "delete-question".equals(action)
+                || "assign-question".equals(action) || "remove-question".equals(action);
+
+        if (isManagementAction) {
+            if (currentUser == null) {
+                resp.sendRedirect(req.getContextPath() + "/auth/login");
+                return;
+            }
+            if (!isStaffOrExpert(currentUser)) {
+                SessionUtil.setFlashError(req, "Bạn không có quyền quản lý bài thi hoặc xem ngân hàng câu hỏi.");
+                resp.sendRedirect(req.getContextPath() + "/home");
+                return;
+            }
+        }
+
         switch (action) {
             case "list":
                 showQuizList(req, resp);
@@ -489,18 +520,34 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void showAttempt(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         try {
             long regId = Long.parseLong(req.getParameter("registrationId"));
             long quizId = Long.parseLong(req.getParameter("quizId"));
             QuizAttemptDto attempt = quizService.startAttempt(regId, quizId);
             QuizDto quiz = quizService.getQuizDetail(quizId);
 
+            // [ANTI-CHEAT DEFENSE]: TUYỆT ĐỐI KHÔNG gửi cờ đáp án đúng (isCorrect) về phía học viên trước khi nộp bài!
+            if (quiz != null && quiz.getQuestions() != null) {
+                for (QuestionDto q : quiz.getQuestions()) {
+                    if (q.getOptions() != null) {
+                        for (AnswerOptionDto opt : q.getOptions()) {
+                            opt.setCorrect(false);
+                        }
+                    }
+                }
+            }
+
             req.setAttribute("attempt", attempt);
             req.setAttribute("quiz", quiz);
             req.getRequestDispatcher("/WEB-INF/views/quiz/take.jsp").forward(req, resp);
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
-                    + java.net.URLEncoder.encode("Không thể bắt đầu làm bài thi: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            SessionUtil.setFlashError(req, "Không thể bắt đầu làm bài thi: " + e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
         }
     }
 

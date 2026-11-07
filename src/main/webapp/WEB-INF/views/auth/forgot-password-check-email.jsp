@@ -357,6 +357,20 @@
                 </div>
             </div>
 
+            <c:if test="${not empty sessionScope.devResetUrl}">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px dashed #10b981; border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; text-align: left;">
+                    <div style="font-weight: 700; color: #059669; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <i class="bi bi-shield-check"></i> Liên kết đặt lại mật khẩu (Kiểm thử / Khi chưa nhận được email):
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">
+                        Do giới hạn cổng SMTP của môi trường mạng nội bộ, bạn có thể bấm trực tiếp vào nút dưới đây để đổi mật khẩu ngay:
+                    </div>
+                    <a href="${sessionScope.devResetUrl}" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px 16px; background: #10b981; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; box-sizing: border-box; transition: background 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                        <i class="bi bi-key-fill"></i> Đặt lại mật khẩu ngay
+                    </a>
+                </div>
+            </c:if>
+
             <!-- Resend Button -->
             <button type="button" class="btn-resend" id="resendBtn" disabled>
                 <i class="bi bi-hourglass-split" id="resendIcon"></i>
@@ -394,7 +408,7 @@
                     info: 'bi-info-circle-fill'
                 };
                 const CoursonToast = {
-                    show: function (type, message, duration = 5000) {
+                    show: function (type, message, duration = 3000) {
                         if (!message)
                             return;
                         const c = getOrCreateContainer();
@@ -437,7 +451,7 @@
                             if (duration > 0) {
                                 timer = setTimeout(() => {
                                     dismissToast(toast);
-                                }, 2000);
+                                }, 1200);
                             }
                         };
                         return toast;

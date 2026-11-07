@@ -385,7 +385,7 @@
                 }, 400);
             }
             const CoursonToast = {
-                show: function(type, message, duration = 8000) {
+                show: function(type, message, duration = 3000) {
                     if (!message) return;
                     const c = getOrCreateContainer();
                     const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
@@ -422,7 +422,7 @@
                     toast.onmouseleave = () => {
                         timer = setTimeout(() => {
                             dismissToast(toast);
-                        }, 2000);
+                        }, 1200);
                     };
                     return toast;
                 }
@@ -446,6 +446,7 @@
     <c:remove var="flashToastMessage" scope="session"/>
     <c:remove var="flashToastType" scope="session"/>
 </c:if>
+
 
 
 </body>

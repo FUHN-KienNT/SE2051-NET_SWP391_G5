@@ -89,6 +89,14 @@ public class LessonServlet extends HttpServlet {
      * Điều hướng request đến hàm xử lý tương ứng dựa vào tên action.
      */
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // [Phân quyền bảo vệ - Admin không thuộc Expert Studio]: Chuyển hướng ngay về Admin Dashboard
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser != null && ("ADMIN".equalsIgnoreCase(currentUser.getRoleName()) || "ROLE_ADMIN".equalsIgnoreCase(currentUser.getRoleName()))) {
+            SessionUtil.setFlashError(req, "Tài khoản Quản trị viên không thuộc phạm vi Expert Studio. Hệ thống đã chuyển hướng bạn về Admin Dashboard.");
+            resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+            return;
+        }
+
         // [Xử lý Flash Messages]: Lấy thông báo lỗi/thành công từ Session (nếu có) và nạp vào Request, tự động xóa khỏi Session
         String flashError = SessionUtil.popFlashError(req);
         if (flashError != null) {
@@ -104,7 +112,7 @@ public class LessonServlet extends HttpServlet {
             "save-lesson", "hide-lesson", "delete-lesson", "toggle-lesson-status",
             "save-module", "delete-module", "save-course", "batch-save-lessons",
             "delete-course", "save-lesson-draft", "delete-lesson-draft",
-            "generate-ai-description", "request-publish", "cancel-request-publish",
+            "request-publish", "cancel-request-publish",
             "archive-course", "unarchive-course", "cancel-archive", "reorder-lessons"
         );
         if (mutatingActions.contains(action) && !"POST".equalsIgnoreCase(req.getMethod())) {
@@ -121,6 +129,16 @@ public class LessonServlet extends HttpServlet {
         switch (action) {
             case "dashboard":
                 showExpertDashboard(req, resp);
+                break;
+            case "course-detail":
+                showCourseDetail(req, resp);
+                break;
+            case "course-create":
+                resp.sendRedirect(req.getContextPath() + "/expert/course-detail");
+                break;
+            case "course-edit":
+                String editId = req.getParameter("id");
+                resp.sendRedirect(req.getContextPath() + "/expert/course-detail" + (editId != null ? "?id=" + editId : ""));
                 break;
             case "lessons":
                 showLessonList(req, resp);
@@ -229,6 +247,57 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
         req.setAttribute("categories", categories);
         req.getRequestDispatcher("/WEB-INF/views/expert/dashboard.jsp").forward(req, resp);
     }
+
+    /**
+     * [Màn hình Course Detail của Expert]
+     * Dùng chung để Tạo Khóa Học Mới (khi id trống/0) và Chỉnh Sửa Khóa Học (khi có id).
+     */
+    private void showCourseDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String idStr = req.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            idStr = req.getParameter("courseId");
+        }
+
+        CourseDto course = null;
+        boolean isEdit = false;
+        if (idStr != null && !idStr.trim().isEmpty() && !"0".equals(idStr.trim()) && !"new".equalsIgnoreCase(idStr.trim())) {
+            try {
+                long courseId = Long.parseLong(idStr.trim());
+                String role = currentUser.getRoleName();
+                if (!"ADMIN".equalsIgnoreCase(role) && !"MANAGER".equalsIgnoreCase(role)) {
+                    courseService.checkCourseOwnership(courseId, currentUser);
+                }
+                course = courseService.getCourseDetail(courseId);
+                isEdit = (course != null);
+            } catch (SecurityException se) {
+                SessionUtil.setFlashError(req, se.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                return;
+            } catch (Exception e) {
+                SessionUtil.setFlashError(req, "Không thể tải thông tin khóa học: " + e.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
+                return;
+            }
+        }
+
+        if (course == null) {
+            course = new CourseDto();
+            course.setPrice(java.math.BigDecimal.ZERO);
+            course.setStatus(entity.enums.CourseStatus.DRAFT);
+        }
+
+        req.setAttribute("course", course);
+        req.setAttribute("isEdit", isEdit);
+        req.setAttribute("categories", courseService.getCategories());
+        req.getRequestDispatcher("/WEB-INF/views/expert/course_detail.jsp").forward(req, resp);
+    }
+
+
 
     /**
      * [Tối ưu hiệu năng & Indexed Query]:
@@ -428,9 +497,14 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
 
         resp.setContentType("application/json;charset=UTF-8");
         StringBuilder sb = new StringBuilder("{");
+        sb.append("\"success\":true,");
         sb.append("\"playlistTitle\":");
-        if (result.getPlaylistTitle() != null && !result.getPlaylistTitle().isEmpty()) {
-            sb.append("\"").append(escapeJson(result.getPlaylistTitle())).append("\"");
+        String pTitle = result.getPlaylistTitle();
+        if ((pTitle == null || pTitle.trim().isEmpty()) && !result.getLessons().isEmpty()) {
+            pTitle = result.getLessons().get(0).getTitle();
+        }
+        if (pTitle != null && !pTitle.trim().isEmpty()) {
+            sb.append("\"").append(escapeJson(pTitle)).append("\"");
         } else {
             sb.append("null");
         }
@@ -451,6 +525,21 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
         }
         sb.append(",\"videos\":[");
         List<LessonDto> lessons = result.getLessons();
+        for (int i = 0; i < lessons.size(); i++) {
+            LessonDto l = lessons.get(i);
+            if (i > 0) sb.append(",");
+            String vidId = "";
+            if (l.getVideoUrl() != null && l.getVideoUrl().contains("/embed/")) {
+                vidId = l.getVideoUrl().substring(l.getVideoUrl().lastIndexOf("/embed/") + 7);
+            }
+            sb.append("{")
+              .append("\"orderIndex\":").append(l.getOrderIndex()).append(",")
+              .append("\"title\":\"").append(escapeJson(l.getTitle())).append("\",")
+              .append("\"videoUrl\":\"").append(escapeJson(l.getVideoUrl())).append("\",")
+              .append("\"videoId\":\"").append(escapeJson(vidId)).append("\"")
+              .append("}");
+        }
+        sb.append("],\"lessons\":[");
         for (int i = 0; i < lessons.size(); i++) {
             LessonDto l = lessons.get(i);
             if (i > 0) sb.append(",");
@@ -573,10 +662,20 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
             if (batchResult != null && !batchResult.getLessons().isEmpty()) {
                 courseService.saveBatchLessons(savedId, null, batchModuleTitle, batchResult.getLessons());
                 SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Các bài giảng đã được tự động phân chia vào các Chương học (Modules) tương ứng.");
+                resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
             } else {
-                SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
+                String redirectTarget = req.getParameter("redirect");
+                if ("detail".equalsIgnoreCase(redirectTarget)) {
+                    SessionUtil.setFlashSuccess(req, "Lưu thông tin khóa học thành công!");
+                    resp.sendRedirect(req.getContextPath() + "/expert/course-detail?id=" + savedId);
+                } else if ("public".equalsIgnoreCase(redirectTarget)) {
+                    SessionUtil.setFlashSuccess(req, "Lưu thông tin khóa học thành công!");
+                    resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + savedId);
+                } else {
+                    SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
+                    resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
+                }
             }
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
         } catch (Exception e) {
             SessionUtil.setFlashError(req, e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
@@ -789,6 +888,8 @@ private void requestPublish(HttpServletRequest req, HttpServletResponse resp) th
         String from = req.getParameter("from");
         if ("lessons".equalsIgnoreCase(from)) {
             resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        } else if ("detail".equalsIgnoreCase(from)) {
+            resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + courseIdStr);
         } else {
             resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
         }
@@ -833,6 +934,8 @@ private void requestPublish(HttpServletRequest req, HttpServletResponse resp) th
         String from = req.getParameter("from");
         if ("lessons".equalsIgnoreCase(from)) {
             resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseIdStr);
+        } else if ("detail".equalsIgnoreCase(from)) {
+            resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + courseIdStr);
         } else {
             resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
         }

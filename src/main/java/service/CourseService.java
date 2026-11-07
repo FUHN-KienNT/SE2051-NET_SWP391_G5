@@ -1438,7 +1438,7 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
         java.util.regex.Pattern playlistPattern = java.util.regex.Pattern.compile(
                 "(?:[?&]list=|playlist\\?list=)([a-zA-Z0-9_-]+)|(^PL[a-zA-Z0-9_-]{16,})");
         java.util.regex.Pattern ytIdPattern = java.util.regex.Pattern.compile(
-                "(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})|^([a-zA-Z0-9_-]{11})$");
+                "(?:youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|shorts\\/|watch\\?v=|\\&v=)([a-zA-Z0-9_-]{11})");
 
         java.util.Set<String> processedPlaylistIds = new java.util.HashSet<>();
         java.util.Set<String> seenVideoIds = new java.util.HashSet<>();
@@ -1476,13 +1476,13 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
 
             // 2. Nếu không phải Playlist (hoặc tải Playlist thất bại), bóc tách video đơn lẻ
             String videoId = null;
-            String[] tokens = line.split("\\s+");
-            for (String token : tokens) {
-                java.util.regex.Matcher m = ytIdPattern.matcher(token);
-                if (m.find()) {
-                    videoId = m.group(1) != null ? m.group(1) : m.group(2);
-                    break;
-                }
+            // 2.1 Bóc tách link YouTube thực sự từ dòng (có domain/path youtube)
+            java.util.regex.Matcher m = ytIdPattern.matcher(line);
+            if (m.find()) {
+                videoId = m.group(1);
+            } else if (line.matches("^[a-zA-Z0-9_-]{11}$") && line.matches(".*[0-9_-].*")) {
+                // 2.2 Chỉ khi cả dòng duy nhất là 1 mã ID 11 ký tự (có chứa số/kí tự đặc biệt để loại trừ từ thông thường)
+                videoId = line;
             }
 
             if (videoId != null && seenVideoIds.add(videoId)) {
@@ -1646,6 +1646,9 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
                 if (mTitle.find()) {
                     plTitle = unescapeHtml(unescapeUnicode(mTitle.group(1).trim()));
                 }
+            }
+            if ("undefined".equalsIgnoreCase(plTitle) || "null".equalsIgnoreCase(plTitle) || "YouTube".equalsIgnoreCase(plTitle)) {
+                plTitle = null;
             }
             data.setTitle(plTitle);
 
@@ -1818,14 +1821,6 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
             Course course = courseDao.findById(con, reg.getCourseId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học tương ứng."));
 
-            // Không cho phép học viên thường truy cập bài học nếu khóa học đang ở trạng thái DRAFT hoặc PENDING_REVIEW
-            if (course.getStatus() == CourseStatus.DRAFT || course.getStatus() == CourseStatus.PENDING_REVIEW) {
-                boolean isPrivileged = (course.getExpertId() != null && course.getExpertId().equals(userId))
-                        || (course.getManagerId() != null && course.getManagerId().equals(userId));
-                if (!isPrivileged) {
-                    throw new IllegalStateException("Khóa học này đang ở trạng thái Nháp (tạm thời chưa mở học hoặc đang cập nhật nội dung). Vui lòng quay lại sau.");
-                }
-            }
 
             CourseDto courseDto = buildCourseTree(con, course);
 
@@ -1859,7 +1854,7 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
                 return;
             }
             Course course = courseDao.findById(con, reg.getCourseId()).orElse(null);
-            if (course == null || course.getStatus() == CourseStatus.DRAFT) {
+            if (course == null) {
                 return;
             }
             lessonProgressDao.touchLesson(con, registrationId, lessonId);

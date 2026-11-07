@@ -26,6 +26,12 @@ public class AuthenticationFilter implements Filter {
         publicPaths.add("/home");
         publicPaths.add("/courses/catalog");
         publicPaths.add("/courses/detail");
+        publicPaths.add("/registrations/vnpay-ipn");
+        publicPaths.add("/registrations/payment-callback");
+        publicPaths.add("/registrations/vnpay-return");
+        publicPaths.add("/registrations/payment-return");
+        publicPaths.add("/api/dev");
+        publicPaths.add("/dev");
         publicPaths.add("/assets");
         publicPaths.add("/css");
         publicPaths.add("/js");

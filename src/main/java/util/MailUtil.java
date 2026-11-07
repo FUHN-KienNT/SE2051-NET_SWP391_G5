@@ -33,6 +33,12 @@ public final class MailUtil {
     private static String SMTP_PASSWORD = "";
     private static String FROM_NAME = "Courson LMS";
     private static String APP_BASE_URL = "http://localhost:8080/Courson";
+    private static final java.util.Map<String, String> lastResetUrls = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static String getLastResetUrl(String email) {
+        if (email == null) return null;
+        return lastResetUrls.get(email.trim().toLowerCase());
+    }
 
     static {
         loadConfig();
@@ -162,11 +168,20 @@ public final class MailUtil {
      * Sends password reset email asynchronously.
      */
     public static void sendPasswordResetEmailAsync(String toEmail, String fullName, String rawToken, String dynamicBaseUrl) {
+        String baseUrl = (dynamicBaseUrl != null && !dynamicBaseUrl.trim().isEmpty()) ? dynamicBaseUrl : APP_BASE_URL;
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        String resetUrl = baseUrl + "/auth/reset-password?token=" + rawToken;
+        if (toEmail != null) {
+            lastResetUrls.put(toEmail.trim().toLowerCase(), resetUrl);
+        }
+
         EXECUTOR.submit(() -> {
             try {
                 sendPasswordResetEmailSync(toEmail, fullName, rawToken, dynamicBaseUrl);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Lỗi khi gửi email đặt lại mật khẩu bất đồng bộ tới: " + toEmail, e);
+                LOGGER.log(Level.WARNING, "Lỗi gửi email reset qua SMTP (URL dự phòng sẵn sàng): " + e.getMessage());
             }
         });
     }
@@ -174,9 +189,12 @@ public final class MailUtil {
     /**
      * Synchronous mail sending logic for password reset.
      */
-    public static void sendPasswordResetEmailSync(String toEmail, String fullName, String rawToken, String dynamicBaseUrl)
+        public static void sendPasswordResetEmailSync(String toEmail, String fullName, String rawToken, String dynamicBaseUrl)
             throws MessagingException {
         String resetUrl = resolveBaseUrl(dynamicBaseUrl) + "/auth/reset-password?token=" + rawToken;
+        if (toEmail != null) {
+            lastResetUrls.put(toEmail.trim().toLowerCase(), resetUrl);
+        }
         String htmlBody = buildPasswordResetEmailHtml(fullName != null ? fullName : "Học viên", resetUrl);
         sendHtmlEmailSync(toEmail, "Đặt lại mật khẩu tài khoản Courson LMS", htmlBody, "đặt lại mật khẩu");
     }

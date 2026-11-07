@@ -36,6 +36,10 @@ public class RegistrationService {
     }
 
     public RegistrationDto enroll(long userId, long courseId) {
+        return enroll(userId, courseId, null);
+    }
+
+    public RegistrationDto enroll(long userId, long courseId, BigDecimal customAmount) {
         try (Connection con = DbConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
@@ -45,8 +49,25 @@ public class RegistrationService {
                 }
                 Course course = courseOpt.get();
 
-                // Không cho phép đăng ký hoặc tiếp tục đăng ký khóa học đang ở trạng thái Nháp
-                // hoặc Chờ duyệt
+                // Nếu học viên đã có đơn đăng ký từ trước (đã mua / đang học), ưu tiên trả về quyền truy cập
+                Optional<Registration> existingOpt = registrationDao.findByUserAndCourse(con, userId, courseId);
+                if (existingOpt.isPresent()) {
+                    Registration reg = existingOpt.get();
+                    if (reg.getStatus() == RegistrationStatus.ACTIVE
+                            || reg.getStatus() == RegistrationStatus.COMPLETED) {
+                        return mapRegistration(reg);
+                    }
+                    if (reg.getStatus() == RegistrationStatus.PENDING) {
+                        if (customAmount != null && customAmount.compareTo(BigDecimal.ZERO) >= 0) {
+                            reg.setPaymentAmount(customAmount);
+                            registrationDao.updatePayment(con, reg);
+                            con.commit();
+                        }
+                        return mapRegistration(reg);
+                    }
+                }
+
+                // Với người dùng chưa đăng ký: Không cho phép đăng ký mới khóa học đang ở trạng thái Nháp hoặc Chờ duyệt
                 if (course.getStatus() == CourseStatus.DRAFT) {
                     throw new IllegalStateException(
                             "Khóa học này đang ở trạng thái Nháp (chưa được xuất bản). Bạn không thể đăng ký.");
@@ -55,7 +76,6 @@ public class RegistrationService {
                     throw new IllegalStateException("Khóa học này đang chờ phê duyệt. Bạn không thể đăng ký.");
                 }
 
-                Optional<Registration> existingOpt = registrationDao.findByUserAndCourse(con, userId, courseId);
                 if (existingOpt.isPresent()) {
                     Registration reg = existingOpt.get();
                     if (reg.getStatus() == RegistrationStatus.ACTIVE
@@ -65,6 +85,18 @@ public class RegistrationService {
                     if (reg.getStatus() == RegistrationStatus.PENDING) {
                         return mapRegistration(reg);
                     }
+                    // Truong hop truoc do don bi huy / that bai: Kich hoat lai don hang moi
+                    Registration fresh = initializePayment(course, customAmount);
+                    reg.setStatus(fresh.getStatus());
+                    reg.setPaymentStatus(fresh.getPaymentStatus());
+                    reg.setPaymentMethod(fresh.getPaymentMethod());
+                    reg.setPaymentCode(fresh.getPaymentCode());
+                    reg.setPaymentAmount(fresh.getPaymentAmount());
+                    reg.setRegistrationDate(OffsetDateTime.now());
+                    reg.setPaidAt(fresh.getPaidAt());
+                    registrationDao.updatePayment(con, reg);
+                    con.commit();
+                    return mapRegistration(reg);
                 }
 
                 // Nếu chưa có đơn đăng ký, kiểm tra xem khóa học đã lưu trữ (ngừng tuyển sinh)
@@ -76,7 +108,7 @@ public class RegistrationService {
                             "Khóa học này đã được chuyển sang chế độ Lưu trữ (ngừng nhận học viên mới). Bạn không thể đăng ký mới.");
                 }
 
-                Registration reg = initializePayment(course);
+                Registration reg = initializePayment(course, customAmount);
                 reg.setUserId(userId);
                 reg.setCourseId(courseId);
                 long id = registrationDao.insert(con, reg);
@@ -201,7 +233,7 @@ public RecentLearningDto getRecentLearning(long userId) {
                 + "JOIN courses c ON r.course_id = c.id "
                 + "LEFT JOIN settings s ON c.category_id = s.id "
                 + "JOIN lessons l ON lp.lesson_id = l.id "
-                + "WHERE r.user_id = ? AND r.status IN ('ACTIVE', 'COMPLETED') AND c.status != 'DRAFT' "
+                + "WHERE r.user_id = ? AND r.status IN ('ACTIVE', 'COMPLETED') "
                 + "ORDER BY COALESCE(lp.updated_at, lp.completed_at) DESC NULLS LAST "
                 + "LIMIT 1";
 
@@ -276,7 +308,7 @@ public RecentLearningDto getRecentLearning(long userId) {
                     + "  ORDER BY m3.order_index ASC, l3.order_index ASC "
                     + "  LIMIT 1 "
                     + ") l ON true "
-                    + "WHERE r.user_id = ? AND r.status IN ('ACTIVE', 'COMPLETED') AND c.status != 'DRAFT' "
+                    + "WHERE r.user_id = ? AND r.status IN ('ACTIVE', 'COMPLETED') "
                     + "ORDER BY r.id DESC "
                     + "LIMIT 1";
 
@@ -467,12 +499,18 @@ public RecentLearningDto getRecentLearning(long userId) {
                     reg.setPaymentCode(code);
                 if (paidAt != null)
                     reg.setPaidAt(paidAt);
-
                 if (status == PaymentStatus.SUCCESS || status == PaymentStatus.FREE) {
                     reg.setStatus(RegistrationStatus.ACTIVE);
+                    if (reg.getPaidAt() == null) {
+                        reg.setPaidAt(paidAt != null ? paidAt : OffsetDateTime.now());
+                    }
+                    if (reg.getPaymentCode() == null || reg.getPaymentCode().trim().isEmpty()) {
+                        reg.setPaymentCode(code != null ? code : ("PAY-" + System.currentTimeMillis()));
+                    }
                 } else if (status == PaymentStatus.FAILED) {
                     reg.setStatus(RegistrationStatus.CANCELLED);
                 }
+
 
                 registrationDao.updatePayment(con, reg);
                 con.commit();
@@ -534,10 +572,18 @@ public RecentLearningDto getRecentLearning(long userId) {
     }
 
     private Registration initializePayment(Course course) {
+        return initializePayment(course, null);
+    }
+
+    private Registration initializePayment(Course course, BigDecimal customAmount) {
         Registration reg = new Registration();
         reg.setRegistrationDate(OffsetDateTime.now());
         reg.setProgressPercentage(BigDecimal.ZERO);
-        reg.setPaymentAmount(course.getPrice() != null ? course.getPrice() : BigDecimal.ZERO);
+        BigDecimal amount = customAmount != null ? customAmount : (course.getPrice() != null ? course.getPrice() : BigDecimal.ZERO);
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            amount = BigDecimal.ZERO;
+        }
+        reg.setPaymentAmount(amount);
 
         if (reg.getPaymentAmount().compareTo(BigDecimal.ZERO) <= 0) {
             reg.setStatus(RegistrationStatus.ACTIVE);

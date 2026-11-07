@@ -1,0 +1,38 @@
+[
+  {
+    "check": "student login",
+    "status": 302,
+    "location": "/Courson/registrations/my"
+  },
+  {
+    "check": "unrecognized voucher sets full discount",
+    "status": 302,
+    "location": "/Courson/courses/learn?courseId=6"
+  },
+  {
+    "check": "paid course access after forged discount",
+    "status": 200,
+    "url": "http://localhost:18080/Courson/registrations/my",
+    "containsLessons": true
+  },
+  {
+    "check": "guest receives password reset URL",
+    "status": 200,
+    "resetLinkExposed": true
+  },
+  {
+    "check": "exposed reset token opens reset form",
+    "status": 200,
+    "hasPasswordForm": true
+  },
+  {
+    "check": "guest resets password without email access",
+    "status": 302,
+    "location": "/Courson/auth/login"
+  },
+  {
+    "check": "new password login",
+    "status": 302,
+    "location": "/Courson/registrations/my"
+  }
+]

@@ -203,24 +203,59 @@
     let quill = null;
     let isUserTypingTitleManually = ${lesson != null && not empty lesson.title ? 'true' : 'false'};
     let lastFetchedVideoId = null;
+    let lastFetchedVideoTitle = '';
     let isFetchingTitle = false;
 
     document.addEventListener('DOMContentLoaded', function() {
         const titleInp = document.getElementById('lessonTitle');
         if (titleInp) {
+            if (titleInp.value && titleInp.value.trim()) {
+                lastFetchedVideoTitle = titleInp.value.trim();
+            }
             titleInp.addEventListener('input', function() {
                 if (this.value.trim().length > 0) {
                     isUserTypingTitleManually = true;
                 } else {
+                    // Khi người dùng xóa hết chữ, mở khóa auto-fill để nhận diện lại lần thứ 2 trở đi
                     isUserTypingTitleManually = false;
+                    lastFetchedVideoId = null;
+                }
+            });
+
+            // Khi tiêu đề trống, người dùng nhấn Enter -> tự động fill lại tiêu đề theo link!
+            titleInp.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    if (!this.value || this.value.trim() === '') {
+                        e.preventDefault();
+                        isUserTypingTitleManually = false;
+                        lastFetchedVideoId = null;
+                        if (lastFetchedVideoTitle && lastFetchedVideoTitle.trim()) {
+                            this.value = lastFetchedVideoTitle;
+                        }
+                        fetchAndApplyVideoTitle(true);
+                    }
                 }
             });
         }
         
-        // Initial check if video URL is present and title is empty
         const videoInp = document.getElementById('lessonVideoUrl');
-        if (videoInp && videoInp.value.trim() && titleInp && !titleInp.value.trim()) {
-            handleVideoUrlChange();
+        if (videoInp) {
+            videoInp.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const titleInput = document.getElementById('lessonTitle');
+                    if (!titleInput || !titleInput.value || titleInput.value.trim() === '') {
+                        e.preventDefault();
+                        lastFetchedVideoId = null;
+                        isUserTypingTitleManually = false;
+                        fetchAndApplyVideoTitle(true);
+                    }
+                }
+            });
+
+            // Initial check if video URL is present and title is empty
+            if (videoInp.value.trim() && titleInp && !titleInp.value.trim()) {
+                handleVideoUrlChange();
+            }
         }
     });
 
@@ -248,8 +283,11 @@
         const isTitleEmpty = !titleInput || !titleInput.value || titleInput.value.trim() === '';
 
         // Tự động lấy tiêu đề nếu bài học mới hoặc tiêu đề đang để trống / chưa được người dùng tự gõ
-        if (ytId && (isTitleEmpty || !isUserTypingTitleManually)) {
-            if (ytId !== lastFetchedVideoId) {
+        if (url && (isTitleEmpty || !isUserTypingTitleManually)) {
+            if (isTitleEmpty || ytId !== lastFetchedVideoId) {
+                if (isTitleEmpty) {
+                    lastFetchedVideoId = null;
+                }
                 fetchAndApplyVideoTitle(false);
             }
         }
@@ -335,6 +373,7 @@
 
         if (videoTitle) {
             titleInput.value = videoTitle;
+            lastFetchedVideoTitle = videoTitle;
             isUserTypingTitleManually = false;
             if (feedbackEl) {
                 feedbackEl.style.display = 'block';

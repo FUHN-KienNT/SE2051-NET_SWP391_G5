@@ -5,775 +5,795 @@
 <jsp:include page="../common/header.jsp" />
 
 <style>
-/* ==========================================================================
-   MODERN SAAS DESIGN SYSTEM (Linear / Vercel / shadcn inspired)
-   ========================================================================== */
-:root {
-    --saas-bg: #f8fafc;
-    --saas-card-bg: #ffffff;
-    --saas-border: #e2e8f0;
-    --saas-border-subtle: #f1f5f9;
-    --saas-text-heading: #0f172a;
-    --saas-text-body: #334155;
-    --saas-text-muted: #64748b;
-    --saas-primary: #0f172a;
-    --saas-primary-hover: #1e293b;
-    --saas-accent: #2563eb;
-    --saas-accent-hover: #1d4ed8;
-    --saas-radius-sm: 6px;
-    --saas-radius-md: 10px;
-    --saas-radius-lg: 14px;
-    --saas-radius-xl: 18px;
-    --saas-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-    --saas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-    --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-}
-
-body {
-    background-color: var(--saas-bg);
-    color: var(--saas-text-body);
-}
-
-
-/* Page Header */
-.saas-header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.saas-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    color: var(--saas-text-heading);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.saas-subtitle {
-    font-size: 0.875rem;
-    color: var(--saas-text-muted);
-    margin-top: 4px;
-    margin-bottom: 0;
-}
-
-/* Stat Cards */
-.saas-stat-card {
-    background: var(--saas-card-bg);
-    border: 1px solid var(--saas-border);
-    border-radius: var(--saas-radius-lg);
-    padding: 20px;
-    box-shadow: var(--saas-shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-.saas-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--saas-shadow-md);
-    border-color: #cbd5e1;
-}
-.saas-stat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-.saas-stat-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--saas-text-muted);
-}
-.saas-stat-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--saas-radius-md);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.125rem;
-}
-.saas-icon-blue { background: #eff6ff; color: #2563eb; }
-.saas-icon-emerald { background: #ecfdf5; color: #059669; }
-.saas-icon-amber { background: #fffbeb; color: #d97706; }
-.saas-icon-slate { background: #f1f5f9; color: #475569; }
-
-.saas-stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    color: var(--saas-text-heading);
-    line-height: 1;
-}
-.saas-stat-desc {
-    font-size: 0.8125rem;
-    color: var(--saas-text-muted);
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-/* Course Main Card & Toolbar */
-.saas-card {
-    background: var(--saas-card-bg);
-    border: 1px solid var(--saas-border);
-    border-radius: var(--saas-radius-lg);
-    box-shadow: var(--saas-shadow-sm);
-    overflow: hidden;
-}
-.saas-toolbar {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--saas-border);
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    background: #ffffff;
-}
-
-/* Segmented Filter Tabs */
-.saas-tabs {
-    display: inline-flex;
-    align-items: center;
-    background: #f1f5f9;
-    padding: 3px;
-    border-radius: 8px;
-    gap: 2px;
-}
-.saas-tab-btn {
-    border: none;
-    background: transparent;
-    padding: 6px 14px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--saas-text-muted);
-    border-radius: 6px;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.saas-tab-btn:hover {
-    color: var(--saas-text-heading);
-}
-.saas-tab-btn.active {
-    background: #ffffff;
-    color: var(--saas-text-heading);
-    font-weight: 600;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-}
-.saas-tab-badge {
-    background: #e2e8f0;
-    color: #475569;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 1px 6px;
-    border-radius: 9999px;
-}
-.saas-tab-btn.active .saas-tab-badge {
-    background: #f1f5f9;
-    color: #0f172a;
-}
-
-/* Search Box */
-.saas-search-box {
-    position: relative;
-    min-width: 260px;
-}
-.saas-search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    pointer-events: none;
-    font-size: 0.875rem;
-}
-.saas-search-input {
-    width: 100%;
-    padding: 7px 12px 7px 34px;
-    font-size: 0.875rem;
-    border-radius: 8px;
-    border: 1px solid var(--saas-border);
-    background: #f8fafc;
-    color: var(--saas-text-heading);
-    transition: all 0.15s ease;
-}
-.saas-search-input:focus {
-    outline: none;
-    background: #ffffff;
-    border-color: var(--saas-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-
-/* SaaS Table */
-.saas-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-.saas-table th {
-    background: #f8fafc;
-    padding: 12px 16px;
-    font-size: 0.775rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    border-bottom: 1px solid var(--saas-border);
-    white-space: nowrap;
-}
-.saas-table td {
-    padding: 16px 16px;
-    border-bottom: 1px solid var(--saas-border-subtle);
-    vertical-align: middle;
-    background: #ffffff;
-    transition: background-color 0.15s ease;
-}
-.saas-table tr:hover td {
-    background-color: #f8fafc;
-}
-.saas-table tr:last-child td {
-    border-bottom: none;
-}
-
-@media (min-width: 992px) {
-    .table-responsive {
-        overflow-x: visible !important;
+    /* ==========================================================================
+       MODERN SAAS DESIGN SYSTEM (Linear / Vercel / shadcn inspired)
+       ========================================================================== */
+    :root {
+        --saas-bg: #f8fafc;
+        --saas-card-bg: #ffffff;
+        --saas-border: #e2e8f0;
+        --saas-border-subtle: #f1f5f9;
+        --saas-text-heading: #0f172a;
+        --saas-text-body: #334155;
+        --saas-text-muted: #64748b;
+        --saas-primary: #0f172a;
+        --saas-primary-hover: #1e293b;
+        --saas-accent: #2563eb;
+        --saas-accent-hover: #1d4ed8;
+        --saas-radius-sm: 6px;
+        --saas-radius-md: 10px;
+        --saas-radius-lg: 14px;
+        --saas-radius-xl: 18px;
+        --saas-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+        --saas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+        --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
     }
-}
 
-/* Course Identity Column */
-.course-info-wrap {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    min-width: 0;
-}
-.course-thumb-box {
-    width: 96px;
-    height: 60px;
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: #0f172a;
-    border: 1px solid #e2e8f0;
-    position: relative;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-.course-thumb-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.2s ease;
-}
-.course-info-wrap:hover .course-thumb-img {
-    transform: scale(1.05);
-}
-.course-title-text {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--saas-text-heading);
-    text-decoration: none;
-    line-height: 1.4;
-    display: block;
-    word-break: break-word;
-    transition: color 0.15s ease;
-}
-.course-title-text:hover {
-    color: var(--saas-accent);
-}
-.course-meta-sub {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-    font-size: 0.8125rem;
-    color: var(--saas-text-muted);
-}
+    body {
+        background-color: var(--saas-bg);
+        color: var(--saas-text-body);
+    }
 
-/* Modern Status Badges (shadcn inspired) */
-.saas-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    border-radius: 9999px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-}
-.badge-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-}
-.saas-badge-published {
-    background: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-}
-.saas-badge-published .badge-dot { background: #10b981; }
 
-.saas-badge-pending {
-    background: #fffbeb;
-    color: #92400e;
-    border: 1px solid #fde68a;
-}
-.saas-badge-pending .badge-dot { background: #f59e0b; }
+    /* Page Header */
+    .saas-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .saas-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--saas-text-heading);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .saas-subtitle {
+        font-size: 0.875rem;
+        color: var(--saas-text-muted);
+        margin-top: 4px;
+        margin-bottom: 0;
+    }
 
-.saas-badge-draft {
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #cbd5e1;
-}
-.saas-badge-draft .badge-dot { background: #64748b; }
-
-.saas-badge-archived {
-    background: #f8fafc;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
-}
-.saas-badge-archived .badge-dot { background: #94a3b8; }
-
-/* Category & Info Pills */
-.pill-neutral {
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #e2e8f0;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 3px 9px;
-    border-radius: 6px;
-    display: inline-block;
-}
-.pill-quiz {
-    background: #fefce8;
-    color: #854d0e;
-    border: 1px solid #fef08a;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 2px 7px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-.pill-quiz.empty {
-    background: #f8fafc;
-    color: #94a3b8;
-    border: 1px solid #e2e8f0;
-}
-
-/* Action Dropdown & Buttons */
-.btn-saas-primary {
-    background: #0f172a;
-    color: #ffffff;
-    border: 1px solid #0f172a;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    padding: 6px 14px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    box-shadow: var(--saas-shadow-xs);
-}
-.btn-saas-primary:hover {
-    background: #1e293b;
-    color: #ffffff;
-    border-color: #1e293b;
-}
-
-.btn-saas-outline-emerald {
-    background: #ffffff;
-    color: #059669;
-    border: 1px solid #a7f3d0;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    padding: 6px 12px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-}
-.btn-saas-outline-emerald:hover {
-    background: #ecfdf5;
-    color: #047857;
-    border-color: #6ee7b7;
-}
-
-.btn-saas-outline-amber {
-    background: #ffffff;
-    color: #d97706;
-    border: 1px solid #fde68a;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    padding: 6px 12px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-}
-.btn-saas-outline-amber:hover {
-    background: #fffbeb;
-    color: #b45309;
-    border-color: #fcd34d;
-}
-
-.btn-icon-action {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--saas-border);
-    background: #ffffff;
-    color: #64748b;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    font-size: 0.95rem;
-}
-.btn-icon-action:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-    border-color: #cbd5e1;
-}
-
-@media (max-width: 768px) {
-    .saas-toolbar {
+    /* Stat Cards */
+    .saas-stat-card {
+        background: var(--saas-card-bg);
+        border: 1px solid var(--saas-border);
+        border-radius: var(--saas-radius-lg);
+        padding: 20px;
+        box-shadow: var(--saas-shadow-sm);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        height: 100%;
+        display: flex;
         flex-direction: column;
-        align-items: stretch;
+        justify-content: space-between;
     }
+    .saas-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--saas-shadow-md);
+        border-color: #cbd5e1;
+    }
+    .saas-stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .saas-stat-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--saas-text-muted);
+    }
+    .saas-stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--saas-radius-md);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+    }
+    .saas-icon-blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+    .saas-icon-emerald {
+        background: #ecfdf5;
+        color: #059669;
+    }
+    .saas-icon-amber {
+        background: #fffbeb;
+        color: #d97706;
+    }
+    .saas-icon-slate {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .saas-stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: var(--saas-text-heading);
+        line-height: 1;
+    }
+    .saas-stat-desc {
+        font-size: 0.8125rem;
+        color: var(--saas-text-muted);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Course Main Card & Toolbar */
+    .saas-card {
+        background: var(--saas-card-bg);
+        border: 1px solid var(--saas-border);
+        border-radius: var(--saas-radius-lg);
+        box-shadow: var(--saas-shadow-sm);
+        overflow: hidden;
+    }
+    .saas-toolbar {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--saas-border);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        background: #ffffff;
+    }
+
+    /* Segmented Filter Tabs */
     .saas-tabs {
-        width: 100%;
-        overflow-x: auto;
-        white-space: nowrap;
-        justify-content: flex-start;
+        display: inline-flex;
+        align-items: center;
+        background: #f1f5f9;
+        padding: 3px;
+        border-radius: 8px;
+        gap: 2px;
     }
+    .saas-tab-btn {
+        border: none;
+        background: transparent;
+        padding: 6px 14px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--saas-text-muted);
+        border-radius: 6px;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .saas-tab-btn:hover {
+        color: var(--saas-text-heading);
+    }
+    .saas-tab-btn.active {
+        background: #ffffff;
+        color: var(--saas-text-heading);
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .saas-tab-badge {
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 9999px;
+    }
+    .saas-tab-btn.active .saas-tab-badge {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    /* Search Box */
     .saas-search-box {
+        position: relative;
+        min-width: 260px;
+    }
+    .saas-search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        pointer-events: none;
+        font-size: 0.875rem;
+    }
+    .saas-search-input {
         width: 100%;
-        min-width: unset;
+        padding: 7px 12px 7px 34px;
+        font-size: 0.875rem;
+        border-radius: 8px;
+        border: 1px solid var(--saas-border);
+        background: #f8fafc;
+        color: var(--saas-text-heading);
+        transition: all 0.15s ease;
     }
-}
-
-/* Dropdown Menu (shadcn style) */
-.saas-dropdown-menu {
-    border: 1px solid var(--saas-border);
-    border-radius: 10px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-    padding: 6px;
-    min-width: 190px;
-    border: 1px solid #e2e8f0;
-}
-.saas-dropdown-item {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: #334155;
-    padding: 8px 12px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.12s ease;
-    text-decoration: none;
-}
-.saas-dropdown-item:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-}
-.saas-dropdown-item.text-danger {
-    color: #dc2626 !important;
-}
-.saas-dropdown-item.text-danger:hover {
-    background: #fef2f2 !important;
-    color: #b91c1c !important;
-}
-
-/* Modals */
-.modal-content.saas-modal {
-    border-radius: 16px;
-    border: 1px solid var(--saas-border);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    overflow: visible !important;
-}
-.modal-header.saas-modal-header {
-    background: #ffffff;
-    border-bottom: 1px solid var(--saas-border);
-    padding: 20px 24px;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-}
-.modal-footer.saas-modal-footer {
-    background: #f8fafc;
-    border-top: 1px solid var(--saas-border);
-    padding: 16px 24px;
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
-}
-.saas-form-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #334155;
-    margin-bottom: 6px;
-}
-.saas-form-control {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    padding: 9px 12px;
-    transition: all 0.15s ease;
-}
-.saas-form-control:focus {
-    border-color: var(--saas-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-
-/* Modern SaaS Searchable Select (Combobox) */
-.saas-combobox {
-    position: relative;
-    width: 100%;
-}
-.saas-combobox-trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 9px 12px;
-    font-size: 0.875rem;
-    color: var(--saas-text-heading);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    text-align: left;
-    user-select: none;
-}
-.saas-combobox-trigger:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
-}
-.saas-combobox.open .saas-combobox-trigger,
-.saas-combobox-trigger:focus {
-    outline: none;
-    background: #ffffff;
-    border-color: var(--saas-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-.saas-combobox-label {
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding-right: 8px;
-    font-weight: 500;
-}
-.saas-combobox-arrow {
-    font-size: 0.75rem;
-    color: #64748b;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    flex-shrink: 0;
-}
-.saas-combobox.open .saas-combobox-arrow {
-    transform: rotate(180deg);
-    color: var(--saas-accent);
-}
-.saas-combobox-dropdown {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    background: #ffffff;
-    border: 1px solid var(--saas-border);
-    border-radius: 12px;
-    box-shadow: 0 14px 34px -4px rgba(15, 23, 42, 0.16), 0 6px 12px -2px rgba(15, 23, 42, 0.08);
-    z-index: 1065;
-    display: none;
-    overflow: hidden;
-}
-.saas-combobox.open .saas-combobox-dropdown {
-    display: block;
-    animation: saasComboboxFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes saasComboboxFade {
-    from {
-        opacity: 0;
-        transform: translateY(-6px);
+    .saas-search-input:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    /* SaaS Table */
+    .saas-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
     }
-}
-.saas-combobox-search-wrap {
-    position: relative;
-    padding: 10px;
-    background: #f8fafc;
-    border-bottom: 1px solid var(--saas-border-subtle);
-}
-.saas-combobox-search {
-    width: 100%;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 7px 30px 7px 32px;
-    font-size: 0.8125rem;
-    background: #ffffff;
-    outline: none;
-    color: var(--saas-text-heading);
-    transition: all 0.15s ease;
-}
-.saas-combobox-search:focus {
-    border-color: var(--saas-accent);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-.saas-combobox-search-icon {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.8rem;
-    color: #94a3b8;
-    pointer-events: none;
-}
-.saas-combobox-search-clear {
-    position: absolute;
-    right: 18px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: none;
-    background: transparent;
-    color: #94a3b8;
-    cursor: pointer;
-    padding: 0;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-}
-.saas-combobox-search-clear:hover {
-    color: #475569;
-}
-.saas-combobox-list {
-    max-height: 220px;
-    overflow-y: auto;
-    padding: 6px;
-}
-.saas-combobox-list::-webkit-scrollbar {
-    width: 5px;
-}
-.saas-combobox-list::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-.saas-combobox-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.84rem;
-    color: #334155;
-    cursor: pointer;
-    transition: all 0.12s ease;
-    user-select: none;
-    margin-bottom: 1px;
-}
-.saas-combobox-item:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-}
-.saas-combobox-item.selected {
-    background: #eff6ff;
-    color: #1d4ed8;
-    font-weight: 600;
-}
-.saas-combobox-item .item-check {
-    color: #2563eb;
-    font-size: 1rem;
-    display: none;
-}
-.saas-combobox-item.selected .item-check {
-    display: inline-block;
-}
-.saas-combobox-empty {
-    padding: 16px 12px;
-    text-align: center;
-    font-size: 0.8125rem;
-    color: #94a3b8;
-}
-.saas-combobox-footer {
-    border-top: 1px solid var(--saas-border-subtle);
-    padding: 6px;
-    background: #fafbfc;
-}
-.saas-combobox-footer .add-new-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.84rem;
-    font-weight: 600;
-    color: #2563eb;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: all 0.12s ease;
-    text-align: left;
-}
-.saas-combobox-footer .add-new-btn:hover {
-    background: #eff6ff;
-    color: #1d4ed8;
-}
+    .saas-table th {
+        background: #f8fafc;
+        padding: 12px 16px;
+        font-size: 0.775rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-bottom: 1px solid var(--saas-border);
+        white-space: nowrap;
+    }
+    .saas-table td {
+        padding: 16px 16px;
+        border-bottom: 1px solid var(--saas-border-subtle);
+        vertical-align: middle;
+        background: #ffffff;
+        transition: background-color 0.15s ease;
+    }
+    .saas-table tr:hover td {
+        background-color: #f8fafc;
+    }
+    .saas-table tr:last-child td {
+        border-bottom: none;
+    }
 
-.saas-youtube-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 16px;
-}
+    @media (min-width: 992px) {
+        .table-responsive {
+            overflow-x: visible !important;
+        }
+    }
 
-/* Alert notifications */
-.saas-alert {
-    border-radius: var(--saas-radius-md);
-    padding: 14px 18px;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    box-shadow: var(--saas-shadow-xs);
-}
-.saas-alert-success {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #166534;
-}
-.saas-alert-danger {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-}
+    /* Course Identity Column */
+    .course-info-wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+    }
+    .course-thumb-box {
+        width: 96px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #0f172a;
+        border: 1px solid #e2e8f0;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+    .course-thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.2s ease;
+    }
+    .course-info-wrap:hover .course-thumb-img {
+        transform: scale(1.05);
+    }
+    .course-title-text {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--saas-text-heading);
+        text-decoration: none;
+        line-height: 1.4;
+        display: block;
+        word-break: break-word;
+        transition: color 0.15s ease;
+    }
+    .course-title-text:hover {
+        color: var(--saas-accent);
+    }
+    .course-meta-sub {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        font-size: 0.8125rem;
+        color: var(--saas-text-muted);
+    }
+
+    /* Modern Status Badges (shadcn inspired) */
+    .saas-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+    .badge-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+    .saas-badge-published {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+    .saas-badge-published .badge-dot {
+        background: #10b981;
+    }
+
+    .saas-badge-pending {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+    .saas-badge-pending .badge-dot {
+        background: #f59e0b;
+    }
+
+    .saas-badge-draft {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+    .saas-badge-draft .badge-dot {
+        background: #64748b;
+    }
+
+    .saas-badge-archived {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    .saas-badge-archived .badge-dot {
+        background: #94a3b8;
+    }
+
+    /* Category & Info Pills */
+    .pill-neutral {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 3px 9px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+    .pill-quiz {
+        background: #fefce8;
+        color: #854d0e;
+        border: 1px solid #fef08a;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .pill-quiz.empty {
+        background: #f8fafc;
+        color: #94a3b8;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Action Dropdown & Buttons */
+    .btn-saas-primary {
+        background: #0f172a;
+        color: #ffffff;
+        border: 1px solid #0f172a;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 14px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        box-shadow: var(--saas-shadow-xs);
+    }
+    .btn-saas-primary:hover {
+        background: #1e293b;
+        color: #ffffff;
+        border-color: #1e293b;
+    }
+
+    .btn-saas-outline-emerald {
+        background: #ffffff;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .btn-saas-outline-emerald:hover {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #6ee7b7;
+    }
+
+    .btn-saas-outline-amber {
+        background: #ffffff;
+        color: #d97706;
+        border: 1px solid #fde68a;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .btn-saas-outline-amber:hover {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fcd34d;
+    }
+
+    .btn-icon-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--saas-border);
+        background: #ffffff;
+        color: #64748b;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+    .btn-icon-action:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    @media (max-width: 768px) {
+        .saas-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .saas-tabs {
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            justify-content: flex-start;
+        }
+        .saas-search-box {
+            width: 100%;
+            min-width: unset;
+        }
+    }
+
+    /* Dropdown Menu (shadcn style) */
+    .saas-dropdown-menu {
+        border: 1px solid var(--saas-border);
+        border-radius: 10px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        padding: 6px;
+        min-width: 190px;
+        border: 1px solid #e2e8f0;
+    }
+    .saas-dropdown-item {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #334155;
+        padding: 8px 12px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.12s ease;
+        text-decoration: none;
+    }
+    .saas-dropdown-item:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .saas-dropdown-item.text-danger {
+        color: #dc2626 !important;
+    }
+    .saas-dropdown-item.text-danger:hover {
+        background: #fef2f2 !important;
+        color: #b91c1c !important;
+    }
+
+    /* Modals */
+    .modal-content.saas-modal {
+        border-radius: 16px;
+        border: 1px solid var(--saas-border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        overflow: visible !important;
+    }
+    .modal-header.saas-modal-header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--saas-border);
+        padding: 20px 24px;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+    .modal-footer.saas-modal-footer {
+        background: #f8fafc;
+        border-top: 1px solid var(--saas-border);
+        padding: 16px 24px;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+    .saas-form-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+    .saas-form-control {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        padding: 9px 12px;
+        transition: all 0.15s ease;
+    }
+    .saas-form-control:focus {
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    /* Modern SaaS Searchable Select (Combobox) */
+    .saas-combobox {
+        position: relative;
+        width: 100%;
+    }
+    .saas-combobox-trigger {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 0.875rem;
+        color: var(--saas-text-heading);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-align: left;
+        user-select: none;
+    }
+    .saas-combobox-trigger:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+    }
+    .saas-combobox.open .saas-combobox-trigger,
+    .saas-combobox-trigger:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .saas-combobox-label {
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 8px;
+        font-weight: 500;
+    }
+    .saas-combobox-arrow {
+        font-size: 0.75rem;
+        color: #64748b;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        flex-shrink: 0;
+    }
+    .saas-combobox.open .saas-combobox-arrow {
+        transform: rotate(180deg);
+        color: var(--saas-accent);
+    }
+    .saas-combobox-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid var(--saas-border);
+        border-radius: 12px;
+        box-shadow: 0 14px 34px -4px rgba(15, 23, 42, 0.16), 0 6px 12px -2px rgba(15, 23, 42, 0.08);
+        z-index: 1065;
+        display: none;
+        overflow: hidden;
+    }
+    .saas-combobox.open .saas-combobox-dropdown {
+        display: block;
+        animation: saasComboboxFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes saasComboboxFade {
+        from {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .saas-combobox-search-wrap {
+        position: relative;
+        padding: 10px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--saas-border-subtle);
+    }
+    .saas-combobox-search {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 7px 30px 7px 32px;
+        font-size: 0.8125rem;
+        background: #ffffff;
+        outline: none;
+        color: var(--saas-text-heading);
+        transition: all 0.15s ease;
+    }
+    .saas-combobox-search:focus {
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+    .saas-combobox-search-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8rem;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+    .saas-combobox-search-clear {
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+    }
+    .saas-combobox-search-clear:hover {
+        color: #475569;
+    }
+    .saas-combobox-list {
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 6px;
+    }
+    .saas-combobox-list::-webkit-scrollbar {
+        width: 5px;
+    }
+    .saas-combobox-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    .saas-combobox-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.84rem;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.12s ease;
+        user-select: none;
+        margin-bottom: 1px;
+    }
+    .saas-combobox-item:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .saas-combobox-item.selected {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+    .saas-combobox-item .item-check {
+        color: #2563eb;
+        font-size: 1rem;
+        display: none;
+    }
+    .saas-combobox-item.selected .item-check {
+        display: inline-block;
+    }
+    .saas-combobox-empty {
+        padding: 16px 12px;
+        text-align: center;
+        font-size: 0.8125rem;
+        color: #94a3b8;
+    }
+    .saas-combobox-footer {
+        border-top: 1px solid var(--saas-border-subtle);
+        padding: 6px;
+        background: #fafbfc;
+    }
+    .saas-combobox-footer .add-new-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: #2563eb;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: all 0.12s ease;
+        text-align: left;
+    }
+    .saas-combobox-footer .add-new-btn:hover {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .saas-youtube-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+    }
+
+    /* Alert notifications */
+    .saas-alert {
+        border-radius: var(--saas-radius-md);
+        padding: 14px 18px;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        box-shadow: var(--saas-shadow-xs);
+    }
+    .saas-alert-success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+    .saas-alert-danger {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
 </style>
 
 <main class="main-content py-4">
@@ -787,9 +807,9 @@ body {
                 <p class="saas-subtitle">Quản lý và soạn nội dung các khóa học của bạn</p>
             </div>
             <div>
-                <button type="button" class="btn btn-saas-primary px-3 py-2" data-bs-toggle="modal" data-bs-target="#newCourseModal">
+                <a href="${pageContext.request.contextPath}/expert/course-detail" class="btn btn-saas-primary px-3 py-2 text-decoration-none">
                     <i class="bi bi-plus-lg"></i>Tạo Khóa học mới
-                </button>
+                </a>
             </div>
         </div>
 
@@ -829,7 +849,7 @@ body {
         <c:set var="archivedCount" value="0" />
         <c:set var="totalAllQuizzes" value="0" />
                                 <!-- #m_ds [TRẠM 4/4 - HIỂN THỊ JSP]: Nhận list ${courses} từ Servlet và dùng forEach vẽ từng dòng bảng: tiêu đề, giá, badge trạng thái -->
-<c:forEach var="c" items="${courses}">
+        <c:forEach var="c" items="${courses}">
             <c:choose>
                 <c:when test="${c.status == 'PUBLISHED'}">
                     <c:set var="publishedCount" value="${publishedCount + 1}" />
@@ -847,73 +867,6 @@ body {
             <c:set var="totalAllQuizzes" value="${totalAllQuizzes + c.totalQuizzes}" />
         </c:forEach>
 
-        <!-- Modern SaaS Stat Cards (Neutral white cards, clean typography, soft icons) -->
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="saas-stat-card">
-                    <div class="saas-stat-header">
-                        <span class="saas-stat-label">Tổng khóa học</span>
-                        <div class="saas-stat-icon saas-icon-blue">
-                            <i class="bi bi-collection-play"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="saas-stat-value">${courses.size()}</div>
-                        <div class="saas-stat-desc">
-                            <span>Tất cả khóa học của bạn</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="saas-stat-card">
-                    <div class="saas-stat-header">
-                        <span class="saas-stat-label">Đã công khai</span>
-                        <div class="saas-stat-icon saas-icon-emerald">
-                            <i class="bi bi-check2-circle"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="saas-stat-value">${publishedCount}</div>
-                        <div class="saas-stat-desc text-success">
-                            <i class="bi bi-broadcast me-1"></i>Học viên đang theo học
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="saas-stat-card">
-                    <div class="saas-stat-header">
-                        <span class="saas-stat-label">Chờ duyệt</span>
-                        <div class="saas-stat-icon saas-icon-amber">
-                            <i class="bi bi-hourglass-split"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="saas-stat-value">${pendingCount}</div>
-                        <div class="saas-stat-desc text-warning">
-                            <i class="bi bi-clock-history me-1"></i>Đang chờ Quản lý duyệt
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="saas-stat-card">
-                    <div class="saas-stat-header">
-                        <span class="saas-stat-label">Bản nháp</span>
-                        <div class="saas-stat-icon saas-icon-slate">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="saas-stat-value">${draftCount}</div>
-                        <div class="saas-stat-desc text-muted">
-                            <i class="bi bi-lock me-1"></i>Chưa công khai (chỉ bạn thấy)
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Course assigned list Card -->
         <div class="saas-card">
@@ -967,9 +920,9 @@ body {
                                             </div>
                                             <h6 class="fw-bold text-dark mb-1">Bạn chưa có khóa học nào</h6>
                                             <p class="text-muted small mb-3">Tạo khóa học đầu tiên để bắt đầu xây dựng nội dung.</p>
-                                            <button type="button" class="btn btn-saas-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newCourseModal">
+                                            <a href="${pageContext.request.contextPath}/expert/course-detail" class="btn btn-saas-primary btn-sm text-decoration-none">
                                                 <i class="bi bi-plus-lg me-1"></i>Tạo Khóa học mới
-                                            </button>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -997,14 +950,6 @@ body {
                                                         <span>${c.totalLessons} bài học</span>
                                                     </div>
                                                 </div>
-                                                <c:if test="${not empty c.moderationNote}">
-                                                    <div class="mt-2 p-2 rounded-2 bg-danger bg-opacity-10 border border-danger border-opacity-25" style="max-width: 440px;">
-                                                        <div class="d-flex align-items-center gap-1 text-danger fw-bold small mb-1">
-                                                            <i class="bi bi-chat-left-dots-fill"></i> Lý do / Góp ý từ Quản trị viên:
-                                                        </div>
-                                                        <div class="text-dark small" style="white-space: pre-wrap; font-size: 0.825rem; line-height: 1.4;">${fn:escapeXml(c.moderationNote)}</div>
-                                                    </div>
-                                                </c:if>
                                             </div>
                                         </td>
                                         <td>
@@ -1043,11 +988,6 @@ body {
                                                 <c:when test="${c.status == 'ARCHIVED'}">
                                                     <span class="saas-badge saas-badge-archived" title="Đã ngừng nhận học viên mới">
                                                         <span class="badge-dot"></span>Đã lưu trữ
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${not empty c.moderationNote}">
-                                                    <span class="saas-badge" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;" title="Khóa học bị từ chối / Cần chỉnh sửa lại">
-                                                        <span class="badge-dot" style="background-color: #ef4444;"></span>Cần chỉnh sửa
                                                     </span>
                                                 </c:when>
                                                 <c:otherwise>
@@ -1092,8 +1032,8 @@ body {
                                                                     </a>
                                                                 </li>
                                                                 <li><hr class="dropdown-divider my-1"></li>
-                                                            </c:when>
-                                                            <c:when test="${c.status == 'PENDING_REVIEW'}">
+                                                                </c:when>
+                                                                <c:when test="${c.status == 'PENDING_REVIEW'}">
                                                                 <li>
                                                                     <a class="saas-dropdown-item text-warning fw-semibold"
                                                                        href="javascript:void(0)"
@@ -1102,8 +1042,8 @@ body {
                                                                     </a>
                                                                 </li>
                                                                 <li><hr class="dropdown-divider my-1"></li>
-                                                            </c:when>
-                                                            <c:when test="${c.status == 'PUBLISHED'}">
+                                                                </c:when>
+                                                                <c:when test="${c.status == 'PUBLISHED'}">
                                                                 <li>
                                                                     <a class="saas-dropdown-item text-warning fw-semibold"
                                                                        href="javascript:void(0)"
@@ -1112,26 +1052,26 @@ body {
                                                                     </a>
                                                                 </li>
                                                                 <li><hr class="dropdown-divider my-1"></li>
-                                                            </c:when>
-                                                            
+                                                                </c:when>
+
                                                         </c:choose>
                                                         <c:if test="${not empty c.moderationNote}">
                                                             <li>
                                                                 <button type="button" class="saas-dropdown-item text-danger fw-semibold w-100 border-0 bg-transparent text-start" onclick="showModerationNoteModal('${fn:escapeXml(c.title)}', '${fn:escapeXml(c.moderationNote)}')">
-                                                                    <i class="bi bi-chat-square-text text-danger"></i>Xem góp ý kiểm duyệt
+                                                                    <i class="bi bi-chat-square-text text-danger"></i>Lý do từ chối
                                                                 </button>
                                                             </li>
                                                             <li><hr class="dropdown-divider my-1"></li>
-                                                        </c:if>
+                                                            </c:if>
                                                         <li>
                                                             <a class="saas-dropdown-item" href="${pageContext.request.contextPath}/quizzes/list?courseId=${c.id}">
                                                                 <i class="bi bi-patch-question text-warning"></i>Quản lý Quiz (${c.totalQuizzes})
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <button type="button" class="saas-dropdown-item w-100 border-0 bg-transparent text-start" onclick="openEditCourseModal('${c.id}')">
+                                                            <a class="saas-dropdown-item" href="${pageContext.request.contextPath}/expert/course-detail?id=${c.id}">
                                                                 <i class="bi bi-gear text-secondary"></i>Chỉnh sửa thông tin
-                                                            </button>
+                                                            </a>
                                                         </li>
                                                         <li>
                                                             <a class="saas-dropdown-item" href="${pageContext.request.contextPath}/courses/detail?id=${c.id}" target="_blank">
@@ -1142,9 +1082,9 @@ body {
                                                             <c:when test="${c.status == 'DRAFT'}">
                                                                 <li><hr class="dropdown-divider my-1"></li>
                                                                 <li>
-                                                                <!-- #m_xoa [TRẠM 1/4 - GIAO DIỆN]: Nút xóa bản nháp menu 3 chấm. Bấm xác nhận sẽ gửi POST /expert/delete-course?id=... -->
+                                                                    <!-- #m_xoa [TRẠM 1/4 - GIAO DIỆN]: Nút xóa bản nháp menu 3 chấm. Bấm xác nhận sẽ gửi POST /expert/delete-course?id=... -->
                                                                     <a class="saas-dropdown-item text-danger" href="javascript:void(0)"
-onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
+                                                                       onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.contextPath}/expert/delete-course?id=${c.id}')">
                                                                         <i class="bi bi-trash3 text-danger"></i>Xóa vĩnh viễn (Nháp)
                                                                     </a>
                                                                 </li>
@@ -1186,121 +1126,6 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
 
 
 
-<!-- New Course Modal (Redesigned Minimalist SaaS Modal) -->
-<div class="modal fade" id="newCourseModal" tabindex="-1" aria-labelledby="newCourseModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content saas-modal">
-            <form action="${pageContext.request.contextPath}/expert/save-course" method="POST">
-                <div class="modal-header saas-modal-header">
-                    <div>
-                        <h5 class="modal-title fw-bold text-dark mb-1" id="newCourseModalLabel">
-                            <i class="bi bi-plus-circle text-primary me-2"></i>Tạo Khóa học mới
-                        </h5>
-                        <p class="text-muted small mb-0">Nhập thông tin khóa học hoặc dán link YouTube để tự động tạo bài học</p>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="saas-form-label">Tên khóa học <span class="text-danger">*</span></label>
-                        <input type="text" name="title" id="newCourseTitle" class="form-control saas-form-control"
-                            placeholder="Ví dụ: Khóa học Lập trình Web Fullstack..." required oninput="this.dataset.autofilled = 'false'">
-                        <div class="form-text small text-muted">Nếu dán link Playlist YouTube bên dưới, tên khóa học sẽ tự động được điền theo tên playlist.</div>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-7">
-                            <label class="saas-form-label">Danh mục</label>
-                            <div class="saas-combobox" id="newCourseCategoryCombobox">
-                                <input type="hidden" name="categoryId" id="newCourseCategoryId" value="${not empty categories ? categories[0].id : ''}">
-                                <button type="button" class="saas-combobox-trigger" aria-haspopup="listbox" aria-expanded="false">
-                                    <span class="saas-combobox-label">
-                                        <i class="bi bi-tag text-muted me-2"></i>
-                                        <span class="selected-text">${not empty categories ? categories[0].name : 'Chọn danh mục...'}</span>
-                                    </span>
-                                    <i class="bi bi-chevron-down saas-combobox-arrow"></i>
-                                </button>
-                                <div class="saas-combobox-dropdown" role="listbox">
-                                    <div class="saas-combobox-search-wrap">
-                                        <i class="bi bi-search saas-combobox-search-icon"></i>
-                                        <input type="text" class="saas-combobox-search" placeholder="Tìm kiếm danh mục..." autocomplete="off">
-                                        <button type="button" class="saas-combobox-search-clear d-none" aria-label="Xóa tìm kiếm">
-                                            <i class="bi bi-x-circle-fill"></i>
-                                        </button>
-                                    </div>
-                                    <div class="saas-combobox-list">
-                                        <c:forEach var="cat" items="${categories}" varStatus="status">
-                                            <div class="saas-combobox-item ${status.first ? 'selected' : ''}"
-                                                 data-value="${cat.id}"
-                                                 data-label="${fn:escapeXml(cat.name)}"
-                                                 role="option">
-                                                <span class="item-text"><c:out value="${cat.name}"/></span>
-                                                <i class="bi bi-check2 item-check"></i>
-                                            </div>
-                                        </c:forEach>
-                                        <div class="saas-combobox-empty d-none">
-                                            <i class="bi bi-search text-muted mb-1 d-block fs-6"></i>
-                                            Không tìm thấy danh mục phù hợp
-                                        </div>
-                                    </div>
-                                    <div class="saas-combobox-footer">
-                                        <button type="button" class="add-new-btn">
-                                            <i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục mới...
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="newCourseCustomCatDiv" class="mt-2" style="display: none;">
-                                <div class="position-relative">
-                                    <input type="text" name="customCategory"
-                                        class="form-control form-control-sm saas-form-control border-primary pe-4"
-                                        placeholder="✨ Nhập tên danh mục mới...">
-                                    <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
-                                        onclick="cancelCustomCategory('newCourseCategoryCombobox', 'newCourseCustomCatDiv')" title="Hủy nhập danh mục mới">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="saas-form-label">Học phí (VNĐ)</label>
-                            <input type="number" name="price" class="form-control saas-form-control" value="0" min="0"
-                                placeholder="0 = Miễn phí">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="saas-form-label">Mô tả tóm tắt</label>
-                        <textarea name="description" id="newCourseDescription" rows="4" class="form-control saas-form-control"
-                            style="min-height: 105px; resize: vertical; line-height: 1.6;"
-                            placeholder="Mô tả ngắn gọn về khóa học..." oninput="this.dataset.autofilled = 'false'; autoResizeTextarea(this);"></textarea>
-                    </div>
-
-                    <!-- YouTube Import Card -->
-                    <div class="saas-youtube-card mb-2">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="saas-form-label mb-0 text-dark">
-                                <i class="bi bi-youtube text-danger me-1"></i>Nhập Playlist hoặc danh sách link YouTube
-                            </span>
-                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 11px;">Tùy chọn</span>
-                        </div>
-                        <textarea name="batchVideoText" id="newCourseBatchText" rows="3"
-                            class="form-control font-monospace small bg-white saas-form-control"
-                            placeholder="Dán link playlist (https://www.youtube.com/playlist?list=...) hoặc danh sách link video (mỗi dòng 1 link)..."
-                            oninput="previewCourseBatchVideos()"></textarea>
-                        
-                        <div id="newCourseBatchFeedback" class="mt-2 small d-none"></div>
-                    </div>
-                </div>
-                <div class="modal-footer saas-modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-saas-primary">
-                        <i class="bi bi-check-lg me-1"></i>Tạo khóa học
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- Single Reusable Edit Course Modal (Redesigned) -->
 <div class="modal fade" id="editCourseModal" tabindex="-1" aria-labelledby="editCourseModalTitle" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
@@ -1332,55 +1157,55 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
                         <div class="row g-3 mb-3">
                             <div class="col-md-7">
                                 <label class="saas-form-label">Danh mục</label>
-                            <div class="saas-combobox" id="editCourseCategoryCombobox">
-                                <input type="hidden" name="categoryId" id="editCourseCategory" value="">
-                                <button type="button" class="saas-combobox-trigger" aria-haspopup="listbox" aria-expanded="false">
-                                    <span class="saas-combobox-label">
-                                        <i class="bi bi-tag text-muted me-2"></i>
-                                        <span class="selected-text">Chọn danh mục...</span>
-                                    </span>
-                                    <i class="bi bi-chevron-down saas-combobox-arrow"></i>
-                                </button>
-                                <div class="saas-combobox-dropdown" role="listbox">
-                                    <div class="saas-combobox-search-wrap">
-                                        <i class="bi bi-search saas-combobox-search-icon"></i>
-                                        <input type="text" class="saas-combobox-search" placeholder="Tìm kiếm danh mục..." autocomplete="off">
-                                        <button type="button" class="saas-combobox-search-clear d-none" aria-label="Xóa tìm kiếm">
-                                            <i class="bi bi-x-circle-fill"></i>
-                                        </button>
-                                    </div>
-                                    <div class="saas-combobox-list">
-                                        <c:forEach var="cat" items="${categories}">
-                                            <div class="saas-combobox-item"
-                                                 data-value="${cat.id}"
-                                                 data-label="${fn:escapeXml(cat.name)}"
-                                                 role="option">
-                                                <span class="item-text"><c:out value="${cat.name}"/></span>
-                                                <i class="bi bi-check2 item-check"></i>
+                                <div class="saas-combobox" id="editCourseCategoryCombobox">
+                                    <input type="hidden" name="categoryId" id="editCourseCategory" value="">
+                                    <button type="button" class="saas-combobox-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="saas-combobox-label">
+                                            <i class="bi bi-tag text-muted me-2"></i>
+                                            <span class="selected-text">Chọn danh mục...</span>
+                                        </span>
+                                        <i class="bi bi-chevron-down saas-combobox-arrow"></i>
+                                    </button>
+                                    <div class="saas-combobox-dropdown" role="listbox">
+                                        <div class="saas-combobox-search-wrap">
+                                            <i class="bi bi-search saas-combobox-search-icon"></i>
+                                            <input type="text" class="saas-combobox-search" placeholder="Tìm kiếm danh mục..." autocomplete="off">
+                                            <button type="button" class="saas-combobox-search-clear d-none" aria-label="Xóa tìm kiếm">
+                                                <i class="bi bi-x-circle-fill"></i>
+                                            </button>
+                                        </div>
+                                        <div class="saas-combobox-list">
+                                            <c:forEach var="cat" items="${categories}">
+                                                <div class="saas-combobox-item"
+                                                     data-value="${cat.id}"
+                                                     data-label="${fn:escapeXml(cat.name)}"
+                                                     role="option">
+                                                    <span class="item-text"><c:out value="${cat.name}"/></span>
+                                                    <i class="bi bi-check2 item-check"></i>
+                                                </div>
+                                            </c:forEach>
+                                            <div class="saas-combobox-empty d-none">
+                                                <i class="bi bi-search text-muted mb-1 d-block fs-6"></i>
+                                                Không tìm thấy danh mục phù hợp
                                             </div>
-                                        </c:forEach>
-                                        <div class="saas-combobox-empty d-none">
-                                            <i class="bi bi-search text-muted mb-1 d-block fs-6"></i>
-                                            Không tìm thấy danh mục phù hợp
+                                        </div>
+                                        <div class="saas-combobox-footer">
+                                            <button type="button" class="add-new-btn">
+                                                <i class="bi bi-plus-circle text-primary me-2"></i>+ Nhập danh mục mới...
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="saas-combobox-footer">
-                                        <button type="button" class="add-new-btn">
-                                            <i class="bi bi-plus-circle text-primary me-2"></i>+ Nhập danh mục mới...
+                                </div>
+                                <div id="editCourseCustomCatDiv" class="mt-2" style="display: none;">
+                                    <div class="position-relative">
+                                        <input type="text" name="customCategory" class="form-control form-control-sm saas-form-control border-primary pe-4"
+                                               placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                                        <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
+                                                onclick="cancelCustomCategory('editCourseCategoryCombobox', 'editCourseCustomCatDiv')" title="Hủy nhập danh mục mới">
+                                            <i class="bi bi-x-lg"></i>
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                            <div id="editCourseCustomCatDiv" class="mt-2" style="display: none;">
-                                <div class="position-relative">
-                                    <input type="text" name="customCategory" class="form-control form-control-sm saas-form-control border-primary pe-4"
-                                        placeholder="✨ Nhập tên danh mục đào tạo mới...">
-                                    <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
-                                        onclick="cancelCustomCategory('editCourseCategoryCombobox', 'editCourseCustomCatDiv')" title="Hủy nhập danh mục mới">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </div>
-                            </div>
                             </div>
                             <div class="col-md-5">
                                 <label class="saas-form-label">Học phí (VNĐ)</label>
@@ -1390,7 +1215,7 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
                         <div class="mb-3">
                             <label class="saas-form-label">Mô tả tóm tắt</label>
                             <textarea name="description" id="editCourseDescription" rows="4" class="form-control saas-form-control"
-                                style="min-height: 105px; resize: vertical; line-height: 1.6;" oninput="autoResizeTextarea(this);"></textarea>
+                                      style="min-height: 105px; resize: vertical; line-height: 1.6;" oninput="autoResizeTextarea(this);"></textarea>
                         </div>
                     </div>
                 </div>
@@ -1410,9 +1235,52 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
     </div>
 </div>
 
+
+<!-- Bootstrap Modal: Lý do từ chối kiểm duyệt -->
+<div class="modal fade" id="moderationNoteModal" tabindex="-1" aria-labelledby="moderationNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-2 text-danger d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0" id="moderationNoteModalLabel">Lý do từ chối kiểm duyệt</h5>
+                        <small class="text-muted" id="moderationCourseTitle"></small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <label class="form-label text-muted small fw-semibold">Góp ý từ Quản trị viên:</label>
+                <div class="p-3 rounded-3 bg-light border text-dark" style="font-size: 0.925rem; line-height: 1.6; white-space: pre-wrap;" id="moderationNoteContent"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    function showModerationNoteModal(courseTitle, note) {
+        var titleEl = document.getElementById('moderationCourseTitle');
+        var noteEl = document.getElementById('moderationNoteContent');
+        if (titleEl)
+            titleEl.textContent = courseTitle || '';
+        if (noteEl)
+            noteEl.textContent = note || '';
+        var modalEl = document.getElementById('moderationNoteModal');
+        if (modalEl) {
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    }
+
     function autoResizeTextarea(el) {
-        if (!el) return;
+        if (!el)
+            return;
         el.style.height = 'auto';
         el.style.height = Math.max(105, el.scrollHeight + 4) + 'px';
     }
@@ -1426,7 +1294,8 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         currentFilter = status;
         const tabBtns = document.querySelectorAll('#statusFilterTabs .saas-tab-btn');
         tabBtns.forEach(btn => btn.classList.remove('active'));
-        if (btnEl) btnEl.classList.add('active');
+        if (btnEl)
+            btnEl.classList.add('active');
 
         applyFilters();
     }
@@ -1482,60 +1351,63 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         document.getElementById('editCourseSubmitBtn').disabled = true;
 
         const customDiv = document.getElementById('editCourseCustomCatDiv');
-        if (customDiv) customDiv.style.display = 'none';
+        if (customDiv)
+            customDiv.style.display = 'none';
 
         modal.show();
 
         fetch('${pageContext.request.contextPath}/expert/get-course?id=' + encodeURIComponent(courseId))
-            .then(res => {
-                if (!res.ok) throw new Error('Không thể tải khóa học #' + courseId);
-                return res.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
+                .then(res => {
+                    if (!res.ok)
+                        throw new Error('Không thể tải khóa học #' + courseId);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        modal.hide();
+                        return;
+                    }
+                    document.getElementById('editCourseId').value = data.id;
+                    document.getElementById('editCourseTitle').value = data.title || '';
+                    if (data.categoryId) {
+                        setComboboxValue('editCourseCategoryCombobox', data.categoryId, data.categoryName);
+                    } else if (data.categoryName) {
+                        setComboboxValue('editCourseCategoryCombobox', '__NEW__', data.categoryName);
+                        const customDiv = document.getElementById('editCourseCustomCatDiv');
+                        if (customDiv) {
+                            customDiv.style.display = 'block';
+                            const inp = customDiv.querySelector('input');
+                            if (inp)
+                                inp.value = data.categoryName;
+                        }
+                    }
+                    document.getElementById('editCoursePrice').value = data.price != null ? data.price : 0;
+                    const editDescEl = document.getElementById('editCourseDescription');
+                    editDescEl.value = data.description || '';
+                    autoResizeTextarea(editDescEl);
+
+                    document.getElementById('editCourseLoading').style.display = 'none';
+                    document.getElementById('editCourseFormFields').style.display = 'block';
+                    document.getElementById('editCourseSubmitBtn').disabled = false;
+
+                    // Quy tắc: Chỉ khóa học ở trạng thái DRAFT mới cho phép Expert xóa
+                    const delBtn = document.getElementById('editCourseDeleteBtn');
+                    if (delBtn) {
+                        if (data.status === 'DRAFT') {
+                            delBtn.style.display = 'inline-block';
+                        } else {
+                            delBtn.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(err => {
+                    alert('Lỗi khi truy vấn khóa học từ CSDL: ' + err.message);
                     modal.hide();
-                    return;
-                }
-                document.getElementById('editCourseId').value = data.id;
-                document.getElementById('editCourseTitle').value = data.title || '';
-                if (data.categoryId) {
-                    setComboboxValue('editCourseCategoryCombobox', data.categoryId, data.categoryName);
-                } else if (data.categoryName) {
-                    setComboboxValue('editCourseCategoryCombobox', '__NEW__', data.categoryName);
-                    const customDiv = document.getElementById('editCourseCustomCatDiv');
-                    if (customDiv) {
-                        customDiv.style.display = 'block';
-                        const inp = customDiv.querySelector('input');
-                        if (inp) inp.value = data.categoryName;
-                    }
-                }
-                document.getElementById('editCoursePrice').value = data.price != null ? data.price : 0;
-                const editDescEl = document.getElementById('editCourseDescription');
-                editDescEl.value = data.description || '';
-                autoResizeTextarea(editDescEl);
-
-                document.getElementById('editCourseLoading').style.display = 'none';
-                document.getElementById('editCourseFormFields').style.display = 'block';
-                document.getElementById('editCourseSubmitBtn').disabled = false;
-
-                // Quy tắc: Chỉ khóa học ở trạng thái DRAFT mới cho phép Expert xóa
-                const delBtn = document.getElementById('editCourseDeleteBtn');
-                if (delBtn) {
-                    if (data.status === 'DRAFT') {
-                        delBtn.style.display = 'inline-block';
-                    } else {
-                        delBtn.style.display = 'none';
-                    }
-                }
-            })
-            .catch(err => {
-                alert('Lỗi khi truy vấn khóa học từ CSDL: ' + err.message);
-                modal.hide();
-            });
+                });
     }
 
-        // =========================================================================
+    // =========================================================================
     // ARCHIVE & UNARCHIVE (INSTANT CONFIRMATION)
     // =========================================================================
     function confirmArchiveCourse(title, url) {
@@ -1543,10 +1415,10 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
             title: 'Lưu trữ / Ẩn khóa học',
             method: 'POST',
             html: 'Bạn có chắc chắn muốn lưu trữ khóa học "<strong>' + (title || '') + '</strong>"?<br><br>' +
-                  '<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>' +
-                  'Khóa học sẽ <strong>lập tức ẩn khỏi trang Chủ và Danh mục</strong> (ngừng nhận học viên mới).<br>' +
-                  '<i class="bi bi-shield-check text-success me-1"></i>Học viên đã mua trước đây vẫn học tập bình thường.<br>' +
-                  '<i class="bi bi-exclamation-circle text-danger me-1"></i>Lưu ý: Thao tác này là vĩnh viễn và không thể hoàn tác.</span>',
+                    '<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>' +
+                    'Khóa học sẽ <strong>lập tức ẩn khỏi trang Chủ và Danh mục</strong> (ngừng nhận học viên mới).<br>' +
+                    '<i class="bi bi-shield-check text-success me-1"></i>Học viên đã mua trước đây vẫn học tập bình thường.<br>' +
+                    '<i class="bi bi-exclamation-circle text-danger me-1"></i>Lưu ý: Thao tác này là vĩnh viễn và không thể hoàn tác.</span>',
             type: 'warning',
             icon: 'bi bi-archive-fill',
             confirmText: 'Lưu trữ ngay',
@@ -1556,21 +1428,23 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         });
     }
 
-        // =========================================================================
+    // =========================================================================
     // SAAS SEARCHABLE SELECT (COMBOBOX) CONTROLLER
     // =========================================================================
     function removeVietnameseDiacritics(str) {
-        if (!str) return '';
+        if (!str)
+            return '';
         return str.normalize("NFD")
-                  .replace(/[\u0300-\u036f]/g, "")
-                  .replace(/đ/g, "d").replace(/Đ/g, "D")
-                  .toLowerCase()
-                  .trim();
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/đ/g, "d").replace(/Đ/g, "D")
+                .toLowerCase()
+                .trim();
     }
 
     function initSearchableSelect(comboboxId, customDivId) {
         const box = document.getElementById(comboboxId);
-        if (!box) return;
+        if (!box)
+            return;
 
         const trigger = box.querySelector('.saas-combobox-trigger');
         const labelSpan = box.querySelector('.selected-text');
@@ -1585,7 +1459,8 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
 
         function openDropdown() {
             document.querySelectorAll('.saas-combobox.open').forEach(cb => {
-                if (cb !== box) cb.classList.remove('open');
+                if (cb !== box)
+                    cb.classList.remove('open');
             });
             box.classList.add('open');
             trigger.setAttribute('aria-expanded', 'true');
@@ -1609,19 +1484,19 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
             }
         }
 
-        trigger.addEventListener('click', function(e) {
+        trigger.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             toggleDropdown();
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!box.contains(e.target)) {
                 closeDropdown();
             }
         });
 
-        box.addEventListener('keydown', function(e) {
+        box.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeDropdown();
                 trigger.focus();
@@ -1671,16 +1546,16 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         }
 
         if (searchInput) {
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', function () {
                 filterItems(this.value);
             });
-            searchInput.addEventListener('click', function(e) {
+            searchInput.addEventListener('click', function (e) {
                 e.stopPropagation();
             });
         }
 
         if (searchClear) {
-            searchClear.addEventListener('click', function(e) {
+            searchClear.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 searchInput.value = '';
@@ -1690,7 +1565,7 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         }
 
         items.forEach(it => {
-            it.addEventListener('click', function(e) {
+            it.addEventListener('click', function (e) {
                 e.stopPropagation();
                 const val = this.getAttribute('data-value');
                 const label = this.getAttribute('data-label') || this.querySelector('.item-text').textContent;
@@ -1715,7 +1590,7 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         });
 
         if (addNewBtn) {
-            addNewBtn.addEventListener('click', function(e) {
+            addNewBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 hiddenInput.value = '__NEW__';
                 const customVal = addNewBtn.dataset.customText || '';
@@ -1727,7 +1602,8 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
                     customDiv.style.display = 'block';
                     if (customInput) {
                         customInput.required = true;
-                        if (customVal) customInput.value = customVal;
+                        if (customVal)
+                            customInput.value = customVal;
                         setTimeout(() => customInput.focus(), 50);
                     }
                 }
@@ -1737,7 +1613,7 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         }
 
         if (customInput) {
-            customInput.addEventListener('input', function() {
+            customInput.addEventListener('input', function () {
                 if (this.value.trim()) {
                     labelSpan.textContent = 'Mới: ' + this.value.trim();
                 } else {
@@ -1749,7 +1625,8 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
 
     function setComboboxValue(comboboxId, value, fallbackName) {
         const box = document.getElementById(comboboxId);
-        if (!box) return;
+        if (!box)
+            return;
 
         const hiddenInput = box.querySelector('input[type="hidden"]');
         const labelSpan = box.querySelector('.selected-text');
@@ -1795,16 +1672,16 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
     }
 
     function escapeHtml(text) {
-        if (!text) return '';
+        if (!text)
+            return '';
         return text.replace(/&/g, "&amp;")
-                   .replace(/</g, "&lt;")
-                   .replace(/>/g, "&gt;")
-                   .replace(/"/g, "&quot;")
-                   .replace(/'/g, "&#039;");
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        initSearchableSelect('newCourseCategoryCombobox', 'newCourseCustomCatDiv');
+    document.addEventListener('DOMContentLoaded', function () {
         initSearchableSelect('editCourseCategoryCombobox', 'editCourseCustomCatDiv');
     });
 
@@ -1815,7 +1692,8 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
     let courseBatchAbortController = null;
 
     function hasYoutubeVideoOrPlaylist(text) {
-        if (!text || !text.trim()) return false;
+        if (!text || !text.trim())
+            return false;
         const playlistRegex = /(?:[?&]list=|playlist\?list=)[a-zA-Z0-9_-]+|^PL[a-zA-Z0-9_-]{16,}/i;
         const videoRegex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/)|youtube\.com\/live\/)[a-zA-Z0-9_-]{11}/i;
         return playlistRegex.test(text) || videoRegex.test(text);
@@ -1860,62 +1738,55 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
             params.append('batchText', text);
             fetch('${pageContext.request.contextPath}/expert/preview-batch-videos', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: params.toString(),
                 signal: signal
             })
-            .then(r => r.json())
-            .then(data => {
-                const list = Array.isArray(data) ? data : (data.videos || []);
-                if (list && list.length > 0) {
-                    const plTitle = data.playlistTitle;
-                    let infoText = 'Đã nhận diện: <strong>' + list.length + ' bài giảng</strong>';
-                    if (plTitle) {
-                        infoText += ' từ Playlist: "<strong>' + plTitle + '</strong>"';
-                        const titleInp = document.getElementById('newCourseTitle');
-                        if (titleInp && (!titleInp.value.trim() || titleInp.dataset.autofilled === 'true')) {
-                            titleInp.value = plTitle;
-                            titleInp.dataset.autofilled = 'true';
+                    .then(r => r.json())
+                    .then(data => {
+                        const list = Array.isArray(data) ? data : (data.videos || []);
+                        if (list && list.length > 0) {
+                            const plTitle = data.playlistTitle;
+                            let infoText = 'Đã nhận diện: <strong>' + list.length + ' bài giảng</strong>';
+                            if (plTitle) {
+                                infoText += ' từ Playlist: "<strong>' + plTitle + '</strong>"';
+                                const titleInp = document.getElementById('newCourseTitle');
+                                if (titleInp && (!titleInp.value.trim() || titleInp.dataset.autofilled === 'true')) {
+                                    titleInp.value = plTitle;
+                                    titleInp.dataset.autofilled = 'true';
+                                }
+                            }
+
+                            // Tự động gán danh mục nếu phát hiện (chọn ngầm định)
+                            if (data.suggestedCategoryId && data.suggestedCategoryName) {
+                                setComboboxValue('newCourseCategoryCombobox', data.suggestedCategoryId, data.suggestedCategoryName);
+                            }
+
+                            // Tự động điền mô tả tóm tắt nếu AI sinh thành công
+                            if (data.suggestedDescription) {
+                                const descInp = document.getElementById('newCourseDescription');
+                                if (descInp && (!descInp.value.trim() || descInp.dataset.autofilled === 'true')) {
+                                    let cleanDesc = data.suggestedDescription.replace(/\\"/g, '"').replace(/^"+|"+$/g, '').trim();
+                                    descInp.value = cleanDesc;
+                                    descInp.dataset.autofilled = 'true';
+                                    autoResizeTextarea(descInp);
+                                }
+                            }
+
+
+                            feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
+                            feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + '</span>';
+                        } else {
+                            feedback.className = 'mt-2 small text-muted';
+                            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Chưa nhận diện được video YouTube hợp lệ.';
                         }
-                    }
-
-                    // Tự động gán danh mục nếu phát hiện (chọn ngầm định)
-                    if (data.suggestedCategoryId && data.suggestedCategoryName) {
-                        setComboboxValue('newCourseCategoryCombobox', data.suggestedCategoryId, data.suggestedCategoryName);
-                    }
-
-                    // Tự động điền mô tả tóm tắt nếu AI sinh thành công
-                    if (data.suggestedDescription) {
-                        const descInp = document.getElementById('newCourseDescription');
-                        if (descInp && (!descInp.value.trim() || descInp.dataset.autofilled === 'true')) {
-                            let cleanDesc = data.suggestedDescription.replace(/\\"/g, '"').replace(/^"+|"+$/g, '').trim();
-                            descInp.value = cleanDesc;
-                            descInp.dataset.autofilled = 'true';
-                            autoResizeTextarea(descInp);
-                        }
-                    }
-
-                    let aiBadge = '';
-                    if (data.aiProcessed) {
-                        aiBadge = ' <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 11px;"><i class="bi bi-stars text-primary me-1"></i>Gemini AI</span>';
-                    } else if (data.aiAvailable === false) {
-                        aiBadge = ' <span class="badge bg-warning-subtle text-dark border border-warning-subtle ms-2" style="font-size: 11px;" title="Chưa cấu hình GEMINI_API_KEY hoặc khóa API tạm vắng"><i class="bi bi-cpu text-warning me-1"></i>Chế độ Fallback (Chưa có AI)</span>';
-                    } else {
-                        aiBadge = ' <span class="badge bg-warning-subtle text-dark border border-warning-subtle ms-2" style="font-size: 11px;" title="AI tạm thời không phản hồi hoặc hết quota, đang dùng thuật toán nội bộ"><i class="bi bi-exclamation-triangle text-warning me-1"></i>Chế độ Fallback (AI lỗi/hết quota)</span>';
-                    }
-
-                    feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
-                    feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + aiBadge + '</span>';
-                } else {
-                    feedback.className = 'mt-2 small text-muted';
-                    feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Chưa nhận diện được video YouTube hợp lệ.';
-                }
-            })
-            .catch(err => {
-                // Nếu bị abort do người dùng đổi link khác -> im lặng bỏ qua, không nhận dữ liệu cũ
-                if (err.name === 'AbortError') return;
-                feedback.className = 'mt-2 small d-none';
-            });
+                    })
+                    .catch(err => {
+                        // Nếu bị abort do người dùng đổi link khác -> im lặng bỏ qua, không nhận dữ liệu cũ
+                        if (err.name === 'AbortError')
+                            return;
+                        feedback.className = 'mt-2 small d-none';
+                    });
         }, 300);
     }
 
@@ -1933,7 +1804,8 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
             const box = document.getElementById(categoryComboboxId);
             if (box) {
                 const label = box.querySelector('.selected-text');
-                if (label) catName = label.textContent.trim();
+                if (label)
+                    catName = label.textContent.trim();
             }
         }
 
@@ -1951,36 +1823,36 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
 
         fetch('${pageContext.request.contextPath}/expert/generate-ai-description', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: params.toString()
         })
-        .then(r => r.json())
-        .then(data => {
-            if (data && data.description) {
-                descInp.value = data.description;
-                descInp.dataset.autofilled = 'false';
-                descInp.style.transition = 'all 0.3s ease';
-                descInp.style.backgroundColor = 'rgba(37, 99, 235, 0.08)';
-                setTimeout(() => {
-                    descInp.style.backgroundColor = '';
-                }, 800);
-            } else {
-                if (data && data.aiAvailable === false) {
-                    alert('⚠️ Chưa cấu hình GEMINI_API_KEY trong hệ thống! Vui lòng cấu hình file ai.properties hoặc biến môi trường để sử dụng tính năng này.');
-                } else {
-                    alert('⚠️ Kết nối đến Google Gemini AI thất bại hoặc vượt quá hạn mức (Quota limit)! Vui lòng kiểm tra lại API Key hoặc kết nối mạng.');
-                }
-            }
-        })
-        .catch(err => {
-            alert('Lỗi kết nối khi gọi AI: ' + err.message);
-        })
-        .finally(() => {
-            if (btnEl) {
-                btnEl.disabled = false;
-                btnEl.innerHTML = originalBtnHtml;
-            }
-        });
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.description) {
+                        descInp.value = data.description;
+                        descInp.dataset.autofilled = 'false';
+                        descInp.style.transition = 'all 0.3s ease';
+                        descInp.style.backgroundColor = 'rgba(37, 99, 235, 0.08)';
+                        setTimeout(() => {
+                            descInp.style.backgroundColor = '';
+                        }, 800);
+                    } else {
+                        if (data && data.aiAvailable === false) {
+                            alert('⚠️ Chưa cấu hình GEMINI_API_KEY trong hệ thống! Vui lòng cấu hình file ai.properties hoặc biến môi trường để sử dụng tính năng này.');
+                        } else {
+                            alert('⚠️ Kết nối đến Google Gemini AI thất bại hoặc vượt quá hạn mức (Quota limit)! Vui lòng kiểm tra lại API Key hoặc kết nối mạng.');
+                        }
+                    }
+                })
+                .catch(err => {
+                    alert('Lỗi kết nối khi gọi AI: ' + err.message);
+                })
+                .finally(() => {
+                    if (btnEl) {
+                        btnEl.disabled = false;
+                        btnEl.innerHTML = originalBtnHtml;
+                    }
+                });
     }
 
     function deleteEditingCourse() {
@@ -1988,7 +1860,8 @@ onclick="confirmDeleteCourse('${fn:escapeXml(c.title)}', '${pageContext.request.
         const title = document.getElementById('editCourseTitle').value;
         const modalEl = document.getElementById('editCourseModal');
         const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) modalInstance.hide();
+        if (modalInstance)
+            modalInstance.hide();
         startDeleteCourseCountdown(id, title);
     }
 

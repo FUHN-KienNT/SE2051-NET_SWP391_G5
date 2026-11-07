@@ -36,8 +36,8 @@ public class AuthorizationFilter implements Filter {
         // Admin workspace (Admin Dashboard & Course Management) is for ADMIN & MANAGER
         routeRoles.put("/admin", managerOrAdmin);
         routeRoles.put("/manager", managerOrAdmin);
-        // Expert workspace (Expert Dashboard & Lesson Management) is for EXPERT & ADMIN
-        routeRoles.put("/expert", new HashSet<>(Arrays.asList("EXPERT", "ROLE_EXPERT", "ADMIN", "ROLE_ADMIN")));
+        // Expert workspace (Expert Dashboard & Lesson Management) is for EXPERT only
+        routeRoles.put("/expert", new HashSet<>(Arrays.asList("EXPERT", "ROLE_EXPERT")));
     }
 
     @Override
@@ -62,6 +62,16 @@ public class AuthorizationFilter implements Filter {
         if (hasPermission(role, required)) {
             chain.doFilter(request, response);
         } else {
+            if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+                SessionUtil.setFlashError(req, "Tài khoản Quản trị viên không thuộc phạm vi Expert Studio. Hệ thống đã chuyển hướng bạn về Admin Dashboard.");
+                resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                return;
+            }
+            if ("MANAGER".equalsIgnoreCase(role) || "ROLE_MANAGER".equalsIgnoreCase(role)) {
+                SessionUtil.setFlashError(req, "Tài khoản Quản lý không thuộc phạm vi Expert Studio. Hệ thống đã chuyển hướng bạn về Manager Dashboard.");
+                resp.sendRedirect(req.getContextPath() + "/manager/dashboard");
+                return;
+            }
             sendForbidden(resp);
         }
     }

@@ -367,7 +367,7 @@
                     }, 400);
                 }
                 const CoursonToast = {
-                    show: function(type, message, duration = 9000) {
+                    show: function(type, message, duration = 3000) {
                         if (!message) return;
                         const c = getOrCreateContainer();
                         const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
@@ -393,7 +393,7 @@
                         requestAnimationFrame(() => { toast.classList.add('show'); });
                         let timer = setTimeout(() => { dismissToast(toast); }, duration);
                         toast.onmouseenter = () => { clearTimeout(timer); };
-                        toast.onmouseleave = () => { timer = setTimeout(() => { dismissToast(toast); }, 2000); };
+                        toast.onmouseleave = () => { timer = setTimeout(() => { dismissToast(toast); }, 1200); };
                         return toast;
                     }
                 };

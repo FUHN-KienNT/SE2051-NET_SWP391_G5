@@ -153,4 +153,30 @@ public class LessonDto {
     public void setActive(boolean active) {
         this.isActive = active;
     }
+    public String getEmbedVideoUrl() {
+        if (videoUrl == null || videoUrl.trim().isEmpty()) {
+            return null;
+        }
+        String url = videoUrl.trim();
+        if (url.contains("youtube.com/embed/")) {
+            return url;
+        }
+        if (url.contains("v=")) {
+            String vid = url.substring(url.indexOf("v=") + 2);
+            if (vid.contains("&")) vid = vid.substring(0, vid.indexOf("&"));
+            if (vid.contains("?")) vid = vid.substring(0, vid.indexOf("?"));
+            if (!vid.isEmpty()) {
+                return "https://www.youtube.com/embed/" + vid;
+            }
+        }
+        if (url.contains("youtu.be/")) {
+            String vid = url.substring(url.indexOf("youtu.be/") + 9);
+            if (vid.contains("?")) vid = vid.substring(0, vid.indexOf("?"));
+            if (vid.contains("&")) vid = vid.substring(0, vid.indexOf("&"));
+            if (!vid.isEmpty()) {
+                return "https://www.youtube.com/embed/" + vid;
+            }
+        }
+        return url;
+    }
 }

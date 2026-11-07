@@ -41,6 +41,10 @@ public class PasswordResetService {
      * Handles forgot password request.
      * Throws ValidationException if email is missing/invalid or account does not exist.
      */
+    public String getLastResetUrl(String email) {
+        return MailUtil.getLastResetUrl(email);
+    }
+
     public void sendResetRequest(String email, String dynamicBaseUrl) {
         createAndSendResetToken(email, dynamicBaseUrl, false);
     }

@@ -3,8 +3,6 @@
 <c:set var="pageTitle" value="Không gian học tập - ${course.title}" />
 <jsp:include page="../common/header.jsp" />
 
-<!-- Quill WYSIWYG Editor Styles -->
-<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 
 <style>
     html, body {
@@ -76,36 +74,6 @@
             left: 0;
             box-shadow: 4px 0 15px rgba(0,0,0,0.1);
         }
-    }
-    /* Note editor customized styling */
-    .note-card {
-        display: flex;
-        flex-direction: column;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        background: #ffffff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .note-card .ql-toolbar.ql-snow {
-        border-top-left-radius: 9px;
-        border-top-right-radius: 9px;
-        border-color: #e2e8f0;
-        background: #f8fafc;
-        padding: 5px 8px;
-    }
-    .note-card .ql-container.ql-snow {
-        border-bottom-left-radius: 9px;
-        border-bottom-right-radius: 9px;
-        border-color: #e2e8f0;
-        font-family: inherit;
-        font-size: 14px;
-        line-height: 1.55;
-    }
-    .note-card .ql-editor {
-        height: 310px;
-        min-height: 240px;
-        max-height: 380px;
-        overflow-y: auto;
     }
     .markdown-body {
         font-size: 14.5px;
@@ -333,18 +301,17 @@
                         </div>
                     </c:if>
 
-                    <div class="row g-3">
-                        <!-- CENTER COLUMN: Video Player & Controls & Mô tả -->
-                        <div class="col-12 col-md-7 col-lg-7 col-xl-7 col-xxl-8">
-                            <div class="card p-3 shadow-sm border-0 rounded-3 mb-3 bg-white">
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-xl-11 col-xxl-10">
+                            <div class="card p-3 p-md-4 shadow-sm border-0 rounded-3 mb-3 bg-white">
                                 <!-- Lesson Title & Completed Action -->
-                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2 pb-2 border-bottom">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
                                     <div>
                                         <c:if test="${not empty activeModuleName}">
                                             <span class="badge bg-light text-secondary border me-1"><i class="bi bi-folder2 me-1"></i>${activeModuleName}</span>
                                         </c:if>
                                         <span class="badge bg-primary-subtle text-primary border mb-1">Bài học</span>
-                                        <h5 class="fw-bold mb-0 mt-1 text-dark">${activeLesson.title}</h5>
+                                        <h4 class="fw-bold mb-0 mt-1 text-dark">${activeLesson.title}</h4>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <form action="${pageContext.request.contextPath}/courses/update-progress" method="POST" class="d-inline">
@@ -370,110 +337,73 @@
                                 <!-- Video Player (ratio-16x9) -->
                                 <c:choose>
                                     <c:when test="${not empty activeLesson.videoUrl}">
-                                        <div class="ratio ratio-16x9 mb-2 rounded-3 bg-dark shadow-sm overflow-hidden border">
-                                            <iframe src="${activeLesson.videoUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                        <div class="ratio ratio-16x9 mb-3 rounded-3 bg-dark shadow-sm overflow-hidden border">
+                                            <iframe src="${not empty activeLesson.embedVideoUrl ? activeLesson.embedVideoUrl : activeLesson.videoUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                                         </div>
                                     </c:when>
                                     <c:otherwise>
-                                        <div class="ratio ratio-16x9 mb-2 rounded-3 bg-secondary-subtle d-flex align-items-center justify-content-center text-muted border">
-                                            <div class="text-center p-3">
-                                                <i class="bi bi-play-circle fs-2 mb-2 text-secondary"></i>
-                                                <p class="mb-0 fw-semibold small">Bài học này không có video hướng dẫn trực tiếp.</p>
-                                                <span class="text-muted" style="font-size: 11px;">Vui lòng đọc mô tả và ghi chú bài học bên dưới.</span>
+                                        <div class="ratio ratio-16x9 mb-3 rounded-3 bg-secondary-subtle d-flex align-items-center justify-content-center text-muted border">
+                                            <div class="text-center p-4">
+                                                <i class="bi bi-play-circle fs-1 mb-2 text-secondary"></i>
+                                                <p class="mb-0 fw-semibold">Bài học này không có video hướng dẫn trực tiếp.</p>
+                                                <span class="text-muted small">Vui lòng đọc tài liệu và nội dung bài học bên dưới.</span>
                                             </div>
                                         </div>
                                     </c:otherwise>
                                 </c:choose>
 
                                 <!-- Navigation buttons between lessons -->
-                                <div class="d-flex justify-content-between align-items-center py-1.5 px-3 bg-light rounded-3 mb-3 border small">
+                                <div class="d-flex justify-content-between align-items-center py-2 px-3 bg-light rounded-3 mb-4 border small">
                                     <c:choose>
                                         <c:when test="${prevLessonId != null}">
-                                            <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${registrationId}&lessonId=${prevLessonId}" class="btn btn-outline-secondary btn-sm py-1 px-2 rounded-2" style="font-size: 12px;">
+                                            <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${registrationId}&lessonId=${prevLessonId}" class="btn btn-outline-secondary btn-sm py-1 px-3 rounded-2">
                                                 <i class="bi bi-arrow-left me-1"></i>Bài trước
                                             </a>
                                         </c:when>
                                         <c:otherwise>
-                                            <button class="btn btn-outline-secondary btn-sm py-1 px-2 rounded-2" style="font-size: 12px;" disabled><i class="bi bi-arrow-left me-1"></i>Bài trước</button>
+                                            <button class="btn btn-outline-secondary btn-sm py-1 px-3 rounded-2" disabled><i class="bi bi-arrow-left me-1"></i>Bài trước</button>
                                         </c:otherwise>
                                     </c:choose>
 
-                                    <span class="text-muted fw-semibold d-none d-sm-inline" style="font-size: 12px;">Điều hướng bài học</span>
+                                    <span class="text-muted fw-semibold d-none d-sm-inline">Điều hướng bài học</span>
 
                                     <c:choose>
                                         <c:when test="${nextLessonId != null}">
-                                            <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${registrationId}&lessonId=${nextLessonId}" class="btn btn-primary btn-sm py-1 px-2 rounded-2" style="font-size: 12px;">
+                                            <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${registrationId}&lessonId=${nextLessonId}" class="btn btn-primary btn-sm py-1 px-3 rounded-2 fw-semibold">
                                                 Bài kế tiếp <i class="bi bi-arrow-right ms-1"></i>
                                             </a>
                                         </c:when>
                                         <c:otherwise>
-                                            <button class="btn btn-secondary btn-sm py-1 px-2 rounded-2" style="font-size: 12px;" disabled>Đã hết bài <i class="bi bi-check2 ms-1"></i></button>
+                                            <button class="btn btn-secondary btn-sm py-1 px-3 rounded-2" disabled>Đã hết bài <i class="bi bi-check2 ms-1"></i></button>
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
 
-                                <!-- Mô tả (Lesson Description & Attachments) -->
-                                <div class="lesson-overview pt-2 border-top">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="fw-bold mb-0 text-dark">
-                                            <i class="bi bi-info-circle text-primary me-2"></i>Mô tả & Tài liệu
-                                        </h6>
+                                <!-- Mô tả & Tài liệu học tập -->
+                                <div class="lesson-overview pt-3 border-top">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="fw-bold mb-0 text-dark">
+                                            <i class="bi bi-journal-text text-primary me-2"></i>Nội dung & Tài liệu học tập
+                                        </h5>
                                         <c:if test="${not empty activeLesson.documentUrl}">
-                                            <a href="${activeLesson.documentUrl}" target="_blank" class="btn btn-outline-primary btn-sm rounded-2 py-0 px-2" style="font-size: 12px;">
-                                                <i class="bi bi-file-earmark-arrow-down me-1"></i>Tài liệu đính kèm
+                                            <a href="${activeLesson.documentUrl}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                                <i class="bi bi-file-earmark-arrow-down me-1"></i>Tải tài liệu đính kèm
                                             </a>
                                         </c:if>
                                     </div>
 
-                                    <!-- Collapsible Accordion: Original Expert Note for Quick Reference -->
-                                    <c:if test="${not empty activeLesson.content}">
-                                        <div class="accordion mt-2" id="accordionExpertRef">
-                                            <div class="accordion-item border rounded-3 overflow-hidden">
-                                                <h2 class="accordion-header" id="headingExpertRef">
-                                                    <button class="accordion-button collapsed py-2 px-3 small fw-semibold bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExpertRef" aria-expanded="false" aria-controls="collapseExpertRef">
-                                                        <i class="bi bi-lightbulb text-warning me-2 fs-6"></i>
-                                                        Xem ghi chú tham khảo gốc của Chuyên gia (Expert's Reference)
-                                                    </button>
-                                                </h2>
-                                                <div id="collapseExpertRef" class="accordion-collapse collapse" aria-labelledby="headingExpertRef" data-bs-parent="#accordionExpertRef">
-                                                    <div class="accordion-body p-3 bg-white">
-                                                        <div id="expertContentRendered" class="ql-editor p-0 markdown-body border-0" style="max-height: 250px; overflow-y: auto;">
-                                                            ${activeLesson.content}
-                                                        </div>
-                                                    </div>
+                                    <c:choose>
+                                        <c:when test="${not empty activeLesson.content}">
+                                            <div class="p-3 bg-light rounded-3 border">
+                                                <div id="expertContentRendered" class="markdown-body">
+                                                    ${activeLesson.content}
                                                 </div>
                                             </div>
-                                        </div>
-                                    </c:if>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- RIGHT COLUMN: Note (Student Personal Blank Note with Cloud Auto-save) -->
-                        <div class="col-12 col-md-5 col-lg-5 col-xl-5 col-xxl-4">
-                            <div class="note-card p-3 shadow-sm sticky-top" style="top: 15px; z-index: 10;">
-                                <!-- Note Header -->
-                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom flex-wrap gap-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-journal-text text-primary fs-5"></i>
-                                        <h6 class="fw-bold mb-0 text-dark">Ghi chú cá nhân</h6>
-                                    </div>
-                                    <div>
-                                        <span id="noteSavedStatus" class="badge bg-light text-muted border" style="font-size: 11.5px; font-weight: 500;">
-                                            <i class="bi bi-cloud-check text-success me-1"></i>Đã đồng bộ
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Quill Rich Text Editor Container (Blank note by default, or student's saved note) -->
-                                <div id="studentNoteEditor">
-                                    <c:out value="${activeLesson.userNote}" escapeXml="false" />
-                                </div>
-
-                                <!-- Auto-save Hint Footer -->
-                                <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top text-muted small" style="font-size: 11.5px;">
-                                    <span><i class="bi bi-cloud-arrow-up text-primary me-1"></i>Tự động lưu vào CSDL</span>
-                                    <span id="noteCharCount" class="text-secondary">0 từ</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <p class="text-muted small mb-0 fst-italic">Giảng viên không để lại mô tả bổ sung cho bài học này.</p>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                             </div>
                         </div>
@@ -494,7 +424,6 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script>
     // 1. Filter Lessons in Sidebar
     function filterLearningLessons() {
@@ -573,130 +502,6 @@
         }
     });
 
-    // 4. Initialize Quill Blank Note Editor & Seamless Database Auto-Save
-    let quill = null;
-    let noteDebounceTimer = null;
-    let hasUnsavedNote = false;
-
-    function setSaveStatus(type, msg) {
-        const el = document.getElementById('noteSavedStatus');
-        if (!el) return;
-        if (type === 'saved') {
-            el.className = 'badge bg-success-subtle text-success border';
-            el.innerHTML = '<i class="bi bi-cloud-check text-success me-1"></i>' + msg;
-        } else if (type === 'saving') {
-            el.className = 'badge bg-info-subtle text-info border';
-            el.innerHTML = '<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span>' + msg;
-        } else if (type === 'unsaved') {
-            el.className = 'badge bg-warning-subtle text-warning border';
-            el.innerHTML = '<i class="bi bi-pencil-fill me-1"></i>' + msg;
-        } else if (type === 'error') {
-            el.className = 'badge bg-danger-subtle text-danger border';
-            el.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>' + msg;
-        }
-    }
-
-    function updateNoteStats() {
-        if (!quill) return;
-        const text = quill.getText().trim();
-        const wordCount = text.length > 0 ? text.split(/\s+/).length : 0;
-        const charEl = document.getElementById('noteCharCount');
-        if (charEl) {
-            charEl.textContent = wordCount + ' từ (' + text.length + ' ký tự)';
-        }
-    }
-
-    function saveNoteAjax() {
-        if (!quill) return;
-        const noteHtml = quill.root.innerHTML;
-        hasUnsavedNote = false;
-        setSaveStatus('saving', 'Đang lưu...');
-
-        const params = new URLSearchParams();
-        params.append('registrationId', '${registrationId}');
-        params.append('lessonId', '${activeLesson != null ? activeLesson.id : 0}');
-        params.append('note', noteHtml);
-
-        fetch('${pageContext.request.contextPath}/courses/save-lesson-note', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-            },
-            body: params.toString()
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.success) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                setSaveStatus('saved', 'Đã lưu lúc ' + timeStr);
-            } else {
-                setSaveStatus('error', (data && data.message) ? data.message : 'Lỗi khi lưu');
-            }
-        })
-        .catch(err => {
-            setSaveStatus('error', 'Lỗi kết nối máy chủ');
-            console.error('Lỗi lưu ghi chú:', err);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const editorContainer = document.getElementById('studentNoteEditor');
-        if (!editorContainer) return;
-
-        quill = new Quill('#studentNoteEditor', {
-            theme: 'snow',
-            placeholder: 'Ghi chép bài học của bạn tại đây... (Hệ thống tự động lưu vào đám mây)',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['blockquote', 'code-block'],
-                    ['clean']
-                ]
-            }
-        });
-
-        updateNoteStats();
-
-        // Tự động lưu sau 1.2s khi dừng gõ phím
-        quill.on('text-change', function(delta, oldDelta, source) {
-            if (source === 'user') {
-                hasUnsavedNote = true;
-                updateNoteStats();
-                setSaveStatus('unsaved', 'Đang nhập...');
-                if (noteDebounceTimer) {
-                    clearTimeout(noteDebounceTimer);
-                }
-                noteDebounceTimer = setTimeout(function() {
-                    saveNoteAjax();
-                }, 1200);
-            }
-        });
-
-        // Khi người dùng bấm chuột ra ngoài ô soạn thảo (blur), lưu ngay lập tức
-        quill.root.addEventListener('blur', function() {
-            if (hasUnsavedNote) {
-                if (noteDebounceTimer) clearTimeout(noteDebounceTimer);
-                saveNoteAjax();
-            }
-        });
-
-        // Lưu trước khi rời trang / đóng tab
-        window.addEventListener('beforeunload', function() {
-            if (hasUnsavedNote && quill) {
-                const params = new URLSearchParams();
-                params.append('registrationId', '${registrationId}');
-                params.append('lessonId', '${activeLesson != null ? activeLesson.id : 0}');
-                params.append('note', quill.root.innerHTML);
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon('${pageContext.request.contextPath}/courses/save-lesson-note', params);
-                }
-            }
-        });
-    });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -696,7 +696,7 @@
 
                     // Hiển thị thông báo thành công
                     if (window.CoursonToast) {
-                        window.CoursonToast.show('success', data.message || 'Cập nhật thông tin hồ sơ thành công!', 8000);
+                        window.CoursonToast.show('success', data.message || 'Cập nhật thông tin hồ sơ thành công!', 3000);
                     }
                 } else {
                     if (data.field === 'fullName') {
@@ -713,7 +713,7 @@
                         showError('avatarError', 'avatarInput', data.message);
                     }
                     if (window.CoursonToast) {
-                        window.CoursonToast.show('error', data.message || 'Cập nhật hồ sơ thất bại.', 8000);
+                        window.CoursonToast.show('error', data.message || 'Cập nhật hồ sơ thất bại.', 3000);
                     }
                 }
             })
