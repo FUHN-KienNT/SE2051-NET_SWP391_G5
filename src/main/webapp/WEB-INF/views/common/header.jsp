@@ -11,7 +11,7 @@
             <c:set var="isMyRegistrations" value="${fn:contains(reqUri, '/registrations')}" />
             <c:set var="isExpert" value="${fn:contains(reqUri, '/expert')}" />
             <c:set var="isAdmin"
-                value="${fn:contains(reqUri, '/admin') || fn:contains(reqUri, '/users') || fn:contains(reqUri, '/settings')}" />
+                value="${fn:contains(reqUri, '/admin') || fn:contains(reqUri, '/manager') || fn:contains(reqUri, '/users') || fn:contains(reqUri, '/settings') || fn:contains(reqUri, '/registrations/list') || fn:contains(reqUri, '/registrations/course')}" />
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -600,6 +600,12 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                                                     <i class="bi bi-collection text-primary"></i> Quản lý Khóa học
                                                 </a>
                                             </li>
+                                            <li>
+                                                <a class="cf-dropdown-item"
+                                                    href="${pageContext.request.contextPath}/registrations/list">
+                                                    <i class="bi bi-person-lines-fill text-success"></i> Quản lý Đăng ký
+                                                </a>
+                                            </li>
                                             <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN'}">
                                                 <li>
                                                     <hr class="dropdown-divider my-1">
@@ -848,13 +854,17 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
 
                                 <c:if
                                     test="${sessionScope.CURRENT_USER.roleName == 'ADMIN' || sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
-                                    <a href="${pageContext.request.contextPath}/admin/dashboard"
+                                    <a href="${pageContext.request.contextPath}${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager/dashboard' : '/admin/dashboard'}"
                                         class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 border-0 rounded-2 ${isAdmin ? 'fw-bold text-warning' : ''}">
                                         <i class="bi bi-speedometer2 text-danger"></i> Dashboard Quản trị
                                     </a>
-                                    <a href="${pageContext.request.contextPath}/admin/courses"
+                                    <a href="${pageContext.request.contextPath}${sessionScope.CURRENT_USER.roleName == 'MANAGER' ? '/manager/courses' : '/admin/courses'}"
                                         class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 border-0 rounded-2">
                                         <i class="bi bi-collection text-primary"></i> Quản lý Khóa học
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/registrations/list"
+                                        class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 border-0 rounded-2">
+                                        <i class="bi bi-person-lines-fill text-success"></i> Quản lý Đăng ký
                                     </a>
                                     <c:if test="${sessionScope.CURRENT_USER.roleName == 'ADMIN'}">
                                         <a href="${pageContext.request.contextPath}/users/list"

@@ -20,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -341,29 +342,16 @@ public RecentLearningDto getRecentLearning(long userId) {
         if (user == null || user.getRoleName() == null) {
             return false;
         }
-        if ("ADMIN".equalsIgnoreCase(user.getRoleName())) {
-            return true;
-        }
-        if (!"MANAGER".equalsIgnoreCase(user.getRoleName())) {
-            return false;
-        }
-        try (Connection con = DbConnection.getConnection()) {
-            Optional<Course> course = courseDao.findById(con, courseId);
-            return course.isPresent() && Long.valueOf(user.getId()).equals(course.get().getManagerId());
-        } catch (SQLException e) {
-            return false;
-        }
+        return "ADMIN".equalsIgnoreCase(user.getRoleName()) || "MANAGER".equalsIgnoreCase(user.getRoleName());
     }
 
     public boolean canViewRegistration(RegistrationDto registration, UserDto user) {
         if (registration == null || user == null || user.getRoleName() == null) {
             return false;
         }
-        if (Long.valueOf(user.getId()).equals(registration.getUserId()) || "ADMIN".equalsIgnoreCase(user.getRoleName())) {
-            return true;
-        }
-        return "MANAGER".equalsIgnoreCase(user.getRoleName())
-                && canViewCourseRegistrations(registration.getCourseId(), user);
+        return Long.valueOf(user.getId()).equals(registration.getUserId())
+                || "ADMIN".equalsIgnoreCase(user.getRoleName())
+                || "MANAGER".equalsIgnoreCase(user.getRoleName());
     }
 
     public List<RegistrationDto> getByManager(long managerId) {
@@ -376,6 +364,38 @@ public RecentLearningDto getRecentLearning(long userId) {
             return dtoList;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy danh sách đăng ký cho quản lý: " + e.getMessage(), e);
+        }
+    }
+
+    public List<RegistrationDto> getAll() {
+        try (Connection con = DbConnection.getConnection()) {
+            List<Registration> list = registrationDao.findAll(con);
+            List<RegistrationDto> dtoList = new ArrayList<>();
+            for (Registration r : list) {
+                dtoList.add(mapRegistration(r));
+            }
+            return dtoList;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy danh sách toàn bộ đăng ký: " + e.getMessage(), e);
+        }
+    }
+
+    public List<CourseDto> getCoursesForManager(UserDto user) {
+        if (user == null || user.getRoleName() == null) {
+            return Collections.emptyList();
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            List<Course> courses = courseDao.searchAdmin(con, null, null, null, null);
+            List<CourseDto> list = new ArrayList<>();
+            for (Course c : courses) {
+                CourseDto dto = new CourseDto();
+                dto.setId(c.getId());
+                dto.setTitle(c.getTitle());
+                list.add(dto);
+            }
+            return list;
+        } catch (SQLException e) {
+            return Collections.emptyList();
         }
     }
 

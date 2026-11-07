@@ -22,7 +22,7 @@ import java.util.Set;
 import service.RegistrationService;
 import util.SessionUtil;
 
-@WebServlet(name = "RegistrationServlet", urlPatterns = {"/registrations/*"})
+@WebServlet(name = "RegistrationServlet", urlPatterns = { "/registrations/*" })
 public class RegistrationServlet extends HttpServlet {
     private RegistrationService registrationService;
 
@@ -45,7 +45,8 @@ public class RegistrationServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
-    private void processAction(String action, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         switch (action) {
             case "checkout":
                 showCheckout(req, resp);
@@ -135,13 +136,16 @@ public class RegistrationServlet extends HttpServlet {
         if (courseIdStr != null) {
             long courseId = Long.parseLong(courseIdStr);
             RegistrationDto reg = registrationService.enroll(currentUser.getId(), courseId);
-            registrationService.updatePayment(reg.getId(), PaymentStatus.SUCCESS, "PAY-" + System.currentTimeMillis(), OffsetDateTime.now());
+            registrationService.updatePayment(reg.getId(), PaymentStatus.SUCCESS, "PAY-" + System.currentTimeMillis(),
+                    OffsetDateTime.now());
         }
         resp.sendRedirect(req.getContextPath() + "/registrations/my?success=true");
     }
 
-        // #m_tiendo [TRẠM 1/4 - CONTROLLER]: Lấy danh sách đăng ký bằng getByUser() và lấy bài học gần nhất bằng getRecentLearning()
-private void showMyRegistrations(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    // #m_tiendo [TRẠM 1/4 - CONTROLLER]: Lấy danh sách đăng ký bằng getByUser() và
+    // lấy bài học gần nhất bằng getRecentLearning()
+    private void showMyRegistrations(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -174,7 +178,8 @@ private void showMyRegistrations(HttpServletRequest req, HttpServletResponse res
                 // Khóa học đang tạm khóa bảo trì / soạn nháp
             } else if (r.getStatus() == RegistrationStatus.PENDING) {
                 pendingCourses++;
-            } else if (r.getStatus() == RegistrationStatus.COMPLETED || (r.getTotalLessons() > 0 && r.getCompletedLessons() >= r.getTotalLessons())) {
+            } else if (r.getStatus() == RegistrationStatus.COMPLETED
+                    || (r.getTotalLessons() > 0 && r.getCompletedLessons() >= r.getTotalLessons())) {
                 completedCourses++;
             } else if (r.getStatus() == RegistrationStatus.ACTIVE) {
                 inProgressCourses++;
@@ -214,33 +219,69 @@ private void showMyRegistrations(HttpServletRequest req, HttpServletResponse res
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
+
         String courseIdStr = req.getParameter("courseId");
-        if (courseIdStr == null) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thiếu mã khóa học.");
-            return;
-        }
+        String search = req.getParameter("search");
+        String paymentStatus = req.getParameter("paymentStatus");
+        String status = req.getParameter("status");
+
+        List<RegistrationDto> rawList;
+        CourseDto course = null;
 
         try {
-            long courseId = Long.parseLong(courseIdStr);
-            if (!registrationService.canViewCourseRegistrations(courseId, currentUser)) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem danh sách đăng ký của khóa học này.");
-                return;
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                long courseId = Long.parseLong(courseIdStr.trim());
+                if (!registrationService.canViewCourseRegistrations(courseId, currentUser)) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem danh sách đăng ký của khóa học này.");
+                    return;
+                }
+                course = registrationService.getCourseSummary(courseId);
+                rawList = registrationService.getByCourse(courseId);
+            } else {
+                if (!"MANAGER".equalsIgnoreCase(currentUser.getRoleName()) && !"ADMIN".equalsIgnoreCase(currentUser.getRoleName())) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem danh sách đăng ký.");
+                    return;
+                }
+                rawList = registrationService.getAll();
             }
-            CourseDto course = registrationService.getCourseSummary(courseId);
-            if (course == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy khóa học.");
-                return;
-            }
-            req.setAttribute("course", course);
-            req.setAttribute("registrations", registrationService.getByCourse(courseId));
         } catch (NumberFormatException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Mã khóa học không hợp lệ.");
             return;
         }
+
+        List<RegistrationDto> filteredList = new java.util.ArrayList<>();
+        String searchTrim = (search != null) ? search.trim().toLowerCase() : null;
+        for (RegistrationDto r : rawList) {
+            if (searchTrim != null && !searchTrim.isEmpty()) {
+                boolean matchId = String.valueOf(r.getId()).equals(searchTrim);
+                boolean matchUser = r.getUserName() != null && r.getUserName().toLowerCase().contains(searchTrim);
+                boolean matchCourse = r.getCourseTitle() != null && r.getCourseTitle().toLowerCase().contains(searchTrim);
+                boolean matchCode = r.getPaymentCode() != null && r.getPaymentCode().toLowerCase().contains(searchTrim);
+                if (!matchId && !matchUser && !matchCourse && !matchCode) {
+                    continue;
+                }
+            }
+            if (paymentStatus != null && !paymentStatus.trim().isEmpty()) {
+                if (r.getPaymentStatus() == null || !r.getPaymentStatus().name().equalsIgnoreCase(paymentStatus.trim())) {
+                    continue;
+                }
+            }
+            if (status != null && !status.trim().isEmpty()) {
+                if (r.getStatus() == null || !r.getStatus().name().equalsIgnoreCase(status.trim())) {
+                    continue;
+                }
+            }
+            filteredList.add(r);
+        }
+
+        req.setAttribute("course", course);
+        req.setAttribute("registrations", filteredList);
+        req.setAttribute("courseList", registrationService.getCoursesForManager(currentUser));
         req.getRequestDispatcher("/WEB-INF/views/registration/course.jsp").forward(req, resp);
     }
 
-    private void showRegistrationDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void showRegistrationDetail(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -319,7 +360,8 @@ private void showMyRegistrations(HttpServletRequest req, HttpServletResponse res
         String statusStr = req.getParameter("status");
         if (regIdStr != null) {
             long regId = Long.parseLong(regIdStr);
-            PaymentStatus pStatus = "SUCCESS".equalsIgnoreCase(statusStr) ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+            PaymentStatus pStatus = "SUCCESS".equalsIgnoreCase(statusStr) ? PaymentStatus.SUCCESS
+                    : PaymentStatus.FAILED;
             registrationService.updatePayment(regId, pStatus, req.getParameter("transactionNo"), OffsetDateTime.now());
         }
         resp.sendRedirect(req.getContextPath() + "/registrations/my");
@@ -330,7 +372,8 @@ private void showMyRegistrations(HttpServletRequest req, HttpServletResponse res
         String statusStr = req.getParameter("status");
         if (regIdStr != null) {
             long regId = Long.parseLong(regIdStr);
-            PaymentStatus pStatus = "SUCCESS".equalsIgnoreCase(statusStr) ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+            PaymentStatus pStatus = "SUCCESS".equalsIgnoreCase(statusStr) ? PaymentStatus.SUCCESS
+                    : PaymentStatus.FAILED;
             registrationService.updatePayment(regId, pStatus, req.getParameter("transactionNo"), OffsetDateTime.now());
             resp.getWriter().write("OK");
         } else {
@@ -344,7 +387,8 @@ private void showMyRegistrations(HttpServletRequest req, HttpServletResponse res
         if (idStr != null && statusStr != null) {
             long regId = Long.parseLong(idStr);
             PaymentStatus pStatus = PaymentStatus.fromDb(statusStr);
-            registrationService.updatePayment(regId, pStatus, "MANUAL-" + System.currentTimeMillis(), OffsetDateTime.now());
+            registrationService.updatePayment(regId, pStatus, "MANUAL-" + System.currentTimeMillis(),
+                    OffsetDateTime.now());
         }
         resp.sendRedirect(req.getContextPath() + "/registrations/course");
     }

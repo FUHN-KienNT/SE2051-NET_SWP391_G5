@@ -47,22 +47,20 @@ public class ManagerDashboardServlet extends HttpServlet {
             return;
         }
 
-        long managerId = currentUser.getId();
-
         // 1. Tổng quan khóa học
-        List<CourseDto> managerCourses = courseService.searchAdminCourses(null, null, managerId, null);
-        int totalCourses = managerCourses.size();
+        List<CourseDto> allCourses = courseService.searchAdminCourses(null, null, null, null);
+        int totalCourses = allCourses.size();
         
-        long publishedCount = managerCourses.stream().filter(c -> c.getStatus() == CourseStatus.PUBLISHED).count();
-        long draftCount = managerCourses.stream().filter(c -> c.getStatus() == CourseStatus.DRAFT).count();
-        long pendingCount = managerCourses.stream().filter(c -> c.getStatus() == CourseStatus.PENDING_REVIEW).count();
+        long publishedCount = allCourses.stream().filter(c -> c.getStatus() == CourseStatus.PUBLISHED).count();
+        long draftCount = allCourses.stream().filter(c -> c.getStatus() == CourseStatus.DRAFT).count();
+        long pendingCount = allCourses.stream().filter(c -> c.getStatus() == CourseStatus.PENDING_REVIEW).count();
 
         // 2. Tổng quan đăng ký và doanh thu
-        int totalRegistrations = registrationService.countByManagerId(managerId);
-        BigDecimal totalRevenue = registrationService.sumRevenueByManagerId(managerId);
+        int totalRegistrations = registrationService.countTotalRegistrations();
+        BigDecimal totalRevenue = registrationService.sumTotalRevenue();
 
         // 3. Danh sách đăng ký gần đây
-        List<RegistrationDto> recentRegistrations = registrationService.getByManager(managerId);
+        List<RegistrationDto> recentRegistrations = registrationService.getAll();
         if (recentRegistrations.size() > 10) {
             recentRegistrations = recentRegistrations.subList(0, 10);
         }
@@ -75,7 +73,7 @@ public class ManagerDashboardServlet extends HttpServlet {
         req.setAttribute("totalRegistrations", totalRegistrations);
         req.setAttribute("totalRevenue", totalRevenue);
         
-        req.setAttribute("recentCourses", managerCourses.size() > 5 ? managerCourses.subList(0, 5) : managerCourses);
+        req.setAttribute("recentCourses", allCourses.size() > 5 ? allCourses.subList(0, 5) : allCourses);
         req.setAttribute("recentRegistrations", recentRegistrations);
 
         req.getRequestDispatcher("/WEB-INF/views/manager/dashboard.jsp").forward(req, resp);

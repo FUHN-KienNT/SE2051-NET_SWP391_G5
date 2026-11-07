@@ -30,6 +30,18 @@ public class RegistrationDao {
     private static final String SQL_SUM_TOTAL_REVENUE = "SELECT SUM(payment_amount) FROM registrations WHERE payment_status IN ('SUCCESS', 'COMPLETED')";
     private static final String SQL_COUNT_PAID_REGISTRATIONS = "SELECT COUNT(*) FROM registrations WHERE payment_status IN ('SUCCESS', 'COMPLETED')";
     private static final String SQL_COUNT_TOTAL_REGISTRATIONS = "SELECT COUNT(*) FROM registrations";
+    private static final String SQL_FIND_ALL = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations ORDER BY id DESC";
+
+    public List<Registration> findAll(Connection con) throws SQLException {
+        List<Registration> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_ALL);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
 
     public Optional<Registration> findById(Connection con, long id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ID)) {

@@ -212,25 +212,14 @@ body {
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="saas-label">Người quản lý (Assigned Manager)</label>
-                                <select name="managerId" class="form-select saas-select">
-                                    <option value="">-- Chọn Manager --</option>
-                                    <c:forEach var="mgr" items="${managers}">
-                                        <option value="${mgr.id}" ${course.managerId == mgr.id ? 'selected' : ''}>${mgr.fullName}</option>
-                                    </c:forEach>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="saas-label">Chuyên gia phụ trách (Assigned Expert) <span class="text-danger">*</span></label>
-                                <select name="expertId" class="form-select saas-select border-primary" required>
-                                    <option value="">-- Chọn Chuyên gia --</option>
-                                    <c:forEach var="exp" items="${experts}">
-                                        <option value="${exp.id}" ${course.expertId == exp.id ? 'selected' : ''}>${exp.fullName}</option>
-                                    </c:forEach>
-                                </select>
-                            </div>
+                        <div class="mb-3">
+                            <label class="saas-label">Chuyên gia phụ trách (Assigned Expert) <span class="text-danger">*</span></label>
+                            <select name="expertId" class="form-select saas-select border-primary" required>
+                                <option value="">-- Chọn Chuyên gia --</option>
+                                <c:forEach var="exp" items="${experts}">
+                                    <option value="${exp.id}" ${course.expertId == exp.id ? 'selected' : ''}>${exp.fullName}</option>
+                                </c:forEach>
+                            </select>
                         </div>
 
                         <div class="mb-4">
@@ -289,10 +278,6 @@ body {
                         <li class="d-flex justify-content-between py-2 border-bottom">
                             <span class="text-muted">Mã khóa học:</span>
                             <span class="fw-bold">#${course.id}</span>
-                        </li>
-                        <li class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">Người quản lý (Manager):</span>
-                            <span class="fw-semibold">${course.managerName != null ? course.managerName : 'Hệ thống'}</span>
                         </li>
                         <li class="d-flex justify-content-between py-2 border-bottom">
                             <span class="text-muted">Chuyên gia phụ trách:</span>

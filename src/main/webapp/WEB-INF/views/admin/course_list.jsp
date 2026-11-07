@@ -221,7 +221,7 @@ body {
                     </span>
                     Danh sách Khóa học (Course List)
                 </h1>
-                <p class="saas-subtitle">Quản lý toàn bộ khóa học trên hệ thống, phân công Chuyên gia (Expert) và Người quản lý (Manager)</p>
+                <p class="saas-subtitle">Quản lý toàn bộ khóa học trên hệ thống và phân công Chuyên gia (Expert)</p>
             </div>
             <div class="d-flex gap-2">
                 <c:choose>
