@@ -467,13 +467,20 @@ public List<CourseDto> getManagedCourses(long userId) {
                         course.setCategoryId(dto.getCategoryId());
                     course.setDescription(dto.getDescription());
                     course.setPrice(dto.getPrice());
-                    course.setStatus(dto.getStatus() != null ? dto.getStatus() : CourseStatus.DRAFT);
+                    CourseStatus targetStatus = dto.getStatus() != null ? dto.getStatus() : CourseStatus.DRAFT;
+                    course.setStatus(targetStatus);
                     if (dto.getManagerId() != null)
                         course.setManagerId(dto.getManagerId());
                     if (dto.getExpertId() != null)
                         course.setExpertId(dto.getExpertId());
-                    if (dto.getArchiveAt() != null)
+                    if (dto.getArchiveAt() != null) {
                         course.setArchiveAt(dto.getArchiveAt());
+                    } else if (targetStatus != CourseStatus.ARCHIVED
+                            && course.getArchiveAt() != null
+                            && !course.getArchiveAt().isAfter(OffsetDateTime.now())) {
+                        course.setArchiveAt(null);
+                        course.setArchiveNotice(null);
+                    }
                     if (dto.getArchiveNotice() != null)
                         course.setArchiveNotice(dto.getArchiveNotice());
                     if (dto.getModerationNote() != null)

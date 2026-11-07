@@ -34,6 +34,8 @@
         color: #9CA3AF;
         background-color: #F9FAFB;
         border-color: #E5E7EB;
+        pointer-events: none;
+        cursor: not-allowed;
     }
 </style>
 
@@ -41,7 +43,14 @@
     <div class="container">
         <div class="row mb-4 align-items-center">
             <div class="col-md-8">
-                <h3 class="fw-bold mb-1">Tất cả khóa học</h3>
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                    <h3 class="fw-bold mb-0">Tất cả khóa học</h3>
+                    <c:if test="${not empty totalCourses && totalCourses > 0}">
+                        <span class="badge rounded-pill bg-light text-secondary border fw-semibold px-3 py-2">
+                            ${totalCourses} khóa học &bull; Trang ${currentPage}/${totalPages}
+                        </span>
+                    </c:if>
+                </div>
                 <p class="text-muted small mb-0">Khám phá các lộ trình học tập chuyên sâu được giảng dạy bởi các chuyên gia.</p>
             </div>
             <div class="col-md-4 mt-3 mt-md-0">
@@ -138,9 +147,18 @@
                                 </c:if>
                             </c:url>
                             <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="${currentPage <= 1 ? '#' : prevUrl}" aria-label="Trang trước">
-                                    <i class="bi bi-chevron-left"></i>
-                                </a>
+                                <c:choose>
+                                    <c:when test="${currentPage <= 1}">
+                                        <span class="page-link" aria-disabled="true" aria-label="Trang trước">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a class="page-link" href="${prevUrl}" aria-label="Trang trước">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </c:otherwise>
+                                </c:choose>
                             </li>
 
                             <c:forEach begin="1" end="${totalPages}" var="p">
@@ -168,9 +186,18 @@
                                 </c:if>
                             </c:url>
                             <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
-                                <a class="page-link" href="${currentPage >= totalPages ? '#' : nextUrl}" aria-label="Trang sau">
-                                    <i class="bi bi-chevron-right"></i>
-                                </a>
+                                <c:choose>
+                                    <c:when test="${currentPage >= totalPages}">
+                                        <span class="page-link" aria-disabled="true" aria-label="Trang sau">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a class="page-link" href="${nextUrl}" aria-label="Trang sau">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </c:otherwise>
+                                </c:choose>
                             </li>
                         </ul>
                     </nav>
