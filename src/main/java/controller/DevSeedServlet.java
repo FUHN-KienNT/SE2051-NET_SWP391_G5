@@ -23,7 +23,17 @@ public class DevSeedServlet extends HttpServlet {
         processReset(req, resp);
     }
 
-    private void processReset(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        private void processReset(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        dto.UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String role = currentUser.getRoleName();
+        if (!"ADMIN".equalsIgnoreCase(role) && !"ROLE_ADMIN".equalsIgnoreCase(role)) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: Only ADMIN can reset seed data.");
+            return;
+        }
         boolean success = DevSeedService.resetMasterSeed();
 
         String redirect = req.getParameter("redirect");

@@ -471,10 +471,6 @@ public class AuthServlet extends HttpServlet {
 
         try {
             passwordResetService.sendResetRequest(email, dynamicBaseUrl);
-            String devResetUrl = passwordResetService.getLastResetUrl(email);
-            if (devResetUrl != null) {
-                req.getSession().setAttribute("devResetUrl", devResetUrl);
-            }
             resp.sendRedirect(req.getContextPath() + "/auth/forgot-password-check-email?email="
                     + (email != null ? URLEncoder.encode(email.trim(), StandardCharsets.UTF_8) : ""));
         } catch (ValidationException e) {
@@ -513,10 +509,6 @@ public class AuthServlet extends HttpServlet {
 
         try {
             passwordResetService.resendResetRequest(email, dynamicBaseUrl);
-            String devResetUrl = passwordResetService.getLastResetUrl(email);
-            if (devResetUrl != null) {
-                req.getSession().setAttribute("devResetUrl", devResetUrl);
-            }
 
             if (isAjax) {
                 resp.setContentType("application/json;charset=UTF-8");
