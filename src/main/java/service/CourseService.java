@@ -161,7 +161,6 @@ public class CourseService {
             throw new RuntimeException("Lỗi tìm kiếm khóa học (Admin): " + e.getMessage(), e);
         }
     }
-
     /**
      * Lấy chi tiết toàn bộ khóa học cùng cây chương/bài giảng.
      * 1. Gọi courseDao.findById(con, courseId) để truy vấn bảng 'courses'.
