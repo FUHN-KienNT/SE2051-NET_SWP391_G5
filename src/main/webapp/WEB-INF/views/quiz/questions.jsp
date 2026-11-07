@@ -89,37 +89,7 @@ body {
     margin-bottom: 0;
 }
 
-/* Stat Cards */
-.saas-stat-card {
-    background: var(--saas-card-bg);
-    border: 1px solid var(--saas-border);
-    border-radius: var(--saas-radius-lg);
-    padding: 20px;
-    box-shadow: var(--saas-shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-.saas-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--saas-shadow-md);
-    border-color: #cbd5e1;
-}
-.saas-stat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-.saas-stat-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--saas-text-muted);
-}
+/* Icons */
 .saas-stat-icon {
     width: 36px;
     height: 36px;
@@ -133,22 +103,6 @@ body {
 .saas-icon-emerald { background: #ecfdf5; color: #059669; }
 .saas-icon-amber { background: #fffbeb; color: #d97706; }
 .saas-icon-slate { background: #f1f5f9; color: #475569; }
-
-.saas-stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    color: var(--saas-text-heading);
-    line-height: 1;
-}
-.saas-stat-desc {
-    font-size: 0.8125rem;
-    color: var(--saas-text-muted);
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
 
 /* Tabs */
 .saas-tabs {
@@ -609,7 +563,7 @@ body {
                         <i class="bi bi-journal-text text-primary me-1"></i>Quản lý bài học
                     </a>
                     <button type="button"
-                        class="btn-saas-outline-emerald"
+                        class="btn-saas-primary"
                         data-bs-toggle="modal" data-bs-target="#questionModal"
                         onclick="openCreateQuestionModal('')">
                         <i class="bi bi-plus-lg me-1"></i>Thêm câu hỏi mới
@@ -617,62 +571,6 @@ body {
                 </c:if>
             </div>
         </div>
-
-        <!-- 3 Stat Cards (Cohesive with Expert Studio) -->
-        <c:if test="${not empty course}">
-            <div class="row g-3 mb-4">
-                <div class="col-md-4 col-sm-6 col-12">
-                    <div class="saas-stat-card">
-                        <div class="saas-stat-header">
-                            <span class="saas-stat-label">Tổng số bài Quiz</span>
-                            <div class="saas-stat-icon saas-icon-blue">
-                                <i class="bi bi-patch-question-fill"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="saas-stat-value">${totalQuizzes}</div>
-                            <div class="saas-stat-desc">
-                                <i class="bi bi-collection text-primary"></i> Bài kiểm tra trắc nghiệm
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4 col-sm-6 col-12">
-                    <div class="saas-stat-card">
-                        <div class="saas-stat-header">
-                            <span class="saas-stat-label">Ngân hàng câu hỏi</span>
-                            <div class="saas-stat-icon saas-icon-emerald">
-                                <i class="bi bi-database-fill-check"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="saas-stat-value">${totalQuestions}</div>
-                            <div class="saas-stat-desc">
-                                <i class="bi bi-check-circle-fill text-success"></i> Câu hỏi trong kho lưu trữ
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4 col-sm-12 col-12">
-                    <div class="saas-stat-card">
-                        <div class="saas-stat-header">
-                            <span class="saas-stat-label">Số chương học</span>
-                            <div class="saas-stat-icon saas-icon-slate">
-                                <i class="bi bi-folder2-open"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="saas-stat-value">${course.totalModules}</div>
-                            <div class="saas-stat-desc">
-                                <i class="bi bi-layers-half text-secondary"></i> Chương trong khóa học
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </c:if>
 
         <!-- Main Tabs Navigation (Dedicated Screens) -->
         <ul class="nav nav-tabs saas-tabs mb-4" id="assessmentTabs" role="tablist">
