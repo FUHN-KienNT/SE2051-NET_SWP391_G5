@@ -149,44 +149,6 @@ public class RegistrationServlet extends HttpServlet {
             try (java.sql.Connection con = util.DbConnection.getConnection()) {
                 new CourseDao().findById(con, courseId).ifPresent(c -> req.setAttribute("course", c));
             }
-
-            // LOYALTY VOUCHER REWARD: Điều kiện hoàn thành >= 1 khóa học mới random ra 01 mã giảm giá
-            List<RegistrationDto> userRegs = registrationService.getByUser(currentUser.getId());
-            int completedCoursesCount = 0;
-            for (RegistrationDto r : userRegs) {
-                if (r.getStatus() == RegistrationStatus.COMPLETED || (r.getTotalLessons() > 0 && r.getCompletedLessons() >= r.getTotalLessons())) {
-                    completedCoursesCount++;
-                }
-            }
-
-            String loyaltyVoucher = null;
-            String loyaltyVoucherLabel = null;
-            if (completedCoursesCount >= 1) {
-                String rewardKey = "LOYALTY_VOUCHER_" + currentUser.getId();
-                String sessionVoucher = (String) req.getSession().getAttribute(rewardKey);
-                String[] poolCodes = {"COURSON10", "SWP391", "VIPMEMBER"};
-                String[] poolLabels = {"COURSON10 (-10%)", "SWP391 (-50.000đ)", "VIPMEMBER (-100.000đ)"};
-
-                int chosenIdx = -1;
-                if (sessionVoucher != null) {
-                    for (int i = 0; i < poolCodes.length; i++) {
-                        if (poolCodes[i].equals(sessionVoucher)) {
-                            chosenIdx = i;
-                            break;
-                        }
-                    }
-                }
-                if (chosenIdx == -1) {
-                    chosenIdx = new java.util.Random().nextInt(poolCodes.length);
-                    req.getSession().setAttribute(rewardKey, poolCodes[chosenIdx]);
-                }
-                loyaltyVoucher = poolCodes[chosenIdx];
-                loyaltyVoucherLabel = poolLabels[chosenIdx];
-            }
-
-            req.setAttribute("completedCoursesCount", completedCoursesCount);
-            req.setAttribute("loyaltyVoucher", loyaltyVoucher);
-            req.setAttribute("loyaltyVoucherLabel", loyaltyVoucherLabel);
         } catch (NumberFormatException e) {
             SessionUtil.setFlashError(req, "Mã khóa học không hợp lệ: " + courseIdStr);
             resp.sendRedirect(req.getContextPath() + "/courses/catalog");
@@ -232,42 +194,16 @@ public class RegistrationServlet extends HttpServlet {
                 certName = currentUser.getFullName();
             }
             String phone = req.getParameter("studentPhone");
-            String voucherCode = req.getParameter("voucherCode");
-            String discountStr = req.getParameter("discountAmount");
             String requestVat = req.getParameter("requestVat");
             String vatCompany = req.getParameter("vatCompany");
             String vatTaxCode = req.getParameter("vatTaxCode");
             String vatAddress = req.getParameter("vatAddress");
 
-            BigDecimal originalPrice = course.getPrice() != null ? course.getPrice() : BigDecimal.ZERO;
-            BigDecimal discount = BigDecimal.ZERO;
-            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
-                String code = voucherCode.trim().toUpperCase();
-                if ("COURSON10".equals(code)) {
-                    discount = originalPrice.multiply(new BigDecimal("0.10")).setScale(0, java.math.RoundingMode.HALF_UP);
-                } else if ("SWP391".equals(code)) {
-                    discount = new BigDecimal("50000");
-                } else if ("VIPMEMBER".equals(code)) {
-                    discount = new BigDecimal("100000");
-                } else if (discountStr != null && !discountStr.trim().isEmpty()) {
-                    try {
-                        discount = new BigDecimal(discountStr.trim());
-                    } catch (Exception ignored) {}
-                }
-            }
-            if (discount.compareTo(originalPrice) > 0) {
-                discount = originalPrice;
-            }
-            BigDecimal finalPrice = originalPrice.subtract(discount);
-            if (finalPrice.compareTo(BigDecimal.ZERO) < 0) {
-                finalPrice = BigDecimal.ZERO;
-            }
+            BigDecimal finalPrice = course.getPrice() != null ? course.getPrice() : BigDecimal.ZERO;
 
             Map<String, Object> checkoutData = new HashMap<>();
             checkoutData.put("certName", certName.trim());
             checkoutData.put("phone", phone != null ? phone.trim() : "");
-            checkoutData.put("voucherCode", voucherCode != null ? voucherCode.trim().toUpperCase() : null);
-            checkoutData.put("discountAmount", discount);
             checkoutData.put("finalPrice", finalPrice);
             checkoutData.put("requestVat", "on".equalsIgnoreCase(requestVat) || "true".equalsIgnoreCase(requestVat));
             checkoutData.put("vatCompany", vatCompany != null ? vatCompany.trim() : "");
@@ -345,9 +281,6 @@ public class RegistrationServlet extends HttpServlet {
 
                 String certName = checkoutData != null && checkoutData.get("certName") != null ? (String) checkoutData.get("certName") : currentUser.getFullName();
                 String phone = checkoutData != null && checkoutData.get("phone") != null ? (String) checkoutData.get("phone") : (currentUser.getPhone() != null ? currentUser.getPhone() : "");
-                String voucherCode = checkoutData != null ? (String) checkoutData.get("voucherCode") : null;
-                BigDecimal discountAmount = checkoutData != null && checkoutData.get("discountAmount") != null ? (BigDecimal) checkoutData.get("discountAmount") : BigDecimal.ZERO;
-
                 BigDecimal finalAmount = course.getPrice() != null ? course.getPrice() : BigDecimal.ZERO;
                 if (pendingReg != null && pendingReg.getPaymentAmount() != null) {
                     finalAmount = pendingReg.getPaymentAmount();
@@ -358,8 +291,6 @@ public class RegistrationServlet extends HttpServlet {
                 req.setAttribute("registration", pendingReg);
                 req.setAttribute("certName", certName);
                 req.setAttribute("phone", phone);
-                req.setAttribute("voucherCode", voucherCode);
-                req.setAttribute("discountAmount", discountAmount);
                 req.setAttribute("finalAmount", finalAmount);
                 req.setAttribute("paymentCode", pendingReg != null && pendingReg.getPaymentCode() != null ? pendingReg.getPaymentCode() : ("CR" + System.currentTimeMillis() % 1000000));
             }
