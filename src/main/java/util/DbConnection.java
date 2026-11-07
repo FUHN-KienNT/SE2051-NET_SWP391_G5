@@ -128,6 +128,7 @@ public final class DbConnection {
                        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS moderation_note text; " +
                        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false; " +
                        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
+                       "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text; " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(); " +
                        "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();");

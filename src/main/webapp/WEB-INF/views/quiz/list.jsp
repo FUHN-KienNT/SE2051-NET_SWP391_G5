@@ -532,6 +532,8 @@ body {
                                         <c:choose>
                                             <c:when test="${param.success == 'deleted'}">Đã xóa bài kiểm tra thành công.</c:when>
                                             <c:when test="${param.success == 'saved'}">Đã lưu thông tin cấu hình bài kiểm tra thành công.</c:when>
+                                            <c:when test="${param.success == 'activated'}">Đã kích hoạt hiển thị bài thi cho học viên.</c:when>
+                                            <c:when test="${param.success == 'deactivated'}">Đã ẩn bài thi đối với học viên.</c:when>
                                             <c:otherwise>Thao tác đã được hoàn tất thành công.</c:otherwise>
                                         </c:choose>
                                     </div>
@@ -768,13 +770,15 @@ body {
                                                                     <table class="table clean-table mb-0 align-middle">
                                                                         <thead>
                                                                             <tr>
-                                                                                <th style="width: 70px;"
+                                                                                <th style="width: 60px;"
                                                                                     class="text-center">TT</th>
                                                                                 <th>Tên bài thi (Quiz)</th>
-                                                                                <th style="width: 140px;"
+                                                                                <th style="width: 120px;"
                                                                                     class="text-center">Điểm đạt</th>
-                                                                                <th style="width: 140px;"
+                                                                                <th style="width: 120px;"
                                                                                     class="text-center">Thời lượng</th>
+                                                                                <th style="width: 130px;"
+                                                                                    class="text-center">Trạng thái</th>
                                                                                 <th style="width: 130px;"
                                                                                     class="text-end pe-3">Hành động</th>
                                                                             </tr>
@@ -796,7 +800,7 @@ body {
                                                                                                 ${q.title}
                                                                                             </a>
                                                                                             <span class="small text-muted d-block" style="font-size: 0.75rem;">
-                                                                                                Mã đề: #${q.id}
+                                                                                                 Mã đề: #${q.id}
                                                                                                 <c:if test="${q.attemptCount > 0}">
                                                                                                     • <span class="text-primary fw-semibold" title="Đã có ${q.attemptCount} lượt học viên làm bài"><i class="bi bi-people-fill me-1"></i>${q.attemptCount} lượt thi</span>
                                                                                                 </c:if>
@@ -820,8 +824,31 @@ body {
                                                                                             </c:otherwise>
                                                                                         </c:choose>
                                                                                     </td>
+                                                                                    <td class="text-center">
+                                                                                        <c:choose>
+                                                                                            <c:when test="${q.active}">
+                                                                                                <a href="${pageContext.request.contextPath}/quizzes/toggle-active?id=${q.id}&courseId=${course.id}"
+                                                                                                   class="saas-badge saas-badge-published text-decoration-none"
+                                                                                                   title="Bấm để ẩn bài thi đối với học viên">
+                                                                                                    <span class="badge-dot"></span>Hiển thị
+                                                                                                </a>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <a href="${pageContext.request.contextPath}/quizzes/toggle-active?id=${q.id}&courseId=${course.id}"
+                                                                                                   class="saas-badge saas-badge-draft text-decoration-none"
+                                                                                                   title="Bấm để hiển thị bài thi cho học viên">
+                                                                                                    <span class="badge-dot"></span>Đang ẩn
+                                                                                                </a>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
                                                                                     <td class="text-end pe-3">
                                                                                         <div class="d-inline-flex align-items-center gap-1">
+                                                                                            <a href="${pageContext.request.contextPath}/quizzes/toggle-active?id=${q.id}&courseId=${course.id}"
+                                                                                                class="btn-icon-action ${q.active ? 'text-success' : 'text-secondary'}"
+                                                                                                title="${q.active ? 'Tạm ẩn bài thi đối với học sinh' : 'Hiện bài thi cho học sinh làm bài'}">
+                                                                                                <i class="bi ${q.active ? 'bi-eye-fill' : 'bi-eye-slash-fill'}"></i>
+                                                                                            </a>
                                                                                             <a href="${pageContext.request.contextPath}/quizzes/detail?id=${q.id}&courseId=${course.id}"
                                                                                                 class="btn-icon-action"
                                                                                                 title="Cài đặt & chi tiết bài thi">
@@ -932,13 +959,25 @@ body {
                                         </div>
                                     </div>
 
-                                    <div class="mb-2">
+                                    <div class="mb-3">
                                         <label class="saas-form-label">Thứ tự hiển thị <span
                                                 class="text-danger">*</span></label>
                                         <input type="number" name="orderIndex" id="modalQuizOrderIndex"
                                             class="form-control saas-form-control" value="1" min="1" required>
                                         <div id="modalQuizOrderHint" class="form-text small text-muted">
                                             Số thứ tự phải không trùng với bài Quiz khác trong cùng chương.
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 bg-light rounded-3 border mb-2">
+                                        <div class="form-check form-switch d-flex align-items-center justify-content-between ps-0 mb-0">
+                                            <label class="form-check-label fw-semibold text-dark mb-0 cursor-pointer" for="modalQuizActiveSwitch">
+                                                <i class="bi bi-eye-slash-fill text-secondary me-1.5" id="modalActiveIcon"></i>Hiển thị cho học viên ngay
+                                            </label>
+                                            <input class="form-check-input ms-0" type="checkbox" role="switch" id="modalQuizActiveSwitch" name="active" value="true" style="cursor: pointer; width: 2.25em; height: 1.25em;" onchange="updateModalActiveIcon(this)">
+                                        </div>
+                                        <div class="form-text small text-muted mt-1" style="font-size: 0.75rem;">
+                                            Mặc định bài thi sẽ ở trạng thái <strong>Ẩn</strong> để bạn hoàn thiện cấu hình và câu hỏi trước khi phát hành cho học viên.
                                         </div>
                                     </div>
                                 </div>
@@ -1052,6 +1091,16 @@ body {
                         }
                     });
 
+                    function updateModalActiveIcon(checkbox) {
+                        const icon = document.getElementById('modalActiveIcon');
+                        if (!icon) return;
+                        if (checkbox.checked) {
+                            icon.className = 'bi bi-eye-fill text-success me-1.5';
+                        } else {
+                            icon.className = 'bi bi-eye-slash-fill text-secondary me-1.5';
+                        }
+                    }
+
                     // 2. Modal Quản lý Quiz
                     function openCreateQuizModal(moduleId, suggestedOrder) {
                         const idInput = document.getElementById('modalQuizId');
@@ -1064,6 +1113,11 @@ body {
                         if (passScoreInput) passScoreInput.value = '50';
                         const timeLimitInput = document.getElementById('modalQuizTimeLimit');
                         if (timeLimitInput) timeLimitInput.value = '15';
+                        const activeSwitch = document.getElementById('modalQuizActiveSwitch');
+                        if (activeSwitch) {
+                            activeSwitch.checked = false;
+                            updateModalActiveIcon(activeSwitch);
+                        }
                         const orderInput = document.getElementById('modalQuizOrderIndex');
                         if (orderInput) orderInput.value = (suggestedOrder && suggestedOrder > 0) ? suggestedOrder : '1';
                         // Cập nhật hint text STT

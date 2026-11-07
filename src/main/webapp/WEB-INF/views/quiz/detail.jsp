@@ -583,6 +583,8 @@
                                                 hỏi vẫn nằm trong Ngân hàng).</c:when>
                                             <c:when test="${param.success == 'question_created_and_assigned'}">Đã tạo
                                                 câu hỏi mới và tự động gán vào bài kiểm tra.</c:when>
+                                            <c:when test="${param.success == 'activated'}">Đã kích hoạt hiển thị bài thi cho học viên.</c:when>
+                                            <c:when test="${param.success == 'deactivated'}">Đã ẩn bài thi đối với học viên.</c:when>
                                             <c:otherwise>Thao tác đã được hoàn tất thành công.</c:otherwise>
                                         </c:choose>
                                     </div>
@@ -613,6 +615,18 @@
                                         <span class="badge bg-light text-dark border fw-semibold">Chương
                                             ${currentModule.orderIndex}</span>
                                     </c:if>
+                                    <c:choose>
+                                        <c:when test="${quiz.active}">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                                                <i class="bi bi-eye-fill me-1"></i>Đang hiển thị
+                                            </span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fw-semibold">
+                                                <i class="bi bi-eye-slash-fill me-1"></i>Đang ẩn
+                                            </span>
+                                        </c:otherwise>
+                                    </c:choose>
                                     <h1 class="saas-title">
                                         <span class="saas-stat-icon saas-icon-blue"
                                             style="width: 36px; height: 36px; border-radius: 10px;">
@@ -629,6 +643,12 @@
                             </div>
 
                             <div class="d-flex align-items-center gap-2">
+                                <a href="${pageContext.request.contextPath}/quizzes/toggle-active?id=${quiz.id}&courseId=${courseId}&from=detail"
+                                   class="btn ${quiz.active ? 'btn-outline-secondary' : 'btn-outline-success'} btn-sm fw-medium d-inline-flex align-items-center gap-1.5"
+                                   title="${quiz.active ? 'Tạm ẩn bài thi đối với học viên' : 'Hiển thị bài thi cho học viên làm bài'}">
+                                    <i class="bi ${quiz.active ? 'bi-eye-slash' : 'bi-eye'}"></i>
+                                    <span>${quiz.active ? 'Ẩn với học viên' : 'Hiện cho học viên'}</span>
+                                </a>
                                 <c:url var="backQuizListUrl" value="/quizzes/list">
                                     <c:if test="${not empty courseId}">
                                         <c:param name="courseId" value="${courseId}" />
@@ -667,6 +687,28 @@
                                             <input type="hidden" name="moduleId" value="${quiz.moduleId}">
                                             <c:if test="${not empty courseId}">
                                                 <input type="hidden" name="courseId" value="${courseId}">
+                                            </c:if>
+
+                                            <!-- Module (Fixed) -->
+                                            <c:if test="${not empty currentModule}">
+                                                <div class="mb-3">
+                                                    <label
+                                                        class="saas-form-label d-flex align-items-center justify-content-between">
+                                                        <span>Thuộc chương học</span>
+                                                        <span class="badge bg-light text-muted border fw-normal"
+                                                            style="font-size: 0.725rem;">
+                                                            <i class="bi bi-lock-fill me-1 text-secondary"></i>Cố định
+                                                        </span>
+                                                    </label>
+                                                    <div class="form-control saas-form-control bg-light text-secondary d-flex align-items-center gap-2 py-2"
+                                                        style="cursor: not-allowed;">
+                                                        <i class="bi bi-folder2-open text-primary"></i>
+                                                        <span class="text-truncate fw-medium text-dark">
+                                                            Chương ${currentModule.orderIndex}:
+                                                            <c:out value="${currentModule.title}" />
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </c:if>
 
                                             <!-- Quiz Title -->
@@ -745,13 +787,27 @@
                                             </div>
 
                                             <!-- Order Index -->
-                                            <div class="mb-4">
+                                            <div class="mb-3">
                                                 <label class="saas-form-label">
                                                     Thứ tự hiển thị trong chương <span class="text-danger">*</span>
                                                 </label>
                                                 <input type="number" name="orderIndex"
                                                     class="form-control saas-form-control" value="${quiz.orderIndex}"
                                                     min="1" required>
+                                            </div>
+
+                                            <!-- Active Status Switch -->
+                                            <div class="mb-4 p-3 bg-light rounded-3 border">
+                                                <div class="form-check form-switch d-flex align-items-center justify-content-between ps-0 mb-1">
+                                                    <label class="form-check-label fw-semibold text-dark mb-0 cursor-pointer" for="quizActiveSwitch">
+                                                        <i class="bi ${quiz.active ? 'bi-eye-fill text-success' : 'bi-eye-slash-fill text-secondary'} me-1.5"></i>
+                                                        Hiển thị cho học viên
+                                                    </label>
+                                                    <input class="form-check-input ms-0" type="checkbox" role="switch" id="quizActiveSwitch" name="active" value="true" ${quiz.active ? 'checked' : ''} style="cursor: pointer; width: 2.25em; height: 1.25em;">
+                                                </div>
+                                                <div class="form-text small text-muted" style="font-size: 0.75rem;">
+                                                    Khi bật, học viên có thể nhìn thấy và làm bài thi trong khóa học. Khi tắt, chỉ có Expert nhìn thấy đề thi.
+                                                </div>
                                             </div>
 
                                             <button type="submit"
@@ -773,6 +829,22 @@
                                                 class="d-flex justify-content-between align-items-center py-1 border-bottom">
                                                 <span class="text-muted">Mã Quiz ID:</span>
                                                 <span class="fw-semibold text-dark">#${quiz.id}</span>
+                                            </div>
+                                            <div
+                                                class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                                <span class="text-muted">Trạng thái:</span>
+                                                <c:choose>
+                                                    <c:when test="${quiz.active}">
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                                                            <i class="bi bi-eye-fill me-1"></i>Đang hiển thị
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fw-semibold">
+                                                            <i class="bi bi-eye-slash-fill me-1"></i>Đang ẩn
+                                                        </span>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
                                             <c:if test="${not empty currentModule}">
                                                 <div

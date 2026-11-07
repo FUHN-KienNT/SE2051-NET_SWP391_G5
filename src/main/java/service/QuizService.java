@@ -73,6 +73,7 @@ public class QuizService {
             dto.setPassScore(quiz.getPassScore());
             dto.setTimeLimitMinutes(quiz.getTimeLimitMinutes());
             dto.setOrderIndex(quiz.getOrderIndex());
+            dto.setActive(quiz.isActive());
             dto.setAttemptCount(quizDao.countAttempts(con, quizId));
 
             List<QuizQuestion> assignments = quizDao.findAssignments(con, quizId);
@@ -126,6 +127,11 @@ public class QuizService {
                     Quiz q = quizDao.findById(con, dto.getId())
                             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi cần cập nhật."));
 
+                    // Chặn thay đổi chương học để bảo toàn ngân hàng câu hỏi và kết quả học viên
+                    if (dto.getModuleId() != null && !dto.getModuleId().equals(q.getModuleId())) {
+                        throw new IllegalArgumentException("Không thể thay đổi chương học của bài kiểm tra để bảo toàn ngân hàng câu hỏi và dữ liệu học tập.");
+                    }
+
                     // Kiểm tra STT trùng lặp trong cùng chương (exclude bài thi đang sửa)
                     if (quizDao.existsOrderIndex(con, q.getModuleId(), dto.getOrderIndex(), q.getId())) {
                         throw new IllegalArgumentException(
@@ -137,6 +143,7 @@ public class QuizService {
                     q.setPassScore(dto.getPassScore() != null ? dto.getPassScore() : BigDecimal.valueOf(50.0));
                     q.setTimeLimitMinutes(dto.getTimeLimitMinutes());
                     q.setOrderIndex(dto.getOrderIndex());
+                    q.setActive(dto.isActive());
                     quizDao.update(con, q);
                     id = q.getId();
                 } else {
@@ -153,6 +160,7 @@ public class QuizService {
                     q.setPassScore(dto.getPassScore() != null ? dto.getPassScore() : BigDecimal.valueOf(50.0));
                     q.setTimeLimitMinutes(dto.getTimeLimitMinutes());
                     q.setOrderIndex(dto.getOrderIndex());
+                    q.setActive(dto.isActive());
                     id = quizDao.insert(con, q);
                 }
                 con.commit();
@@ -262,7 +270,7 @@ public class QuizService {
             for (Quiz q : quizzes) {
                 QuizDto qDto = new QuizDto(
                         q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
-                        q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>()
+                        q.getTimeLimitMinutes(), q.getOrderIndex(), q.isActive(), new ArrayList<>()
                 );
                 qDto.setAttemptCount(attemptCounts.getOrDefault(q.getId(), 0));
                 quizzesByModuleId.computeIfAbsent(q.getModuleId(), k -> new ArrayList<>()).add(qDto);
@@ -568,6 +576,12 @@ public class QuizService {
                 throw new IllegalStateException("Đơn đăng ký không hoạt động.");
             }
 
+            Quiz quiz = quizDao.findById(con, quizId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi ID: " + quizId));
+            if (!quiz.isActive()) {
+                throw new IllegalStateException("Bài kiểm tra này đang tạm đóng hoặc không khả dụng đối với học viên.");
+            }
+
             QuizAttempt attempt = new QuizAttempt();
             attempt.setRegistrationId(registrationId);
             attempt.setQuizId(quizId);
@@ -729,6 +743,18 @@ public class QuizService {
         }
         result.setAnswers(answerDtos);
         return result;
+    }
+
+    public boolean toggleQuizActive(long quizId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Quiz q = quizDao.findById(con, quizId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi ID: " + quizId));
+            boolean newStatus = !q.isActive();
+            quizDao.updateActiveStatus(con, quizId, newStatus);
+            return newStatus;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật trạng thái hiển thị của bài thi: " + e.getMessage(), e);
+        }
     }
 
     private void saveAttemptTransaction(QuizAttempt attempt, List<QuizAnswer> answers) {

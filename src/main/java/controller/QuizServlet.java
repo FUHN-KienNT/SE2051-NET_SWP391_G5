@@ -105,6 +105,9 @@ public class QuizServlet extends HttpServlet {
             case "delete":
                 deleteQuiz(req, resp);
                 break;
+            case "toggle-active":
+                toggleQuizActive(req, resp);
+                break;
             case "save-question":
                 saveQuestion(req, resp);
                 break;
@@ -474,6 +477,39 @@ public class QuizServlet extends HttpServlet {
         }
     }
 
+    private void toggleQuizActive(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String idStr = req.getParameter("id");
+        String courseIdStr = req.getParameter("courseId");
+        String from = req.getParameter("from");
+        try {
+            long quizId = Long.parseLong(idStr);
+            boolean newStatus = quizService.toggleQuizActive(quizId);
+            String successMsg = newStatus ? "activated" : "deactivated";
+
+            if ("detail".equalsIgnoreCase(from)) {
+                String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
+                if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                    target += "&courseId=" + courseIdStr.trim();
+                }
+                resp.sendRedirect(target + "&success=" + successMsg);
+                return;
+            }
+
+            String target = req.getContextPath() + "/quizzes/list?";
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "success=" + successMsg);
+        } catch (Exception e) {
+            String target = req.getContextPath() + "/quizzes/list?";
+            if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+                target += "courseId=" + courseIdStr.trim();
+            }
+            resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "error="
+                    + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi cập nhật trạng thái.", java.nio.charset.StandardCharsets.UTF_8));
+        }
+    }
+
     private void saveQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String quizIdStr = req.getParameter("quizId");
         String courseIdStr = req.getParameter("courseId");
@@ -731,6 +767,14 @@ public class QuizServlet extends HttpServlet {
                 timeLimitStr != null && !timeLimitStr.trim().isEmpty() ? Integer.parseInt(timeLimitStr.trim()) : null);
         String orderStr = req.getParameter("orderIndex");
         dto.setOrderIndex(orderStr != null && !orderStr.trim().isEmpty() ? Integer.parseInt(orderStr.trim()) : 1);
+        String from = req.getParameter("from");
+        String activeStr = req.getParameter("active");
+        if (activeStr != null) {
+            dto.setActive("true".equalsIgnoreCase(activeStr) || "1".equals(activeStr) || "on".equalsIgnoreCase(activeStr));
+        } else {
+            // Cả khi tạo mới hoặc cập nhật mà không tick active thì mặc định là false (Ẩn)
+            dto.setActive(false);
+        }
         return dto;
     }
 

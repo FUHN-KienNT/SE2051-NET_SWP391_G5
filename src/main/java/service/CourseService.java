@@ -2008,7 +2008,7 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
             if (mDto != null) {
                 QuizDto qDto = new QuizDto(
                         q.getId(), q.getModuleId(), q.getTitle(), q.getPassScore(),
-                        q.getTimeLimitMinutes(), q.getOrderIndex(), new ArrayList<>());
+                        q.getTimeLimitMinutes(), q.getOrderIndex(), q.isActive(), new ArrayList<>());
                 mDto.getQuizzes().add(qDto);
             }
         }

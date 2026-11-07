@@ -10,6 +10,7 @@ public class Quiz {
     private BigDecimal passScore;
     private Integer timeLimitMinutes;
     private int orderIndex;
+    private boolean active = false;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
@@ -18,12 +19,18 @@ public class Quiz {
 
     public Quiz(Long id, Long moduleId, String title, BigDecimal passScore, Integer timeLimitMinutes,
                 int orderIndex, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this(id, moduleId, title, passScore, timeLimitMinutes, orderIndex, true, createdAt, updatedAt);
+    }
+
+    public Quiz(Long id, Long moduleId, String title, BigDecimal passScore, Integer timeLimitMinutes,
+                int orderIndex, boolean active, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.id = id;
         this.moduleId = moduleId;
         this.title = title;
         this.passScore = passScore;
         this.timeLimitMinutes = timeLimitMinutes;
         this.orderIndex = orderIndex;
+        this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -74,6 +81,14 @@ public class Quiz {
 
     public void setOrderIndex(int orderIndex) {
         this.orderIndex = orderIndex;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public OffsetDateTime getCreatedAt() {

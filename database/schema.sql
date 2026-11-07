@@ -199,6 +199,7 @@ CREATE TABLE quizzes (
     pass_score         numeric(5,2) NOT NULL,
     time_limit_minutes integer,
     order_index        integer      NOT NULL,
+    is_active          boolean      NOT NULL DEFAULT true,
     created_at         timestamptz  NOT NULL DEFAULT now(),
     updated_at         timestamptz  NOT NULL DEFAULT now(),
     CONSTRAINT fk_quizzes_module FOREIGN KEY (module_id) REFERENCES modules (id) ON DELETE CASCADE,

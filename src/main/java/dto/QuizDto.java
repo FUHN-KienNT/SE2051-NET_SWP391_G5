@@ -11,6 +11,7 @@ public class QuizDto {
     private BigDecimal passScore;
     private Integer timeLimitMinutes;
     private int orderIndex;
+    private boolean active = false;
     private int attemptCount = 0;
     private List<QuestionDto> questions = new ArrayList<>();
 
@@ -19,12 +20,18 @@ public class QuizDto {
 
     public QuizDto(Long id, Long moduleId, String title, BigDecimal passScore, Integer timeLimitMinutes,
                    int orderIndex, List<QuestionDto> questions) {
+        this(id, moduleId, title, passScore, timeLimitMinutes, orderIndex, true, questions);
+    }
+
+    public QuizDto(Long id, Long moduleId, String title, BigDecimal passScore, Integer timeLimitMinutes,
+                   int orderIndex, boolean active, List<QuestionDto> questions) {
         this.id = id;
         this.moduleId = moduleId;
         this.title = title;
         this.passScore = passScore;
         this.timeLimitMinutes = timeLimitMinutes;
         this.orderIndex = orderIndex;
+        this.active = active;
         this.questions = questions != null ? questions : new ArrayList<>();
     }
 
@@ -74,6 +81,14 @@ public class QuizDto {
 
     public void setOrderIndex(int orderIndex) {
         this.orderIndex = orderIndex;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public List<QuestionDto> getQuestions() {

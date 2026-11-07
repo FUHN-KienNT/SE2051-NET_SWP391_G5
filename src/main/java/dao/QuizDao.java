@@ -15,11 +15,11 @@ import java.util.Map;
 import java.util.Optional;
 
 public class QuizDao {
-    private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, title, pass_score, time_limit_minutes, order_index, created_at, updated_at FROM quizzes WHERE module_id = ? ORDER BY order_index ASC";
-    private static final String SQL_FIND_BY_ID = "SELECT id, module_id, title, pass_score, time_limit_minutes, order_index, created_at, updated_at FROM quizzes WHERE id = ?";
+    private static final String SQL_FIND_BY_MODULE = "SELECT id, module_id, title, pass_score, time_limit_minutes, order_index, is_active, created_at, updated_at FROM quizzes WHERE module_id = ? ORDER BY order_index ASC";
+    private static final String SQL_FIND_BY_ID = "SELECT id, module_id, title, pass_score, time_limit_minutes, order_index, is_active, created_at, updated_at FROM quizzes WHERE id = ?";
     private static final String SQL_EXISTS_ORDER = "SELECT COUNT(1) FROM quizzes WHERE module_id = ? AND order_index = ? AND (? IS NULL OR id != ?)";
-    private static final String SQL_INSERT = "INSERT INTO quizzes (module_id, title, pass_score, time_limit_minutes, order_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
-    private static final String SQL_UPDATE = "UPDATE quizzes SET title = ?, pass_score = ?, time_limit_minutes = ?, order_index = ?, updated_at = ? WHERE id = ?";
+    private static final String SQL_INSERT = "INSERT INTO quizzes (module_id, title, pass_score, time_limit_minutes, order_index, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_UPDATE = "UPDATE quizzes SET title = ?, pass_score = ?, time_limit_minutes = ?, order_index = ?, is_active = ?, updated_at = ? WHERE id = ?";
     private static final String SQL_DELETE = "DELETE FROM quizzes WHERE id = ?";
 
     private static final String SQL_FIND_ASSIGNMENTS = "SELECT id, quiz_id, question_id, module_id, order_index, points FROM quiz_questions WHERE quiz_id = ? ORDER BY order_index ASC";
@@ -47,7 +47,7 @@ public class QuizDao {
 
     public List<Quiz> search(Connection con, long courseId, Long moduleId, String keyword) throws SQLException {
         StringBuilder sql = new StringBuilder(
-                "SELECT q.id, q.module_id, q.title, q.pass_score, q.time_limit_minutes, q.order_index, q.created_at, q.updated_at "
+                "SELECT q.id, q.module_id, q.title, q.pass_score, q.time_limit_minutes, q.order_index, q.is_active, q.created_at, q.updated_at "
                 + "FROM quizzes q JOIN modules m ON q.module_id = m.id "
                 + "WHERE m.course_id = ?"
         );
@@ -133,9 +133,10 @@ public class QuizDao {
             if (entity.getTimeLimitMinutes() != null) ps.setInt(4, entity.getTimeLimitMinutes());
             else ps.setNull(4, java.sql.Types.INTEGER);
             ps.setInt(5, entity.getOrderIndex());
+            ps.setBoolean(6, entity.isActive());
             OffsetDateTime now = OffsetDateTime.now();
-            ps.setObject(6, entity.getCreatedAt() != null ? entity.getCreatedAt() : now);
-            ps.setObject(7, entity.getUpdatedAt() != null ? entity.getUpdatedAt() : now);
+            ps.setObject(7, entity.getCreatedAt() != null ? entity.getCreatedAt() : now);
+            ps.setObject(8, entity.getUpdatedAt() != null ? entity.getUpdatedAt() : now);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -155,8 +156,19 @@ public class QuizDao {
             if (entity.getTimeLimitMinutes() != null) ps.setInt(3, entity.getTimeLimitMinutes());
             else ps.setNull(3, java.sql.Types.INTEGER);
             ps.setInt(4, entity.getOrderIndex());
-            ps.setObject(5, OffsetDateTime.now());
-            ps.setLong(6, entity.getId());
+            ps.setBoolean(5, entity.isActive());
+            ps.setObject(6, OffsetDateTime.now());
+            ps.setLong(7, entity.getId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateActiveStatus(Connection con, long id, boolean active) throws SQLException {
+        String sql = "UPDATE quizzes SET is_active = ?, updated_at = ? WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setBoolean(1, active);
+            ps.setObject(2, OffsetDateTime.now());
+            ps.setLong(3, id);
             return ps.executeUpdate() > 0;
         }
     }
@@ -270,6 +282,7 @@ public class QuizDao {
         int limit = rs.getInt("time_limit_minutes");
         q.setTimeLimitMinutes(rs.wasNull() ? null : limit);
         q.setOrderIndex(rs.getInt("order_index"));
+        q.setActive(rs.getBoolean("is_active"));
         q.setCreatedAt(rs.getObject("created_at", OffsetDateTime.class));
         q.setUpdatedAt(rs.getObject("updated_at", OffsetDateTime.class));
         return q;
