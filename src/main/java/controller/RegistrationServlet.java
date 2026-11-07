@@ -557,40 +557,110 @@ public class RegistrationServlet extends HttpServlet {
     }
 
 
+    private enum VnPayProcessStatus {
+        SUCCESS,
+        ALREADY_CONFIRMED,
+        INVALID_SIGNATURE,
+        ORDER_NOT_FOUND,
+        INVALID_AMOUNT,
+        FAILED
+    }
+
+    private static class VnPayValidationResult {
+        final VnPayProcessStatus status;
+        final RegistrationDto registration;
+        final VnPayVerifyResult verifyResult;
+        final String message;
+
+        VnPayValidationResult(VnPayProcessStatus status, RegistrationDto registration, VnPayVerifyResult verifyResult, String message) {
+            this.status = status;
+            this.registration = registration;
+            this.verifyResult = verifyResult;
+            this.message = message;
+        }
+    }
+
     /**
-     * Xử lý kết quả trả về từ trình duyệt khách hàng sau khi thanh toán trên VNPay
+     * Xác thực và đối soát đồng nhất 100% giữa Return URL (Browser) và IPN Webhook (Server-to-Server)
      */
-    private void paymentReturn(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        VnPayVerifyResult result = VnPayUtil.verifyPayment(req.getParameterMap());
+    private VnPayValidationResult validateAndProcessVnPay(Map<String, String[]> parameterMap) {
+        VnPayVerifyResult result = VnPayUtil.verifyPayment(parameterMap);
 
         if (!result.isValidSignature()) {
-            SessionUtil.setFlashError(req, "Chữ ký bảo mật không hợp lệ từ VNPay (Invalid Checksum).");
-            resp.sendRedirect(req.getContextPath() + "/registrations/my");
-            return;
+            return new VnPayValidationResult(VnPayProcessStatus.INVALID_SIGNATURE, null, result, "Chữ ký bảo mật không hợp lệ từ VNPay (Invalid Checksum).");
         }
 
         long regId = result.getRegistrationId();
         if (regId <= 0) {
-            SessionUtil.setFlashError(req, "Không tìm thấy mã đơn đăng ký từ phản hồi VNPay.");
-            resp.sendRedirect(req.getContextPath() + "/registrations/my");
-            return;
+            return new VnPayValidationResult(VnPayProcessStatus.ORDER_NOT_FOUND, null, result, "Không tìm thấy mã đơn đăng ký từ phản hồi VNPay.");
         }
 
         RegistrationDto reg = registrationService.getById(regId);
         if (reg == null) {
-            SessionUtil.setFlashError(req, "Không tìm thấy thông tin đơn đăng ký #" + regId);
+            return new VnPayValidationResult(VnPayProcessStatus.ORDER_NOT_FOUND, null, result, "Không tìm thấy thông tin đơn đăng ký #" + regId);
+        }
+
+        // 1. Kiểm tra số tiền thanh toán (Amount Verification) - Đồng nhất cả IPN lẫn Return URL
+        if (result.getAmount() != null && reg.getPaymentAmount() != null) {
+            if (result.getAmount().compareTo(reg.getPaymentAmount()) != 0) {
+                return new VnPayValidationResult(VnPayProcessStatus.INVALID_AMOUNT, reg, result,
+                        "Số tiền thanh toán (" + result.getAmount() + ") không khớp với giá trị đơn hàng (" + reg.getPaymentAmount() + ").");
+            }
+        }
+
+        // 2. Kiểm tra Idempotent: Đơn hàng đã thành công từ trước (do IPN hoặc Return xử lý trước)
+        if (reg.getPaymentStatus() == PaymentStatus.SUCCESS || reg.getStatus() == RegistrationStatus.ACTIVE) {
+            return new VnPayValidationResult(VnPayProcessStatus.ALREADY_CONFIRMED, reg, result, "Đơn hàng đã được xác nhận thanh toán thành công trước đó.");
+        }
+
+        // 3. Cập nhật kết quả giao dịch vào CSDL
+        if (result.isSuccess()) {
+            registrationService.updatePayment(regId, PaymentStatus.SUCCESS, result.getTransactionNo(), OffsetDateTime.now());
+            return new VnPayValidationResult(VnPayProcessStatus.SUCCESS, reg, result, "Thanh toán VNPay thành công!");
+        } else {
+            registrationService.updatePayment(regId, PaymentStatus.FAILED, result.getTransactionNo(), OffsetDateTime.now());
+            return new VnPayValidationResult(VnPayProcessStatus.FAILED, reg, result,
+                    "Thanh toán VNPay không thành công: " + result.getMessage() + " (Mã: " + result.getResponseCode() + ").");
+        }
+    }
+
+    /**
+     * Xử lý kết quả trả về từ trình duyệt khách hàng sau khi thanh toán trên VNPay
+     */
+    private void paymentReturn(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        VnPayValidationResult val = validateAndProcessVnPay(req.getParameterMap());
+        RegistrationDto reg = val.registration;
+
+        // IDOR Defense / Ownership check: nếu học viên đang đăng nhập, kiểm tra có đúng đơn hàng của họ không
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser != null && reg != null && reg.getUserId() != currentUser.getId()) {
+            SessionUtil.setFlashError(req, "Bạn không có quyền truy cập kết quả đơn đăng ký này.");
             resp.sendRedirect(req.getContextPath() + "/registrations/my");
             return;
         }
 
-        if (result.isSuccess()) {
-            registrationService.updatePayment(regId, PaymentStatus.SUCCESS, result.getTransactionNo(), OffsetDateTime.now());
-            SessionUtil.setFlashSuccess(req, "Thanh toán VNPay thành công! Bạn đã được kích hoạt khóa học \"" + (reg.getCourseTitle() != null ? reg.getCourseTitle() : "") + "\".");
-            resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId);
-        } else {
-            registrationService.updatePayment(regId, PaymentStatus.FAILED, result.getTransactionNo(), OffsetDateTime.now());
-            SessionUtil.setFlashError(req, "Thanh toán VNPay không thành công: " + result.getMessage() + " (Mã: " + result.getResponseCode() + ").");
-            resp.sendRedirect(req.getContextPath() + "/registrations/payment?courseId=" + reg.getCourseId());
+        switch (val.status) {
+            case INVALID_SIGNATURE:
+            case ORDER_NOT_FOUND:
+                SessionUtil.setFlashError(req, val.message);
+                resp.sendRedirect(req.getContextPath() + "/registrations/my");
+                break;
+            case INVALID_AMOUNT:
+                SessionUtil.setFlashError(req, val.message);
+                resp.sendRedirect(req.getContextPath() + (reg != null ? ("/registrations/payment?courseId=" + reg.getCourseId()) : "/registrations/my"));
+                break;
+            case ALREADY_CONFIRMED:
+                SessionUtil.setFlashSuccess(req, "Đơn hàng của bạn đã được thanh toán thành công trước đó! Chúc bạn học tập hiệu quả.");
+                resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + reg.getId());
+                break;
+            case SUCCESS:
+                SessionUtil.setFlashSuccess(req, "Thanh toán VNPay thành công! Bạn đã được kích hoạt khóa học \"" + (reg.getCourseTitle() != null ? reg.getCourseTitle() : "") + "\".");
+                resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + reg.getId());
+                break;
+            case FAILED:
+                SessionUtil.setFlashError(req, val.message);
+                resp.sendRedirect(req.getContextPath() + (reg != null ? ("/registrations/payment?courseId=" + reg.getCourseId()) : "/registrations/my"));
+                break;
         }
     }
 
@@ -598,48 +668,27 @@ public class RegistrationServlet extends HttpServlet {
      * Webhook / IPN tiếp nhận thông báo kết quả thanh toán bất đồng bộ từ máy chủ VNPay
      */
     private void paymentCallback(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
         resp.setContentType("application/json;charset=UTF-8");
-        VnPayVerifyResult result = VnPayUtil.verifyPayment(req.getParameterMap());
+        VnPayValidationResult val = validateAndProcessVnPay(req.getParameterMap());
 
-        if (!result.isValidSignature()) {
-            resp.getWriter().write("{\"RspCode\":\"97\",\"Message\":\"Invalid Checksum\"}");
-            return;
-        }
-
-        long regId = result.getRegistrationId();
-        if (regId <= 0) {
-            resp.getWriter().write("{\"RspCode\":\"01\",\"Message\":\"Order not found\"}");
-            return;
-        }
-
-        RegistrationDto reg = registrationService.getById(regId);
-        if (reg == null) {
-            resp.getWriter().write("{\"RspCode\":\"01\",\"Message\":\"Order not found\"}");
-            return;
-        }
-
-        // Kiểm tra số tiền thanh toán khớp với giá khóa học
-        if (result.getAmount() != null && reg.getPaymentAmount() != null) {
-            if (result.getAmount().compareTo(reg.getPaymentAmount()) != 0) {
+        switch (val.status) {
+            case INVALID_SIGNATURE:
+                resp.getWriter().write("{\"RspCode\":\"97\",\"Message\":\"Invalid Checksum\"}");
+                break;
+            case ORDER_NOT_FOUND:
+                resp.getWriter().write("{\"RspCode\":\"01\",\"Message\":\"Order not found\"}");
+                break;
+            case INVALID_AMOUNT:
                 resp.getWriter().write("{\"RspCode\":\"04\",\"Message\":\"Invalid Amount\"}");
-                return;
-            }
+                break;
+            case ALREADY_CONFIRMED:
+                resp.getWriter().write("{\"RspCode\":\"02\",\"Message\":\"Order already confirmed\"}");
+                break;
+            case SUCCESS:
+            case FAILED:
+                resp.getWriter().write("{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}");
+                break;
         }
-
-        // Đơn hàng đã được xác nhận thành công trước đó (idempotent)
-        if (reg.getPaymentStatus() == PaymentStatus.SUCCESS) {
-            resp.getWriter().write("{\"RspCode\":\"02\",\"Message\":\"Order already confirmed\"}");
-            return;
-        }
-
-        if (result.isSuccess()) {
-            registrationService.updatePayment(regId, PaymentStatus.SUCCESS, result.getTransactionNo(), OffsetDateTime.now());
-        } else {
-            registrationService.updatePayment(regId, PaymentStatus.FAILED, result.getTransactionNo(), OffsetDateTime.now());
-        }
-
-        resp.getWriter().write("{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}");
     }
 
     private void updateRegistrationStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {

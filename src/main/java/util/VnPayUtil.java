@@ -22,28 +22,59 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class VnPayUtil {
 
-    private static String payUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    private static String tmnCode = "CGXZLS0Z";
-    private static String hashSecret = "XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN";
+    private static String payUrl;
+    private static String tmnCode;
+    private static String hashSecret;
     private static String returnUrl = "/registrations/vnpay-return";
     private static String version = "2.1.0";
     private static String command = "pay";
 
     static {
+        Properties props = new Properties();
         try (InputStream is = VnPayUtil.class.getClassLoader().getResourceAsStream("vnpay.properties")) {
             if (is != null) {
-                Properties props = new Properties();
                 props.load(is);
-                if (props.getProperty("vnp_PayUrl") != null) payUrl = props.getProperty("vnp_PayUrl").trim();
-                if (props.getProperty("vnp_TmnCode") != null) tmnCode = props.getProperty("vnp_TmnCode").trim();
-                if (props.getProperty("vnp_HashSecret") != null) hashSecret = props.getProperty("vnp_HashSecret").trim();
-                if (props.getProperty("vnp_ReturnUrl") != null) returnUrl = props.getProperty("vnp_ReturnUrl").trim();
-                if (props.getProperty("vnp_Version") != null) version = props.getProperty("vnp_Version").trim();
-                if (props.getProperty("vnp_Command") != null) command = props.getProperty("vnp_Command").trim();
             }
         } catch (Exception e) {
-            System.err.println("[VnPayUtil] Could not load vnpay.properties, using sandbox defaults: " + e.getMessage());
+            System.err.println("[VnPayUtil] Lỗi tải file vnpay.properties: " + e.getMessage());
         }
+
+        payUrl = getPropertyOrEnv(props, "vnp_PayUrl", "VNP_PAY_URL");
+        tmnCode = getPropertyOrEnv(props, "vnp_TmnCode", "VNP_TMN_CODE");
+        hashSecret = getPropertyOrEnv(props, "vnp_HashSecret", "VNP_HASH_SECRET");
+
+        String propReturnUrl = getPropertyOrEnv(props, "vnp_ReturnUrl", "VNP_RETURN_URL");
+        if (propReturnUrl != null && !propReturnUrl.isEmpty()) {
+            returnUrl = propReturnUrl;
+        }
+        String propVersion = getPropertyOrEnv(props, "vnp_Version", "VNP_VERSION");
+        if (propVersion != null && !propVersion.isEmpty()) {
+            version = propVersion;
+        }
+        String propCommand = getPropertyOrEnv(props, "vnp_Command", "VNP_COMMAND");
+        if (propCommand != null && !propCommand.isEmpty()) {
+            command = propCommand;
+        }
+
+        if (tmnCode == null || hashSecret == null || payUrl == null) {
+            System.err.println("[VnPayUtil] CẢNH BÁO AN NINH: Thiếu cấu hình bắt buộc cho Cổng VNPay (vnp_TmnCode, vnp_HashSecret, vnp_PayUrl). Vui lòng cấu hình trong vnpay.properties hoặc biến môi trường.");
+        }
+    }
+
+    private static String getPropertyOrEnv(Properties props, String propKey, String envKey) {
+        String val = props.getProperty(propKey);
+        if (val != null && !val.trim().isEmpty()) {
+            return val.trim();
+        }
+        val = System.getenv(envKey);
+        if (val != null && !val.trim().isEmpty()) {
+            return val.trim();
+        }
+        val = System.getProperty(propKey);
+        if (val != null && !val.trim().isEmpty()) {
+            return val.trim();
+        }
+        return null;
     }
 
     public static String getPayUrl() {
@@ -243,7 +274,7 @@ public class VnPayUtil {
             }
         }
 
-        boolean success = validSignature && "00".equals(responseCode);
+        boolean success = validSignature && "00".equals(responseCode) && (transactionStatus == null || "00".equals(transactionStatus));
         String message = getResponseMessage(responseCode);
 
         return new VnPayVerifyResult(
