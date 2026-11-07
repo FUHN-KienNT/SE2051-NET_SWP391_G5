@@ -157,7 +157,12 @@ public class PasswordResetService {
                 throw new IllegalArgumentException("Không tìm thấy thông tin tài khoản liên kết với mã này.");
             }
 
-            return userOpt.get();
+            User user = userOpt.get();
+            if (user.getStatus() == UserStatus.BANNED) {
+                throw new IllegalArgumentException("Tài khoản đã bị khóa, không thể đặt lại mật khẩu.");
+            }
+
+            return user;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi kiểm tra token đặt lại mật khẩu", e);
             throw new RuntimeException("Có lỗi hệ thống khi kiểm tra liên kết đặt lại mật khẩu.", e);
@@ -208,16 +213,26 @@ public class PasswordResetService {
                 }
 
                 long userId = consumedUserIdOpt.get();
+                Optional<User> userOpt = userDao.findById(con, userId);
+                if (!userOpt.isPresent()) {
+                    con.rollback();
+                    throw new IllegalArgumentException("Không tìm thấy thông tin tài khoản liên kết với mã này.");
+                }
+                if (userOpt.get().getStatus() == UserStatus.BANNED) {
+                    con.rollback();
+                    throw new IllegalArgumentException("Tài khoản đã bị khóa, không thể đặt lại mật khẩu.");
+                }
+
                 String passwordHash = PasswordUtil.hash(newPassword);
 
                 boolean updated = userDao.updatePassword(con, userId, passwordHash);
                 if (!updated) {
+                    con.rollback();
                     throw new RuntimeException("Cập nhật mật khẩu thất bại, không tìm thấy người dùng.");
                 }
 
                 // Kích hoạt tài khoản nếu đang ở trạng thái INACTIVE (đã xác thực qua email)
-                Optional<User> userOpt = userDao.findById(con, userId);
-                if (userOpt.isPresent() && userOpt.get().getStatus() == UserStatus.INACTIVE) {
+                if (userOpt.get().getStatus() == UserStatus.INACTIVE) {
                     userDao.updateStatus(con, userId, UserStatus.ACTIVE);
                     new VerificationTokenDao().invalidateTokensByUserId(con, userId);
                 }

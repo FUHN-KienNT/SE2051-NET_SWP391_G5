@@ -34,6 +34,7 @@ public class AuthorizationFilter implements Filter {
         routeRoles.put("/users", new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN")));
         // Admin workspace (Admin Dashboard & Course Management) is for ADMIN & MANAGER
         routeRoles.put("/admin", managerOrAdmin);
+        routeRoles.put("/manager", managerOrAdmin);
         // Expert workspace (Expert Dashboard & Lesson Management) is for EXPERT & ADMIN
         routeRoles.put("/expert", new HashSet<>(Arrays.asList("EXPERT", "ROLE_EXPERT", "ADMIN", "ROLE_ADMIN")));
     }
