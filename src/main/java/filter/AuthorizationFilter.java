@@ -26,7 +26,6 @@ public class AuthorizationFilter implements Filter {
     public void init(FilterConfig config) throws ServletException {
         Set<String> managerOrAdmin = new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER"));
         // Registration administration is restricted to Manager and Admin.
-        routeRoles.put("/registrations/course", managerOrAdmin);
         routeRoles.put("/registrations/list", managerOrAdmin);
         routeRoles.put("/registrations/update-status", managerOrAdmin);
         // Settings are for ADMIN

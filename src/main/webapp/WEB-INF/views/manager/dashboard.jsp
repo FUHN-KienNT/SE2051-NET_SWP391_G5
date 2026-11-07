@@ -388,11 +388,13 @@ body {
             <!-- Recent Registrations (8 cols) -->
             <div class="col-lg-8">
                 <div class="saas-card h-100">
-                    <div class="saas-card-header">
-                        <h2 class="saas-card-title">
+                    <div class="saas-card-header d-flex justify-content-between align-items-center">
+                        <h2 class="saas-card-title mb-0">
                             <i class="bi bi-person-lines-fill text-primary"></i> Giao dịch đăng ký gần đây
                         </h2>
-                        <span class="text-muted small fw-semibold">10 lượt mới nhất</span>
+                        <a href="${pageContext.request.contextPath}/registrations/list" class="text-decoration-none small fw-semibold text-primary">
+                            Xem tất cả <i class="bi bi-arrow-right"></i>
+                        </a>
                     </div>
                     <div class="table-responsive">
                         <table class="saas-table">
@@ -421,7 +423,9 @@ body {
                                         <c:forEach var="reg" items="${recentRegistrations}">
                                             <tr>
                                                 <td class="ps-3">
-                                                    <span class="saas-badge saas-badge-secondary">#${reg.id}</span>
+                                                    <a href="${pageContext.request.contextPath}/registrations/detail?id=${reg.id}" class="text-decoration-none" title="Xem chi tiết đơn #${reg.id}">
+                                                        <span class="saas-badge saas-badge-secondary">#${reg.id}</span>
+                                                    </a>
                                                 </td>
                                                 <td>
                                                     <div class="text-truncate fw-semibold" style="max-width: 280px;" title="${reg.courseTitle}">

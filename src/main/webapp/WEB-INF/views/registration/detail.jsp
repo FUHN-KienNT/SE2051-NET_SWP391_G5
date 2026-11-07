@@ -31,7 +31,9 @@
                     <div class="col-md-6">
                         <div class="text-muted small text-uppercase fw-semibold mb-2">Tiến độ học</div>
                         <div class="d-flex justify-content-between mb-1"><strong>${registration.progressPercentage}%</strong></div>
-                        <div class="progress" style="height: 10px;"><div class="progress-bar" style="width: ${registration.progressPercentage}%"></div></div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar" role="progressbar" style="width: 0%;" data-progress="${registration.progressPercentage}"></div>
+                        </div>
                     </div>
                     <div class="col-md-6"><div class="text-muted small text-uppercase fw-semibold mb-1">Trạng thái học</div><span class="badge text-bg-light border fs-6">${registration.status}</span></div>
                     <div class="col-12"><hr class="my-0"></div>
@@ -45,4 +47,14 @@
         </div>
     </div>
 </main>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-progress]').forEach(function(el) {
+            var val = el.getAttribute('data-progress');
+            if (val !== null && val !== '') {
+                el.style.width = Math.min(Math.max(parseFloat(val) || 0, 0), 100) + '%';
+            }
+        });
+    });
+</script>
 <jsp:include page="../common/footer.jsp" />

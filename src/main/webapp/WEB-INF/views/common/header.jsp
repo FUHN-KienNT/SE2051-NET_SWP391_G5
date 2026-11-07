@@ -11,7 +11,7 @@
             <c:set var="isMyRegistrations" value="${fn:contains(reqUri, '/registrations')}" />
             <c:set var="isExpert" value="${fn:contains(reqUri, '/expert')}" />
             <c:set var="isAdmin"
-                value="${fn:contains(reqUri, '/admin') || fn:contains(reqUri, '/manager') || fn:contains(reqUri, '/users') || fn:contains(reqUri, '/settings') || fn:contains(reqUri, '/registrations/list') || fn:contains(reqUri, '/registrations/course')}" />
+                value="${fn:contains(reqUri, '/admin') || fn:contains(reqUri, '/manager') || fn:contains(reqUri, '/users') || fn:contains(reqUri, '/settings') || fn:contains(reqUri, '/registrations/list')}" />
 <!DOCTYPE html>
 <html lang="vi">
 <head>

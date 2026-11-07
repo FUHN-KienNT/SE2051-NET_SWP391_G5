@@ -126,21 +126,26 @@ body {
 
 <main class="main-content py-4">
     <div class="container">
-        <!-- Breadcrumb & Title -->
-        <nav class="mb-4">
-            <ol class="breadcrumb small mb-0">
-                <c:choose>
-                    <c:when test="${sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/manager/dashboard" class="text-decoration-none text-muted">Manager Dashboard</a></li>
-                    </c:when>
-                    <c:otherwise>
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard" class="text-decoration-none text-muted">Admin Dashboard</a></li>
-                    </c:otherwise>
-                </c:choose>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}${rolePath}/courses" class="text-decoration-none text-muted">Khóa học</a></li>
-                <li class="breadcrumb-item active text-dark fw-semibold">Chi tiết khóa học #${course.id}</li>
-            </ol>
-        </nav>
+        <!-- Breadcrumb & Actions -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <nav>
+                <ol class="breadcrumb small mb-0">
+                    <c:choose>
+                        <c:when test="${sessionScope.CURRENT_USER.roleName == 'MANAGER'}">
+                            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/manager/dashboard" class="text-decoration-none text-muted">Manager Dashboard</a></li>
+                        </c:when>
+                        <c:otherwise>
+                            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard" class="text-decoration-none text-muted">Admin Dashboard</a></li>
+                        </c:otherwise>
+                    </c:choose>
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}${rolePath}/courses" class="text-decoration-none text-muted">Khóa học</a></li>
+                    <li class="breadcrumb-item active text-dark fw-semibold">Chi tiết khóa học #${course.id}</li>
+                </ol>
+            </nav>
+            <a href="${pageContext.request.contextPath}/registrations/list?courseId=${course.id}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                <i class="bi bi-people-fill me-1"></i> Danh sách đăng ký
+            </a>
+        </div>
 
         <c:if test="${param.success != null}">
             <div class="alert alert-success fade show d-flex align-items-center justify-content-between rounded-3 shadow-xs mb-4 py-2 px-3 small" role="alert">

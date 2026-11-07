@@ -27,7 +27,6 @@ import util.SessionUtil;
  */
 @WebServlet(name = "RegistrationManagementServlet", urlPatterns = {
     "/registrations/list",
-    "/registrations/course",
     "/registrations/detail",
     "/registrations/update-status"
 })
@@ -128,7 +127,7 @@ public class RegistrationManagementServlet extends HttpServlet {
         req.setAttribute("course", course);
         req.setAttribute("registrations", filteredList);
         req.setAttribute("courseList", registrationService.getCoursesForManager(currentUser));
-        req.getRequestDispatcher("/WEB-INF/views/registration/course.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/registration/list.jsp").forward(req, resp);
     }
 
     private void showRegistrationDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

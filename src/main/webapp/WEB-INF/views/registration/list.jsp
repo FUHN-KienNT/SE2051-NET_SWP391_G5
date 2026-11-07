@@ -343,7 +343,7 @@
                                                     <td>
                                                         <div class="fw-semibold text-truncate" style="max-width: 240px;"
                                                             title="${registration.courseTitle}">
-                                                            <a href="${pageContext.request.contextPath}/registrations/course?courseId=${registration.courseId}"
+                                                            <a href="${pageContext.request.contextPath}/registrations/list?courseId=${registration.courseId}"
                                                                 class="text-decoration-none text-dark hover-primary">
                                                                 ${registration.courseTitle}
                                                             </a>
