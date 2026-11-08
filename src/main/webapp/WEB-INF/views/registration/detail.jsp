@@ -448,11 +448,7 @@
 
                         </c:choose>
 
-                        <a href="${pageContext.request.contextPath}/courses/detail?id=${registration.courseId}" class="btn btn-saas-outline">
-
-                            <i class="bi bi-info-circle"></i>Xem trang thông tin chung khóa học
-
-                        </a>
+                        
 
                     </div>
 
@@ -468,7 +464,7 @@
 
             <!-- Left Column: Syllabus & Learning Checklist -->
 
-            <div class="col-lg-8">
+            <div class="col-12">
 
                 <div class="saas-card p-4">
 
@@ -482,7 +478,7 @@
 
                             </h5>
 
-                            <p class="text-muted small mb-0">Theo dõi trạng thái hoàn thành của từng bài giảng và bài tập</p>
+                            
 
                         </div>
 
@@ -690,148 +686,8 @@
 
 
 
-            <!-- Right Column: Registration & Payment Information (VNPay Gateway verification) -->
-
-            <div class="col-lg-4">
-
-                <div class="saas-card p-4 sticky-top" style="top: 80px;">
-
-                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-
-                        <h6 class="fw-bold text-dark mb-0">
-
-                            <i class="bi bi-receipt text-primary me-2"></i>Thông tin đăng ký & Giao dịch
-
-                        </h6>
-
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
-
-                            ${registration.status}
-
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="d-flex flex-column gap-3 small">
-
-                        <div>
-
-                            <span class="text-muted d-block" style="font-size: 0.75rem;">MÃ ĐĂNG KÝ HỌC VIÊN</span>
-
-                            <span class="fw-bold font-monospace fs-6">#${registration.id}</span>
-
-                        </div>
-
-                        <div>
-
-                            <span class="text-muted d-block" style="font-size: 0.75rem;">HỌC VIÊN SỞ HỮU</span>
-
-                            <span class="fw-semibold text-dark">${registration.userName != null ? registration.userName : sessionScope.CURRENT_USER.fullName}</span>
-
-                        </div>
-
-                        <div>
-
-                            <span class="text-muted d-block" style="font-size: 0.75rem;">HỌC PHÍ ĐÃ THANH TOÁN</span>
-
-                            <span class="fw-bold text-success fs-5">
-
-                                <c:choose>
-
-                                    <c:when test="${registration.paymentAmount <= 0}">0 VNĐ (Miễn phí)</c:when>
-
-                                    <c:otherwise><fmt:formatNumber value="${registration.paymentAmount}" pattern="#,###" /> VNĐ</c:otherwise>
-
-                                </c:choose>
-
-                            </span>
-
-                        </div>
-
-                        <div>
-
-                            <span class="text-muted d-block" style="font-size: 0.75rem;">CỔNG THANH TOÁN</span>
-
-                            <span class="fw-semibold text-dark">
-
-                                <i class="bi bi-credit-card-2-front text-primary me-1"></i>
-
-                                ${registration.paymentMethod != null ? registration.paymentMethod : "VNPay Sandbox"}
-
-                            </span>
-
-                        </div>
-
-                        <div>
-
-                            <span class="text-muted d-block" style="font-size: 0.75rem;">MÃ GIAO DỊCH (TRANSACTION CODE)</span>
-
-                            <span class="font-monospace text-dark bg-light px-2 py-1 rounded border d-inline-block small">
-
-                                ${registration.paymentCode != null ? registration.paymentCode : "CHƯA GHI NHẬN"}
-
-                            </span>
-
-                        </div>
-
-                        <div>
-
-                            <span class="text-muted d-block" style="font-size: 0.75rem;">THỜI ĐIỂM THANH TOÁN</span>
-
-                            <span class="text-dark">
-
-                                <c:choose>
-
-                                    <c:when test="${not empty registration.paidAt}">${registration.paidAt}</c:when>
-
-                                    <c:otherwise>${registration.formattedRegistrationDate}</c:otherwise>
-
-                                </c:choose>
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="border-top pt-3 mt-3">
-
-                        <span class="text-muted d-block small mb-2">Quyền lợi học viên Courson:</span>
-
-                        <div class="d-flex align-items-center gap-2 small text-muted mb-1.5">
-
-                            <i class="bi bi-check-circle-fill text-success"></i>Bảo lưu quyền học trọn đời
-
-                        </div>
-
-                        <div class="d-flex align-items-center gap-2 small text-muted mb-1.5">
-
-                            <i class="bi bi-check-circle-fill text-success"></i>Tự động lưu tiến độ video học dở
-
-                        </div>
-
-                        <div class="d-flex align-items-center gap-2 small text-muted">
-
-                            <i class="bi bi-check-circle-fill text-success"></i>Hỗ trợ giải đáp từ chuyên gia
-
-                        </div>
-
-                    </div>
-
-                </div>
-
             </div>
-
-        </div>
-
-
-
     </div>
-
 </main>
 
 

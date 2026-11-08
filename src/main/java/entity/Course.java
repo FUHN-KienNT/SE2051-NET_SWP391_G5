@@ -94,6 +94,20 @@ public class Course {
         return price;
     }
 
+    public String getFormattedPrice() {
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            return "Miễn phí";
+        }
+        return String.format(java.util.Locale.US, "%,d VNĐ", price.longValue());
+    }
+
+    public String getFormattedPriceNumber() {
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            return "0";
+        }
+        return String.format(java.util.Locale.US, "%,d", price.longValue());
+    }
+
     public void setPrice(BigDecimal price) {
         this.price = price;
     }

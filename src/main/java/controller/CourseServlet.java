@@ -258,51 +258,17 @@ public class CourseServlet extends HttpServlet {
                 }
             }
 
-            LessonDto targetLesson = null;
-            LessonDto firstActiveLesson = null;
-            if (course != null && course.getModules() != null) {
-                for (ModuleDto m : course.getModules()) {
-                    if (m.getLessons() != null) {
-                        for (LessonDto l : m.getLessons()) {
-                            if (firstActiveLesson == null && l.isActive()) {
-                                firstActiveLesson = l;
-                            }
-                            if (targetLessonId != null && l.getId() == targetLessonId.longValue()) {
-                                targetLesson = l;
-                            }
-                        }
-                    }
-                }
-            }
-
-            Long finalLessonId = null;
-            if (targetLesson != null) {
-                if (targetLesson.isActive()) {
-                    finalLessonId = targetLesson.getId();
+            LessonResolutionResult resolution = resolveCurrentLesson(course, targetLessonId, sessionLessonId);
+            if (resolution.hiddenAccessDenied) {
+                SessionUtil.setFlashError(req, "Bài học này đã được tạm ẩn và không còn khả dụng.");
+                if (resolution.fallbackLessonId != null) {
+                    resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId + "&lessonId=" + resolution.fallbackLessonId);
                 } else {
-                    // Bài học đã bị ẩn: Học viên đang học dở phiên hiện tại thì vẫn được học tiếp
-                    if (sessionLessonId != null && sessionLessonId.equals(targetLesson.getId())) {
-                        finalLessonId = targetLesson.getId();
-                    } else {
-                        // Đã rời khỏi bài học hoặc truy cập bài học đã ẩn mà không có phiên học dở
-                        SessionUtil.setFlashError(req, "Bài học này đã được tạm ẩn và không còn khả dụng.");
-                        if (firstActiveLesson != null) {
-                            resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId + "&lessonId=" + firstActiveLesson.getId());
-                            return;
-                        } else {
-                            resp.sendRedirect(req.getContextPath() + "/registrations/my");
-                            return;
-                        }
-                    }
+                    resp.sendRedirect(req.getContextPath() + "/registrations/my");
                 }
-            } else {
-                // Không truyền lessonId cụ thể -> Mở bài học hoạt động đầu tiên
-                if (firstActiveLesson != null) {
-                    finalLessonId = firstActiveLesson.getId();
-                } else if (sessionLessonId != null) {
-                    finalLessonId = sessionLessonId;
-                }
+                return;
             }
+            Long finalLessonId = resolution.lessonId;
 
             if (finalLessonId != null) {
                 req.getSession().setAttribute(sessionKey, finalLessonId);
@@ -400,4 +366,51 @@ public class CourseServlet extends HttpServlet {
             resp.getWriter().write("{\"success\":false,\"message\":\"" + safeMsg + "\"}");
         }
     }
+    private static class LessonResolutionResult {
+        final Long lessonId;
+        final boolean hiddenAccessDenied;
+        final Long fallbackLessonId;
+
+        LessonResolutionResult(Long lessonId, boolean hiddenAccessDenied, Long fallbackLessonId) {
+            this.lessonId = lessonId;
+            this.hiddenAccessDenied = hiddenAccessDenied;
+            this.fallbackLessonId = fallbackLessonId;
+        }
+    }
+
+    /**
+     * [Tối ưu Item 8]: Tách rời logic điều hướng bài giảng hiện tại, loại bỏ vòng lặp lồng phức tạp trong Servlet
+     */
+    private LessonResolutionResult resolveCurrentLesson(CourseDto course, Long requestedLessonId, Long sessionLessonId) {
+        if (course == null || course.getModules() == null) {
+            return new LessonResolutionResult(null, false, null);
+        }
+        LessonDto targetLesson = null;
+        LessonDto firstActiveLesson = null;
+
+        for (ModuleDto m : course.getModules()) {
+            if (m.getLessons() == null) continue;
+            for (LessonDto l : m.getLessons()) {
+                if (firstActiveLesson == null && l.isActive()) {
+                    firstActiveLesson = l;
+                }
+                if (requestedLessonId != null && l.getId() == requestedLessonId.longValue()) {
+                    targetLesson = l;
+                }
+            }
+        }
+
+        Long fallbackId = firstActiveLesson != null ? firstActiveLesson.getId() : null;
+
+        if (targetLesson != null) {
+            if (targetLesson.isActive() || (sessionLessonId != null && sessionLessonId.equals(targetLesson.getId()))) {
+                return new LessonResolutionResult(targetLesson.getId(), false, null);
+            }
+            return new LessonResolutionResult(null, true, fallbackId);
+        }
+
+        Long finalId = firstActiveLesson != null ? firstActiveLesson.getId() : sessionLessonId;
+        return new LessonResolutionResult(finalId, false, null);
+    }
+
 }
