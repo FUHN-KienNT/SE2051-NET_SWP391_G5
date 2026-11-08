@@ -99,6 +99,11 @@
                         Lưu trữ <span class="saas-tab-badge">${archivedCount}</span>
                     </button>
                 </div>
+
+                <div class="saas-search-box">
+                    <i class="bi bi-search saas-search-icon"></i>
+                    <input type="text" id="courseSearchInput" class="saas-search-input" placeholder="Tìm theo tên khóa học..." oninput="handleCourseSearch()">
+                </div>
             </div>
 
             <!-- Modern SaaS Table -->
@@ -135,7 +140,6 @@
                             <c:otherwise>
                                 <c:forEach var="c" items="${courses}" varStatus="status">
                                     <tr class="course-row" id="courseRow-${c.id}" 
-                                        data-id="${c.id}"
                                         data-status="${c.status}" 
                                         data-title="${fn:escapeXml(c.title)}" 
                                         data-category="${fn:escapeXml(c.categoryName != null ? c.categoryName : '')}">
@@ -314,11 +318,11 @@
                         </c:choose>
                         <!-- No Match Filter Row -->
                         <tr id="noMatchRow" style="display: none;">
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="5" class="text-center py-5 text-muted">
                                 <i class="bi bi-search fs-2 d-block mb-2 text-muted"></i>
-                                Không có khóa học nào thuộc trạng thái này.<br>
+                                Không tìm thấy khóa học nào phù hợp với bộ lọc.<br>
                                 <button type="button" class="btn btn-link btn-sm text-decoration-none mt-2" onclick="resetFilters()">
-                                    Xem tất cả khóa học
+                                    Xóa bộ lọc tìm kiếm
                                 </button>
                             </td>
                         </tr>

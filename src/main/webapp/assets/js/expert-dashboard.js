@@ -34,15 +34,38 @@ function showModerationNoteModal(courseTitle, note) {
         applyFilters();
     }
 
+    function handleCourseSearch() {
+        applyFilters();
+    }
+
+    function removeVietnameseDiacritics(str) {
+        if (!str) return '';
+        return str.normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    }
+
     function applyFilters() {
+        const searchInput = document.getElementById('courseSearchInput');
+        const rawQuery = (searchInput ? searchInput.value : '').trim();
+        const query = rawQuery.toLowerCase();
+        const queryNoAccents = removeVietnameseDiacritics(query);
+
         const rows = document.querySelectorAll('.course-row');
         let visibleCount = 0;
 
         rows.forEach(row => {
             const status = row.getAttribute('data-status') || '';
-            const matchesStatus = (currentFilter === 'all') || (status === currentFilter);
+            const title = (row.getAttribute('data-title') || '').toLowerCase();
+            const titleNoAccents = removeVietnameseDiacritics(title);
+            const category = (row.getAttribute('data-category') || '').toLowerCase();
 
-            if (matchesStatus) {
+            const matchesStatus = (currentFilter === 'all') || (status === currentFilter);
+            const matchesQuery = !query || 
+                title.includes(query) || titleNoAccents.includes(queryNoAccents) ||
+                category.includes(query);
+
+            if (matchesStatus && matchesQuery) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -57,6 +80,8 @@ function showModerationNoteModal(courseTitle, note) {
     }
 
     function resetFilters() {
+        const searchInput = document.getElementById('courseSearchInput');
+        if (searchInput) searchInput.value = '';
         const allTab = document.querySelector('#statusFilterTabs .saas-tab-btn[data-filter="all"]');
         filterCourses('all', allTab);
     }

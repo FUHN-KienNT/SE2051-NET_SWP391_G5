@@ -638,9 +638,7 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                         <!-- Right Controls: Clean Search Box & Auth / Account -->
                         <div class="d-flex align-items-center gap-2">
 
-                            <!-- Search Box (hidden in Expert Studio and Admin workspaces) -->
-                            <c:if test="${!isExpert && !isAdmin}">
-<!-- Search Box -->
+                            <!-- Search Box -->
                             <form action="${pageContext.request.contextPath}/courses/catalog" method="GET"
                                 class="cf-search-box me-1" role="search">
                                 <i class="bi bi-search cf-search-icon"></i>
@@ -648,7 +646,6 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                                     placeholder="Tìm khóa học..." autocomplete="off">
                                 <kbd class="cf-kbd">Ctrl K</kbd>
                             </form>
-                            </c:if>
 
                             <!-- Auth Controls -->
                             <c:choose>
@@ -821,8 +818,7 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                 <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
                     <div>
                         <!-- Search -->
-                        <c:if test="${!isExpert && !isAdmin}">
-<form action="${pageContext.request.contextPath}/courses/catalog" method="GET" class="mb-3">
+                        <form action="${pageContext.request.contextPath}/courses/catalog" method="GET" class="mb-3">
                             <div class="position-relative">
                                 <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
                                     style="font-size: 12px;"></i>
@@ -831,7 +827,6 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                                     placeholder="Tìm khóa học...">
                             </div>
                         </form>
-                        </c:if>
 
                         <!-- Links -->
                         <div class="list-group list-group-flush">
