@@ -214,9 +214,18 @@
                 <button type="submit" id="submitBtn" class="btn-submit">Yêu cầu đặt lại mật khẩu</button>
 
                 <div style="text-align: center; margin-top: 24px;">
-                    <a href="${pageContext.request.contextPath}/auth/login" class="back-link">
-                        <i class="bi bi-arrow-left"></i> Quay lại đăng nhập
-                    </a>
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.CURRENT_USER}">
+                            <a href="${pageContext.request.contextPath}/profile/change-password" class="back-link">
+                                <i class="bi bi-arrow-left"></i> Quay lại trang đổi mật khẩu
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="${pageContext.request.contextPath}/auth/login" class="back-link">
+                                <i class="bi bi-arrow-left"></i> Quay lại trang đăng nhập
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </form>
         </div>

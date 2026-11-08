@@ -20,6 +20,7 @@ public class RegistrationDao {
     private static final String SQL_FIND_BY_USER = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE user_id = ? ORDER BY id DESC";
     private static final String SQL_FIND_BY_COURSE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE course_id = ? ORDER BY id DESC";
     private static final String SQL_FIND_BY_USER_AND_COURSE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE user_id = ? AND course_id = ?";
+    private static final String SQL_FIND_PENDING_BY_USER_AND_COURSE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE user_id = ? AND course_id = ? AND status = 'PENDING' ORDER BY id DESC LIMIT 1";
     private static final String SQL_FIND_BY_PAYMENT_CODE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE payment_code = ?";
     private static final String SQL_INSERT = "INSERT INTO registrations (user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     private static final String SQL_UPDATE_PAYMENT = "UPDATE registrations SET payment_status = ?, payment_code = ?, paid_at = ?, status = ?, payment_method = ?, payment_amount = ? WHERE id = ?";
@@ -84,6 +85,19 @@ public class RegistrationDao {
 
     public Optional<Registration> findByUserAndCourse(Connection con, long userId, long courseId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_USER_AND_COURSE)) {
+            ps.setLong(1, userId);
+            ps.setLong(2, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Registration> findPendingByUserAndCourse(Connection con, long userId, long courseId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_PENDING_BY_USER_AND_COURSE)) {
             ps.setLong(1, userId);
             ps.setLong(2, courseId);
             try (ResultSet rs = ps.executeQuery()) {

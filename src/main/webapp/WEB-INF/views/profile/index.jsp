@@ -191,24 +191,7 @@
         box-shadow: none;
         cursor: not-allowed;
     }
-    .word-count-badge {
-        font-size: 0.82rem;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 12px;
-        background-color: #F1F5F9;
-        color: #475569;
-        transition: all 0.2s ease;
-    }
-    .word-count-badge.warning {
-        background-color: #FEF3C7;
-        color: #D97706;
-    }
-    .word-count-badge.danger {
-        background-color: #FEE2E2;
-        color: #DC2626;
-        font-weight: 700;
-    }
+
     .field-error-text {
         font-size: 0.82rem;
         color: #DC2626;
@@ -369,13 +352,10 @@
 
                     <!-- Row 4: Tiểu sử / Mô tả bản thân -->
                     <div class="mb-4">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <label class="cf-form-label mb-0" for="bioTextarea">Tiểu sử</label>
-                            <span id="bioWordCounter" class="word-count-badge">0 / 250 từ</span>
-                        </div>
+                        <label class="cf-form-label mb-1" for="bioTextarea">Tiểu sử</label>
                         <textarea id="bioTextarea" name="bio" rows="4" class="form-control cf-form-control"
                                   placeholder="Mô tả tóm tắt kinh nghiệm, chuyên môn hoặc định hướng học tập của bạn..."><c:out value="${user.bio}"/></textarea>
-                        <div class="d-flex align-items-center justify-content-between mt-1">
+                        <div class="mt-1">
                             <small class="form-text text-muted">Giới hạn tối đa 250 từ.</small>
                         </div>
                         <div id="bioError" class="field-error-text"></div>
@@ -407,7 +387,6 @@
         const phoneInput = document.getElementById('phoneInput');
         const birthDateInput = document.getElementById('birthDateInput');
         const bioTextarea = document.getElementById('bioTextarea');
-        const bioWordCounter = document.getElementById('bioWordCounter');
         const btnSubmit = document.getElementById('btnSubmitProfile');
         const btnSubmitText = document.getElementById('btnSubmitText');
 
@@ -425,36 +404,7 @@
             clearError('avatarError', 'avatarInput');
         });
 
-        // Validation helpers
-        function getWords(text) {
-            if (!text) return [];
-            const trimmed = text.trim();
-            if (!trimmed) return [];
-            return trimmed.split(/\s+/);
-        }
-
-        function updateBioWordCount() {
-            const words = getWords(bioTextarea.value);
-            const count = words.length;
-            bioWordCounter.textContent = count + ' / 250 từ';
-
-            bioWordCounter.classList.remove('warning', 'danger');
-            if (count > 250) {
-                bioWordCounter.classList.add('danger');
-                showError('bioError', 'bioTextarea', 'Tiểu sử không được vượt quá 250 từ (hiện có ' + count + ' từ).');
-                return false;
-            } else if (count >= 200) {
-                bioWordCounter.classList.add('warning');
-                clearError('bioError', 'bioTextarea');
-                return true;
-            } else {
-                clearError('bioError', 'bioTextarea');
-                return true;
-            }
-        }
-
-        bioTextarea.addEventListener('input', updateBioWordCount);
-        updateBioWordCount();
+        bioTextarea.addEventListener('input', () => clearError('bioError', 'bioTextarea'));
 
         // Live Avatar preview when choosing file
         avatarInput.addEventListener('change', function() {
@@ -591,11 +541,6 @@
                 clearError('birthDateError', 'birthDateInput');
             }
 
-            // 5. Bio word count
-            if (!updateBioWordCount()) {
-                isValid = false;
-            }
-
             if (!isValid) {
                 e.preventDefault();
                 return;
@@ -699,15 +644,15 @@
                         window.CoursonToast.show('success', data.message || 'Cập nhật thông tin hồ sơ thành công!', 8000);
                     }
                 } else {
-                    if (data.field === 'fullName') {
+                    if (data.field === 'fullName' || (data.message && data.message.includes('Họ và tên'))) {
                         showError('fullNameError', 'fullNameInput', data.message);
-                    } else if (data.field === 'username') {
+                    } else if (data.field === 'username' || (data.message && data.message.includes('người dùng'))) {
                         showError('usernameError', 'usernameInput', data.message);
-                    } else if (data.field === 'phone') {
+                    } else if (data.field === 'phone' || (data.message && data.message.includes('thoại'))) {
                         showError('phoneError', 'phoneInput', data.message);
-                    } else if (data.field === 'birthDate') {
+                    } else if (data.field === 'birthDate' || (data.message && (data.message.includes('sinh') || data.message.includes('tuổi')))) {
                         showError('birthDateError', 'birthDateInput', data.message);
-                    } else if (data.field === 'bio') {
+                    } else if (data.field === 'bio' || (data.message && (data.message.includes('Tiểu sử') || data.message.includes('Mô tả')))) {
                         showError('bioError', 'bioTextarea', data.message);
                     } else if (data.field === 'avatar') {
                         showError('avatarError', 'avatarInput', data.message);

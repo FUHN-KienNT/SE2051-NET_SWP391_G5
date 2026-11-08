@@ -114,6 +114,11 @@ public class RegistrationManagementServlet extends HttpServlet {
         }
 
         if (!"MANAGER".equalsIgnoreCase(currentUser.getRoleName()) && !"ADMIN".equalsIgnoreCase(currentUser.getRoleName())) {
+            String idStr = req.getParameter("id");
+            if (idStr != null && !idStr.trim().isEmpty()) {
+                resp.sendRedirect(req.getContextPath() + "/registrations/my-detail?id=" + idStr.trim());
+                return;
+            }
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem chi tiết đơn đăng ký.");
             return;
         }

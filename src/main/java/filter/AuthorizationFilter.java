@@ -27,7 +27,7 @@ public class AuthorizationFilter implements Filter {
         Set<String> managerOrAdmin = new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER"));
         // Registration administration is restricted to Manager and Admin.
         routeRoles.put("/registrations/list", managerOrAdmin);
-        routeRoles.put("/registrations/detail", managerOrAdmin);
+        // routeRoles.put("/registrations/detail", managerOrAdmin); // Dynamically handled: Student -> my-detail, Manager -> admin detail
         routeRoles.put("/registrations/update-status", managerOrAdmin);
         // Settings are for ADMIN
         routeRoles.put("/settings", new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN")));

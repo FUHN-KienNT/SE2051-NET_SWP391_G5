@@ -191,8 +191,21 @@ public class ProfileServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/profile");
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
+            String field = "profile";
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.contains("Tiểu sử") || msg.contains("Mô tả")) {
+                field = "bio";
+            } else if (msg.contains("Họ và tên")) {
+                field = "fullName";
+            } else if (msg.contains("người dùng")) {
+                field = "username";
+            } else if (msg.contains("thoại")) {
+                field = "phone";
+            } else if (msg.contains("sinh") || msg.contains("tuổi")) {
+                field = "birthDate";
+            }
             if (ajax) {
-                sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, "profile", e.getMessage(), null);
+                sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, false, field, e.getMessage(), null);
             } else {
                 req.setAttribute("error", e.getMessage());
                 showProfile(req, resp, currentUser);
