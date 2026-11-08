@@ -34,41 +34,15 @@ function showModerationNoteModal(courseTitle, note) {
         applyFilters();
     }
 
-    function removeVietnameseDiacritics(str) {
-        if (!str) return '';
-        return str.normalize('NFD')
-                  .replace(/[̀-ͯ]/g, '')
-                  .replace(/đ/g, 'd').replace(/Đ/g, 'D');
-    }
-
-    function handleCourseSearch() {
-        applyFilters();
-    }
-
     function applyFilters() {
-        const rawInput = (document.getElementById('courseSearchInput').value || '').trim();
-        const query = rawInput.toLowerCase();
-        const queryNoAccents = removeVietnameseDiacritics(query);
-        const queryId = query.replace(/^#/, ''); // Cho phép tìm theo cả #1 hoặc 1
         const rows = document.querySelectorAll('.course-row');
         let visibleCount = 0;
 
         rows.forEach(row => {
             const status = row.getAttribute('data-status') || '';
-            const id = (row.getAttribute('data-id') || '').trim();
-            const title = (row.getAttribute('data-title') || '').toLowerCase();
-            const titleNoAccents = removeVietnameseDiacritics(title);
-            const category = (row.getAttribute('data-category') || '').toLowerCase();
-            const categoryNoAccents = removeVietnameseDiacritics(category);
-
             const matchesStatus = (currentFilter === 'all') || (status === currentFilter);
-            const matchesId = queryId && (id === queryId || id.includes(queryId));
-            const matchesText = !query || 
-                title.includes(query) || titleNoAccents.includes(queryNoAccents) ||
-                category.includes(query) || categoryNoAccents.includes(queryNoAccents);
-            const matchesQuery = matchesId || matchesText;
 
-            if (matchesStatus && matchesQuery) {
+            if (matchesStatus) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -83,7 +57,6 @@ function showModerationNoteModal(courseTitle, note) {
     }
 
     function resetFilters() {
-        document.getElementById('courseSearchInput').value = '';
         const allTab = document.querySelector('#statusFilterTabs .saas-tab-btn[data-filter="all"]');
         filterCourses('all', allTab);
     }
