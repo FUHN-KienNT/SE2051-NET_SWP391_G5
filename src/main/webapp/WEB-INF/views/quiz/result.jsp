@@ -72,6 +72,15 @@
                             </span>
                         </div>
 
+                        <c:if test="${!result.passStatus}">
+                            <div class="alert alert-warning border-warning-subtle small d-flex align-items-center gap-2.5 mb-3 rounded-3">
+                                <i class="bi bi-shield-lock-fill text-warning fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong>Chế độ ôn tập bảo mật:</strong> Do bạn chưa đạt điểm tối thiểu của bài kiểm tra, hệ thống chỉ hiển thị các câu bạn đã làm đúng hoặc sai để bạn nhận biết lỗ hổng kiến thức, và tạm thời ẩn đáp án mẫu nhằm đảm bảo tính công bằng khi bạn làm lại bài thi.
+                                </div>
+                            </div>
+                        </c:if>
+
                         <div class="d-flex flex-column gap-3">
                             <c:forEach var="q" items="${quiz.questions}" varStatus="status">
                                 <c:set var="userAns" value="${answerMap != null ? answerMap[q.id] : null}" />
@@ -103,27 +112,27 @@
                                         <c:forEach var="opt" items="${q.options}">
                                             <c:set var="isSelected" value="${userAns != null && userAns.hasSelectedOption(opt.id)}" />
                                             <div class="p-2 rounded-2 d-flex align-items-center justify-content-between text-break 
-                                                ${opt.correct ? 'bg-success-subtle border border-success' : (isSelected ? 'bg-danger-subtle border border-danger' : 'bg-light border border-light-subtle')}">
+                                                ${opt.correct ? 'bg-success-subtle border border-success' : (isSelected ? (isCorrect ? 'bg-success-subtle border border-success' : 'bg-danger-subtle border border-danger') : 'bg-light border border-light-subtle')}">
                                                 <div class="d-flex align-items-center gap-2">
                                                     <c:choose>
-                                                        <c:when test="${opt.correct}">
+                                                        <c:when test="${opt.correct || (isSelected && isCorrect)}">
                                                             <i class="bi bi-check-circle-fill text-success fs-6"></i>
                                                         </c:when>
-                                                        <c:when test="${isSelected}">
+                                                        <c:when test="${isSelected && !isCorrect}">
                                                             <i class="bi bi-x-circle-fill text-danger fs-6"></i>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <i class="bi bi-circle text-muted fs-6"></i>
                                                         </c:otherwise>
                                                     </c:choose>
-                                                    <span class="${opt.correct ? 'fw-bold text-success' : (isSelected ? 'text-danger' : 'text-dark')}">
+                                                    <span class="${opt.correct || (isSelected && isCorrect) ? 'fw-bold text-success' : (isSelected ? 'text-danger' : 'text-dark')}">
                                                         ${opt.optionText}
                                                     </span>
                                                 </div>
                                                 <div class="d-flex align-items-center gap-1">
                                                     <c:if test="${isSelected}">
-                                                        <span class="badge bg-primary text-white" style="font-size: 11px;">
-                                                            Lựa chọn của bạn
+                                                        <span class="badge ${isCorrect ? 'bg-success' : 'bg-danger'} text-white" style="font-size: 11px;">
+                                                            Lựa chọn của bạn (${isCorrect ? 'Đúng' : 'Sai'})
                                                         </span>
                                                     </c:if>
                                                     <c:if test="${opt.correct}">

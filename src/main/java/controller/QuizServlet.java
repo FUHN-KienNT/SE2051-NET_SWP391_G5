@@ -699,6 +699,14 @@ public class QuizServlet extends HttpServlet {
         }
     }
 
+    private Long getAuthorizedStudentId(UserDto currentUser) {
+        if (currentUser == null) return null;
+        if ("ADMIN".equalsIgnoreCase(currentUser.getRoleName()) || "MANAGER".equalsIgnoreCase(currentUser.getRoleName())) {
+            return null; // Admin / Manager có thể xem mọi đơn đăng ký
+        }
+        return currentUser.getId();
+    }
+
     private void showQuizOverview(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
@@ -709,14 +717,11 @@ public class QuizServlet extends HttpServlet {
             long regId = Long.parseLong(req.getParameter("registrationId"));
             long quizId = Long.parseLong(req.getParameter("quizId"));
 
-            QuizDto quiz = quizService.getQuizDetail(quizId);
-            if (!quiz.isActive()) {
-                SessionUtil.setFlashError(req, "Bài kiểm tra này hiện đang đóng hoặc không khả dụng.");
-                resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId);
-                return;
-            }
+            Long authUserId = getAuthorizedStudentId(currentUser);
+            quizService.validateQuizAccess(regId, quizId, authUserId);
 
-            QuizResultDto lastResult = quizService.getLatestCompletedResult(regId, quizId);
+            QuizDto quiz = quizService.getQuizDetail(quizId);
+            QuizResultDto lastResult = quizService.getLatestCompletedResult(regId, quizId, authUserId);
 
             req.setAttribute("quiz", quiz);
             req.setAttribute("registrationId", regId);
@@ -740,7 +745,8 @@ public class QuizServlet extends HttpServlet {
             long regId = Long.parseLong(regIdStr);
             long quizId = Long.parseLong(quizIdStr);
             boolean isRetake = "true".equalsIgnoreCase(req.getParameter("retake"));
-            QuizAttemptDto attempt = quizService.startAttempt(regId, quizId, isRetake);
+            Long authUserId = getAuthorizedStudentId(currentUser);
+            QuizAttemptDto attempt = quizService.startAttempt(regId, quizId, isRetake, authUserId);
             QuizDto quiz = quizService.getQuizDetail(quizId);
 
             // [ANTI-CHEAT DEFENSE]: TUYỆT ĐỐI KHÔNG gửi cờ đáp án đúng (isCorrect) về phía học viên trước khi nộp bài!
@@ -773,8 +779,10 @@ public class QuizServlet extends HttpServlet {
         String regIdStr = req.getParameter("registrationId");
         String quizIdStr = req.getParameter("quizId");
         try {
+            UserDto currentUser = SessionUtil.getCurrentUser(req);
+            Long authUserId = getAuthorizedStudentId(currentUser);
             QuizAttemptDto dto = bindAttempt(req);
-            QuizResultDto result = quizService.submitAttempt(dto);
+            QuizResultDto result = quizService.submitAttempt(dto, authUserId);
             req.getSession().setAttribute("lastQuizResult", result);
             resp.sendRedirect(req.getContextPath() + "/quizzes/result?registrationId=" + dto.getRegistrationId()
                     + "&quizId=" + dto.getQuizId());
@@ -798,8 +806,25 @@ public class QuizServlet extends HttpServlet {
         try {
             long regId = Long.parseLong(regIdStr);
             long quizId = Long.parseLong(quizIdStr);
-            QuizResultDto result = quizService.getResult(regId, quizId);
+            UserDto currentUser = SessionUtil.getCurrentUser(req);
+            Long authUserId = getAuthorizedStudentId(currentUser);
+            QuizResultDto result = quizService.getResult(regId, quizId, authUserId);
             QuizDto quiz = quizService.getQuizDetail(quizId);
+
+            // [LỖ HỔNG 3 VÁ TOÀN DIỆN]: Nếu học viên chưa đạt điểm tối thiểu và không phải Admin/Manager,
+            // xóa cờ isCorrect trên các Option trước khi gửi xuống view để chống gian lận khi làm lại!
+            boolean isAdminOrManager = currentUser != null && ("ADMIN".equalsIgnoreCase(currentUser.getRoleName()) || "MANAGER".equalsIgnoreCase(currentUser.getRoleName()));
+            if (!result.isPassStatus() && !isAdminOrManager) {
+                if (quiz != null && quiz.getQuestions() != null) {
+                    for (QuestionDto q : quiz.getQuestions()) {
+                        if (q.getOptions() != null) {
+                            for (AnswerOptionDto opt : q.getOptions()) {
+                                opt.setCorrect(false);
+                            }
+                        }
+                    }
+                }
+            }
 
             Map<Long, QuizAnswerDto> answerMap = new HashMap<>();
             if (result.getAnswers() != null) {

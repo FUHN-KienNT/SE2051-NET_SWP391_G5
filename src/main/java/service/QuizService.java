@@ -573,23 +573,56 @@ public class QuizService {
         }
     }
 
+    public Registration validateQuizAccess(Connection con, long registrationId, long quizId, Long currentUserId) throws SQLException {
+        Registration reg = registrationDao.findById(con, registrationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký."));
+
+        // LỖ HỔNG 1: Chống IDOR - Xác thực quyền sở hữu đơn đăng ký
+        if (currentUserId != null && !currentUserId.equals(reg.getUserId())) {
+            throw new SecurityException("Bạn không có quyền truy cập vào đơn đăng ký của học viên khác.");
+        }
+
+        if (reg.getStatus() != RegistrationStatus.ACTIVE && reg.getStatus() != RegistrationStatus.COMPLETED) {
+            throw new IllegalStateException("Đơn đăng ký không hoạt động.");
+        }
+
+        Quiz quiz = quizDao.findById(con, quizId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi ID: " + quizId));
+        if (!quiz.isActive()) {
+            throw new IllegalStateException("Bài kiểm tra này đang tạm đóng hoặc không khả dụng đối với học viên.");
+        }
+
+        // LỖ HỔNG 2: Chống truy cập Quiz xuyên khóa học (Cross-Course Access)
+        Optional<entity.Module> modOpt = moduleDao.findById(con, quiz.getModuleId());
+        if (!modOpt.isPresent() || !modOpt.get().getCourseId().equals(reg.getCourseId())) {
+            throw new SecurityException("Bài kiểm tra không thuộc về khóa học trong đơn đăng ký của bạn.");
+        }
+
+        return reg;
+    }
+
+    public void validateQuizAccess(long registrationId, long quizId, Long currentUserId) {
+        try (Connection con = DbConnection.getConnection()) {
+            validateQuizAccess(con, registrationId, quizId, currentUserId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xác thực quyền bài thi: " + e.getMessage(), e);
+        }
+    }
+
     public QuizAttemptDto startAttempt(long registrationId, long quizId) {
-        return startAttempt(registrationId, quizId, false);
+        return startAttempt(registrationId, quizId, false, null);
     }
 
     public QuizAttemptDto startAttempt(long registrationId, long quizId, boolean isRetake) {
+        return startAttempt(registrationId, quizId, isRetake, null);
+    }
+
+    public QuizAttemptDto startAttempt(long registrationId, long quizId, boolean isRetake, Long currentUserId) {
         try (Connection con = DbConnection.getConnection()) {
-            Registration reg = registrationDao.findById(con, registrationId)
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký."));
-            if (reg.getStatus() != RegistrationStatus.ACTIVE && reg.getStatus() != RegistrationStatus.COMPLETED) {
-                throw new IllegalStateException("Đơn đăng ký không hoạt động.");
-            }
+            validateQuizAccess(con, registrationId, quizId, currentUserId);
 
             Quiz quiz = quizDao.findById(con, quizId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi ID: " + quizId));
-            if (!quiz.isActive()) {
-                throw new IllegalStateException("Bài kiểm tra này đang tạm đóng hoặc không khả dụng đối với học viên.");
-            }
 
             Optional<QuizAttempt> existingOpt = quizAttemptDao.findByRegistrationAndQuiz(con, registrationId, quizId);
             long id;
@@ -659,10 +692,16 @@ public class QuizService {
     }
 
     public QuizResultDto submitAttempt(QuizAttemptDto dto) {
+        return submitAttempt(dto, null);
+    }
+
+    public QuizResultDto submitAttempt(QuizAttemptDto dto, Long currentUserId) {
         if (dto == null || dto.getQuizId() == null) {
             throw new IllegalArgumentException("Dữ liệu nộp bài không hợp lệ.");
         }
         try (Connection con = DbConnection.getConnection()) {
+            validateQuizAccess(con, dto.getRegistrationId(), dto.getQuizId(), currentUserId);
+
             Quiz quiz = quizDao.findById(con, dto.getQuizId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi."));
             List<QuizQuestion> assignments = quizDao.findAssignments(con, quiz.getId());
@@ -753,11 +792,17 @@ public class QuizService {
     }
 
     public QuizResultDto getResult(long registrationId, long quizId) {
+        return getResult(registrationId, quizId, null);
+    }
+
+    public QuizResultDto getResult(long registrationId, long quizId, Long currentUserId) {
         try (Connection con = DbConnection.getConnection()) {
+            validateQuizAccess(con, registrationId, quizId, currentUserId);
+
             Quiz quiz = quizDao.findById(con, quizId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi."));
             Optional<QuizAttempt> attemptOpt = quizAttemptDao.findByRegistrationAndQuiz(con, registrationId, quizId);
-            if (!attemptOpt.isPresent()) {
+            if (!attemptOpt.isPresent() || attemptOpt.get().getSubmittedAt() == null) {
                 throw new IllegalArgumentException("Chưa có lượt làm bài nào cho bài thi này.");
             }
             QuizAttempt attempt = attemptOpt.get();
@@ -775,7 +820,18 @@ public class QuizService {
     }
 
     public QuizResultDto getLatestCompletedResult(long registrationId, long quizId) {
+        return getLatestCompletedResult(registrationId, quizId, null);
+    }
+
+    public QuizResultDto getLatestCompletedResult(long registrationId, long quizId, Long currentUserId) {
         try (Connection con = DbConnection.getConnection()) {
+            if (currentUserId != null) {
+                try {
+                    validateQuizAccess(con, registrationId, quizId, currentUserId);
+                } catch (Exception e) {
+                    return null;
+                }
+            }
             Optional<QuizAttempt> attemptOpt = quizAttemptDao.findByRegistrationAndQuiz(con, registrationId, quizId);
             if (!attemptOpt.isPresent() || attemptOpt.get().getSubmittedAt() == null) {
                 return null;

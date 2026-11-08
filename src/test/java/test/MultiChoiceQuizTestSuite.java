@@ -270,4 +270,24 @@ public class MultiChoiceQuizTestSuite {
             System.out.println("Thông báo kết nối DB: " + e.getMessage());
         }
     }
+
+    @Test
+    @DisplayName("2.5 Chống IDOR: validateQuizAccess từ chối học viên cố tình can thiệp đơn đăng ký người khác")
+    void testValidateQuizAccessRejectsIdor() {
+        try (java.sql.Connection con = util.DbConnection.getConnection()) {
+            try (java.sql.PreparedStatement ps = con.prepareStatement("SELECT id, user_id FROM registrations LIMIT 1");
+                 java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    long regId = rs.getLong("id");
+                    long realUserId = rs.getLong("user_id");
+                    long fakeUserId = realUserId + 999999L;
+                    assertThrows(SecurityException.class, () -> {
+                        quizService.validateQuizAccess(con, regId, 1L, fakeUserId);
+                    });
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Thông báo test IDOR: " + e.getMessage());
+        }
+    }
 }
