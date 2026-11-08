@@ -336,7 +336,8 @@ public class AdminCourseServlet extends HttpServlet {
         }
         dto.setDescription(req.getParameter("description"));
         String priceStr = req.getParameter("price");
-        dto.setPrice(priceStr != null && !priceStr.trim().isEmpty() ? new BigDecimal(priceStr.trim()) : BigDecimal.ZERO);
+        String cleanPrice = priceStr != null ? priceStr.replaceAll("[^0-9]", "") : "";
+        dto.setPrice(!cleanPrice.isEmpty() ? new BigDecimal(cleanPrice) : BigDecimal.ZERO);
         String statusStr = req.getParameter("status");
         dto.setStatus(statusStr != null ? CourseStatus.fromDb(statusStr) : CourseStatus.DRAFT);
         dto.setModerationNote(req.getParameter("moderationNote"));
