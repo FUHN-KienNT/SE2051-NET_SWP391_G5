@@ -124,6 +124,14 @@
     </div>
 </div>
 
+<!-- OFFLINE WARNING BANNER -->
+<div class="container mt-2">
+    <div id="offlineAlert" class="alert alert-danger shadow-sm text-center py-2 mb-0 rounded-3" style="display: none;">
+        <i class="bi bi-wifi-off me-1.5 fw-bold"></i>
+        <strong>Mất kết nối Internet!</strong> Bài làm vẫn đang được lưu an toàn trên trình duyệt. Vui lòng kiểm tra lại kết nối mạng trước khi nộp bài.
+    </div>
+</div>
+
 <main class="main-content py-3 py-lg-4">
     <div class="container">
         <form id="quizForm" action="${pageContext.request.contextPath}/quizzes/submit" method="POST">
@@ -525,7 +533,6 @@
             if (displayEl) displayEl.innerText = '00:00';
             if (mobileDisplayEl) mobileDisplayEl.innerText = '00:00';
             isSubmitting = true;
-            localStorage.removeItem(storageKey);
             localStorage.removeItem(timerKey);
 
             // Mở modal hết giờ và submit tự động
@@ -674,7 +681,7 @@
 
     window.executeSubmit = function() {
         isSubmitting = true;
-        localStorage.removeItem(storageKey);
+        // Giữ lại storageKey để bảo vệ bài làm nếu mạng rớt; chỉ xóa timer
         localStorage.removeItem(timerKey);
         const btn = document.getElementById('btnConfirmSubmit');
         if (btn) {
@@ -704,7 +711,17 @@
         window.location.href = '${pageContext.request.contextPath}/quizzes/overview?registrationId=' + regId + '&quizId=' + quizId;
     };
 
-    // 9. CẢNH BÁO VÔ TÌNH THOÁT TRANG (BEFOREUNLOAD)
+    // 9. CẢNH BÁO MẤT KẾT NỐI MẠNG (ONLINE/OFFLINE LISTENER)
+    window.addEventListener('offline', function() {
+        const alertEl = document.getElementById('offlineAlert');
+        if (alertEl) alertEl.style.display = 'block';
+    });
+    window.addEventListener('online', function() {
+        const alertEl = document.getElementById('offlineAlert');
+        if (alertEl) alertEl.style.display = 'none';
+    });
+
+    // 10. CẢNH BÁO VÔ TÌNH THOÁT TRANG (BEFOREUNLOAD)
     window.addEventListener('beforeunload', function(e) {
         if (!isSubmitting) {
             e.preventDefault();

@@ -145,4 +145,14 @@
     </div>
 </main>
 
+<script>
+    // Dọn dẹp an toàn bộ nhớ đệm đáp án sau khi đã nộp bài thành công vào CSDL
+    (function() {
+        const quizId = '${quiz.id}';
+        const regId = '${registrationId}';
+        localStorage.removeItem('courson_quiz_answers_' + quizId + '_' + regId);
+        localStorage.removeItem('courson_quiz_timer_' + quizId + '_' + regId);
+    })();
+</script>
+
 <jsp:include page="../common/footer.jsp" />

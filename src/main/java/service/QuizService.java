@@ -607,8 +607,22 @@ public class QuizService {
                     quizAttemptDao.replaceAnswers(con, id, Collections.emptyList());
                 } else {
                     // Đang trong tiến trình làm bài dở (F5 / reload) -> Giữ nguyên lượt làm hiện tại
-                    id = existing.getId();
                     startedAt = existing.getStartedAt() != null ? existing.getStartedAt() : now;
+                    if (quiz.getTimeLimitMinutes() != null && quiz.getTimeLimitMinutes() > 0) {
+                        long elapsedSeconds = java.time.Duration.between(startedAt, now).getSeconds();
+                        long totalAllowedSeconds = quiz.getTimeLimitMinutes() * 60L;
+                        long gracePeriodSeconds = 60L;
+                        if (elapsedSeconds > (totalAllowedSeconds + gracePeriodSeconds)) {
+                            // Bài thi bỏ dở đã quá hạn khi học viên rời đi -> Tự động chốt bài thi quá hạn 0 điểm
+                            existing.setSubmittedAt(startedAt.plusSeconds(totalAllowedSeconds));
+                            existing.setTotalScore(BigDecimal.ZERO);
+                            existing.setPassStatus(false);
+                            quizAttemptDao.upsertAttempt(con, existing);
+                            quizAttemptDao.replaceAnswers(con, existing.getId(), Collections.emptyList());
+                            throw new IllegalStateException("Lượt làm bài trước đã hết thời gian quy định (0.00 điểm - Không đạt). Bạn có thể bấm 'Làm lại bài thi' để bắt đầu lượt mới.");
+                        }
+                    }
+                    id = existing.getId();
                 }
             } else {
                 startedAt = now;
@@ -690,6 +704,10 @@ public class QuizService {
             Optional<QuizAttempt> existingOpt = quizAttemptDao.findByRegistrationAndQuiz(con, dto.getRegistrationId(), dto.getQuizId());
             if (existingOpt.isPresent()) {
                 QuizAttempt existing = existingOpt.get();
+                // 1. Chống nộp đè đa tab: Nếu lượt thi này đã nộp trước đó thì từ chối nộp đè
+                if (existing.getSubmittedAt() != null) {
+                    throw new IllegalStateException("Bài thi này đã được nộp thành công từ trước.");
+                }
                 if (attemptId == null || attemptId <= 0) {
                     attemptId = existing.getId();
                 }
@@ -702,8 +720,18 @@ public class QuizService {
                 long allowedSeconds = quiz.getTimeLimitMinutes() * 60L;
                 long gracePeriodSeconds = 60L; // 60 giây bù trừ độ trễ đường truyền
                 if (elapsedSeconds > (allowedSeconds + gracePeriodSeconds)) {
+                    // 2. Quá hạn nộp bài ngoài grace period -> Không chấp nhận payload gửi kèm, tự động đóng bài thi với 0.00 điểm
+                    QuizAttempt expiredAttempt = new QuizAttempt();
+                    expiredAttempt.setId(attemptId);
+                    expiredAttempt.setRegistrationId(dto.getRegistrationId());
+                    expiredAttempt.setQuizId(dto.getQuizId());
+                    expiredAttempt.setStartedAt(startedAt);
+                    expiredAttempt.setSubmittedAt(startedAt.plusSeconds(allowedSeconds));
+                    expiredAttempt.setTotalScore(BigDecimal.ZERO);
+                    expiredAttempt.setPassStatus(false);
+                    saveAttemptTransaction(expiredAttempt, Collections.emptyList());
                     throw new IllegalStateException("Thời gian làm bài đã vượt quá giới hạn quy định ("
-                            + (elapsedSeconds / 60) + " phút / quy định " + quiz.getTimeLimitMinutes() + " phút). Bài thi đã quá giờ.");
+                            + (elapsedSeconds / 60) + " phút / quy định " + quiz.getTimeLimitMinutes() + " phút). Bài thi đã bị đóng (0.00 điểm - Không đạt).");
                 }
             }
 
