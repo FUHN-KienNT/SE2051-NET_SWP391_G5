@@ -421,7 +421,7 @@ let quill = null;
         fetch((window.CONTEXT_PATH || '') + '/expert/save-lesson-draft', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
             },
             body: params.toString()
         })

@@ -34,22 +34,39 @@ function showModerationNoteModal(courseTitle, note) {
         applyFilters();
     }
 
+    function removeVietnameseDiacritics(str) {
+        if (!str) return '';
+        return str.normalize('NFD')
+                  .replace(/[̀-ͯ]/g, '')
+                  .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    }
+
     function handleCourseSearch() {
         applyFilters();
     }
 
     function applyFilters() {
-        const query = (document.getElementById('courseSearchInput').value || '').trim().toLowerCase();
+        const rawInput = (document.getElementById('courseSearchInput').value || '').trim();
+        const query = rawInput.toLowerCase();
+        const queryNoAccents = removeVietnameseDiacritics(query);
+        const queryId = query.replace(/^#/, ''); // Cho phép tìm theo cả #1 hoặc 1
         const rows = document.querySelectorAll('.course-row');
         let visibleCount = 0;
 
         rows.forEach(row => {
             const status = row.getAttribute('data-status') || '';
+            const id = (row.getAttribute('data-id') || '').trim();
             const title = (row.getAttribute('data-title') || '').toLowerCase();
+            const titleNoAccents = removeVietnameseDiacritics(title);
             const category = (row.getAttribute('data-category') || '').toLowerCase();
+            const categoryNoAccents = removeVietnameseDiacritics(category);
 
             const matchesStatus = (currentFilter === 'all') || (status === currentFilter);
-            const matchesQuery = !query || title.includes(query) || category.includes(query);
+            const matchesId = queryId && (id === queryId || id.includes(queryId));
+            const matchesText = !query || 
+                title.includes(query) || titleNoAccents.includes(queryNoAccents) ||
+                category.includes(query) || categoryNoAccents.includes(queryNoAccents);
+            const matchesQuery = matchesId || matchesText;
 
             if (matchesStatus && matchesQuery) {
                 row.style.display = '';
@@ -473,7 +490,7 @@ function showModerationNoteModal(courseTitle, note) {
             params.append('batchText', text);
             fetch((window.CONTEXT_PATH||'')+'/expert/preview-batch-videos', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
                 body: params.toString(),
                 signal: signal
             })
@@ -558,7 +575,7 @@ function showModerationNoteModal(courseTitle, note) {
 
         fetch((window.CONTEXT_PATH||'')+'/expert/generate-ai-description', {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
             body: params.toString()
         })
                 .then(r => r.json())

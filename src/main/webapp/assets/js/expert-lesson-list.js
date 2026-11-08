@@ -207,7 +207,7 @@ function openEditModuleModal(id, title, order) {
         fetch((window.CONTEXT_PATH||'')+'/expert/reorder-lessons', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: formData.toString()

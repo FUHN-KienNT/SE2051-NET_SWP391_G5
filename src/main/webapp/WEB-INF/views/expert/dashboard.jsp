@@ -102,7 +102,7 @@
 
                 <div class="saas-search-box">
                     <i class="bi bi-search saas-search-icon"></i>
-                    <input type="text" id="courseSearchInput" class="saas-search-input" placeholder="Tìm theo tên khóa học..." oninput="handleCourseSearch()">
+                    <input type="text" id="courseSearchInput" class="saas-search-input" placeholder="Tìm theo tên, mã (#ID) hoặc danh mục..." oninput="handleCourseSearch()">
                 </div>
             </div>
 
@@ -140,6 +140,7 @@
                             <c:otherwise>
                                 <c:forEach var="c" items="${courses}" varStatus="status">
                                     <tr class="course-row" id="courseRow-${c.id}" 
+                                        data-id="${c.id}"
                                         data-status="${c.status}" 
                                         data-title="${fn:escapeXml(c.title)}" 
                                         data-category="${fn:escapeXml(c.categoryName != null ? c.categoryName : '')}">
