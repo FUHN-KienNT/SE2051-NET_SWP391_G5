@@ -380,10 +380,16 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                     border-color: var(--cf-orange);
                     box-shadow: 0 0 0 3px rgba(243, 128, 32, 0.18);
                 }
-
                 .cf-avatar {
                     width: 34px;
                     height: 34px;
+                    min-width: 34px;
+                    min-height: 34px;
+                    max-width: 34px;
+                    max-height: 34px;
+                    flex-shrink: 0;
+                    aspect-ratio: 1 / 1;
+                    object-fit: cover;
                     border-radius: 50%;
                     background: linear-gradient(135deg, var(--cf-orange), #FAAD3F);
                     color: #FFFFFF;
@@ -688,7 +694,7 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                                                             </div>
                                                         </c:otherwise>
                                                     </c:choose>
-                                                    <div class="overflow-hidden">
+                                                    <div class="overflow-hidden flex-grow-1" style="min-width: 0;">
                                                         <div class="fw-bold text-dark text-truncate">${displayName}
                                                         </div>
                                                         <div class="text-muted small text-truncate"
@@ -896,7 +902,7 @@ CLOUDFLARE MODERN STREAMLINED NAVBAR
                                             <div class="cf-avatar navbar-avatar-text">${userInitial}</div>
                                         </c:otherwise>
                                     </c:choose>
-                                    <div class="overflow-hidden">
+                                    <div class="overflow-hidden flex-grow-1" style="min-width: 0;">
                                         <div class="fw-bold text-dark text-truncate small">${displayName}</div>
                                         <span class="cf-role-badge cf-role-student py-0 px-2"
                                             style="font-size: 10px;">${sessionScope.CURRENT_USER.roleName}</span>
