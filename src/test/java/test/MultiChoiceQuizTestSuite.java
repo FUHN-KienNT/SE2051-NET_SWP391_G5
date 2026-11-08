@@ -290,4 +290,38 @@ public class MultiChoiceQuizTestSuite {
             System.out.println("Thông báo test IDOR: " + e.getMessage());
         }
     }
+
+    @Test
+    @DisplayName("2.6 Bảo vệ toggle-active: QuizServlet phân loại toggle-active là action quản lý và chặn STUDENT")
+    void testToggleActiveIsManagementActionProtected() {
+        controller.QuizServlet servlet = new controller.QuizServlet();
+
+        // 1. Kiểm tra toggle-active được phân loại là management action
+        assertTrue(servlet.isManagementAction("toggle-active"),
+                "Action 'toggle-active' bắt buộc phải là management action để tránh Student tự ý đổi trạng thái quiz");
+        assertTrue(servlet.isManagementAction("list"));
+        assertTrue(servlet.isManagementAction("save"));
+        assertTrue(servlet.isManagementAction("delete"));
+        assertTrue(servlet.isManagementAction("unknown-action"),
+                "Bất kỳ action lạ nào cũng phải được coi là management action để phòng thủ theo chiều sâu");
+
+        // 2. Chỉ 4 action dành riêng cho học viên mới không phải management action
+        assertFalse(servlet.isManagementAction("overview"));
+        assertFalse(servlet.isManagementAction("attempt"));
+        assertFalse(servlet.isManagementAction("submit"));
+        assertFalse(servlet.isManagementAction("result"));
+
+        // 3. Phân quyền: STUDENT không được là Staff/Expert
+        dto.UserDto student = new dto.UserDto();
+        student.setRoleName("STUDENT");
+        assertFalse(servlet.isStaffOrExpert(student), "STUDENT không có quyền thực hiện management actions");
+
+        dto.UserDto expert = new dto.UserDto();
+        expert.setRoleName("EXPERT");
+        assertTrue(servlet.isStaffOrExpert(expert), "EXPERT có quyền quản lý");
+
+        dto.UserDto admin = new dto.UserDto();
+        admin.setRoleName("ADMIN");
+        assertTrue(servlet.isStaffOrExpert(admin), "ADMIN có quyền quản lý");
+    }
 }

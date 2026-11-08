@@ -60,7 +60,7 @@ public class QuizServlet extends HttpServlet {
         processAction(action, req, resp);
     }
 
-    private boolean isStaffOrExpert(UserDto user) {
+    public boolean isStaffOrExpert(UserDto user) {
         if (user == null) return false;
         String role = user.getRoleName();
         if (role == null) return false;
@@ -68,19 +68,23 @@ public class QuizServlet extends HttpServlet {
         return "ADMIN".equals(role) || "MANAGER".equals(role) || "EXPERT".equals(role);
     }
 
+    public boolean isManagementAction(String action) {
+        return "list".equals(action) || "detail".equals(action)
+                || "questions".equals(action)
+                || "save".equals(action) || "delete".equals(action)
+                || "toggle-active".equals(action)
+                || "save-question".equals(action) || "delete-question".equals(action)
+                || "assign-question".equals(action) || "remove-question".equals(action)
+                || (!"overview".equals(action) && !"attempt".equals(action) && !"submit".equals(action) && !"result".equals(action));
+    }
+
     private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
 
         // [SECURITY DEFENSE]: Chặn triệt để Student truy cập vào các chức năng quản lý bài thi,
-        // xem danh sách câu hỏi / đáp án đúng hoặc sửa đề thi.
-        boolean isManagementAction = "list".equals(action) || "detail".equals(action)
-                || "questions".equals(action)
-                || "save".equals(action) || "delete".equals(action)
-                || "save-question".equals(action) || "delete-question".equals(action)
-                || "assign-question".equals(action) || "remove-question".equals(action);
-
-        if (isManagementAction) {
+        // xem danh sách câu hỏi / đáp án đúng, sửa đề thi hoặc thay đổi trạng thái ẩn/hiện quiz.
+        if (isManagementAction(action)) {
             if (currentUser == null) {
                 resp.sendRedirect(req.getContextPath() + "/auth/login");
                 return;
