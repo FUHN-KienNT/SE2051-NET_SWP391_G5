@@ -964,7 +964,7 @@ INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_c
 (1, 2, 5, true, 25.00),
 (1, 3, 9, true, 25.00),
 (1, 4, 13, true, 25.00)
-ON CONFLICT (quiz_attempt_id, question_id) DO UPDATE SET selected_option_id = EXCLUDED.selected_option_id, is_correct = true, score = 25.00;
+ON CONFLICT (quiz_attempt_id, question_id, selected_option_id) DO UPDATE SET is_correct = true, score = 25.00;
 
 -- =====================================================================
 -- 6. Cập nhật tất cả các sequences của PostgreSQL
