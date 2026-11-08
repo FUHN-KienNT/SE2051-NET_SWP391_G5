@@ -364,9 +364,18 @@
             </button>
 
             <div class="links-row">
-                <a href="${pageContext.request.contextPath}/auth/login" class="back-link">
-                    <i class="bi bi-arrow-left"></i> Quay lại đăng nhập
-                </a>
+                <c:choose>
+                    <c:when test="${not empty sessionScope.CURRENT_USER}">
+                        <a href="${pageContext.request.contextPath}/profile/change-password" class="back-link">
+                            <i class="bi bi-arrow-left"></i> Quay lại trang đổi mật khẩu
+                        </a>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/auth/login" class="back-link">
+                            <i class="bi bi-arrow-left"></i> Quay lại trang đăng nhập
+                        </a>
+                    </c:otherwise>
+                </c:choose>
                 <a href="${pageContext.request.contextPath}/auth/forgot-password" class="back-link">
                     <i class="bi bi-pencil-square"></i> Nhập email khác
                 </a>
