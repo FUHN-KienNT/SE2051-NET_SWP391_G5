@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class QuizAttemptDao {
-    private static final String SQL_FIND_BY_REG_AND_QUIZ = "SELECT id, registration_id, quiz_id, submitted_at, total_score, pass_status FROM quiz_attempts WHERE registration_id = ? AND quiz_id = ? ORDER BY id DESC LIMIT 1";
-    private static final String SQL_INSERT_ATTEMPT = "INSERT INTO quiz_attempts (registration_id, quiz_id, submitted_at, total_score, pass_status) VALUES (?, ?, ?, ?, ?) RETURNING id";
-    private static final String SQL_UPDATE_ATTEMPT = "UPDATE quiz_attempts SET submitted_at = ?, total_score = ?, pass_status = ? WHERE id = ?";
+    private static final String SQL_FIND_BY_REG_AND_QUIZ = "SELECT id, registration_id, quiz_id, started_at, submitted_at, total_score, pass_status FROM quiz_attempts WHERE registration_id = ? AND quiz_id = ? ORDER BY id DESC LIMIT 1";
+    private static final String SQL_INSERT_ATTEMPT = "INSERT INTO quiz_attempts (registration_id, quiz_id, started_at, submitted_at, total_score, pass_status) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_UPDATE_ATTEMPT = "UPDATE quiz_attempts SET started_at = ?, submitted_at = ?, total_score = ?, pass_status = ? WHERE id = ?";
     private static final String SQL_FIND_ANSWERS = "SELECT id, quiz_attempt_id, question_id, selected_option_id, is_correct, score FROM quiz_answers WHERE quiz_attempt_id = ?";
     private static final String SQL_DELETE_ANSWERS = "DELETE FROM quiz_answers WHERE quiz_attempt_id = ?";
     private static final String SQL_INSERT_ANSWER = "INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_correct, score) VALUES (?, ?, ?, ?, ?) RETURNING id";
@@ -49,10 +49,15 @@ public class QuizAttemptDao {
     public long upsertAttempt(Connection con, QuizAttempt entity) throws SQLException {
         if (entity.getId() != null && entity.getId() > 0) {
             try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_ATTEMPT)) {
-                ps.setObject(1, entity.getSubmittedAt() != null ? entity.getSubmittedAt() : OffsetDateTime.now());
-                ps.setBigDecimal(2, entity.getTotalScore() != null ? entity.getTotalScore() : BigDecimal.ZERO);
-                ps.setBoolean(3, entity.isPassStatus());
-                ps.setLong(4, entity.getId());
+                ps.setObject(1, entity.getStartedAt() != null ? entity.getStartedAt() : OffsetDateTime.now());
+                if (entity.getSubmittedAt() != null) {
+                    ps.setObject(2, entity.getSubmittedAt());
+                } else {
+                    ps.setNull(2, java.sql.Types.TIMESTAMP_WITH_TIMEZONE);
+                }
+                ps.setBigDecimal(3, entity.getTotalScore() != null ? entity.getTotalScore() : BigDecimal.ZERO);
+                ps.setBoolean(4, entity.isPassStatus());
+                ps.setLong(5, entity.getId());
                 ps.executeUpdate();
                 return entity.getId();
             }
@@ -60,9 +65,14 @@ public class QuizAttemptDao {
             try (PreparedStatement ps = con.prepareStatement(SQL_INSERT_ATTEMPT)) {
                 ps.setLong(1, entity.getRegistrationId());
                 ps.setLong(2, entity.getQuizId());
-                ps.setObject(3, entity.getSubmittedAt() != null ? entity.getSubmittedAt() : OffsetDateTime.now());
-                ps.setBigDecimal(4, entity.getTotalScore() != null ? entity.getTotalScore() : BigDecimal.ZERO);
-                ps.setBoolean(5, entity.isPassStatus());
+                ps.setObject(3, entity.getStartedAt() != null ? entity.getStartedAt() : OffsetDateTime.now());
+                if (entity.getSubmittedAt() != null) {
+                    ps.setObject(4, entity.getSubmittedAt());
+                } else {
+                    ps.setNull(4, java.sql.Types.TIMESTAMP_WITH_TIMEZONE);
+                }
+                ps.setBigDecimal(5, entity.getTotalScore() != null ? entity.getTotalScore() : BigDecimal.ZERO);
+                ps.setBoolean(6, entity.isPassStatus());
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         long id = rs.getLong(1);
@@ -112,6 +122,7 @@ public class QuizAttemptDao {
         qa.setId(rs.getLong("id"));
         qa.setRegistrationId(rs.getLong("registration_id"));
         qa.setQuizId(rs.getLong("quiz_id"));
+        qa.setStartedAt(rs.getObject("started_at", OffsetDateTime.class));
         qa.setSubmittedAt(rs.getObject("submitted_at", OffsetDateTime.class));
         qa.setTotalScore(rs.getBigDecimal("total_score"));
         qa.setPassStatus(rs.getBoolean("pass_status"));

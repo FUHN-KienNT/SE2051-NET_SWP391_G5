@@ -261,7 +261,7 @@
 
                         <c:forEach var="q" items="${m.quizzes}">
                             <c:if test="${q.active}">
-                                <a href="${pageContext.request.contextPath}/quizzes/attempt?registrationId=${registrationId}&quizId=${q.id}"
+                                <a href="${pageContext.request.contextPath}/quizzes/overview?registrationId=${registrationId}&quizId=${q.id}"
                                    class="list-group-item list-group-item-action list-group-item-warning d-flex justify-content-between align-items-center py-2 px-2 rounded-2 mb-1 learn-item border-0"
                                    data-title="${q.title.toLowerCase()}">
                                     <span class="text-truncate"><i class="bi bi-patch-question me-1"></i>${q.title}</span>

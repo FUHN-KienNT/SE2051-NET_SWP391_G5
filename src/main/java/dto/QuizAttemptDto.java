@@ -9,9 +9,11 @@ public class QuizAttemptDto {
     private Long id;
     private Long registrationId;
     private Long quizId;
+    private OffsetDateTime startedAt;
     private OffsetDateTime submittedAt;
     private BigDecimal totalScore;
     private boolean passStatus;
+    private Integer remainingSeconds;
     private List<QuizAnswerDto> answers = new ArrayList<>();
 
     public QuizAttemptDto() {
@@ -19,12 +21,20 @@ public class QuizAttemptDto {
 
     public QuizAttemptDto(Long id, Long registrationId, Long quizId, OffsetDateTime submittedAt,
                           BigDecimal totalScore, boolean passStatus, List<QuizAnswerDto> answers) {
+        this(id, registrationId, quizId, OffsetDateTime.now(), submittedAt, totalScore, passStatus, null, answers);
+    }
+
+    public QuizAttemptDto(Long id, Long registrationId, Long quizId, OffsetDateTime startedAt,
+                          OffsetDateTime submittedAt, BigDecimal totalScore, boolean passStatus,
+                          Integer remainingSeconds, List<QuizAnswerDto> answers) {
         this.id = id;
         this.registrationId = registrationId;
         this.quizId = quizId;
+        this.startedAt = startedAt;
         this.submittedAt = submittedAt;
         this.totalScore = totalScore;
         this.passStatus = passStatus;
+        this.remainingSeconds = remainingSeconds;
         this.answers = answers != null ? answers : new ArrayList<>();
     }
 
@@ -50,6 +60,22 @@ public class QuizAttemptDto {
 
     public void setQuizId(Long quizId) {
         this.quizId = quizId;
+    }
+
+    public OffsetDateTime getStartedAt() {
+        return startedAt;
+    }
+
+    public void setStartedAt(OffsetDateTime startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public Integer getRemainingSeconds() {
+        return remainingSeconds;
+    }
+
+    public void setRemainingSeconds(Integer remainingSeconds) {
+        this.remainingSeconds = remainingSeconds;
     }
 
     public OffsetDateTime getSubmittedAt() {

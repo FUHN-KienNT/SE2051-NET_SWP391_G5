@@ -1,6 +1,7 @@
 package dto;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,7 @@ public class QuizResultDto {
     private BigDecimal maxScore;
     private BigDecimal percentage;
     private boolean passStatus;
+    private OffsetDateTime submittedAt;
     private List<QuizAnswerDto> answers = new ArrayList<>();
 
     public QuizResultDto() {
@@ -63,6 +65,14 @@ public class QuizResultDto {
 
     public void setPassStatus(boolean passStatus) {
         this.passStatus = passStatus;
+    }
+
+    public OffsetDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(OffsetDateTime submittedAt) {
+        this.submittedAt = submittedAt;
     }
 
     public List<QuizAnswerDto> getAnswers() {

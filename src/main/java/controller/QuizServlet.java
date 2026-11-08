@@ -22,7 +22,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import service.QuizService;
 import dto.UserDto;
@@ -119,6 +122,9 @@ public class QuizServlet extends HttpServlet {
                 break;
             case "remove-question":
                 removeQuestion(req, resp);
+                break;
+            case "overview":
+                showQuizOverview(req, resp);
                 break;
             case "attempt":
                 showAttempt(req, resp);
@@ -693,7 +699,7 @@ public class QuizServlet extends HttpServlet {
         }
     }
 
-    private void showAttempt(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void showQuizOverview(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -702,7 +708,39 @@ public class QuizServlet extends HttpServlet {
         try {
             long regId = Long.parseLong(req.getParameter("registrationId"));
             long quizId = Long.parseLong(req.getParameter("quizId"));
-            QuizAttemptDto attempt = quizService.startAttempt(regId, quizId);
+
+            QuizDto quiz = quizService.getQuizDetail(quizId);
+            if (!quiz.isActive()) {
+                SessionUtil.setFlashError(req, "Bài kiểm tra này hiện đang đóng hoặc không khả dụng.");
+                resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + regId);
+                return;
+            }
+
+            QuizResultDto lastResult = quizService.getLatestCompletedResult(regId, quizId);
+
+            req.setAttribute("quiz", quiz);
+            req.setAttribute("registrationId", regId);
+            req.setAttribute("lastResult", lastResult);
+            req.getRequestDispatcher("/WEB-INF/views/quiz/overview.jsp").forward(req, resp);
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, "Không thể tải thông tin bài kiểm tra: " + e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+        }
+    }
+
+    private void showAttempt(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String regIdStr = req.getParameter("registrationId");
+        String quizIdStr = req.getParameter("quizId");
+        try {
+            long regId = Long.parseLong(regIdStr);
+            long quizId = Long.parseLong(quizIdStr);
+            boolean isRetake = "true".equalsIgnoreCase(req.getParameter("retake"));
+            QuizAttemptDto attempt = quizService.startAttempt(regId, quizId, isRetake);
             QuizDto quiz = quizService.getQuizDetail(quizId);
 
             // [ANTI-CHEAT DEFENSE]: TUYỆT ĐỐI KHÔNG gửi cờ đáp án đúng (isCorrect) về phía học viên trước khi nộp bài!
@@ -720,12 +758,20 @@ public class QuizServlet extends HttpServlet {
             req.setAttribute("quiz", quiz);
             req.getRequestDispatcher("/WEB-INF/views/quiz/take.jsp").forward(req, resp);
         } catch (Exception e) {
+            String redirectUrl;
+            if (regIdStr != null && quizIdStr != null) {
+                redirectUrl = req.getContextPath() + "/quizzes/overview?registrationId=" + regIdStr.trim() + "&quizId=" + quizIdStr.trim();
+            } else {
+                redirectUrl = req.getContextPath() + "/registrations/my";
+            }
             SessionUtil.setFlashError(req, "Không thể bắt đầu làm bài thi: " + e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            resp.sendRedirect(redirectUrl);
         }
     }
 
     private void submitAttempt(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String regIdStr = req.getParameter("registrationId");
+        String quizIdStr = req.getParameter("quizId");
         try {
             QuizAttemptDto dto = bindAttempt(req);
             QuizResultDto result = quizService.submitAttempt(dto);
@@ -733,21 +779,51 @@ public class QuizServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/quizzes/result?registrationId=" + dto.getRegistrationId()
                     + "&quizId=" + dto.getQuizId());
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
-                    + java.net.URLEncoder.encode("Lỗi khi nộp bài thi: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            String redirectUrl;
+            if (regIdStr != null && quizIdStr != null) {
+                redirectUrl = req.getContextPath() + "/quizzes/overview?registrationId=" + regIdStr.trim() + "&quizId=" + quizIdStr.trim();
+            } else if (regIdStr != null) {
+                redirectUrl = req.getContextPath() + "/courses/learn?registrationId=" + regIdStr.trim();
+            } else {
+                redirectUrl = req.getContextPath() + "/registrations/my";
+            }
+            SessionUtil.setFlashError(req, "Lỗi khi nộp bài thi: " + e.getMessage());
+            resp.sendRedirect(redirectUrl);
         }
     }
 
     private void showResult(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String regIdStr = req.getParameter("registrationId");
+        String quizIdStr = req.getParameter("quizId");
         try {
-            long regId = Long.parseLong(req.getParameter("registrationId"));
-            long quizId = Long.parseLong(req.getParameter("quizId"));
+            long regId = Long.parseLong(regIdStr);
+            long quizId = Long.parseLong(quizIdStr);
             QuizResultDto result = quizService.getResult(regId, quizId);
+            QuizDto quiz = quizService.getQuizDetail(quizId);
+
+            Map<Long, QuizAnswerDto> answerMap = new HashMap<>();
+            if (result.getAnswers() != null) {
+                for (QuizAnswerDto a : result.getAnswers()) {
+                    answerMap.put(a.getQuestionId(), a);
+                }
+            }
+
             req.setAttribute("result", result);
+            req.setAttribute("quiz", quiz);
+            req.setAttribute("answerMap", answerMap);
+            req.setAttribute("registrationId", regId);
             req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
-                    + java.net.URLEncoder.encode("Không thể tải kết quả bài thi: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+            String redirectUrl;
+            if (regIdStr != null && quizIdStr != null) {
+                redirectUrl = req.getContextPath() + "/quizzes/overview?registrationId=" + regIdStr.trim() + "&quizId=" + quizIdStr.trim();
+            } else if (regIdStr != null) {
+                redirectUrl = req.getContextPath() + "/courses/learn?registrationId=" + regIdStr.trim();
+            } else {
+                redirectUrl = req.getContextPath() + "/registrations/my";
+            }
+            SessionUtil.setFlashError(req, "Không thể tải kết quả bài thi: " + e.getMessage());
+            resp.sendRedirect(redirectUrl);
         }
     }
 

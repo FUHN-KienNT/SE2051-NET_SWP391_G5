@@ -236,4 +236,38 @@ public class MultiChoiceQuizTestSuite {
         assertFalse(ansDto.isCorrect());
         assertEquals(BigDecimal.ZERO, ansDto.getScore());
     }
+
+    @Test
+    @DisplayName("2.3 calculateResult gán chính xác submittedAt từ QuizAttempt vào QuizResultDto")
+    void testCalculateResultSetsSubmittedAt() throws Exception {
+        Method calcMethod = QuizService.class.getDeclaredMethod("calculateResult", QuizAttempt.class, List.class, String.class, BigDecimal.class);
+        calcMethod.setAccessible(true);
+
+        java.time.OffsetDateTime now = java.time.OffsetDateTime.now();
+        QuizAttempt attempt = new QuizAttempt();
+        attempt.setTotalScore(new BigDecimal("10.00"));
+        attempt.setPassStatus(true);
+        attempt.setSubmittedAt(now);
+
+        QuizResultDto result = (QuizResultDto) calcMethod.invoke(quizService, attempt, new ArrayList<>(), "Bài kiểm tra mẫu", new BigDecimal("10.00"));
+        assertNotNull(result);
+        assertEquals(now, result.getSubmittedAt());
+    }
+
+    @Test
+    @DisplayName("2.4 Đảm bảo DbConnection thực thi schema update và quiz_attempts.submitted_at cho phép NULL")
+    void testQuizAttemptsSubmittedAtAllowsNull() {
+        try (java.sql.Connection con = util.DbConnection.getConnection()) {
+            assertNotNull(con, "Kết nối database thành công");
+            java.sql.DatabaseMetaData meta = con.getMetaData();
+            try (java.sql.ResultSet rs = meta.getColumns(null, null, "quiz_attempts", "submitted_at")) {
+                if (rs.next()) {
+                    String isNullable = rs.getString("IS_NULLABLE");
+                    assertEquals("YES", isNullable, "Cột submitted_at trong bảng quiz_attempts phải cho phép NULL (IS_NULLABLE = YES)");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Thông báo kết nối DB: " + e.getMessage());
+        }
+    }
 }

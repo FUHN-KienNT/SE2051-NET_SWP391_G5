@@ -119,27 +119,35 @@ public final class DbConnection {
     private static synchronized void verifySchemaOnce(Connection con) {
         if (schemaVerified) return;
         try (Statement st = con.createStatement()) {
-            // Đảm bảo hỗ trợ trạng thái PENDING_REVIEW trong courses
-            st.execute("ALTER TABLE courses DROP CONSTRAINT IF EXISTS chk_courses_status; " +
-                       "ALTER TABLE courses ADD CONSTRAINT chk_courses_status CHECK (status IN ('DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'ARCHIVED'));");
-            // Đảm bảo có các cột lưu trữ và ghi chú mới
-            st.execute("ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_at timestamptz; " +
-                       "ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_notice text; " +
-                       "ALTER TABLE courses ADD COLUMN IF NOT EXISTS moderation_note text; " +
-                       "ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false; " +
-                       "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
-                       "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true; " +
-                       "ALTER TABLE quiz_answers DROP CONSTRAINT IF EXISTS uq_quiz_answers_attempt_question; " +
-                       "ALTER TABLE quiz_answers DROP CONSTRAINT IF EXISTS uq_quiz_answers_attempt_question_option; " +
-                       "ALTER TABLE quiz_answers ADD CONSTRAINT uq_quiz_answers_attempt_question_option UNIQUE (quiz_attempt_id, question_id, selected_option_id); " +
-                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text; " +
-                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(); " +
-                       "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();");
-            st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url varchar(255); " +
-                       "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone varchar(20); " +
-                       "ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date date;");
-            st.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users (LOWER(username)); " +
-                       "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));");
+            String[] ddlStatements = {
+                "ALTER TABLE courses DROP CONSTRAINT IF EXISTS chk_courses_status;",
+                "ALTER TABLE courses ADD CONSTRAINT chk_courses_status CHECK (status IN ('DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'ARCHIVED'));",
+                "ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_at timestamptz;",
+                "ALTER TABLE courses ADD COLUMN IF NOT EXISTS archive_notice text;",
+                "ALTER TABLE courses ADD COLUMN IF NOT EXISTS moderation_note text;",
+                "ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false;",
+                "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;",
+                "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;",
+                "ALTER TABLE quiz_answers DROP CONSTRAINT IF EXISTS uq_quiz_answers_attempt_question;",
+                "ALTER TABLE quiz_answers DROP CONSTRAINT IF EXISTS uq_quiz_answers_attempt_question_option;",
+                "ALTER TABLE quiz_answers ADD CONSTRAINT uq_quiz_answers_attempt_question_option UNIQUE (quiz_attempt_id, question_id, selected_option_id);",
+                "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS user_note text;",
+                "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();",
+                "ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();",
+                "ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS started_at timestamptz NOT NULL DEFAULT now();",
+                "ALTER TABLE quiz_attempts ALTER COLUMN submitted_at DROP NOT NULL;",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url varchar(255);",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone varchar(20);",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date date;",
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users (LOWER(username));",
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));"
+            };
+            for (String sql : ddlStatements) {
+                try {
+                    st.execute(sql);
+                } catch (Exception ignored) {
+                }
+            }
         } catch (Exception ex) {
             // Không chặn ứng dụng nếu tài khoản không đủ quyền DDL
         } finally {

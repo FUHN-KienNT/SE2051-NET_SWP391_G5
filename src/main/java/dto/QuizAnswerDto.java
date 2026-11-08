@@ -80,4 +80,12 @@ public class QuizAnswerDto {
     public void setScore(BigDecimal score) {
         this.score = score;
     }
+
+    public boolean hasSelectedOption(Long optionId) {
+        if (optionId == null) return false;
+        if (selectedOptionIds != null && selectedOptionIds.contains(optionId)) {
+            return true;
+        }
+        return selectedOptionId != null && selectedOptionId.equals(optionId);
+    }
 }

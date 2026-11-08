@@ -574,6 +574,10 @@ public class QuizService {
     }
 
     public QuizAttemptDto startAttempt(long registrationId, long quizId) {
+        return startAttempt(registrationId, quizId, false);
+    }
+
+    public QuizAttemptDto startAttempt(long registrationId, long quizId, boolean isRetake) {
         try (Connection con = DbConnection.getConnection()) {
             Registration reg = registrationDao.findById(con, registrationId)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đăng ký."));
@@ -587,22 +591,53 @@ public class QuizService {
                 throw new IllegalStateException("Bài kiểm tra này đang tạm đóng hoặc không khả dụng đối với học viên.");
             }
 
-            QuizAttempt attempt = new QuizAttempt();
-            attempt.setRegistrationId(registrationId);
-            attempt.setQuizId(quizId);
-            attempt.setSubmittedAt(null);
-            attempt.setTotalScore(BigDecimal.ZERO);
-            attempt.setPassStatus(false);
-            long id = quizAttemptDao.upsertAttempt(con, attempt);
-            attempt.setId(id);
+            Optional<QuizAttempt> existingOpt = quizAttemptDao.findByRegistrationAndQuiz(con, registrationId, quizId);
+            long id;
+            OffsetDateTime startedAt;
+            OffsetDateTime now = OffsetDateTime.now();
+            if (existingOpt.isPresent()) {
+                QuizAttempt existing = existingOpt.get();
+                if (isRetake || existing.getSubmittedAt() != null) {
+                    startedAt = now;
+                    existing.setStartedAt(startedAt);
+                    existing.setSubmittedAt(null);
+                    existing.setTotalScore(BigDecimal.ZERO);
+                    existing.setPassStatus(false);
+                    id = quizAttemptDao.upsertAttempt(con, existing);
+                    quizAttemptDao.replaceAnswers(con, id, Collections.emptyList());
+                } else {
+                    // Đang trong tiến trình làm bài dở (F5 / reload) -> Giữ nguyên lượt làm hiện tại
+                    id = existing.getId();
+                    startedAt = existing.getStartedAt() != null ? existing.getStartedAt() : now;
+                }
+            } else {
+                startedAt = now;
+                QuizAttempt attempt = new QuizAttempt();
+                attempt.setRegistrationId(registrationId);
+                attempt.setQuizId(quizId);
+                attempt.setStartedAt(startedAt);
+                attempt.setSubmittedAt(null);
+                attempt.setTotalScore(BigDecimal.ZERO);
+                attempt.setPassStatus(false);
+                id = quizAttemptDao.upsertAttempt(con, attempt);
+            }
+
+            Integer remainingSeconds = null;
+            if (quiz.getTimeLimitMinutes() != null && quiz.getTimeLimitMinutes() > 0) {
+                long elapsedSeconds = java.time.Duration.between(startedAt, now).getSeconds();
+                long totalAllowedSeconds = quiz.getTimeLimitMinutes() * 60L;
+                remainingSeconds = (int) Math.max(0, totalAllowedSeconds - elapsedSeconds);
+            }
 
             QuizAttemptDto dto = new QuizAttemptDto();
             dto.setId(id);
             dto.setRegistrationId(registrationId);
             dto.setQuizId(quizId);
+            dto.setStartedAt(startedAt);
             dto.setSubmittedAt(null);
             dto.setTotalScore(BigDecimal.ZERO);
             dto.setPassStatus(false);
+            dto.setRemainingSeconds(remainingSeconds);
             return dto;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi bắt đầu bài làm thi: " + e.getMessage(), e);
@@ -650,11 +685,34 @@ public class QuizService {
             BigDecimal passScore = quiz.getPassScore() != null ? quiz.getPassScore() : BigDecimal.valueOf(50.0);
             boolean pass = totalScore.compareTo(passScore) >= 0 || percentage.compareTo(passScore) >= 0;
 
+            Long attemptId = dto.getId();
+            OffsetDateTime startedAt = null;
+            Optional<QuizAttempt> existingOpt = quizAttemptDao.findByRegistrationAndQuiz(con, dto.getRegistrationId(), dto.getQuizId());
+            if (existingOpt.isPresent()) {
+                QuizAttempt existing = existingOpt.get();
+                if (attemptId == null || attemptId <= 0) {
+                    attemptId = existing.getId();
+                }
+                startedAt = existing.getStartedAt();
+            }
+
+            OffsetDateTime now = OffsetDateTime.now();
+            if (quiz.getTimeLimitMinutes() != null && quiz.getTimeLimitMinutes() > 0 && startedAt != null) {
+                long elapsedSeconds = java.time.Duration.between(startedAt, now).getSeconds();
+                long allowedSeconds = quiz.getTimeLimitMinutes() * 60L;
+                long gracePeriodSeconds = 60L; // 60 giây bù trừ độ trễ đường truyền
+                if (elapsedSeconds > (allowedSeconds + gracePeriodSeconds)) {
+                    throw new IllegalStateException("Thời gian làm bài đã vượt quá giới hạn quy định ("
+                            + (elapsedSeconds / 60) + " phút / quy định " + quiz.getTimeLimitMinutes() + " phút). Bài thi đã quá giờ.");
+                }
+            }
+
             QuizAttempt attempt = new QuizAttempt();
-            attempt.setId(dto.getId());
+            attempt.setId(attemptId);
             attempt.setRegistrationId(dto.getRegistrationId());
             attempt.setQuizId(dto.getQuizId());
-            attempt.setSubmittedAt(OffsetDateTime.now());
+            attempt.setStartedAt(startedAt != null ? startedAt : now);
+            attempt.setSubmittedAt(now);
             attempt.setTotalScore(totalScore);
             attempt.setPassStatus(pass);
 
@@ -685,6 +743,29 @@ public class QuizService {
             return calculateResult(attempt, answers, quiz.getTitle(), maxScore);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lấy kết quả bài thi: " + e.getMessage(), e);
+        }
+    }
+
+    public QuizResultDto getLatestCompletedResult(long registrationId, long quizId) {
+        try (Connection con = DbConnection.getConnection()) {
+            Optional<QuizAttempt> attemptOpt = quizAttemptDao.findByRegistrationAndQuiz(con, registrationId, quizId);
+            if (!attemptOpt.isPresent() || attemptOpt.get().getSubmittedAt() == null) {
+                return null;
+            }
+            Quiz quiz = quizDao.findById(con, quizId).orElse(null);
+            if (quiz == null) {
+                return null;
+            }
+            QuizAttempt attempt = attemptOpt.get();
+            List<QuizAnswer> answers = quizAttemptDao.findAnswers(con, attempt.getId());
+            List<QuizQuestion> assignments = quizDao.findAssignments(con, quizId);
+            BigDecimal maxScore = assignments.stream()
+                    .map(QuizQuestion::getPoints)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            return calculateResult(attempt, answers, quiz.getTitle(), maxScore);
+        } catch (SQLException e) {
+            return null;
         }
     }
 
@@ -798,6 +879,7 @@ public class QuizService {
         result.setQuizTitle(quizTitle);
         result.setTotalScore(attempt.getTotalScore());
         result.setMaxScore(maxScore);
+        result.setSubmittedAt(attempt.getSubmittedAt());
         BigDecimal percentage = BigDecimal.ZERO;
         if (maxScore != null && maxScore.compareTo(BigDecimal.ZERO) > 0) {
             percentage = attempt.getTotalScore().multiply(BigDecimal.valueOf(100.0)).divide(maxScore, 2, RoundingMode.HALF_UP);

@@ -7,6 +7,7 @@ public class QuizAttempt {
     private Long id;
     private Long registrationId;
     private Long quizId;
+    private OffsetDateTime startedAt;
     private OffsetDateTime submittedAt;
     private BigDecimal totalScore;
     private boolean passStatus;
@@ -16,9 +17,15 @@ public class QuizAttempt {
 
     public QuizAttempt(Long id, Long registrationId, Long quizId, OffsetDateTime submittedAt,
                        BigDecimal totalScore, boolean passStatus) {
+        this(id, registrationId, quizId, OffsetDateTime.now(), submittedAt, totalScore, passStatus);
+    }
+
+    public QuizAttempt(Long id, Long registrationId, Long quizId, OffsetDateTime startedAt,
+                       OffsetDateTime submittedAt, BigDecimal totalScore, boolean passStatus) {
         this.id = id;
         this.registrationId = registrationId;
         this.quizId = quizId;
+        this.startedAt = startedAt;
         this.submittedAt = submittedAt;
         this.totalScore = totalScore;
         this.passStatus = passStatus;
@@ -46,6 +53,14 @@ public class QuizAttempt {
 
     public void setQuizId(Long quizId) {
         this.quizId = quizId;
+    }
+
+    public OffsetDateTime getStartedAt() {
+        return startedAt;
+    }
+
+    public void setStartedAt(OffsetDateTime startedAt) {
+        this.startedAt = startedAt;
     }
 
     public OffsetDateTime getSubmittedAt() {
