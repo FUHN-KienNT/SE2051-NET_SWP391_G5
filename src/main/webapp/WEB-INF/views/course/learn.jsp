@@ -142,6 +142,28 @@
     .btn-toggle-box:hover .toggle-bar {
         background-color: #0f172a;
     }
+    .learn-quiz-item {
+        background-color: #fffaf5;
+        border: 1px dashed #fcd5b5 !important;
+        transition: all 0.2s ease-in-out;
+        text-decoration: none;
+    }
+    .learn-quiz-item:hover {
+        background-color: #fff0df !important;
+        border-color: #f38020 !important;
+        transform: translateX(2px);
+    }
+    .learn-quiz-item .quiz-icon-badge {
+        background-color: #fff0df;
+        color: #f38020;
+        border: 1px solid #fcd5b5;
+        transition: all 0.2s ease;
+    }
+    .learn-quiz-item:hover .quiz-icon-badge {
+        background-color: #f38020;
+        color: #ffffff;
+        border-color: #f38020;
+    }
 </style>
 
 <div class="learning-wrapper">
@@ -262,10 +284,24 @@
                         <c:forEach var="q" items="${m.quizzes}">
                             <c:if test="${q.active}">
                                 <a href="${pageContext.request.contextPath}/quizzes/overview?registrationId=${registrationId}&quizId=${q.id}"
-                                   class="list-group-item list-group-item-action list-group-item-warning d-flex justify-content-between align-items-center py-2 px-2 rounded-2 mb-1 learn-item border-0"
-                                   data-title="${q.title.toLowerCase()}">
-                                    <span class="text-truncate"><i class="bi bi-patch-question me-1"></i>${q.title}</span>
-                                    <span class="badge bg-warning text-dark">Kiểm tra</span>
+                                   class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 rounded-2 mb-1 learn-item learn-quiz-item"
+                                   data-title="${q.title.toLowerCase()}"
+                                   title="${q.title}">
+                                    <span class="quiz-icon-badge flex-shrink-0 d-inline-flex align-items-center justify-content-center rounded-2"
+                                          style="width: 30px; height: 30px;">
+                                        <i class="bi bi-patch-question-fill" style="font-size: 14px;"></i>
+                                    </span>
+                                    <div class="text-truncate flex-grow-1">
+                                        <span class="d-block text-truncate fw-semibold text-dark" style="font-size: 13px;">${q.title}</span>
+                                        <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 11px;">
+                                            <span><i class="bi bi-stopwatch me-1"></i>${q.timeLimitMinutes != null && q.timeLimitMinutes > 0 ? q.timeLimitMinutes : '∞'} phút</span>
+                                            <span>•</span>
+                                            <span>Đạt: ${q.passScore} đ</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge rounded-pill flex-shrink-0 fw-medium" style="font-size: 10px; background-color: #fff0df; color: #d97706; border: 1px solid #fcd5b5;">
+                                        Quiz
+                                    </span>
                                 </a>
                             </c:if>
                         </c:forEach>
