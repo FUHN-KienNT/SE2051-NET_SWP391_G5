@@ -1,6 +1,11 @@
 package controller;
 
 import dao.CourseDao;
+import dao.LessonDao;
+import dao.LessonProgressDao;
+import dao.ModuleDao;
+import dto.CourseDto;
+import service.CourseService;
 import entity.Course;
 import dao.RegistrationDao;
 import dto.RecentLearningDto;
@@ -37,10 +42,19 @@ import util.VnPayUtil.VnPayVerifyResult;
 @WebServlet(name = "RegistrationServlet", urlPatterns = { "/registrations/*" })
 public class RegistrationServlet extends HttpServlet {
     private RegistrationService registrationService;
+    private CourseService courseService;
 
     @Override
     public void init() throws ServletException {
-        this.registrationService = new RegistrationService(new RegistrationDao(), new CourseDao());
+        CourseDao courseDao = new CourseDao();
+        RegistrationDao registrationDao = new RegistrationDao();
+        this.registrationService = new RegistrationService(registrationDao, courseDao);
+        this.courseService = new CourseService(
+                courseDao,
+                new ModuleDao(),
+                new LessonDao(),
+                new LessonProgressDao(),
+                registrationDao);
     }
 
     @Override
@@ -79,6 +93,11 @@ public class RegistrationServlet extends HttpServlet {
             case "my-courses":
             case "history":
                 showMyRegistrations(req, resp);
+                break;
+            case "my-detail":
+            case "my-course-detail":
+            case "course-progress":
+                showStudentCourseDetail(req, resp);
                 break;
             case "enroll":
                 String enrollCourseId = req.getParameter("courseId");
@@ -384,6 +403,68 @@ public class RegistrationServlet extends HttpServlet {
 
     // #m_tiendo [TRẠM 1/4 - CONTROLLER]: Lấy danh sách đăng ký bằng getByUser() và
     // lấy bài học gần nhất bằng getRecentLearning()
+    /**
+     * Màn hình [Chi tiết khóa học & Tiến độ học tập của Học viên] (My Course Detail).
+     * Chỉ phục vụ học viên đã đăng ký, hiển thị tổng quan tiến độ, đề cương bài học và quiz.
+     */
+    private void showStudentCourseDetail(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        String idStr = req.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            idStr = req.getParameter("registrationId");
+        }
+        if (idStr == null || idStr.trim().isEmpty()) {
+            SessionUtil.setFlashError(req, "Không tìm thấy mã đăng ký.");
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            return;
+        }
+
+        try {
+            long regId = Long.parseLong(idStr.trim());
+            RegistrationDto reg = registrationService.getById(regId);
+            if (reg == null) {
+                SessionUtil.setFlashError(req, "Không tìm thấy thông tin đăng ký khóa học.");
+                resp.sendRedirect(req.getContextPath() + "/registrations/my");
+                return;
+            }
+
+            // Chống IDOR: Chỉ cho phép chính chủ học viên hoặc ADMIN/MANAGER
+            if (reg.getUserId() != currentUser.getId()
+                    && !"ADMIN".equalsIgnoreCase(currentUser.getRoleName())
+                    && !"MANAGER".equalsIgnoreCase(currentUser.getRoleName())) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem thông tin khóa học này.");
+                return;
+            }
+
+            CourseDto course = null;
+            if (reg.getStatus() == RegistrationStatus.ACTIVE || reg.getStatus() == RegistrationStatus.COMPLETED) {
+                try {
+                    course = courseService.getLearningContent(regId, reg.getUserId());
+                } catch (Exception e) {
+                    course = courseService.getCourseDetail(reg.getCourseId());
+                }
+            } else {
+                course = courseService.getCourseDetail(reg.getCourseId());
+            }
+
+            req.setAttribute("registration", reg);
+            req.setAttribute("course", course);
+            req.getRequestDispatcher("/WEB-INF/views/registration/my_course_detail.jsp").forward(req, resp);
+        } catch (NumberFormatException e) {
+            SessionUtil.setFlashError(req, "Mã đăng ký không hợp lệ.");
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, "Lỗi tải thông tin khóa học: " + e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+        }
+    }
+
     private void showMyRegistrations(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
