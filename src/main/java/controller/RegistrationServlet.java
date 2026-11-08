@@ -458,10 +458,15 @@ public class RegistrationServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/registration/my_course_detail.jsp").forward(req, resp);
         } catch (NumberFormatException e) {
             SessionUtil.setFlashError(req, "Mã đăng ký không hợp lệ.");
-            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            if (!resp.isCommitted()) {
+                resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            }
         } catch (Exception e) {
-            SessionUtil.setFlashError(req, "Lỗi tải thông tin khóa học: " + e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            e.printStackTrace();
+            if (!resp.isCommitted()) {
+                SessionUtil.setFlashError(req, "Lỗi tải thông tin khóa học: " + e.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/registrations/my");
+            }
         }
     }
 

@@ -331,11 +331,11 @@
                                                             <span class="fw-semibold text-dark small d-block text-truncate">${q.title}</span>
                                                             <small class="text-muted" style="font-size: 0.72rem;">
                                                                 Điểm đạt: <strong>${q.passScore} điểm</strong> &bull;
-                                                                Thời gian: <strong>${q.timeLimitMinutes > 0 ? q.timeLimitMinutes.concat(' phút') : 'Không giới hạn'}</strong>
+                                                                Thời gian: <strong><c:choose><c:when test="${q.timeLimitMinutes != null && q.timeLimitMinutes > 0}">${q.timeLimitMinutes} phút</c:when><c:otherwise>Không giới hạn</c:otherwise></c:choose></strong>
                                                             </small>
                                                         </div>
                                                     </div>
-                                                    <a href="${pageContext.request.contextPath}/quizzes/take?quizId=${q.id}&registrationId=${registration.id}"
+                                                    <a href="${pageContext.request.contextPath}/quizzes/overview?quizId=${q.id}&registrationId=${registration.id}"
                                                        class="btn btn-sm btn-warning py-1 px-3 fw-semibold rounded-pill text-dark shadow-xs flex-shrink-0"
                                                        style="font-size: 0.75rem;">
                                                         <i class="bi bi-pencil-square me-1"></i>Làm bài tập
