@@ -61,6 +61,16 @@
         transform: translate(-50%, -50%) scale(1.12);
         background: #f38020;
     }
+    .hero-category-pill {
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        font-weight: 500;
+        backdrop-filter: blur(4px);
+    }
+    .bg-opacity-15 {
+        --bs-bg-opacity: 0.15 !important;
+    }
 
     /* KPI Metric Cards */
     .stat-card {
@@ -288,8 +298,8 @@
                                 Tiếp tục bài học gần nhất
                             </span>
                             <c:if test="${not empty recentLearning.categoryName}">
-                                <span class="badge bg-white bg-opacity-15 text-white px-2 py-1 rounded-pill small">
-                                    ${recentLearning.categoryName}
+                                <span class="badge hero-category-pill px-2.5 py-1 rounded-pill small">
+                                    <i class="bi bi-tag-fill me-1 opacity-75"></i>${recentLearning.categoryName}
                                 </span>
                             </c:if>
                         </div>
