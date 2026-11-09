@@ -233,9 +233,6 @@
                                 </a>
                             </c:otherwise>
                         </c:choose>
-                        <a href="${pageContext.request.contextPath}/courses/detail?id=${registration.courseId}" class="btn btn-saas-outline" target="_blank">
-                            <i class="bi bi-box-arrow-up-right"></i>Trang giới thiệu khóa học
-                        </a>
                     </div>
                 </div>
             </div>
