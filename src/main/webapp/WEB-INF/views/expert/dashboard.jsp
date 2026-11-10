@@ -4,7 +4,798 @@
 <c:set var="pageTitle" value="Expert Studio - Courson LMS" />
 <jsp:include page="../common/header.jsp" />
 
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/expert-dashboard.css">
+<style>
+/* ==========================================================================
+       MODERN SAAS DESIGN SYSTEM (Linear / Vercel / shadcn inspired)
+       ========================================================================== */
+    :root {
+        --saas-bg: #f8fafc;
+        --saas-card-bg: #ffffff;
+        --saas-border: #e2e8f0;
+        --saas-border-subtle: #f1f5f9;
+        --saas-text-heading: #0f172a;
+        --saas-text-body: #334155;
+        --saas-text-muted: #64748b;
+        --saas-primary: #0f172a;
+        --saas-primary-hover: #1e293b;
+        --saas-accent: #2563eb;
+        --saas-accent-hover: #1d4ed8;
+        --saas-radius-sm: 6px;
+        --saas-radius-md: 10px;
+        --saas-radius-lg: 14px;
+        --saas-radius-xl: 18px;
+        --saas-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+        --saas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+        --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    }
+
+    body {
+        background-color: var(--saas-bg);
+        color: var(--saas-text-body);
+    }
+
+
+    /* Page Header */
+    .saas-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .saas-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--saas-text-heading);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .saas-subtitle {
+        font-size: 0.875rem;
+        color: var(--saas-text-muted);
+        margin-top: 4px;
+        margin-bottom: 0;
+    }
+
+    /* Stat Cards */
+    .saas-stat-card {
+        background: var(--saas-card-bg);
+        border: 1px solid var(--saas-border);
+        border-radius: var(--saas-radius-lg);
+        padding: 20px;
+        box-shadow: var(--saas-shadow-sm);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .saas-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--saas-shadow-md);
+        border-color: #cbd5e1;
+    }
+    .saas-stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .saas-stat-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--saas-text-muted);
+    }
+    .saas-stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--saas-radius-md);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+    }
+    .saas-icon-blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+    .saas-icon-emerald {
+        background: #ecfdf5;
+        color: #059669;
+    }
+    .saas-icon-amber {
+        background: #fffbeb;
+        color: #d97706;
+    }
+    .saas-icon-slate {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .saas-stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: var(--saas-text-heading);
+        line-height: 1;
+    }
+    .saas-stat-desc {
+        font-size: 0.8125rem;
+        color: var(--saas-text-muted);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Course Main Card & Toolbar */
+    .saas-card {
+        background: var(--saas-card-bg);
+        border: 1px solid var(--saas-border);
+        border-radius: var(--saas-radius-lg);
+        box-shadow: var(--saas-shadow-sm);
+        overflow: hidden;
+    }
+    .saas-toolbar {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--saas-border);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        background: #ffffff;
+    }
+
+    /* Segmented Filter Tabs */
+    .saas-tabs {
+        display: inline-flex;
+        align-items: center;
+        background: #f1f5f9;
+        padding: 3px;
+        border-radius: 8px;
+        gap: 2px;
+    }
+    .saas-tab-btn {
+        border: none;
+        background: transparent;
+        padding: 6px 14px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--saas-text-muted);
+        border-radius: 6px;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .saas-tab-btn:hover {
+        color: var(--saas-text-heading);
+    }
+    .saas-tab-btn.active {
+        background: #ffffff;
+        color: var(--saas-text-heading);
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .saas-tab-badge {
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 9999px;
+    }
+    .saas-tab-btn.active .saas-tab-badge {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    /* Search Box */
+    .saas-search-box {
+        position: relative;
+        min-width: 260px;
+    }
+    .saas-search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        pointer-events: none;
+        font-size: 0.875rem;
+    }
+    .saas-search-input {
+        width: 100%;
+        padding: 7px 12px 7px 34px;
+        font-size: 0.875rem;
+        border-radius: 8px;
+        border: 1px solid var(--saas-border);
+        background: #f8fafc;
+        color: var(--saas-text-heading);
+        transition: all 0.15s ease;
+    }
+    .saas-search-input:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    /* SaaS Table */
+    .saas-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .saas-table th {
+        background: #f8fafc;
+        padding: 12px 16px;
+        font-size: 0.775rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-bottom: 1px solid var(--saas-border);
+        white-space: nowrap;
+    }
+    .saas-table td {
+        padding: 16px 16px;
+        border-bottom: 1px solid var(--saas-border-subtle);
+        vertical-align: middle;
+        background: #ffffff;
+        transition: background-color 0.15s ease;
+    }
+    .saas-table tr:hover td {
+        background-color: #f8fafc;
+    }
+    .saas-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    @media (min-width: 992px) {
+        .table-responsive {
+            overflow-x: visible !important;
+        }
+    }
+
+    /* Course Identity Column */
+    .course-info-wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+    }
+    .course-thumb-box {
+        width: 96px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #0f172a;
+        border: 1px solid #e2e8f0;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+    .course-thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.2s ease;
+    }
+    .course-info-wrap:hover .course-thumb-img {
+        transform: scale(1.05);
+    }
+    .course-title-text {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--saas-text-heading);
+        text-decoration: none;
+        line-height: 1.4;
+        display: block;
+        word-break: break-word;
+        transition: color 0.15s ease;
+    }
+    .course-title-text:hover {
+        color: var(--saas-accent);
+    }
+    .course-meta-sub {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        font-size: 0.8125rem;
+        color: var(--saas-text-muted);
+    }
+
+    /* Modern Status Badges (shadcn inspired) */
+    .saas-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+    .badge-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+    .saas-badge-published {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+    .saas-badge-published .badge-dot {
+        background: #10b981;
+    }
+
+    .saas-badge-pending {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+    .saas-badge-pending .badge-dot {
+        background: #f59e0b;
+    }
+
+    .saas-badge-draft {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+    .saas-badge-draft .badge-dot {
+        background: #64748b;
+    }
+
+    .saas-badge-archived {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    .saas-badge-archived .badge-dot {
+        background: #94a3b8;
+    }
+
+    /* Category & Info Pills */
+    .pill-neutral {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 3px 9px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+    .pill-quiz {
+        background: #fefce8;
+        color: #854d0e;
+        border: 1px solid #fef08a;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .pill-quiz.empty {
+        background: #f8fafc;
+        color: #94a3b8;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Action Dropdown & Buttons */
+    .btn-saas-primary {
+        background: #0f172a;
+        color: #ffffff;
+        border: 1px solid #0f172a;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 14px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        box-shadow: var(--saas-shadow-xs);
+    }
+    .btn-saas-primary:hover {
+        background: #1e293b;
+        color: #ffffff;
+        border-color: #1e293b;
+    }
+
+    .btn-saas-outline-emerald {
+        background: #ffffff;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .btn-saas-outline-emerald:hover {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #6ee7b7;
+    }
+
+    .btn-saas-outline-amber {
+        background: #ffffff;
+        color: #d97706;
+        border: 1px solid #fde68a;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .btn-saas-outline-amber:hover {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fcd34d;
+    }
+
+    .btn-icon-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--saas-border);
+        background: #ffffff;
+        color: #64748b;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+    .btn-icon-action:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    @media (max-width: 768px) {
+        .saas-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .saas-tabs {
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            justify-content: flex-start;
+        }
+        .saas-search-box {
+            width: 100%;
+            min-width: unset;
+        }
+    }
+
+    /* Dropdown Menu (shadcn style) */
+    .saas-dropdown-menu {
+        border: 1px solid var(--saas-border);
+        border-radius: 10px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        padding: 6px;
+        min-width: 190px;
+        border: 1px solid #e2e8f0;
+    }
+    .saas-dropdown-item {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #334155;
+        padding: 8px 12px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.12s ease;
+        text-decoration: none;
+    }
+    .saas-dropdown-item:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .saas-dropdown-item.text-danger {
+        color: #dc2626 !important;
+    }
+    .saas-dropdown-item.text-danger:hover {
+        background: #fef2f2 !important;
+        color: #b91c1c !important;
+    }
+
+    /* Modals */
+    .modal-content.saas-modal {
+        border-radius: 16px;
+        border: 1px solid var(--saas-border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        overflow: visible !important;
+    }
+    .modal-header.saas-modal-header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--saas-border);
+        padding: 20px 24px;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+    .modal-footer.saas-modal-footer {
+        background: #f8fafc;
+        border-top: 1px solid var(--saas-border);
+        padding: 16px 24px;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+    .saas-form-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+    .saas-form-control {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        padding: 9px 12px;
+        transition: all 0.15s ease;
+    }
+    .saas-form-control:focus {
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    /* Modern SaaS Searchable Select (Combobox) */
+    .saas-combobox {
+        position: relative;
+        width: 100%;
+    }
+    .saas-combobox-trigger {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 0.875rem;
+        color: var(--saas-text-heading);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-align: left;
+        user-select: none;
+    }
+    .saas-combobox-trigger:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+    }
+    .saas-combobox.open .saas-combobox-trigger,
+    .saas-combobox-trigger:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .saas-combobox-label {
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 8px;
+        font-weight: 500;
+    }
+    .saas-combobox-arrow {
+        font-size: 0.75rem;
+        color: #64748b;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        flex-shrink: 0;
+    }
+    .saas-combobox.open .saas-combobox-arrow {
+        transform: rotate(180deg);
+        color: var(--saas-accent);
+    }
+    .saas-combobox-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid var(--saas-border);
+        border-radius: 12px;
+        box-shadow: 0 14px 34px -4px rgba(15, 23, 42, 0.16), 0 6px 12px -2px rgba(15, 23, 42, 0.08);
+        z-index: 1065;
+        display: none;
+        overflow: hidden;
+    }
+    .saas-combobox.open .saas-combobox-dropdown {
+        display: block;
+        animation: saasComboboxFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes saasComboboxFade {
+        from {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .saas-combobox-search-wrap {
+        position: relative;
+        padding: 10px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--saas-border-subtle);
+    }
+    .saas-combobox-search {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 7px 30px 7px 32px;
+        font-size: 0.8125rem;
+        background: #ffffff;
+        outline: none;
+        color: var(--saas-text-heading);
+        transition: all 0.15s ease;
+    }
+    .saas-combobox-search:focus {
+        border-color: var(--saas-accent);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+    .saas-combobox-search-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8rem;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+    .saas-combobox-search-clear {
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+    }
+    .saas-combobox-search-clear:hover {
+        color: #475569;
+    }
+    .saas-combobox-list {
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 6px;
+    }
+    .saas-combobox-list::-webkit-scrollbar {
+        width: 5px;
+    }
+    .saas-combobox-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    .saas-combobox-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.84rem;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.12s ease;
+        user-select: none;
+        margin-bottom: 1px;
+    }
+    .saas-combobox-item:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .saas-combobox-item.selected {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+    .saas-combobox-item .item-check {
+        color: #2563eb;
+        font-size: 1rem;
+        display: none;
+    }
+    .saas-combobox-item.selected .item-check {
+        display: inline-block;
+    }
+    .saas-combobox-empty {
+        padding: 16px 12px;
+        text-align: center;
+        font-size: 0.8125rem;
+        color: #94a3b8;
+    }
+    .saas-combobox-footer {
+        border-top: 1px solid var(--saas-border-subtle);
+        padding: 6px;
+        background: #fafbfc;
+    }
+    .saas-combobox-footer .add-new-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: #2563eb;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: all 0.12s ease;
+        text-align: left;
+    }
+    .saas-combobox-footer .add-new-btn:hover {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .saas-youtube-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+    }
+
+    /* Alert notifications */
+    .saas-alert {
+        border-radius: var(--saas-radius-md);
+        padding: 14px 18px;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        box-shadow: var(--saas-shadow-xs);
+    }
+    .saas-alert-success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+    .saas-alert-danger {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+
+</style>
 
 <main class="main-content py-4">
     <div class="container">
@@ -478,7 +1269,699 @@
 
 <script>
     window.CONTEXT_PATH = '${pageContext.request.contextPath}';
+
+function showModerationNoteModal(courseTitle, note) {
+        var titleEl = document.getElementById('moderationCourseTitle');
+        var noteEl = document.getElementById('moderationNoteContent');
+        if (titleEl)
+            titleEl.textContent = courseTitle || '';
+        if (noteEl)
+            noteEl.textContent = note || '';
+        var modalEl = document.getElementById('moderationNoteModal');
+        if (modalEl) {
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    }
+
+    function autoResizeTextarea(el) {
+        if (!el)
+            return;
+        el.style.height = 'auto';
+        el.style.height = Math.max(105, el.scrollHeight + 4) + 'px';
+    }
+
+    // =========================================================================
+    // CLIENT-SIDE FILTER & INSTANT SEARCH
+    // =========================================================================
+    let currentFilter = 'all';
+
+    function filterCourses(status, btnEl) {
+        currentFilter = status;
+        const tabBtns = document.querySelectorAll('#statusFilterTabs .saas-tab-btn');
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+        if (btnEl)
+            btnEl.classList.add('active');
+
+        applyFilters();
+    }
+
+    function handleCourseSearch() {
+        applyFilters();
+    }
+
+    function removeVietnameseDiacritics(str) {
+        if (!str) return '';
+        return str.normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    }
+
+    function applyFilters() {
+        const searchInput = document.getElementById('courseSearchInput');
+        const rawQuery = (searchInput ? searchInput.value : '').trim();
+        const query = rawQuery.toLowerCase();
+        const queryNoAccents = removeVietnameseDiacritics(query);
+
+        const rows = document.querySelectorAll('.course-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status') || '';
+            const title = (row.getAttribute('data-title') || '').toLowerCase();
+            const titleNoAccents = removeVietnameseDiacritics(title);
+            const category = (row.getAttribute('data-category') || '').toLowerCase();
+
+            const matchesStatus = (currentFilter === 'all') || (status === currentFilter);
+            const matchesQuery = !query || 
+                title.includes(query) || titleNoAccents.includes(queryNoAccents) ||
+                category.includes(query);
+
+            if (matchesStatus && matchesQuery) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const noMatchRow = document.getElementById('noMatchRow');
+        if (noMatchRow) {
+            noMatchRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+        }
+    }
+
+    function resetFilters() {
+        const searchInput = document.getElementById('courseSearchInput');
+        if (searchInput) searchInput.value = '';
+        const allTab = document.querySelector('#statusFilterTabs .saas-tab-btn[data-filter="all"]');
+        filterCourses('all', allTab);
+    }
+
+    // =========================================================================
+    // EDIT COURSE MODAL LOGIC (Preserved O(1) Fetch)
+    // =========================================================================
+    function openEditCourseModal(courseId) {
+        const modalEl = document.getElementById('editCourseModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        document.getElementById('editCourseModalTitle').innerHTML = '<i class="bi bi-gear-fill text-primary me-2"></i>Chỉnh sửa Khóa học #' + courseId;
+        document.getElementById('editCourseId').value = courseId;
+        document.getElementById('editCourseLoading').style.display = 'block';
+        document.getElementById('editCourseFormFields').style.display = 'none';
+        document.getElementById('editCourseSubmitBtn').disabled = true;
+
+        const customDiv = document.getElementById('editCourseCustomCatDiv');
+        if (customDiv)
+            customDiv.style.display = 'none';
+
+        modal.show();
+
+        fetch((window.CONTEXT_PATH||'')+'/expert/get-course?id=' + encodeURIComponent(courseId))
+                .then(res => {
+                    if (!res.ok)
+                        throw new Error('Không thể tải khóa học #' + courseId);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        modal.hide();
+                        return;
+                    }
+                    document.getElementById('editCourseId').value = data.id;
+                    document.getElementById('editCourseTitle').value = data.title || '';
+                    if (data.categoryId) {
+                        setComboboxValue('editCourseCategoryCombobox', data.categoryId, data.categoryName);
+                    } else if (data.categoryName) {
+                        setComboboxValue('editCourseCategoryCombobox', '__NEW__', data.categoryName);
+                        const customDiv = document.getElementById('editCourseCustomCatDiv');
+                        if (customDiv) {
+                            customDiv.style.display = 'block';
+                            const inp = customDiv.querySelector('input');
+                            if (inp)
+                                inp.value = data.categoryName;
+                        }
+                    }
+                    let pVal = data.price != null ? parseInt(data.price, 10) : 0;
+                    document.getElementById('editCoursePrice').value = pVal > 0 ? pVal.toLocaleString('en-US') : '0';
+                    const editDescEl = document.getElementById('editCourseDescription');
+                    editDescEl.value = data.description || '';
+                    autoResizeTextarea(editDescEl);
+
+                    document.getElementById('editCourseLoading').style.display = 'none';
+                    document.getElementById('editCourseFormFields').style.display = 'block';
+                    document.getElementById('editCourseSubmitBtn').disabled = false;
+
+                    // Quy tắc: Chỉ khóa học ở trạng thái DRAFT mới cho phép Expert xóa
+                    const delBtn = document.getElementById('editCourseDeleteBtn');
+                    if (delBtn) {
+                        if (data.status === 'DRAFT') {
+                            delBtn.style.display = 'inline-block';
+                        } else {
+                            delBtn.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(err => {
+                    alert('Lỗi khi truy vấn khóa học từ CSDL: ' + err.message);
+                    modal.hide();
+                });
+    }
+
+    // =========================================================================
+    // ARCHIVE & UNARCHIVE (INSTANT CONFIRMATION)
+    // =========================================================================
+    function confirmArchiveCourse(title, url) {
+        showConfirmModal({
+            title: 'Lưu trữ / Ẩn khóa học',
+            method: 'POST',
+            html: 'Bạn có chắc chắn muốn lưu trữ khóa học "<strong>' + (title || '') + '</strong>"?<br><br>' +
+                    '<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>' +
+                    'Khóa học sẽ <strong>lập tức ẩn khỏi trang Chủ và Danh mục</strong> (ngừng nhận học viên mới).<br>' +
+                    '<i class="bi bi-shield-check text-success me-1"></i>Học viên đã mua trước đây vẫn học tập bình thường.<br>' +
+                    '<i class="bi bi-exclamation-circle text-danger me-1"></i>Lưu ý: Thao tác này là vĩnh viễn và không thể hoàn tác.</span>',
+            type: 'warning',
+            icon: 'bi bi-archive-fill',
+            confirmText: 'Lưu trữ ngay',
+            confirmIcon: 'bi bi-archive me-1',
+            confirmBtnClass: 'btn-warning text-dark fw-bold',
+            confirmUrl: url
+        });
+    }
+
+    // =========================================================================
+    // SAAS SEARCHABLE SELECT (COMBOBOX) CONTROLLER
+    // =========================================================================
+    function removeVietnameseDiacritics(str) {
+        if (!str)
+            return '';
+        return str.normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/đ/g, "d").replace(/Đ/g, "D")
+                .toLowerCase()
+                .trim();
+    }
+
+    function initSearchableSelect(comboboxId, customDivId) {
+        const box = document.getElementById(comboboxId);
+        if (!box)
+            return;
+
+        const trigger = box.querySelector('.saas-combobox-trigger');
+        const labelSpan = box.querySelector('.selected-text');
+        const hiddenInput = box.querySelector('input[type="hidden"]');
+        const searchInput = box.querySelector('.saas-combobox-search');
+        const searchClear = box.querySelector('.saas-combobox-search-clear');
+        const items = box.querySelectorAll('.saas-combobox-list .saas-combobox-item');
+        const emptyBox = box.querySelector('.saas-combobox-empty');
+        const addNewBtn = box.querySelector('.add-new-btn');
+        const customDiv = document.getElementById(customDivId);
+        const customInput = customDiv ? customDiv.querySelector('input') : null;
+
+        function openDropdown() {
+            document.querySelectorAll('.saas-combobox.open').forEach(cb => {
+                if (cb !== box)
+                    cb.classList.remove('open');
+            });
+            box.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+            if (searchInput) {
+                searchInput.value = '';
+                filterItems('');
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
+
+        function closeDropdown() {
+            box.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleDropdown() {
+            if (box.classList.contains('open')) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        }
+
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDropdown();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!box.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        box.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeDropdown();
+                trigger.focus();
+            }
+        });
+
+        function filterItems(query) {
+            const cleanQuery = removeVietnameseDiacritics(query);
+            let matchCount = 0;
+
+            if (searchClear) {
+                if (query.trim()) {
+                    searchClear.classList.remove('d-none');
+                } else {
+                    searchClear.classList.add('d-none');
+                }
+            }
+
+            items.forEach(it => {
+                const label = it.getAttribute('data-label') || it.textContent;
+                const cleanLabel = removeVietnameseDiacritics(label);
+                if (!cleanQuery || cleanLabel.includes(cleanQuery)) {
+                    it.classList.remove('d-none');
+                    matchCount++;
+                } else {
+                    it.classList.add('d-none');
+                }
+            });
+
+            if (emptyBox) {
+                if (matchCount === 0) {
+                    emptyBox.classList.remove('d-none');
+                } else {
+                    emptyBox.classList.add('d-none');
+                }
+            }
+
+            if (addNewBtn) {
+                if (query.trim()) {
+                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục "' + escapeHtml(query.trim()) + '"...';
+                    addNewBtn.dataset.customText = query.trim();
+                } else {
+                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục mới...';
+                    delete addNewBtn.dataset.customText;
+                }
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                filterItems(this.value);
+            });
+            searchInput.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchInput.value = '';
+                filterItems('');
+                searchInput.focus();
+            });
+        }
+
+        items.forEach(it => {
+            it.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                const label = this.getAttribute('data-label') || this.querySelector('.item-text').textContent;
+
+                items.forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+
+                hiddenInput.value = val;
+                labelSpan.textContent = label;
+
+                if (customDiv) {
+                    customDiv.style.display = 'none';
+                    if (customInput) {
+                        customInput.required = false;
+                        customInput.value = '';
+                    }
+                }
+
+                closeDropdown();
+                trigger.focus();
+            });
+        });
+
+        if (addNewBtn) {
+            addNewBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                hiddenInput.value = '__NEW__';
+                const customVal = addNewBtn.dataset.customText || '';
+                labelSpan.textContent = customVal ? ('Mới: ' + customVal) : '+ Danh mục mới';
+
+                items.forEach(i => i.classList.remove('selected'));
+
+                if (customDiv) {
+                    customDiv.style.display = 'block';
+                    if (customInput) {
+                        customInput.required = true;
+                        if (customVal)
+                            customInput.value = customVal;
+                        setTimeout(() => customInput.focus(), 50);
+                    }
+                }
+
+                closeDropdown();
+            });
+        }
+
+        if (customInput) {
+            customInput.addEventListener('input', function () {
+                if (this.value.trim()) {
+                    labelSpan.textContent = 'Mới: ' + this.value.trim();
+                } else {
+                    labelSpan.textContent = '+ Danh mục mới';
+                }
+            });
+        }
+    }
+
+    function setComboboxValue(comboboxId, value, fallbackName) {
+        const box = document.getElementById(comboboxId);
+        if (!box)
+            return;
+
+        const hiddenInput = box.querySelector('input[type="hidden"]');
+        const labelSpan = box.querySelector('.selected-text');
+        const items = box.querySelectorAll('.saas-combobox-list .saas-combobox-item');
+
+        let matched = false;
+        items.forEach(it => {
+            if (it.getAttribute('data-value') == value) {
+                it.classList.add('selected');
+                labelSpan.textContent = it.getAttribute('data-label') || it.textContent.trim();
+                hiddenInput.value = value;
+                matched = true;
+            } else {
+                it.classList.remove('selected');
+            }
+        });
+
+        if (!matched && fallbackName) {
+            hiddenInput.value = value || '__NEW__';
+            labelSpan.textContent = fallbackName;
+        }
+    }
+
+    function cancelCustomCategory(comboboxId, customDivId) {
+        const box = document.getElementById(comboboxId);
+        const customDiv = document.getElementById(customDivId);
+        if (customDiv) {
+            customDiv.style.display = 'none';
+            const inp = customDiv.querySelector('input');
+            if (inp) {
+                inp.required = false;
+                inp.value = '';
+            }
+        }
+        if (box) {
+            const firstItem = box.querySelector('.saas-combobox-list .saas-combobox-item');
+            if (firstItem) {
+                const val = firstItem.getAttribute('data-value');
+                const label = firstItem.getAttribute('data-label') || firstItem.textContent.trim();
+                setComboboxValue(comboboxId, val, label);
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text)
+            return '';
+        return text.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initSearchableSelect('editCourseCategoryCombobox', 'editCourseCustomCatDiv');
+    });
+
+    // =========================================================================
+    // YOUTUBE PLAYLIST BATCH AUTO-DETECT & PREVIEW
+    // =========================================================================
+    let courseBatchTimer = null;
+    let courseBatchAbortController = null;
+
+    function hasYoutubeVideoOrPlaylist(text) {
+        if (!text || !text.trim())
+            return false;
+        const playlistRegex = /(?:[?&]list=|playlist\?list=)[a-zA-Z0-9_-]+|^PL[a-zA-Z0-9_-]{16,}/i;
+        const videoRegex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/)|youtube\.com\/live\/)[a-zA-Z0-9_-]{11}/i;
+        return playlistRegex.test(text) || videoRegex.test(text);
+    }
+
+    function previewCourseBatchVideos() {
+        const text = document.getElementById('newCourseBatchText').value;
+        const feedback = document.getElementById('newCourseBatchFeedback');
+
+        // 1. Hủy ngay request cũ đang bay dở dang nếu có
+        if (courseBatchAbortController) {
+            courseBatchAbortController.abort();
+            courseBatchAbortController = null;
+        }
+
+        // 2. Xóa bộ đếm chờ trước đó
+        clearTimeout(courseBatchTimer);
+
+        // 3. Nếu rỗng -> ẩn feedback và dừng lại
+        if (!text || !text.trim()) {
+            feedback.className = 'mt-2 small d-none';
+            feedback.innerHTML = '';
+            return;
+        }
+
+        // 4. KIỂM TRA ĐỊNH DẠNG: Chỉ gọi API nếu thực sự có link Playlist hoặc video YouTube!
+        if (!hasYoutubeVideoOrPlaylist(text)) {
+            feedback.className = 'mt-2 small text-muted';
+            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Hệ thống nhận diện link Playlist (có ?list=...) hoặc link video YouTube (watch?v=, youtu.be, shorts).';
+            return;
+        }
+
+        feedback.className = 'mt-2 small text-muted';
+        feedback.innerHTML = '<span class="spinner-border spinner-border-sm text-danger me-1"></span>Đang phân tích video / playlist YouTube...';
+
+        // 5. Chờ 300ms sau khi người dùng dừng nhập/dán thì mới gửi request mới
+        courseBatchTimer = setTimeout(() => {
+            courseBatchAbortController = new AbortController();
+            const signal = courseBatchAbortController.signal;
+
+            const params = new URLSearchParams();
+            params.append('batchText', text);
+            fetch((window.CONTEXT_PATH||'')+'/expert/preview-batch-videos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: params.toString(),
+                signal: signal
+            })
+                    .then(r => r.json())
+                    .then(data => {
+                        const list = Array.isArray(data) ? data : (data.videos || []);
+                        if (list && list.length > 0) {
+                            const plTitle = data.playlistTitle;
+                            let infoText = 'Đã nhận diện: <strong>' + list.length + ' bài giảng</strong>';
+                            if (plTitle) {
+                                infoText += ' từ Playlist: "<strong>' + plTitle + '</strong>"';
+                                const titleInp = document.getElementById('newCourseTitle');
+                                if (titleInp && (!titleInp.value.trim() || titleInp.dataset.autofilled === 'true')) {
+                                    titleInp.value = plTitle;
+                                    titleInp.dataset.autofilled = 'true';
+                                }
+                            }
+
+                            // Tự động gán danh mục nếu phát hiện (chọn ngầm định)
+                            if (data.suggestedCategoryId && data.suggestedCategoryName) {
+                                setComboboxValue('newCourseCategoryCombobox', data.suggestedCategoryId, data.suggestedCategoryName);
+                            }
+
+                            // Tự động điền mô tả tóm tắt nếu AI sinh thành công
+                            if (data.suggestedDescription) {
+                                const descInp = document.getElementById('newCourseDescription');
+                                if (descInp && (!descInp.value.trim() || descInp.dataset.autofilled === 'true')) {
+                                    let cleanDesc = data.suggestedDescription.replace(/\\"/g, '"').replace(/^"+|"+$/g, '').trim();
+                                    descInp.value = cleanDesc;
+                                    descInp.dataset.autofilled = 'true';
+                                    autoResizeTextarea(descInp);
+                                }
+                            }
+
+
+                            feedback.className = 'mt-2 small alert alert-success py-1 px-2 mb-0 d-flex align-items-center justify-content-between';
+                            feedback.innerHTML = '<span><i class="bi bi-check-circle-fill text-success me-1"></i>' + infoText + '</span>';
+                        } else {
+                            feedback.className = 'mt-2 small text-muted';
+                            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Chưa nhận diện được video YouTube hợp lệ.';
+                        }
+                    })
+                    .catch(err => {
+                        // Nếu bị abort do người dùng đổi link khác -> im lặng bỏ qua, không nhận dữ liệu cũ
+                        if (err.name === 'AbortError')
+                            return;
+                        feedback.className = 'mt-2 small d-none';
+                    });
+        }, 300);
+    }
+
+    function generateAiDescription(titleInputId, descInputId, categoryComboboxId, btnEl) {
+        const titleInp = document.getElementById(titleInputId);
+        const descInp = document.getElementById(descInputId);
+        if (!titleInp || !titleInp.value.trim()) {
+            alert('Vui lòng nhập tên khóa học trước khi yêu cầu AI viết mô tả!');
+            titleInp.focus();
+            return;
+        }
+
+        let catName = '';
+        if (categoryComboboxId) {
+            const box = document.getElementById(categoryComboboxId);
+            if (box) {
+                const label = box.querySelector('.selected-text');
+                if (label)
+                    catName = label.textContent.trim();
+            }
+        }
+
+        const originalBtnHtml = btnEl ? btnEl.innerHTML : '';
+        if (btnEl) {
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Đang viết...';
+        }
+
+        const params = new URLSearchParams();
+        params.append('title', titleInp.value.trim());
+        if (catName && catName !== 'Chọn danh mục...') {
+            params.append('categoryName', catName);
+        }
+
+        fetch((window.CONTEXT_PATH||'')+'/expert/generate-ai-description', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+            body: params.toString()
+        })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.description) {
+                        descInp.value = data.description;
+                        descInp.dataset.autofilled = 'false';
+                        descInp.style.transition = 'all 0.3s ease';
+                        descInp.style.backgroundColor = 'rgba(37, 99, 235, 0.08)';
+                        setTimeout(() => {
+                            descInp.style.backgroundColor = '';
+                        }, 800);
+                    } else {
+                        if (data && data.aiAvailable === false) {
+                            alert('⚠️ Chưa cấu hình GEMINI_API_KEY trong hệ thống! Vui lòng cấu hình file ai.properties hoặc biến môi trường để sử dụng tính năng này.');
+                        } else {
+                            alert('⚠️ Kết nối đến Google Gemini AI thất bại hoặc vượt quá hạn mức (Quota limit)! Vui lòng kiểm tra lại API Key hoặc kết nối mạng.');
+                        }
+                    }
+                })
+                .catch(err => {
+                    alert('Lỗi kết nối khi gọi AI: ' + err.message);
+                })
+                .finally(() => {
+                    if (btnEl) {
+                        btnEl.disabled = false;
+                        btnEl.innerHTML = originalBtnHtml;
+                    }
+                });
+    }
+
+    function deleteEditingCourse() {
+        const id = document.getElementById('editCourseId').value;
+        const title = document.getElementById('editCourseTitle').value;
+        const modalEl = document.getElementById('editCourseModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance)
+            modalInstance.hide();
+        startDeleteCourseCountdown(id, title);
+    }
+
+    function confirmPublishCourse(title, url) {
+        showConfirmModal({
+            title: 'Gửi yêu cầu xuất bản',
+            method: 'POST',
+            html: 'Bạn có chắc chắn muốn gửi yêu cầu duyệt khóa học "<strong>' + (title || '') + '</strong>" để Quản lý kiểm tra và công khai khóa học?',
+            type: 'success',
+            icon: 'bi bi-send-check-fill',
+            confirmText: 'Gửi duyệt ngay',
+            confirmIcon: 'bi bi-send-check me-1',
+            confirmBtnClass: 'btn-success',
+            confirmUrl: url
+        });
+    }
+
+    function confirmCancelPublishCourse(title, url) {
+        showConfirmModal({
+            title: 'Thu hồi yêu cầu xuất bản (Chuyển về Bản nháp)',
+            method: 'POST',
+            html: 'Bạn có chắc chắn muốn thu hồi yêu cầu duyệt để tiếp tục chỉnh sửa khóa học "<strong>' + (title || '') + '</strong>"?<br><span class="text-muted small mt-2 d-inline-block"><i class="bi bi-info-circle me-1"></i>Khóa học sẽ trở về trạng thái <strong>Bản nháp</strong> để bạn có thể thêm, sửa bài giảng và chương học.</span>',
+            type: 'warning',
+            icon: 'bi bi-arrow-counterclockwise',
+            confirmText: 'Chuyển về Bản nháp',
+            confirmIcon: 'bi bi-arrow-counterclockwise me-1',
+            confirmBtnClass: 'btn-warning text-dark',
+            confirmUrl: url
+        });
+    }
+
+    function confirmCancelArchive(title, url) {
+        showConfirmModal({
+            title: 'Hủy lịch lưu trữ',
+            method: 'POST',
+            html: 'Bạn có chắc chắn muốn hủy lịch lưu trữ và tiếp tục giữ khóa học "<strong>' + (title || '') + '</strong>" công khai bình thường?',
+            type: 'primary',
+            icon: 'bi bi-calendar-x-fill',
+            confirmText: 'Hủy lịch lưu trữ',
+            confirmIcon: 'bi bi-calendar-x me-1',
+            confirmBtnClass: 'btn-primary',
+            confirmUrl: url
+        });
+    }
+
+
+
+    function confirmDeleteCourse(title, url) {
+        showConfirmModal({
+            title: 'Xác nhận xóa khóa học nháp',
+            method: 'POST',
+            html: 'Bạn có chắc chắn muốn xóa vĩnh viễn khóa học nháp "<strong>' + (title || '') + '</strong>"?<br><span class="text-danger small mt-2 d-inline-block"><i class="bi bi-exclamation-triangle me-1"></i>Toàn bộ nội dung bài học bên trong sẽ bị xóa vĩnh viễn và không thể hoàn tác.</span>',
+            type: 'danger',
+            icon: 'bi bi-trash3-fill',
+            confirmText: 'Xóa vĩnh viễn',
+            confirmIcon: 'bi bi-trash3 me-1',
+            confirmBtnClass: 'btn-danger',
+            confirmUrl: url
+        });
+    }
+
+
+function formatPriceInputRealtime(el) {
+    if (!el) return;
+    let raw = el.value.replace(/\D/g, '');
+    if (!raw) {
+        el.value = '';
+        return;
+    }
+    raw = raw.replace(/^0+(?=\d)/, '');
+    try {
+        let num = BigInt(raw);
+        el.value = num.toLocaleString('en-US');
+    } catch (e) {
+        el.value = raw;
+    }
+}
+
 </script>
-<script src="${pageContext.request.contextPath}/assets/js/expert-dashboard.js"></script>
 
 <jsp:include page="../common/footer.jsp" />
