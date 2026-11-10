@@ -81,7 +81,7 @@ body {
     border-color: #cbd5e1;
     background-color: #f8fafc;
 }
-.saas-radio-card:has(input[type="radio"]:checked) {
+.saas-radio-card.selected {
     border-color: var(--saas-accent);
     background-color: #eff6ff;
 }
@@ -249,7 +249,7 @@ body {
                     <label class="saas-form-label fw-bold mb-2">Trạng thái khởi tạo (Initial Account Status) <span class="text-danger">*</span></label>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="saas-radio-card w-100">
+                            <label class="saas-radio-card w-100 ${formUser == null || formUser.status == 'ACTIVE' || empty formUser.status ? 'selected' : ''}">
                                 <input type="radio" name="status" value="ACTIVE" class="form-check-input mt-0" 
                                        ${formUser == null || formUser.status == 'ACTIVE' || empty formUser.status ? 'checked' : ''}>
                                 <div class="radio-label-box">
@@ -259,7 +259,7 @@ body {
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <label class="saas-radio-card w-100">
+                            <label class="saas-radio-card w-100 ${formUser != null && formUser.status == 'INACTIVE' ? 'selected' : ''}">
                                 <input type="radio" name="status" value="INACTIVE" class="form-check-input mt-0"
                                        ${formUser != null && formUser.status == 'INACTIVE' ? 'checked' : ''}>
                                 <div class="radio-label-box">
@@ -269,7 +269,7 @@ body {
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <label class="saas-radio-card w-100">
+                            <label class="saas-radio-card w-100 ${formUser != null && formUser.status == 'BANNED' ? 'selected' : ''}">
                                 <input type="radio" name="status" value="BANNED" class="form-check-input mt-0"
                                        ${formUser != null && formUser.status == 'BANNED' ? 'checked' : ''}>
                                 <div class="radio-label-box">
@@ -307,6 +307,23 @@ function togglePasswordVisibility() {
         icon.className = 'bi bi-eye';
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    function updateRadioCards() {
+        document.querySelectorAll('.saas-radio-card').forEach(function(card) {
+            var radio = card.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+    }
+    updateRadioCards();
+    document.querySelectorAll('.saas-radio-card input[type="radio"]').forEach(function(radio) {
+        radio.addEventListener('change', updateRadioCards);
+    });
+});
 </script>
 
 <jsp:include page="../common/footer.jsp" />
