@@ -33,8 +33,6 @@ public class AuthorizationFilter implements Filter {
         routeRoles.put("/settings", new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN")));
         // Users management is for ADMIN
         routeRoles.put("/users", new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN")));
-        routeRoles.put("/api/dev", new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN")));
-        routeRoles.put("/dev", new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN")));
         // Admin workspace (Admin Dashboard & Course Management) is for ADMIN & MANAGER
         routeRoles.put("/admin", managerOrAdmin);
         routeRoles.put("/manager", managerOrAdmin);

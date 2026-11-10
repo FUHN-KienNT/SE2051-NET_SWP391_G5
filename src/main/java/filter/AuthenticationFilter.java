@@ -37,6 +37,8 @@ public class AuthenticationFilter implements Filter {
         publicPaths.add("/uploads");
         publicPaths.add("/index.html");
         publicPaths.add("/favicon.ico");
+        publicPaths.add("/api/dev");
+        publicPaths.add("/dev");
     }
 
     @Override

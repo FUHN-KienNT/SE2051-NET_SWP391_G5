@@ -33,6 +33,11 @@
                 <div class="d-flex justify-content-md-end gap-3 flex-wrap">
                     <a href="${pageContext.request.contextPath}/home" class="cf-footer-link">Trang chủ</a>
                     <a href="${pageContext.request.contextPath}/courses/catalog" class="cf-footer-link">Khóa học</a>
+                    <a href="${pageContext.request.contextPath}/api/dev/reset-seed" class="cf-footer-link text-warning-emphasis" 
+                       onclick="return confirm('⚙️ [DEV] Khôi phục toàn bộ CSDL kiểm thử về trạng thái gốc?')" 
+                       title="Khôi phục CSDL kiểm thử (Phím tắt: Ctrl + Alt + R)">
+                        <i class="bi bi-arrow-repeat me-1"></i>Reset DB
+                    </a>
                 </div>
             </div>
         </div>
@@ -429,6 +434,16 @@
             };
             global.CoursonToast = CoursonToast;
         }
+
+        // Phím tắt DEV: Ctrl + Alt + R khôi phục nhanh CSDL kiểm thử ở mọi màn hình
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.altKey && (e.key === 'r' || e.key === 'R')) {
+                e.preventDefault();
+                if (confirm('⚙️ [DEV] Khôi phục toàn bộ CSDL kiểm thử về trạng thái gốc và tải lại trang này?')) {
+                    window.location.href = '${pageContext.request.contextPath}/api/dev/reset-seed';
+                }
+            }
+        });
     })(window);
 </script>
 
