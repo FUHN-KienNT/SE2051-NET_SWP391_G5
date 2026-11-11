@@ -166,6 +166,197 @@
 
 }
 
+/* Searchable Custom Combobox (SaaS Dropdown) */
+.saas-combobox {
+    position: relative;
+    width: 100%;
+}
+.saas-combobox-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    font-size: 0.875rem;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+}
+.saas-combobox-trigger:hover {
+    border-color: #94a3b8;
+}
+.saas-combobox.open .saas-combobox-trigger {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.saas-combobox-label {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.saas-combobox-arrow {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+}
+.saas-combobox.open .saas-combobox-arrow {
+    transform: rotate(180deg);
+    color: #2563eb;
+}
+.saas-combobox-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 14px 34px -4px rgba(15, 23, 42, 0.16), 0 6px 12px -2px rgba(15, 23, 42, 0.08);
+    z-index: 1065;
+    display: none;
+    overflow: hidden;
+}
+.saas-combobox.open .saas-combobox-dropdown {
+    display: block;
+    animation: saasComboboxFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes saasComboboxFade {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.saas-combobox-search-wrap {
+    position: relative;
+    padding: 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+}
+.saas-combobox-search {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 7px 30px 7px 32px;
+    font-size: 0.8125rem;
+    background: #ffffff;
+    outline: none;
+    color: #0f172a;
+    transition: all 0.15s ease;
+}
+.saas-combobox-search:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+.saas-combobox-search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #94a3b8;
+    pointer-events: none;
+}
+.saas-combobox-search-clear {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+.saas-combobox-search-clear:hover {
+    color: #475569;
+}
+.saas-combobox-list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 6px;
+}
+.saas-combobox-list::-webkit-scrollbar {
+    width: 5px;
+}
+.saas-combobox-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.saas-combobox-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+    margin-bottom: 1px;
+}
+.saas-combobox-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.saas-combobox-item.selected {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+.saas-combobox-item .item-check {
+    color: #2563eb;
+    font-size: 1rem;
+    display: none;
+}
+.saas-combobox-item.selected .item-check {
+    display: inline-block;
+}
+.saas-combobox-empty {
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: #94a3b8;
+}
+.saas-combobox-footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 6px;
+    background: #fafbfc;
+}
+.saas-combobox-footer .add-new-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #2563eb;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    text-align: left;
+}
+.saas-combobox-footer .add-new-btn:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
 </style>
 
 
@@ -350,11 +541,7 @@
 
                         value="<c:out value="${course.title}" />" placeholder="Ví dụ: Khóa học Lập trình Web Fullstack 2026..." required>
 
-                    <c:if test="${not isEdit}">
 
-                        
-
-                    </c:if>
 
                 </div>
 
@@ -368,17 +555,62 @@
 
                         <label class="saas-form-label">Danh mục <span class="text-danger">*</span></label>
 
-                        <select name="categoryId" id="courseCategoryId" class="form-select saas-form-control" required>
+                        <div class="saas-combobox" id="courseCategoryCombobox">
+                            <input type="hidden" name="categoryId" id="courseCategoryId" value="${course.categoryId != null ? course.categoryId : ''}">
+                            <button type="button" class="saas-combobox-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="saas-combobox-label">
+                                    <i class="bi bi-tag text-muted me-2"></i>
+                                    <span class="selected-text">
+                                        <c:set var="matchedCatName" value="" />
+                                        <c:forEach var="cItem" items="${categories}">
+                                            <c:if test="${cItem.id == course.categoryId}"><c:set var="matchedCatName" value="${cItem.name}" /></c:if>
+                                        </c:forEach>
+                                        ${not empty matchedCatName ? matchedCatName : 'Chọn danh mục...'}
+                                    </span>
+                                </span>
+                                <i class="bi bi-chevron-down saas-combobox-arrow"></i>
+                            </button>
+                            <div class="saas-combobox-dropdown" role="listbox">
+                                <div class="saas-combobox-search-wrap">
+                                    <i class="bi bi-search saas-combobox-search-icon"></i>
+                                    <input type="text" class="saas-combobox-search" placeholder="Tìm kiếm danh mục..." autocomplete="off">
+                                    <button type="button" class="saas-combobox-search-clear d-none" aria-label="Xóa tìm kiếm">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </button>
+                                </div>
+                                <div class="saas-combobox-list">
+                                    <c:forEach var="cat" items="${categories}">
+                                        <div class="saas-combobox-item ${cat.id == course.categoryId ? 'selected' : ''}"
+                                             data-value="${cat.id}"
+                                             data-label="${fn:escapeXml(cat.name)}"
+                                             role="option">
+                                            <span class="item-text"><c:out value="${cat.name}"/></span>
+                                            <i class="bi bi-check2 item-check"></i>
+                                        </div>
+                                    </c:forEach>
+                                    <div class="saas-combobox-empty d-none">
+                                        <i class="bi bi-search text-muted mb-1 d-block fs-6"></i>
+                                        Không tìm thấy danh mục phù hợp
+                                    </div>
+                                </div>
+                                <div class="saas-combobox-footer">
+                                    <button type="button" class="add-new-btn">
+                                        <i class="bi bi-plus-circle text-primary me-2"></i> Nhập danh mục mới...
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                            <option value="">-- Chọn danh mục --</option>
-
-                            <c:forEach var="cat" items="${categories}">
-
-                                <option value="${cat.id}" ${cat.id == course.categoryId ? 'selected' : ''}>${cat.name}</option>
-
-                            </c:forEach>
-
-                        </select>
+                        <div id="courseCustomCatDiv" class="mt-2" style="display: none;">
+                            <div class="position-relative">
+                                <input type="text" name="customCategory" id="courseCustomCatInput" class="form-control form-control-sm saas-form-control border-primary pe-4"
+                                       placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                                <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
+                                        onclick="cancelCustomCategory('courseCategoryCombobox', 'courseCustomCatDiv')" title="Hủy nhập danh mục mới">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
 
                     </div>
 
@@ -689,13 +921,8 @@ function previewCourseBatchVideos(forceFill = false) {
 
 
                 // 1. Tự động chọn Danh mục do Gemini AI gợi ý
-
-                const catSelect = document.getElementById('courseCategoryId');
-
-                if (catSelect && data.suggestedCategoryId && (!catSelect.value || catSelect.value === '')) {
-
-                    catSelect.value = data.suggestedCategoryId;
-
+                if (data.suggestedCategoryId) {
+                    setComboboxValue('courseCategoryCombobox', data.suggestedCategoryId, data.suggestedCategoryName);
                 }
 
 
@@ -783,48 +1010,285 @@ function extractYoutubeId(url) {
     const match = url.match(regExp);
 
     return (match && match[2].length === 11) ? match[2] : null;
-
 }
 
-</script>
+function removeVietnameseDiacritics(str) {
+    if (!str) return '';
+    return str.normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/đ/g, "d").replace(/Đ/g, "D")
+            .toLowerCase()
+            .trim();
+}
 
+function initSearchableSelect(comboboxId, customDivId) {
+    const box = document.getElementById(comboboxId);
+    if (!box) return;
 
+    const trigger = box.querySelector('.saas-combobox-trigger');
+    const labelSpan = box.querySelector('.selected-text');
+    const hiddenInput = box.querySelector('input[type="hidden"]');
+    const searchInput = box.querySelector('.saas-combobox-search');
+    const searchClear = box.querySelector('.saas-combobox-search-clear');
+    const items = box.querySelectorAll('.saas-combobox-list .saas-combobox-item');
+    const emptyBox = box.querySelector('.saas-combobox-empty');
+    const addNewBtn = box.querySelector('.add-new-btn');
+    const customDiv = document.getElementById(customDivId);
+    const customInput = customDiv ? customDiv.querySelector('input') : null;
 
-<jsp:include page="../common/footer.jsp" />
+    function openDropdown() {
+        document.querySelectorAll('.saas-combobox.open').forEach(cb => {
+            if (cb !== box) cb.classList.remove('open');
+        });
+        box.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        if (searchInput) {
+            searchInput.value = '';
+            filterItems('');
+            setTimeout(() => searchInput.focus(), 50);
+        }
+    }
 
+    function closeDropdown() {
+        box.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
 
+    trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (box.classList.contains('open')) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
 
-<script>
+    document.addEventListener('click', function (e) {
+        if (!box.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && box.classList.contains('open')) {
+            closeDropdown();
+            trigger.focus();
+        }
+    });
+
+    function filterItems(query) {
+        const cleanQuery = removeVietnameseDiacritics(query);
+        let matchCount = 0;
+
+        if (searchClear) {
+            if (query.trim()) {
+                searchClear.classList.remove('d-none');
+            } else {
+                searchClear.classList.add('d-none');
+            }
+        }
+
+        items.forEach(it => {
+            const label = it.getAttribute('data-label') || it.textContent;
+            const cleanLabel = removeVietnameseDiacritics(label);
+            if (!cleanQuery || cleanLabel.includes(cleanQuery)) {
+                it.classList.remove('d-none');
+                matchCount++;
+            } else {
+                it.classList.add('d-none');
+            }
+        });
+
+        if (emptyBox) {
+            if (matchCount === 0) {
+                emptyBox.classList.remove('d-none');
+            } else {
+                emptyBox.classList.add('d-none');
+            }
+        }
+
+        if (addNewBtn) {
+            if (query.trim()) {
+                addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i> Thêm danh mục "' + escapeHtml(query.trim()) + '"...';
+                addNewBtn.dataset.customText = query.trim();
+            } else {
+                addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Nhập danh mục mới...';
+                delete addNewBtn.dataset.customText;
+            }
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            filterItems(this.value);
+        });
+        searchInput.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    }
+
+    if (searchClear) {
+        searchClear.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            searchInput.value = '';
+            filterItems('');
+            searchInput.focus();
+        });
+    }
+
+    items.forEach(it => {
+        it.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const val = this.getAttribute('data-value');
+            const label = this.getAttribute('data-label') || this.querySelector('.item-text').textContent;
+
+            items.forEach(i => i.classList.remove('selected'));
+            this.classList.add('selected');
+
+            hiddenInput.value = val;
+            labelSpan.textContent = label;
+
+            if (customDiv) {
+                customDiv.style.display = 'none';
+                if (customInput) {
+                    customInput.required = false;
+                    customInput.value = '';
+                }
+            }
+
+            closeDropdown();
+            trigger.focus();
+        });
+    });
+
+    if (addNewBtn) {
+        addNewBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            hiddenInput.value = '__NEW__';
+            const customVal = addNewBtn.dataset.customText || '';
+            labelSpan.textContent = customVal ? ('Mới: ' + customVal) : '+ Danh mục mới';
+
+            items.forEach(i => i.classList.remove('selected'));
+
+            if (customDiv) {
+                customDiv.style.display = 'block';
+                if (customInput) {
+                    customInput.required = true;
+                    if (customVal) customInput.value = customVal;
+                    setTimeout(() => customInput.focus(), 50);
+                }
+            }
+
+            closeDropdown();
+        });
+    }
+
+    if (customInput) {
+        customInput.addEventListener('input', function () {
+            if (this.value.trim()) {
+                labelSpan.textContent = 'Mới: ' + this.value.trim();
+            } else {
+                labelSpan.textContent = '+ Danh mục mới';
+            }
+        });
+    }
+}
+
+function setComboboxValue(comboboxId, value, fallbackName) {
+    const box = document.getElementById(comboboxId);
+    if (!box) return;
+
+    const hiddenInput = box.querySelector('input[type="hidden"]');
+    const labelSpan = box.querySelector('.selected-text');
+    const items = box.querySelectorAll('.saas-combobox-list .saas-combobox-item');
+
+    let matched = false;
+    items.forEach(it => {
+        if (it.getAttribute('data-value') == value) {
+            it.classList.add('selected');
+            labelSpan.textContent = it.getAttribute('data-label') || it.textContent.trim();
+            hiddenInput.value = value;
+            matched = true;
+        } else {
+            it.classList.remove('selected');
+        }
+    });
+
+    if (!matched && fallbackName) {
+        hiddenInput.value = value || '__NEW__';
+        labelSpan.textContent = fallbackName;
+    }
+}
+
+function cancelCustomCategory(comboboxId, customDivId) {
+    const box = document.getElementById(comboboxId);
+    const customDiv = document.getElementById(customDivId);
+    if (customDiv) {
+        customDiv.style.display = 'none';
+        const inp = customDiv.querySelector('input');
+        if (inp) {
+            inp.required = false;
+            inp.value = '';
+        }
+    }
+    if (box) {
+        const hiddenInput = box.querySelector('input[type="hidden"]');
+        const labelSpan = box.querySelector('.selected-text');
+        const firstItem = box.querySelector('.saas-combobox-list .saas-combobox-item');
+        if (firstItem) {
+            const val = firstItem.getAttribute('data-value');
+            const label = firstItem.getAttribute('data-label') || firstItem.textContent.trim();
+            setComboboxValue(comboboxId, val, label);
+        } else {
+            if (hiddenInput) hiddenInput.value = '';
+            if (labelSpan) labelSpan.textContent = 'Chọn danh mục...';
+        }
+    }
+}
 
 function formatPriceInputRealtime(el) {
-
     if (!el) return;
-
     let raw = el.value.replace(/\D/g, '');
-
     if (!raw) {
-
         el.value = '';
-
         return;
-
     }
-
     raw = raw.replace(/^0+(?=\d)/, '');
-
     try {
-
         let num = BigInt(raw);
-
         el.value = num.toLocaleString('en-US');
-
     } catch (e) {
-
         el.value = raw;
-
     }
-
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    initSearchableSelect('courseCategoryCombobox', 'courseCustomCatDiv');
+
+    const form = document.getElementById('courseDetailForm');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            const catId = document.getElementById('courseCategoryId') ? document.getElementById('courseCategoryId').value : '';
+            const customInput = document.getElementById('courseCustomCatInput');
+            if (!catId || catId.trim() === '') {
+                e.preventDefault();
+                alert('Vui lòng chọn hoặc thêm Danh mục đào tạo cho khóa học!');
+                const trigger = document.querySelector('#courseCategoryCombobox .saas-combobox-trigger');
+                if (trigger) trigger.focus();
+                return;
+            }
+            if (catId === '__NEW__' && (!customInput || !customInput.value.trim())) {
+                e.preventDefault();
+                alert('Vui lòng nhập tên danh mục đào tạo mới!');
+                if (customInput) customInput.focus();
+                return;
+            }
+        });
+    }
+});
 </script>
+
+<jsp:include page="../common/footer.jsp" />
 

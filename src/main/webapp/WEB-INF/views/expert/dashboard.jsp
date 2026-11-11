@@ -419,6 +419,26 @@
         border-color: #1e293b;
     }
 
+    .btn-saas-outline {
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid var(--saas-border);
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 14px;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .btn-saas-outline:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+
     .btn-saas-outline-emerald {
         background: #ffffff;
         color: #059669;
@@ -457,6 +477,12 @@
         background: #fffbeb;
         color: #b45309;
         border-color: #fcd34d;
+    }
+
+    .btn-saas-action-main {
+        width: 104px;
+        min-height: 36px;
+        justify-content: center;
     }
 
     .btn-icon-action {
@@ -901,13 +927,13 @@
             <div class="table-responsive">
                 <table class="saas-table align-middle" id="coursesTable">
                     <thead>
-                        <tr>
+                        <tr class="text-center">
                             <th style="width: 50px;" class="text-center">STT</th>
-                            <th style="width: 36%;">Khóa học</th>
-                            <th style="width: 17%;">Danh mục &amp; Học phí</th>
-                            <th style="width: 16%;">Nội dung</th>
-                            <th style="width: 14%;">Trạng thái</th>
-                            <th style="width: 15%; text-align: right;">Thao tác</th>
+                            <th style="width: 36%;" class="text-center">Khóa học</th>
+                            <th style="width: 17%;" class="text-center">Danh mục &amp; Học phí</th>
+                            <th style="width: 16%;" class="text-center">Nội dung</th>
+                            <th style="width: 14%;" class="text-center">Trạng thái</th>
+                            <th style="width: 15%;" class="text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -974,7 +1000,7 @@
                                                 ${c.modules.size()} chương &bull; ${c.totalQuizzes} quiz
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <c:choose>
                                                 <c:when test="${c.status == 'PUBLISHED'}">
                                                     <span class="saas-badge saas-badge-published">
@@ -998,19 +1024,19 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td class="text-end text-nowrap">
-                                            <div class="d-inline-flex align-items-center justify-content-end gap-2">
+                                        <td class="text-center text-nowrap">
+                                            <div class="d-inline-flex align-items-center justify-content-center gap-2">
                                                 <c:choose>
                                                     <c:when test="${c.status == 'PENDING_REVIEW'}">
                                                         <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
-                                                           class="btn btn-saas-outline-amber btn-sm text-nowrap"
+                                                           class="btn btn-saas-outline-amber btn-sm text-nowrap btn-saas-action-main"
                                                            title="Khóa học đang chờ duyệt (nhấp để xem nội dung)">
-                                                            <i class="bi bi-clock-history me-1"></i>Xem (Chờ duyệt)
+                                                            <i class="bi bi-eye me-1"></i>Xem
                                                         </a>
                                                     </c:when>
                                                     <c:otherwise>
                                                         <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
-                                                           class="btn btn-saas-primary btn-sm text-nowrap"
+                                                           class="btn btn-saas-primary btn-sm text-nowrap btn-saas-action-main"
                                                            title="Quản lý chương và bài học">
                                                             <i class="bi bi-pencil-square me-1"></i>Soạn bài
                                                         </a>
@@ -1127,117 +1153,8 @@
 
 
 
-<!-- Single Reusable Edit Course Modal (Redesigned) -->
-<div class="modal fade" id="editCourseModal" tabindex="-1" aria-labelledby="editCourseModalTitle" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content saas-modal">
-            <form action="${pageContext.request.contextPath}/expert/save-course" method="POST">
-                <input type="hidden" name="id" id="editCourseId">
-                <div class="modal-header saas-modal-header">
-                    <div>
-                        <h5 class="modal-title fw-bold text-dark mb-1" id="editCourseModalTitle">
-                            <i class="bi bi-gear-fill text-primary me-2"></i>Chỉnh sửa Khóa học
-                        </h5>
-                        
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <!-- Loading state -->
-                    <div id="editCourseLoading" class="text-center py-4">
-                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                        <span class="small text-muted">Đang tải thông tin khóa học...</span>
-                    </div>
 
-                    <!-- Course Form Fields -->
-                    <div id="editCourseFormFields" style="display: none;">
-                        <div class="mb-3">
-                            <label class="saas-form-label">Tên khóa học <span class="text-danger">*</span></label>
-                            <input type="text" name="title" id="editCourseTitle" class="form-control saas-form-control" required>
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-7">
-                                <label class="saas-form-label">Danh mục</label>
-                                <div class="saas-combobox" id="editCourseCategoryCombobox">
-                                    <input type="hidden" name="categoryId" id="editCourseCategory" value="">
-                                    <button type="button" class="saas-combobox-trigger" aria-haspopup="listbox" aria-expanded="false">
-                                        <span class="saas-combobox-label">
-                                            <i class="bi bi-tag text-muted me-2"></i>
-                                            <span class="selected-text">Chọn danh mục...</span>
-                                        </span>
-                                        <i class="bi bi-chevron-down saas-combobox-arrow"></i>
-                                    </button>
-                                    <div class="saas-combobox-dropdown" role="listbox">
-                                        <div class="saas-combobox-search-wrap">
-                                            <i class="bi bi-search saas-combobox-search-icon"></i>
-                                            <input type="text" class="saas-combobox-search" placeholder="Tìm kiếm danh mục..." autocomplete="off">
-                                            <button type="button" class="saas-combobox-search-clear d-none" aria-label="Xóa tìm kiếm">
-                                                <i class="bi bi-x-circle-fill"></i>
-                                            </button>
-                                        </div>
-                                        <div class="saas-combobox-list">
-                                            <c:forEach var="cat" items="${categories}">
-                                                <div class="saas-combobox-item"
-                                                     data-value="${cat.id}"
-                                                     data-label="${fn:escapeXml(cat.name)}"
-                                                     role="option">
-                                                    <span class="item-text"><c:out value="${cat.name}"/></span>
-                                                    <i class="bi bi-check2 item-check"></i>
-                                                </div>
-                                            </c:forEach>
-                                            <div class="saas-combobox-empty d-none">
-                                                <i class="bi bi-search text-muted mb-1 d-block fs-6"></i>
-                                                Không tìm thấy danh mục phù hợp
-                                            </div>
-                                        </div>
-                                        <div class="saas-combobox-footer">
-                                            <button type="button" class="add-new-btn">
-                                                <i class="bi bi-plus-circle text-primary me-2"></i>+ Nhập danh mục mới...
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="editCourseCustomCatDiv" class="mt-2" style="display: none;">
-                                    <div class="position-relative">
-                                        <input type="text" name="customCategory" class="form-control form-control-sm saas-form-control border-primary pe-4"
-                                               placeholder="✨ Nhập tên danh mục đào tạo mới...">
-                                        <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
-                                                onclick="cancelCustomCategory('editCourseCategoryCombobox', 'editCourseCustomCatDiv')" title="Hủy nhập danh mục mới">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="saas-form-label">Học phí (VNĐ)</label>
-                                <div class="input-group">
-                                    <input type="text" name="price" id="editCoursePrice" class="form-control saas-form-control font-monospace" placeholder="0" autocomplete="off" oninput="formatPriceInputRealtime(this)">
-                                    <span class="input-group-text bg-light text-muted fw-semibold" style="border-color: #cbd5e1;">VNĐ</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="saas-form-label">Mô tả tóm tắt</label>
-                            <textarea name="description" id="editCourseDescription" rows="4" class="form-control saas-form-control"
-                                      style="min-height: 105px; resize: vertical; line-height: 1.6;" oninput="autoResizeTextarea(this);"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer saas-modal-footer d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="editCourseDeleteBtn" onclick="deleteEditingCourse()">
-                        <i class="bi bi-trash3 me-1"></i>Xóa khóa học này
-                    </button>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-saas-primary" id="editCourseSubmitBtn" disabled>
-                            <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 
 <!-- Bootstrap Modal: Lý do từ chối kiểm duyệt -->
@@ -1358,76 +1275,7 @@ function showModerationNoteModal(courseTitle, note) {
         filterCourses('all', allTab);
     }
 
-    // =========================================================================
-    // EDIT COURSE MODAL LOGIC (Preserved O(1) Fetch)
-    // =========================================================================
-    function openEditCourseModal(courseId) {
-        const modalEl = document.getElementById('editCourseModal');
-        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-        document.getElementById('editCourseModalTitle').innerHTML = '<i class="bi bi-gear-fill text-primary me-2"></i>Chỉnh sửa Khóa học #' + courseId;
-        document.getElementById('editCourseId').value = courseId;
-        document.getElementById('editCourseLoading').style.display = 'block';
-        document.getElementById('editCourseFormFields').style.display = 'none';
-        document.getElementById('editCourseSubmitBtn').disabled = true;
-
-        const customDiv = document.getElementById('editCourseCustomCatDiv');
-        if (customDiv)
-            customDiv.style.display = 'none';
-
-        modal.show();
-
-        fetch((window.CONTEXT_PATH||'')+'/expert/get-course?id=' + encodeURIComponent(courseId))
-                .then(res => {
-                    if (!res.ok)
-                        throw new Error('Không thể tải khóa học #' + courseId);
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                        modal.hide();
-                        return;
-                    }
-                    document.getElementById('editCourseId').value = data.id;
-                    document.getElementById('editCourseTitle').value = data.title || '';
-                    if (data.categoryId) {
-                        setComboboxValue('editCourseCategoryCombobox', data.categoryId, data.categoryName);
-                    } else if (data.categoryName) {
-                        setComboboxValue('editCourseCategoryCombobox', '__NEW__', data.categoryName);
-                        const customDiv = document.getElementById('editCourseCustomCatDiv');
-                        if (customDiv) {
-                            customDiv.style.display = 'block';
-                            const inp = customDiv.querySelector('input');
-                            if (inp)
-                                inp.value = data.categoryName;
-                        }
-                    }
-                    let pVal = data.price != null ? parseInt(data.price, 10) : 0;
-                    document.getElementById('editCoursePrice').value = pVal > 0 ? pVal.toLocaleString('en-US') : '0';
-                    const editDescEl = document.getElementById('editCourseDescription');
-                    editDescEl.value = data.description || '';
-                    autoResizeTextarea(editDescEl);
-
-                    document.getElementById('editCourseLoading').style.display = 'none';
-                    document.getElementById('editCourseFormFields').style.display = 'block';
-                    document.getElementById('editCourseSubmitBtn').disabled = false;
-
-                    // Quy tắc: Chỉ khóa học ở trạng thái DRAFT mới cho phép Expert xóa
-                    const delBtn = document.getElementById('editCourseDeleteBtn');
-                    if (delBtn) {
-                        if (data.status === 'DRAFT') {
-                            delBtn.style.display = 'inline-block';
-                        } else {
-                            delBtn.style.display = 'none';
-                        }
-                    }
-                })
-                .catch(err => {
-                    alert('Lỗi khi truy vấn khóa học từ CSDL: ' + err.message);
-                    modal.hide();
-                });
-    }
 
     // =========================================================================
     // ARCHIVE & UNARCHIVE (INSTANT CONFIRMATION)
@@ -1703,9 +1551,7 @@ function showModerationNoteModal(courseTitle, note) {
                 .replace(/'/g, "&#039;");
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        initSearchableSelect('editCourseCategoryCombobox', 'editCourseCustomCatDiv');
-    });
+
 
     // =========================================================================
     // YOUTUBE PLAYLIST BATCH AUTO-DETECT & PREVIEW
@@ -1877,15 +1723,7 @@ function showModerationNoteModal(courseTitle, note) {
                 });
     }
 
-    function deleteEditingCourse() {
-        const id = document.getElementById('editCourseId').value;
-        const title = document.getElementById('editCourseTitle').value;
-        const modalEl = document.getElementById('editCourseModal');
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance)
-            modalInstance.hide();
-        startDeleteCourseCountdown(id, title);
-    }
+
 
     function confirmPublishCourse(title, url) {
         showConfirmModal({

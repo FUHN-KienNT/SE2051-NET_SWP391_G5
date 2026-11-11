@@ -86,6 +86,118 @@ import util.ValidationUtil;
 
 
 
+/**
+ * ====================================================================================================
+ *                                  MỤC LỤC CÁC HÀM (TABLE OF CONTENTS)
+ *                                         CLASS: CourseService
+ * ====================================================================================================
+ * Tip tìm kiếm nhanh:
+ *   - Nhấn Ctrl + F và nhập mã thẻ [ #SEC_... ] hoặc tên hàm để nhảy trực tiếp đến khối mã nguồn.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [1] KHÁM PHÁ & TÌM KIẾM DÀNH CHO HỌC VIÊN (PUBLIC / LEARNER)                 [Tag: #SEC_PUBLIC_SEARCH]
+ * ----------------------------------------------------------------------------------------------------
+ *   - searchPublished(keyword, categoryId)                 : Tìm danh sách tóm tắt khóa học công khai.
+ *   - countPublishedCourses(keyword, categoryId)           : Đếm tổng số khóa học công khai thỏa mãn bộ lọc.
+ *   - searchPublishedPaginated(keyword, catId, page, size) : Phân trang danh sách khóa học công khai.
+ *   - getFeaturedCourses(limit)                            : Lấy danh sách khóa học nổi bật hiển thị trang chủ.
+ *   - getActiveCategories()                                : Lấy danh sách danh mục đang hoạt động (instance).
+ *   - fetchActiveCategories()                              : Lấy danh sách danh mục đang hoạt động (static).
+ *   - getPublicCourseDetail(courseId)                      : Lấy chi tiết cây khóa học chỉ gồm nội dung công khai.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [2] QUẢN TRỊ & QUẢN LÝ KHÓA HỌC (ADMIN / EXPERT MANAGEMENT)             [Tag: #SEC_COURSE_MANAGEMENT]
+ * ----------------------------------------------------------------------------------------------------
+ *   - searchAdminCourses(keyword, catId, mgrId, status)    : Quản trị viên lọc và tìm kiếm toàn bộ khóa học.
+ *   - getCourseDetail(courseId)                            : Lấy chi tiết toàn bộ khóa học (gồm cả bài ẩn).
+ *   - getCourseById(courseId)                              : Tìm entity khóa học theo ID cơ bản.
+ *   - getLessonById(lessonId)                              : Lấy chi tiết bài học theo ID.
+ *   - getCourseSummaryWithModules(courseId)                : Lấy thông tin tóm tắt kèm cây chương/bài học.
+ *   - getManagedCoursesSummary(userId)                     : Thống kê tóm tắt các khóa học do chuyên gia phụ trách.
+ *   - getManagedCourses(userId)                            : Danh sách đầy đủ khóa học do chuyên gia phụ trách.
+ *   - getAllCourses()                                      : Lấy danh sách toàn bộ khóa học trong hệ thống.
+ *   - getExperts()                                         : Lấy danh sách tài khoản chuyên gia (EXPERT/ADMIN).
+ *   - getDefaultManagerId()                                : Lấy ID người quản lý mặc định khi gán tự động.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [3] KIỂM TRA PHÂN QUYỀN & HỢP LỆ (SECURITY & PERMISSIONS / IDOR)        [Tag: #SEC_PERMISSION_CHECK]
+ * ----------------------------------------------------------------------------------------------------
+ *   - isPrivilegedCourseViewer(user, course)               : Kiểm tra user có quyền xem chi tiết nội bộ khóa học.
+ *   - canManageCourse(courseId, user)                      : Kiểm tra user có quyền quản lý/chỉnh sửa khóa học.
+ *   - checkCourseOwnership(courseId, user)                 : Chặn IDOR: Ném Exception nếu không sở hữu khóa học.
+ *   - checkModuleOwnership(moduleId, user)                 : Chặn IDOR: Ném Exception nếu không sở hữu chương học.
+ *   - checkLessonOwnership(lessonId, user)                 : Chặn IDOR: Ném Exception nếu không sở hữu bài học.
+ *   - checkCourseEditable(courseId)                        : Kiểm tra khóa học có đang ở trạng thái cho phép sửa.
+ *   - checkModuleEditable(moduleId)                        : Kiểm tra chương học có thuộc khóa học cho phép sửa.
+ *   - checkLessonEditable(lessonId)                        : Kiểm tra bài học có thuộc khóa học cho phép sửa.
+ *   - isValidTransition(currentStatus, targetStatus)       : Kiểm tra tính hợp lệ của máy trạng thái (State Machine).
+ *   - validateCourse(dto)                                  : [Private] Kiểm tra tính hợp lệ dữ liệu cơ bản.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [4] VÒNG ĐỜI & TRẠNG THÁI KHÓA HỌC (LIFECYCLE & ARCHIVE)                   [Tag: #SEC_COURSE_LIFECYCLE]
+ * ----------------------------------------------------------------------------------------------------
+ *   - saveCourse(dto)                                      : Thêm mới hoặc cập nhật thông tin khóa học.
+ *   - getOrCreateCategory(name)                            : Tìm danh mục theo tên hoặc tạo mới tự động.
+ *   - updateCourseStatus(courseId, targetStatus)           : Cập nhật trạng thái khóa học đơn giản.
+ *   - updateCourseStatus(courseId, targetStatus, reason...) : Cập nhật trạng thái kèm lý do và ghi nhận người sửa.
+ *   - scheduleArchiveCourse(courseId, date, reason...)     : Lên lịch lưu trữ khóa học vào ngày ấn định.
+ *   - scheduleArchiveCourse(courseId, noticeDays, reason..): Lên lịch lưu trữ sau số ngày thông báo trước.
+ *   - unarchiveCourse(courseId, currentUser)               : Khôi phục khóa học đã lưu trữ về trạng thái Nháp.
+ *   - cancelArchiveSchedule(courseId, currentUser)         : Hủy lịch lưu trữ khóa học đang chờ kích hoạt.
+ *   - processScheduledArchives()                           : Quét và kích hoạt tự động các khóa học đến hạn lưu trữ.
+ *   - deleteCourse(courseId)                               : Xóa khóa học (chỉ cho phép ở trạng thái Nháp).
+ *   - deleteCourse(courseId, currentUser)                  : Xóa khóa học có kiểm tra quyền người dùng.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [5] QUẢN LÝ CHƯƠNG & BÀI HỌC (MODULE & LESSON CRUD)                      [Tag: #SEC_MODULE_LESSON_CRUD]
+ * ----------------------------------------------------------------------------------------------------
+ *   - saveModule(dto)                                      : Thêm mới hoặc cập nhật tên chương học.
+ *   - deleteModule(moduleId)                               : Xóa chương học (xóa luôn các bài học bên trong).
+ *   - getOrCreateDefaultModuleId(courseId)                 : Lấy ID chương mặc định hoặc tạo mới nếu chưa có.
+ *   - suggestModuleTitle(courseTitle, lessonTitle)         : Gợi ý tên chương tự động dựa vào tiêu đề khóa & bài.
+ *   - createModuleForCourse(courseId, title)               : Tạo một chương học mới cho khóa học.
+ *   - saveLesson(dto)                                      : Thêm mới hoặc cập nhật bài học chi tiết.
+ *   - reorderLessons(targetModuleId, orderedLessonIds)     : Cập nhật lại thứ tự hiển thị các bài học.
+ *   - hideLesson(lessonId)                                 : Ẩn bài học (chuyển isActive = false).
+ *   - deleteLesson(lessonId)                               : Xóa bài học khỏi hệ thống.
+ *   - toggleLessonActive(lessonId, isActive)               : Bật/tắt trạng thái hiển thị của bài học.
+ *   - saveBatchLessons(courseId, moduleId, lessons)        : Lưu hàng loạt bài học vào chương chỉ định.
+ *   - saveBatchLessons(courseId, modId, newTitle, lessons) : Lưu hàng loạt bài học kèm tạo mới chương học nếu cần.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [6] CÀO YOUTUBE & XỬ LÝ DỮ LIỆU TỰ ĐỘNG (YOUTUBE CRAWLER & AI)             [Tag: #SEC_YOUTUBE_AI_IMPORT]
+ * ----------------------------------------------------------------------------------------------------
+ *   - generateCourseDescription(title, categoryName)       : Sinh mô tả khóa học tự động qua Gemini AI.
+ *   - parseBatchVideoResult(text)                          : [Static] Phân tích văn bản chứa link YouTube/Playlist.
+ *   - parseBatchVideoText(text)                            : [Static] Bóc tách danh sách DTO bài học từ văn bản thô.
+ *   - autoDetectCategory(result)                           : Tự động phân loại danh mục dựa trên từ khóa bài giảng.
+ *   - autoDetectCategory(result, rawInputText)             : Tự động phân loại danh mục kèm dữ liệu ngữ cảnh thô.
+ *   - fetchYoutubePlaylistData(playlistId)                 : [Static] Cào toàn bộ video và tên Playlist từ YouTube.
+ *   - extractVideoIdFromUrl(url)                           : [Static] Trích xuất Video ID 11 ký tự từ link YouTube.
+ *   - fetchYoutubeVideoTitle(videoUrlOrId)                 : [Static] Cào tiêu đề của một video YouTube đơn lẻ.
+ *   - unescapeHtml(text)                                   : [Private Static] Giải mã ký tự HTML entities.
+ *   - unescapeUnicode(input)                               : [Private Static] Giải mã chuỗi mã hóa Unicode (u+xxxx).
+ *   - removeDiacritics(str)                                : [Private Static] Loại bỏ dấu tiếng Việt để so khớp.
+ *   - BatchParseResult                                     : [Inner Class] DTO chứa kết quả phân tích nhập hàng loạt.
+ *   - YoutubePlaylistData                                  : [Inner Class] DTO chứa tiêu đề và danh sách bài Playlist.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [7] NỘI DUNG HỌC TẬP & TIẾN ĐỘ (LEARNING CONTENT & PROGRESS)              [Tag: #SEC_LEARNING_PROGRESS]
+ * ----------------------------------------------------------------------------------------------------
+ *   - getLearningContent(registrationId, userId)           : Lấy toàn bộ cây nội dung học tập theo đăng ký.
+ *   - touchLessonProgress(regId, userId, lessonId)         : Khởi tạo/cập nhật thời điểm học bài mới nhất.
+ *   - saveLessonNote(regId, userId, lessonId, note)        : Lưu lại ghi chú cá nhân của học viên tại bài học.
+ *   - updateLessonProgress(regId, userId, lessonId, ...)   : Cập nhật thời lượng xem và trạng thái hoàn thành.
+ *
+ * ----------------------------------------------------------------------------------------------------
+ * [8] CÁC HÀM NỘI BỘ TIỆN ÍCH (PRIVATE HELPERS & TREE BUILDER)              [Tag: #SEC_PRIVATE_HELPERS]
+ * ----------------------------------------------------------------------------------------------------
+ *   - validateCourse(dto)                                  : [Private] Xác thực dữ liệu đầu vào khóa học.
+ *   - buildCourseTree(course)                              : [Private] Dựng cây dữ liệu DTO từ Course entity.
+ *   - buildCourseTree(con, course)                         : [Private] Dựng cây dữ liệu DTO qua kết nối JDBC có sẵn.
+ *   - refreshRegistrationProgress(registrationId)          : [Private] Tính toán lại tỷ lệ % hoàn thành khóa học.
+ * ====================================================================================================
+ */
 public class CourseService {
 
     private final CourseDao courseDao;
@@ -123,6 +235,11 @@ public class CourseService {
     }
 
 
+
+    // =========================================================================
+    // [SECTION 1]: KHÁM PHÁ & TÌM KIẾM DÀNH CHO HỌC VIÊN (PUBLIC / LEARNER)
+    // Tag tìm kiếm: #SEC_PUBLIC_SEARCH
+    // =========================================================================
 
     public List<CourseDto> searchPublished(String keyword, Long categoryId) {
 
@@ -194,44 +311,6 @@ public class CourseService {
 
 
 
-    public boolean toggleFeatured(long courseId) {
-
-        try (Connection con = DbConnection.getConnection()) {
-
-            Course course = courseDao.findById(con, courseId)
-
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId));
-
-            boolean newFeatured = !course.isFeatured();
-
-            return courseDao.updateFeatured(con, courseId, newFeatured);
-
-        } catch (SQLException e) {
-
-            throw new RuntimeException("Lỗi cập nhật cờ nổi bật khóa học: " + e.getMessage(), e);
-
-        }
-
-    }
-
-
-
-    public boolean setFeatured(long courseId, boolean isFeatured) {
-
-        try (Connection con = DbConnection.getConnection()) {
-
-            return courseDao.updateFeatured(con, courseId, isFeatured);
-
-        } catch (SQLException e) {
-
-            throw new RuntimeException("Lỗi cập nhật cờ nổi bật khóa học: " + e.getMessage(), e);
-
-        }
-
-    }
-
-
-
     /**
 
      * Lấy danh sách các danh mục khóa học đang ACTIVE từ bảng settings trong CSDL.
@@ -293,6 +372,11 @@ public class CourseService {
     }
 
 
+
+    // =========================================================================
+    // [SECTION 2]: QUẢN TRỊ & QUẢN LÝ KHÓA HỌC (ADMIN / EXPERT MANAGEMENT)
+    // Tag tìm kiếm: #SEC_COURSE_MANAGEMENT
+    // =========================================================================
 
     /**
 
@@ -619,9 +703,8 @@ public class CourseService {
 
 
     // =========================================================================
-
-    // KIỂM TRA PHÂN QUYỀN CẤP DỮ LIỆU (IDOR DEFENSE)
-
+    // [SECTION 3]: KIỂM TRA PHÂN QUYỀN & HỢP LỆ (SECURITY & PERMISSIONS / IDOR)
+    // Tag tìm kiếm: #SEC_PERMISSION_CHECK
     // =========================================================================
 
 
@@ -997,6 +1080,11 @@ public class CourseService {
     }
 
 
+
+    // =========================================================================
+    // [SECTION 4]: VÒNG ĐỜI & TRẠNG THÁI KHÓA HỌC (LIFECYCLE & ARCHIVE)
+    // Tag tìm kiếm: #SEC_COURSE_LIFECYCLE
+    // =========================================================================
 
     /**
 
@@ -1821,6 +1909,11 @@ public void deleteCourse(long courseId, UserDto currentUser) {
     }
 
 
+
+    // =========================================================================
+    // [SECTION 5]: QUẢN LÝ CHƯƠNG & BÀI HỌC (MODULE & LESSON CRUD)
+    // Tag tìm kiếm: #SEC_MODULE_LESSON_CRUD
+    // =========================================================================
 
     public long saveModule(ModuleDto dto) {
 
@@ -2819,11 +2912,8 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
 
 
     // =========================================================================
-
-    // [TÍNH NĂNG]: CÀO YOUTUBE PLAYLIST & NHẬP BÀI HỌC HÀNG LOẠT (BATCH IMPORT)
-
-    // Tag tìm kiếm: #YOUTUBE_PLAYLIST_IMPORT #BATCH_LESSON_PARSER
-
+    // [SECTION 6]: CÀO YOUTUBE & XỬ LÝ DỮ LIỆU TỰ ĐỘNG (YOUTUBE CRAWLER & AI)
+    // Tag tìm kiếm: #SEC_YOUTUBE_AI_IMPORT #YOUTUBE_PLAYLIST_IMPORT #BATCH_LESSON_PARSER
     // =========================================================================
 
 
@@ -3536,14 +3626,6 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
 
 
 
-    public static List<LessonDto> fetchYoutubePlaylistVideos(String playlistId) {
-
-        return fetchYoutubePlaylistData(playlistId).getLessons();
-
-    }
-
-
-
     public static String extractVideoIdFromUrl(String url) {
 
         if (url == null) return null;
@@ -3717,6 +3799,11 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
     }
 
 
+
+    // =========================================================================
+    // [SECTION 7]: NỘI DUNG HỌC TẬP & TIẾN ĐỘ (LEARNING CONTENT & PROGRESS)
+    // Tag tìm kiếm: #SEC_LEARNING_PROGRESS
+    // =========================================================================
 
     public CourseDto getLearningContent(long registrationId, long userId) {
 
@@ -3985,6 +4072,11 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
     }
 
 
+
+    // =========================================================================
+    // [SECTION 8]: CÁC HÀM NỘI BỘ TIỆN ÍCH (PRIVATE HELPERS & TREE BUILDER)
+    // Tag tìm kiếm: #SEC_PRIVATE_HELPERS
+    // =========================================================================
 
     private void validateCourse(CourseDto dto) {
 

@@ -217,6 +217,9 @@ case "request-publish":
             case "get-video-title":
                 getVideoTitle(req, resp);
                 break;
+            case "add-category":
+                addCategory(req, resp);
+                break;
             default:
                 showExpertDashboard(req, resp);
                 break;
@@ -684,6 +687,9 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
                 if ("detail".equalsIgnoreCase(redirectTarget)) {
                     SessionUtil.setFlashSuccess(req, "Lưu thông tin khóa học thành công!");
                     resp.sendRedirect(req.getContextPath() + "/expert/course-detail?id=" + savedId);
+                } else if ("dashboard".equalsIgnoreCase(redirectTarget)) {
+                    SessionUtil.setFlashSuccess(req, "Cập nhật thông tin khóa học thành công!");
+                    resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
                 } else if ("public".equalsIgnoreCase(redirectTarget)) {
                     SessionUtil.setFlashSuccess(req, "Lưu thông tin khóa học thành công!");
                     resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + savedId);
@@ -696,6 +702,27 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
             SessionUtil.setFlashError(req, e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
         }
+    }
+
+    /**
+     * Thêm Danh mục Đào tạo mới cho Expert:
+     * - Tạo mới Setting loại COURSE_CATEGORY nếu chưa tồn tại
+     * - Cập nhật thông báo thành công và chuyển hướng về Dashboard
+     */
+    private void addCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String catName = req.getParameter("categoryName");
+        if (catName != null && !catName.trim().isEmpty()) {
+            courseService.getOrCreateCategory(catName.trim());
+            SessionUtil.setFlashSuccess(req, "Thêm danh mục đào tạo \"" + catName.trim() + "\" thành công!");
+        } else {
+            SessionUtil.setFlashError(req, "Tên danh mục không được để trống!");
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/dashboard");
     }
 
     /**
