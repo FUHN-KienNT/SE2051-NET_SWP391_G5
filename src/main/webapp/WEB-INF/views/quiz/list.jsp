@@ -600,7 +600,7 @@ body {
                         <!-- TAB 1: DANH SÁCH BÀI QUIZ THEO TỪNG CHƯƠNG -->
                         <div id="pills-quizzes">
                                 <c:choose>
-                                    <c:when test="${empty course or empty course.modules}">
+                                    <c:when test="${empty course or empty allModules}">
                                         <div class="saas-card p-5 text-center mb-4">
                                             <div class="bg-light text-muted rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
                                                 style="width: 64px; height: 64px;">
@@ -922,8 +922,8 @@ body {
                                             <span class="text-danger">*</span></label>
                                         <select name="moduleId" id="modalModuleSelect" class="form-select saas-form-control"
                                             required>
-                                            <c:forEach var="m" items="${course.modules}">
-                                                <option value="${m.id}">${m.displayTitle}</option>
+                                            <c:forEach var="m" items="${allModules}">
+                                                <option value="${m.id}"><c:out value="${m.displayTitle}" /></option>
                                             </c:forEach>
                                         </select>
                                     </div>
