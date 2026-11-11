@@ -429,6 +429,26 @@
             };
             global.CoursonToast = CoursonToast;
         }
+
+        // Phím tắt DEV: Ctrl + Alt + R khôi phục nhanh CSDL kiểm thử ở mọi màn hình (khi có DevSeedServlet)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.altKey && (e.key === 'r' || e.key === 'R')) {
+                e.preventDefault();
+                if (confirm('⚙️ [DEV] Khôi phục toàn bộ CSDL kiểm thử về trạng thái gốc và tải lại trang này?')) {
+                    fetch('${pageContext.request.contextPath}/api/dev/reset-seed', { method: 'GET' })
+                        .then(function(res) {
+                            if (res.status === 404) {
+                                alert('Thông báo: Môi trường này không cấu hình DevSeedServlet.');
+                            } else {
+                                window.location.reload();
+                            }
+                        })
+                        .catch(function() {
+                            window.location.reload();
+                        });
+                }
+            }
+        });
     })(window);
 </script>
 

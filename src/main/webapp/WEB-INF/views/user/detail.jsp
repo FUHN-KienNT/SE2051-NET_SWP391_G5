@@ -84,7 +84,7 @@ body {
     border-color: #cbd5e1;
     background-color: #f8fafc;
 }
-.saas-radio-card:has(input[type="radio"]:checked) {
+.saas-radio-card.selected {
     border-color: var(--saas-accent);
     background-color: #eff6ff;
 }
@@ -346,7 +346,7 @@ body {
                     </div>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="saas-radio-card w-100">
+                            <label class="saas-radio-card w-100 ${user.status == 'ACTIVE' ? 'selected' : ''}">
                                 <input type="radio" name="status" value="ACTIVE" class="form-check-input mt-0" ${user.status == 'ACTIVE' ? 'checked' : ''}>
                                 <div class="radio-label-box">
                                     <div class="fw-bold text-dark small"><i class="bi bi-check-circle-fill text-success me-1"></i>Active</div>
@@ -355,7 +355,7 @@ body {
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <label class="saas-radio-card w-100 ${isSelf ? 'disabled-card' : ''}">
+                            <label class="saas-radio-card w-100 ${isSelf ? 'disabled-card' : ''} ${user.status == 'INACTIVE' ? 'selected' : ''}">
                                 <input type="radio" name="status" value="INACTIVE" class="form-check-input mt-0" ${user.status == 'INACTIVE' ? 'checked' : ''} ${isSelf ? 'disabled' : ''}>
                                 <div class="radio-label-box">
                                     <div class="fw-bold text-dark small"><i class="bi bi-hourglass-split text-secondary me-1"></i>Inactive</div>
@@ -364,7 +364,7 @@ body {
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <label class="saas-radio-card w-100 ${isSelf ? 'disabled-card' : ''}">
+                            <label class="saas-radio-card w-100 ${isSelf ? 'disabled-card' : ''} ${user.status == 'BANNED' ? 'selected' : ''}">
                                 <input type="radio" name="status" value="BANNED" class="form-check-input mt-0" ${user.status == 'BANNED' ? 'checked' : ''} ${isSelf ? 'disabled' : ''}>
                                 <div class="radio-label-box">
                                     <div class="fw-bold text-danger small"><i class="bi bi-slash-circle-fill text-danger me-1"></i>Suspended</div>
@@ -501,6 +501,23 @@ function openDeleteConfirmModal() {
         bsModal.show();
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    function updateRadioCards() {
+        document.querySelectorAll('.saas-radio-card').forEach(function(card) {
+            var radio = card.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+    }
+    updateRadioCards();
+    document.querySelectorAll('.saas-radio-card input[type="radio"]').forEach(function(radio) {
+        radio.addEventListener('change', updateRadioCards);
+    });
+});
 </script>
 
 <jsp:include page="../common/footer.jsp" />

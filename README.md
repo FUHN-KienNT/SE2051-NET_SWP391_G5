@@ -132,7 +132,6 @@ mvn clean package -DskipTests
    ./catalina.sh run
    ```
 3. Truy cập hệ thống tại: **[http://localhost:8080/Courson/](http://localhost:8080/Courson/)**
-   *(Giao diện demo tương tác nội bộ tại: [http://localhost:8080/Courson/demo.html](http://localhost:8080/Courson/demo.html)).*
 
 ---
 

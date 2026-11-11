@@ -1,9 +1,0 @@
- id |                full_name                 
-----+------------------------------------------
-  5 | Học viên Trần Thị B (Tài khoản mới tinh)
-(1 row)
-
- id | user_id | course_id | status | payment_status | payment_amount 
-----+---------+-----------+--------+----------------+----------------
-(0 rows)
-

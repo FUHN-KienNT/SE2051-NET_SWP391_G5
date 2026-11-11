@@ -41,7 +41,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-
 # Test documents (managed on Google Drive)
 *.xlsm
 *.xlsx
@@ -49,3 +48,20 @@ Thumbs.db
 # Local scratch scripts
 scratch/
 cookies.txt
+
+# Dev & Test endpoints / utilities (Untracked from GitHub)
+src/main/java/controller/DevSeedServlet.java
+src/main/java/service/DevSeedService.java
+src/main/java/TestDB.java
+database/seed_test_master.sql
+src/main/resources/database/seed_test_master.sql
+
+# Test reports & test evidence
+docs/TEST_REPORT_*.md
+docs/test-evidence-*/
+AUDIT_REGRESSION_CHECKLIST.md
+plan.md
+
+# Static demo mockups
+src/main/webapp/demo.html
+index.html
