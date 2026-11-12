@@ -36,8 +36,8 @@ INSERT INTO users (id, username, email, password_hash, full_name, role_id, role_
     (1, 'admin', 'admin@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản trị viên Hệ thống', 5, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0901234567', '1990-01-01'),
     (2, 'manager1', 'manager@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản lý Khóa học', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0912345678', '1992-05-15'),
     (3, 'expert1', 'expert@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Chuyên gia Giảng viên', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0923456789', '1988-10-20'),
-    (4, 'student1', 'student@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Học viên Nguyễn Văn A (Đã sở hữu khóa)', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0934567890', '2002-12-12'),
-    (5, 'student2', 'student2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Học viên Trần Thị B (Tài khoản mới tinh)', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0945678901', '2003-08-20')
+    (4, 'student1', 'student@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Nguyễn Văn A', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0934567890', '2002-12-12'),
+    (5, 'student2', 'student2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Trần Thị B', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0945678901', '2003-08-20')
 ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash, status = 'ACTIVE';
 
 -- COURSE 1: Nhân Tướng Học Thầy Viên Minh - Khái Niệm Nền Tảng Đến Ứng Dụng [PUBLISHED]

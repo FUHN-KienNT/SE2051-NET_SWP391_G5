@@ -208,11 +208,36 @@ public class RegistrationServlet extends HttpServlet {
                 return;
             }
 
+            String agreeTerms = req.getParameter("agreeTerms");
+            if (agreeTerms == null || (!"on".equalsIgnoreCase(agreeTerms) && !"true".equalsIgnoreCase(agreeTerms))) {
+                SessionUtil.setFlashError(req, "Bạn cần chủ động tích chọn đồng ý với Quy chế đào tạo để tiếp tục.");
+                resp.sendRedirect(req.getContextPath() + "/registrations/checkout?courseId=" + courseIdStr);
+                return;
+            }
+
             String certName = req.getParameter("certificateName");
             if (certName == null || certName.trim().isEmpty()) {
                 certName = currentUser.getFullName();
             }
             String phone = req.getParameter("studentPhone");
+            String updateProfile = req.getParameter("updateProfile");
+            if ("true".equalsIgnoreCase(updateProfile) || "on".equalsIgnoreCase(updateProfile)) {
+                try (java.sql.Connection con = util.DbConnection.getConnection()) {
+                    dao.UserDao userDao = new dao.UserDao();
+                    entity.User u = userDao.findById(con, currentUser.getId()).orElse(null);
+                    if (u != null) {
+                        u.setFullName(certName.trim());
+                        if (phone != null && !phone.trim().isEmpty()) {
+                            u.setPhone(phone.trim());
+                        }
+                        userDao.update(con, u);
+                        currentUser.setFullName(u.getFullName());
+                        currentUser.setPhone(u.getPhone());
+                        SessionUtil.setCurrentUser(req, currentUser);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
             String requestVat = req.getParameter("requestVat");
             String vatCompany = req.getParameter("vatCompany");
             String vatTaxCode = req.getParameter("vatTaxCode");
