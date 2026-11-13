@@ -23,7 +23,7 @@ public class RegistrationDao {
     private static final String SQL_FIND_PENDING_BY_USER_AND_COURSE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE user_id = ? AND course_id = ? AND status = 'PENDING' ORDER BY id DESC LIMIT 1";
     private static final String SQL_FIND_BY_PAYMENT_CODE = "SELECT id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at FROM registrations WHERE payment_code = ?";
     private static final String SQL_INSERT = "INSERT INTO registrations (user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
-    private static final String SQL_UPDATE_PAYMENT = "UPDATE registrations SET payment_status = ?, payment_code = ?, paid_at = ?, status = ?, payment_method = ?, payment_amount = ? WHERE id = ?";
+    private static final String SQL_UPDATE_PAYMENT = "UPDATE registrations SET payment_status = ?, payment_code = ?, paid_at = ?, status = ?, payment_method = ?, payment_amount = ?, registration_date = ? WHERE id = ?";
     private static final String SQL_UPDATE_PROGRESS = "UPDATE registrations SET progress_percentage = ? WHERE id = ?";
     private static final String SQL_UPDATE_STATUS = "UPDATE registrations SET status = ? WHERE id = ?";
     private static final String SQL_FIND_BY_MANAGER = "SELECT r.* FROM registrations r JOIN courses c ON r.course_id = c.id WHERE c.manager_id = ? ORDER BY r.id DESC";
@@ -154,7 +154,8 @@ public class RegistrationDao {
             ps.setString(4, entity.getStatus() != null ? entity.getStatus().getDbValue() : null);
             ps.setString(5, entity.getPaymentMethod() != null ? entity.getPaymentMethod().getDbValue() : null);
             ps.setBigDecimal(6, entity.getPaymentAmount());
-            ps.setLong(7, entity.getId());
+            ps.setObject(7, entity.getRegistrationDate() != null ? entity.getRegistrationDate() : OffsetDateTime.now());
+            ps.setLong(8, entity.getId());
             return ps.executeUpdate() > 0;
         }
     }

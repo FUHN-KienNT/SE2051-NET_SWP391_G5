@@ -393,24 +393,11 @@
                             </div>
                         </div>
 
-                        <!-- Search Bar + Category Dropdown + Sort -->
-                        <div class="col-12 col-xl-6">
-                            <div class="row g-2">
-                                <!-- Search Input -->
-                                <div class="col-12 col-md-5">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white border-end-0 text-muted">
-                                            <i class="bi bi-search"></i>
-                                        </span>
-                                        <input type="text" id="courseSearchInput" class="form-control border-start-0 ps-0" placeholder="Tìm theo tên khóa, giảng viên...">
-                                        <button class="btn btn-outline-secondary border-start-0 border-end-1 d-none" type="button" id="clearSearchBtn">
-                                            <i class="bi bi-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
+                        <!-- Category Dropdown + Sort -->
+                        <div class="col-12 col-xl-5 ms-xl-auto">
+                            <div class="row g-2 justify-content-xl-end">
                                 <!-- Category Filter -->
-                                <div class="col-6 col-md-4">
+                                <div class="col-6">
                                     <select class="form-select" id="categoryFilter">
                                         <option value="ALL">Tất cả danh mục</option>
                                         <c:forEach var="cat" items="${categories}">
@@ -420,7 +407,7 @@
                                 </div>
 
                                 <!-- Sort Dropdown -->
-                                <div class="col-6 col-md-3">
+                                <div class="col-6">
                                     <select class="form-select" id="sortSelect">
                                         <option value="recent">Mới nhất</option>
                                         <option value="progress-desc">Tiến độ cao</option>
@@ -493,14 +480,6 @@
                                         <span class="text-truncate">${not empty r.expertName ? r.expertName : 'Giảng viên Courson'}</span>
                                     </div>
 
-                                    <!-- Archive Notice if applicable -->
-                                    <c:if test="${r.archived}">
-                                        <div class="alert alert-warning py-1 px-2 small mb-3 d-flex align-items-center gap-1 rounded-2">
-                                            <i class="bi bi-archive-fill text-warning me-1"></i>
-                                            <span style="font-size: 0.76rem;">Khóa học đã lưu trữ (vẫn học bình thường)</span>
-                                        </div>
-                                    </c:if>
-
                                     <!-- 4. TIẾN ĐỘ HOÀN THÀNH KHÓA HỌC (Feature 4 - Progress Bar & Lesson Counter) -->
                                     <div class="my-auto py-2">
                                         <div class="d-flex justify-content-between align-items-center small text-muted mb-1">
@@ -572,14 +551,14 @@
                 <div id="noResultsMessage" class="card p-5 text-center my-4 border-0 shadow-sm d-none" style="background: #ffffff; border-radius: 18px;">
                     <div class="mb-3">
                         <div class="d-inline-flex p-3 rounded-circle bg-light text-muted">
-                            <i class="bi bi-search fs-1"></i>
+                            <i class="bi bi-folder2-open fs-1"></i>
                         </div>
                     </div>
                     <h5 class="fw-bold text-dark">Không tìm thấy khóa học nào phù hợp</h5>
-                    <p class="text-muted small">Vui lòng thử tìm kiếm với từ khóa khác hoặc điều chỉnh lại bộ lọc trạng thái và danh mục.</p>
+                    <p class="text-muted small">Vui lòng điều chỉnh lại bộ lọc trạng thái hoặc danh mục.</p>
                     <div>
                         <button type="button" class="btn btn-outline-primary btn-sm px-4 rounded-pill fw-semibold" id="resetFiltersBtn">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>Xóa bộ lọc
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Xem tất cả
                         </button>
                     </div>
                 </div>
@@ -592,11 +571,9 @@
 
 <jsp:include page="../common/footer.jsp" />
 
-<!-- 5. REAL-TIME SEARCH & FILTER JAVASCRIPT (Feature 5) -->
+<!-- REAL-TIME FILTER JAVASCRIPT -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('courseSearchInput');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
     const categoryFilter = document.getElementById('categoryFilter');
     const sortSelect = document.getElementById('sortSelect');
     const statusButtons = document.querySelectorAll('#statusFilterGroup .filter-tab-btn');
@@ -608,24 +585,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentStatus = 'ALL';
 
-    function normalizeText(str) {
-        if (!str) return '';
-        return str.toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .trim();
-    }
-
     function filterAndSortCourses() {
-        const keyword = normalizeText(searchInput ? searchInput.value : '');
         const selectedCat = categoryFilter ? categoryFilter.value : 'ALL';
         const cards = Array.from(coursesGrid.querySelectorAll('.course-card-wrapper'));
 
         let visibleCount = 0;
 
         cards.forEach(card => {
-            const title = normalizeText(card.getAttribute('data-title'));
-            const expert = normalizeText(card.getAttribute('data-expert'));
             const cat = card.getAttribute('data-category') || '';
             const status = card.getAttribute('data-status') || '';
 
@@ -635,10 +601,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 2. Category Filter
             const matchCategory = (selectedCat === 'ALL') || (cat === selectedCat);
 
-            // 3. Search Keyword Filter
-            const matchKeyword = !keyword || title.includes(keyword) || expert.includes(keyword);
-
-            if (matchStatus && matchCategory && matchKeyword) {
+            if (matchStatus && matchCategory) {
                 card.classList.remove('d-none');
                 visibleCount++;
             } else {
@@ -646,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // 4. Sorting
+        // 3. Sorting
         const sortMode = sortSelect ? sortSelect.value : 'recent';
         cards.sort((a, b) => {
             if (sortMode === 'name-asc') {
@@ -691,30 +654,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Search Input Event
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            if (clearSearchBtn) {
-                if (this.value.trim().length > 0) {
-                    clearSearchBtn.classList.remove('d-none');
-                } else {
-                    clearSearchBtn.classList.add('d-none');
-                }
-            }
-            filterAndSortCourses();
-        });
-    }
-
-    // Clear Search Button
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', function () {
-            searchInput.value = '';
-            clearSearchBtn.classList.add('d-none');
-            filterAndSortCourses();
-            searchInput.focus();
-        });
-    }
-
     // Category Filter Event
     if (categoryFilter) {
         categoryFilter.addEventListener('change', filterAndSortCourses);
@@ -728,10 +667,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Reset Filters Button
     if (resetFiltersBtn) {
         resetFiltersBtn.addEventListener('click', function () {
-            if (searchInput) {
-                searchInput.value = '';
-                if (clearSearchBtn) clearSearchBtn.classList.add('d-none');
-            }
             if (categoryFilter) categoryFilter.value = 'ALL';
             if (sortSelect) sortSelect.value = 'recent';
 
@@ -744,6 +679,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-
-
 </script>

@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -101,6 +102,10 @@ public class VnPayUtil {
     }
 
     public static String createPaymentUrl(HttpServletRequest req, long registrationId, BigDecimal amount, String orderInfo, String bankCode) {
+        return createPaymentUrl(req, registrationId, amount, orderInfo, bankCode, null);
+    }
+
+    public static String createPaymentUrl(HttpServletRequest req, long registrationId, BigDecimal amount, String orderInfo, String bankCode, OffsetDateTime expireAt) {
         String scheme = req.getScheme();
         String serverName = req.getServerName();
         int serverPort = req.getServerPort();
@@ -124,17 +129,21 @@ public class VnPayUtil {
             clientIp = clientIp.split(",")[0].trim();
         }
 
-        return createPaymentUrl(baseUrl.toString(), clientIp, registrationId, amount, orderInfo, bankCode);
+        return createPaymentUrl(baseUrl.toString(), clientIp, registrationId, amount, orderInfo, bankCode, expireAt);
     }
 
     /**
      * Tạo URL thanh toán VNPay độc lập (tiện cho unit test và gọi service)
      */
     public static String createPaymentUrl(String baseUrl, String clientIp, long registrationId, BigDecimal amount, String orderInfo) {
-        return createPaymentUrl(baseUrl, clientIp, registrationId, amount, orderInfo, null);
+        return createPaymentUrl(baseUrl, clientIp, registrationId, amount, orderInfo, null, null);
     }
 
     public static String createPaymentUrl(String baseUrl, String clientIp, long registrationId, BigDecimal amount, String orderInfo, String bankCode) {
+        return createPaymentUrl(baseUrl, clientIp, registrationId, amount, orderInfo, bankCode, null);
+    }
+
+    public static String createPaymentUrl(String baseUrl, String clientIp, long registrationId, BigDecimal amount, String orderInfo, String bankCode, OffsetDateTime expireAt) {
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", version);
         vnp_Params.put("vnp_Command", command);
@@ -167,12 +176,19 @@ public class VnPayUtil {
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone("Etc/GMT+7"));
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+        if (expireAt != null) {
+            java.time.ZonedDateTime gmt7Expire = expireAt.atZoneSameInstant(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+            String vnp_ExpireDate = gmt7Expire.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+        } else {
+            cld.add(Calendar.MINUTE, 15);
+            String vnp_ExpireDate = formatter.format(cld.getTime());
+            vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+        }
 
         // Sắp xếp các tham số theo thứ tự bảng chữ cái ASCII
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());

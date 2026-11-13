@@ -602,7 +602,8 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
 
         CourseDto dto = new CourseDto();
         String idStr = req.getParameter("id");
-        if (idStr != null && !idStr.trim().isEmpty()) {
+        boolean isNewCourse = (idStr == null || idStr.trim().isEmpty());
+        if (!isNewCourse) {
             long courseId;
             try {
                 courseId = Long.parseLong(idStr.trim());
@@ -682,6 +683,10 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
                 courseService.saveBatchLessons(savedId, null, batchModuleTitle, batchResult.getLessons());
                 SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Các bài giảng đã được tự động phân chia vào các Chương học (Modules) tương ứng.");
                 resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
+            } else if (isNewCourse || "lessons".equalsIgnoreCase(req.getParameter("redirect"))) {
+                // Tạo mới khóa học (kể cả không có video kèm theo): chuyển thẳng tới màn hình soạn đề cương bài giảng (Lesson List)
+                SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
+                resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
             } else {
                 String redirectTarget = req.getParameter("redirect");
                 if ("detail".equalsIgnoreCase(redirectTarget)) {
@@ -694,8 +699,8 @@ private void showExpertDashboard(HttpServletRequest req, HttpServletResponse res
                     SessionUtil.setFlashSuccess(req, "Lưu thông tin khóa học thành công!");
                     resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + savedId);
                 } else {
-                    SessionUtil.setFlashSuccess(req, "Khởi tạo khóa học thành công! Hãy bắt đầu thêm các chương và bài học bên dưới.");
-                    resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + savedId);
+                    SessionUtil.setFlashSuccess(req, "Lưu thông tin khóa học thành công!");
+                    resp.sendRedirect(req.getContextPath() + "/expert/course-detail?id=" + savedId);
                 }
             }
         } catch (Exception e) {

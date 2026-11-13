@@ -298,6 +298,18 @@ public class VnPayTestSuite {
             boolean hasAccessBefore = registrationService.hasCourseAccess(testUserId, testCourseId);
             assertTrue("Chưa thanh toán thì hasCourseAccess() phải trả về false", !hasAccessBefore, "Đã có quyền học trước khi trả tiền!");
 
+            // Bước 2.1: Giả lập phiên thanh toán hết hạn (quá 15 phút) và kiểm thử làm mới phiên
+            try (PreparedStatement ps = con.prepareStatement("UPDATE registrations SET registration_date = now() - interval '20 minutes', payment_code = 'EXPIRED_OLD' WHERE id = ?")) {
+                ps.setLong(1, testRegId);
+                ps.executeUpdate();
+            }
+            RegistrationDto autoRenewed = registrationService.enroll(testUserId, testCourseId);
+            assertTrue("Phiên PENDING quá hạn tự động sinh mã mới khác mã cũ", !"EXPIRED_OLD".equals(autoRenewed.getPaymentCode()), "Mã đơn không được cập nhật mới: " + autoRenewed.getPaymentCode());
+            assertTrue("Mã đơn mới phải bắt đầu bằng PAY-", autoRenewed.getPaymentCode() != null && autoRenewed.getPaymentCode().startsWith("PAY-"), "Sai định dạng mã đơn");
+
+            RegistrationDto manualRenewed = registrationService.renewPaymentSession(testUserId, testCourseId);
+            assertTrue("renewPaymentSession sinh mã đơn mới thành công", manualRenewed.getPaymentCode() != null && manualRenewed.getPaymentCode().startsWith("PAY-"), "Mã đơn thủ công không hợp lệ");
+
             // Bước 3: Nhận phản hồi thanh toán thành công từ VNPay (Update Payment SUCCESS)
             String transactionCode = "VNPAY-TEST-SUCCESS-" + System.currentTimeMillis();
             OffsetDateTime paidAt = OffsetDateTime.now();

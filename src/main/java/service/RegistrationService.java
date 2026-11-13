@@ -81,6 +81,47 @@ public class RegistrationService {
 
 
 
+    public RegistrationDto renewPaymentSession(long userId, long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                Optional<Course> courseOpt = courseDao.findById(con, courseId);
+                if (!courseOpt.isPresent()) {
+                    throw new IllegalArgumentException("Không tìm thấy khóa học ID: " + courseId);
+                }
+                Course course = courseOpt.get();
+
+                Optional<Registration> existingOpt = registrationDao.findByUserAndCourse(con, userId, courseId);
+                if (!existingOpt.isPresent()) {
+                    return enroll(userId, courseId);
+                }
+                Registration reg = existingOpt.get();
+                if (reg.getStatus() == RegistrationStatus.ACTIVE || reg.getStatus() == RegistrationStatus.COMPLETED) {
+                    return mapRegistration(reg);
+                }
+
+                Registration fresh = initializePayment(course, reg.getPaymentAmount());
+                reg.setStatus(RegistrationStatus.PENDING);
+                reg.setPaymentStatus(PaymentStatus.PENDING);
+                reg.setPaymentMethod(PaymentMethod.VNPAY);
+                reg.setPaymentCode(fresh.getPaymentCode());
+                reg.setPaymentAmount(fresh.getPaymentAmount());
+                reg.setRegistrationDate(OffsetDateTime.now());
+                reg.setPaidAt(null);
+                registrationDao.updatePayment(con, reg);
+                con.commit();
+                return mapRegistration(reg);
+            } catch (Exception ex) {
+                DbConnection.rollbackQuietly(con);
+                throw ex;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi làm mới phiên thanh toán: " + e.getMessage(), e);
+        }
+    }
+
     public RegistrationDto enroll(long userId, long courseId) {
 
         return enroll(userId, courseId, null);
@@ -126,19 +167,34 @@ public class RegistrationService {
                     }
 
                     if (reg.getStatus() == RegistrationStatus.PENDING) {
-
-                        if (customAmount != null && customAmount.compareTo(BigDecimal.ZERO) >= 0) {
-
-                            reg.setPaymentAmount(customAmount);
-
-                            registrationDao.updatePayment(con, reg);
-
-                            con.commit();
-
+                        boolean isExpired = false;
+                        if (reg.getRegistrationDate() != null) {
+                            long elapsed = java.time.Duration.between(reg.getRegistrationDate(), OffsetDateTime.now()).getSeconds();
+                            if (elapsed >= 15 * 60) {
+                                isExpired = true;
+                            }
                         }
-
-                        return mapRegistration(reg);
-
+                        if (isExpired) {
+                            // Phiên cũ đã hết hạn (quá 15 phút) -> Tự động khởi tạo phiên mới với thời hạn 15 phút và mã đơn mới
+                            Registration fresh = initializePayment(course, customAmount);
+                            reg.setStatus(fresh.getStatus());
+                            reg.setPaymentStatus(fresh.getPaymentStatus());
+                            reg.setPaymentMethod(fresh.getPaymentMethod());
+                            reg.setPaymentCode(fresh.getPaymentCode());
+                            reg.setPaymentAmount(fresh.getPaymentAmount());
+                            reg.setRegistrationDate(OffsetDateTime.now());
+                            reg.setPaidAt(null);
+                            registrationDao.updatePayment(con, reg);
+                            con.commit();
+                            return mapRegistration(reg);
+                        } else {
+                            if (customAmount != null && customAmount.compareTo(BigDecimal.ZERO) >= 0) {
+                                reg.setPaymentAmount(customAmount);
+                                registrationDao.updatePayment(con, reg);
+                                con.commit();
+                            }
+                            return mapRegistration(reg);
+                        }
                     }
 
                 }

@@ -61,66 +61,59 @@ public class RegistrationServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "my";
-        processAction(action, req, resp);
+
+        switch (action) {
+            case "my":
+            case "my-courses":
+                showMyRegistrations(req, resp);
+                break;
+            case "my-detail":
+                showStudentCourseDetail(req, resp);
+                break;
+            case "checkout":
+                showCheckout(req, resp);
+                break;
+            case "payment":
+                showPayment(req, resp);
+                break;
+            case "payment-return":
+            case "vnpay-return":
+                paymentReturn(req, resp);
+                break;
+            case "payment-callback":
+            case "vnpay-ipn":
+                paymentCallback(req, resp);
+                break;
+            default:
+                resp.sendRedirect(req.getContextPath() + "/registrations/my");
+                break;
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
-        String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "my";
-        processAction(action, req, resp);
-    }
+        String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "";
 
-    private void processAction(String action, HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
         switch (action) {
             case "checkout":
-                if ("POST".equalsIgnoreCase(req.getMethod())) {
-                    processCheckout(req, resp);
-                } else {
-                    showCheckout(req, resp);
-                }
-                break;
-            case "payment":
-                showPayment(req, resp);
+                processCheckout(req, resp);
                 break;
             case "vnpay-create":
-            case "pay-vnpay":
                 createVnPayPayment(req, resp);
                 break;
-
-            case "my":
-            case "my-courses":
-            case "history":
-                showMyRegistrations(req, resp);
-                break;
-            case "my-detail":
-            case "my-course-detail":
-            case "course-progress":
-                showStudentCourseDetail(req, resp);
-                break;
-            case "enroll":
-                String enrollCourseId = req.getParameter("courseId");
-                if (enrollCourseId != null && !enrollCourseId.trim().isEmpty()) {
-                    resp.sendRedirect(
-                            req.getContextPath() + "/registrations/checkout?courseId=" + enrollCourseId.trim());
-                } else {
-                    resp.sendRedirect(req.getContextPath() + "/courses/catalog");
-                }
+            case "renew-session":
+                processRenewSession(req, resp);
                 break;
             case "cancel":
                 cancel(req, resp);
                 break;
-            case "vnpay-return":
-            case "payment-return":
-                paymentReturn(req, resp);
-                break;
-            case "vnpay-ipn":
             case "payment-callback":
+            case "vnpay-ipn":
                 paymentCallback(req, resp);
                 break;
             default:
-                showMyRegistrations(req, resp);
+                resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Phương thức POST không được hỗ trợ cho thao tác này.");
                 break;
         }
     }
@@ -238,21 +231,12 @@ public class RegistrationServlet extends HttpServlet {
                 } catch (Exception ignored) {
                 }
             }
-            String requestVat = req.getParameter("requestVat");
-            String vatCompany = req.getParameter("vatCompany");
-            String vatTaxCode = req.getParameter("vatTaxCode");
-            String vatAddress = req.getParameter("vatAddress");
-
             BigDecimal finalPrice = course.getPrice() != null ? course.getPrice() : BigDecimal.ZERO;
 
             Map<String, Object> checkoutData = new HashMap<>();
             checkoutData.put("certName", certName.trim());
             checkoutData.put("phone", phone != null ? phone.trim() : "");
             checkoutData.put("finalPrice", finalPrice);
-            checkoutData.put("requestVat", "on".equalsIgnoreCase(requestVat) || "true".equalsIgnoreCase(requestVat));
-            checkoutData.put("vatCompany", vatCompany != null ? vatCompany.trim() : "");
-            checkoutData.put("vatTaxCode", vatTaxCode != null ? vatTaxCode.trim() : "");
-            checkoutData.put("vatAddress", vatAddress != null ? vatAddress.trim() : "");
             req.getSession().setAttribute("CHECKOUT_" + courseId, checkoutData);
 
             RegistrationDto reg = registrationService.enroll(currentUser.getId(), courseId, finalPrice);
@@ -272,6 +256,14 @@ public class RegistrationServlet extends HttpServlet {
     }
 
     private void showPayment(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String flashSuccess = SessionUtil.popFlashSuccess(req);
+        if (flashSuccess != null) {
+            req.setAttribute("successMessage", flashSuccess);
+        }
+        String flashErr = SessionUtil.popFlashError(req);
+        if (flashErr != null) {
+            req.setAttribute("errorMessage", flashErr);
+        }
         UserDto currentUser = SessionUtil.getCurrentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -339,10 +331,22 @@ public class RegistrationServlet extends HttpServlet {
                     finalAmount = (BigDecimal) checkoutData.get("finalPrice");
                 }
 
+                long remainingSeconds = 0;
+                boolean isExpired = false;
+                if (pendingReg != null && pendingReg.getRegistrationDate() != null) {
+                    long elapsedSeconds = java.time.Duration.between(pendingReg.getRegistrationDate(), OffsetDateTime.now()).getSeconds();
+                    remainingSeconds = Math.max(0, 15 * 60 - elapsedSeconds);
+                    isExpired = (remainingSeconds <= 0);
+                } else {
+                    remainingSeconds = 15 * 60;
+                }
+
                 req.setAttribute("registration", pendingReg);
                 req.setAttribute("certName", certName);
                 req.setAttribute("phone", phone);
                 req.setAttribute("finalAmount", finalAmount);
+                req.setAttribute("remainingSeconds", remainingSeconds);
+                req.setAttribute("isExpired", isExpired);
                 req.setAttribute("paymentCode",
                         pendingReg != null && pendingReg.getPaymentCode() != null ? pendingReg.getPaymentCode()
                                 : ("CR" + System.currentTimeMillis() % 1000000));
@@ -363,6 +367,28 @@ public class RegistrationServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/registration/payment.jsp").forward(req, resp);
     }
 
+    private void processRenewSession(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+            return;
+        }
+        try {
+            long courseId = Long.parseLong(courseIdStr.trim());
+            registrationService.renewPaymentSession(currentUser.getId(), courseId);
+            SessionUtil.setFlashSuccess(req, "Đã tạo phiên thanh toán mới thành công với thời hạn 15 phút.");
+            resp.sendRedirect(req.getContextPath() + "/registrations/payment?courseId=" + courseId);
+        } catch (Exception e) {
+            SessionUtil.setFlashError(req, "Không thể làm mới phiên thanh toán: " + e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/registrations/payment?courseId=" + courseIdStr);
+        }
+    }
+
     /**
      * Khởi tạo giao dịch thanh toán qua VNPay và chuyển hướng tới cổng thanh toán
      * VNPay Sandbox
@@ -377,6 +403,14 @@ public class RegistrationServlet extends HttpServlet {
 
         if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/courses/catalog");
+            return;
+        }
+
+        // Kiểm tra phương thức thanh toán
+        String paymentMethod = req.getParameter("paymentMethod");
+        if ("SEPAY".equalsIgnoreCase(paymentMethod)) {
+            SessionUtil.setFlashError(req, "Cổng thanh toán SePay hiện chưa khả dụng. Vui lòng chọn VNPay.");
+            resp.sendRedirect(req.getContextPath() + "/registrations/payment?courseId=" + courseIdStr);
             return;
         }
 
@@ -398,13 +432,33 @@ public class RegistrationServlet extends HttpServlet {
                     }
                 }
             }
-            RegistrationDto reg = registrationService.enroll(currentUser.getId(), courseId, finalPrice);
+            RegistrationDto reg = null;
+            List<RegistrationDto> myRegs = registrationService.getByUser(currentUser.getId());
+            for (RegistrationDto r : myRegs) {
+                if (r.getCourseId() == courseId && r.getStatus() == RegistrationStatus.PENDING) {
+                    reg = r;
+                    break;
+                }
+            }
+            if (reg == null) {
+                reg = registrationService.enroll(currentUser.getId(), courseId, finalPrice);
+            }
 
             // Nếu khóa học miễn phí hoặc đã được kích hoạt thành công từ trước
             if (reg.getStatus() == RegistrationStatus.ACTIVE) {
                 SessionUtil.setFlashSuccess(req, "Khóa học đã được kích hoạt thành công!");
                 resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + reg.getId());
                 return;
+            }
+
+            // KIỂM TRA HẾT HẠN PHIÊN THANH TOÁN (15 PHÚT)
+            if (reg.getRegistrationDate() != null) {
+                long elapsedSeconds = java.time.Duration.between(reg.getRegistrationDate(), OffsetDateTime.now()).getSeconds();
+                if (elapsedSeconds >= 15 * 60) {
+                    SessionUtil.setFlashError(req, "Phiên thanh toán đã hết thời hạn 15 phút. Vui lòng tạo phiên thanh toán mới.");
+                    resp.sendRedirect(req.getContextPath() + "/registrations/payment?courseId=" + courseIdStr);
+                    return;
+                }
             }
 
             // Tạo link thanh toán VNPay (mặc định chuyển thẳng đến cổng Ngân hàng NCB theo
@@ -417,7 +471,10 @@ public class RegistrationServlet extends HttpServlet {
             }
 
             String orderInfo = "Thanh toan khoa hoc #" + reg.getCourseId() + " Ma don #" + reg.getId();
-            String vnpayUrl = VnPayUtil.createPaymentUrl(req, reg.getId(), reg.getPaymentAmount(), orderInfo, bankCode);
+            OffsetDateTime expireAt = reg.getRegistrationDate() != null
+                    ? reg.getRegistrationDate().plusMinutes(15)
+                    : OffsetDateTime.now().plusMinutes(15);
+            String vnpayUrl = VnPayUtil.createPaymentUrl(req, reg.getId(), reg.getPaymentAmount(), orderInfo, bankCode, expireAt);
 
             resp.sendRedirect(vnpayUrl);
         } catch (Exception e) {
@@ -564,33 +621,6 @@ public class RegistrationServlet extends HttpServlet {
         req.setAttribute("categories", categories);
 
         req.getRequestDispatcher("/WEB-INF/views/registration/my.jsp").forward(req, resp);
-    }
-
-    private void enroll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        UserDto currentUser = SessionUtil.getCurrentUser(req);
-        if (currentUser == null) {
-            resp.sendRedirect(req.getContextPath() + "/auth/login");
-            return;
-        }
-        String courseIdStr = req.getParameter("courseId");
-        if (courseIdStr != null) {
-            long courseId = Long.parseLong(courseIdStr);
-            try {
-                RegistrationDto reg = registrationService.enroll(currentUser.getId(), courseId);
-                if (reg.getStatus() == RegistrationStatus.ACTIVE) {
-                    resp.sendRedirect(req.getContextPath() + "/courses/learn?registrationId=" + reg.getId());
-                    return;
-                } else {
-                    resp.sendRedirect(req.getContextPath() + "/registrations/my?pendingId=" + reg.getId());
-                    return;
-                }
-            } catch (IllegalStateException | IllegalArgumentException e) {
-                SessionUtil.setFlashError(req, e.getMessage());
-                resp.sendRedirect(req.getContextPath() + "/courses/catalog");
-                return;
-            }
-        }
-        resp.sendRedirect(req.getContextPath() + "/courses/catalog");
     }
 
     private void cancel(HttpServletRequest req, HttpServletResponse resp) throws IOException {

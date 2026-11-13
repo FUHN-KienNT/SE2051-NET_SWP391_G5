@@ -1406,10 +1406,10 @@ function showModerationNoteModal(courseTitle, note) {
 
             if (addNewBtn) {
                 if (query.trim()) {
-                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục "' + escapeHtml(query.trim()) + '"...';
+                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i> Thêm danh mục "' + escapeHtml(query.trim()) + '"...';
                     addNewBtn.dataset.customText = query.trim();
                 } else {
-                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Thêm danh mục mới...';
+                    addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i> Thêm danh mục mới...';
                     delete addNewBtn.dataset.customText;
                 }
             }

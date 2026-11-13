@@ -49,15 +49,8 @@
         border-right: 1px solid #e2e8f0;
         display: flex;
         flex-direction: column;
-        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
         z-index: 100;
         overflow: hidden;
-    }
-    #sidebarWrapper.collapsed {
-        margin-left: -300px;
-        opacity: 0;
-        pointer-events: none;
-        visibility: hidden;
     }
     .learning-content-scroll {
         flex: 1;
@@ -67,12 +60,22 @@
         background-color: #f8fafc;
     }
     @media (max-width: 991.98px) {
+        .learning-main-container {
+            flex-direction: column-reverse;
+            overflow-y: auto;
+        }
         #sidebarWrapper {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 280px;
+            border-right: none;
+            border-top: 1px solid #e2e8f0;
+        }
+        .learning-content-scroll {
+            height: auto;
+            overflow-y: visible;
         }
     }
     .markdown-body {
@@ -108,40 +111,6 @@
         color: inherit;
         padding: 0;
     }
-    .btn-toggle-box {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        padding: 0;
-        border: 1.5px solid #cbd5e1;
-        border-radius: 6px;
-        background-color: #ffffff;
-        cursor: pointer;
-        transition: all 0.15s ease-in-out;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .btn-toggle-box:hover {
-        background-color: #f1f5f9;
-        border-color: #94a3b8;
-    }
-    .btn-toggle-box:active {
-        transform: scale(0.95);
-    }
-    .btn-toggle-box .toggle-bar {
-        display: inline-block;
-        width: 2.5px;
-        height: 16px;
-        background-color: #334155;
-        border-radius: 2px;
-        transition: background-color 0.15s ease;
-    }
-    .btn-toggle-box:hover .toggle-bar {
-        background-color: #0f172a;
-    }
     .learn-quiz-item {
         background-color: #fffaf5;
         border: 1px dashed #fcd5b5 !important;
@@ -170,13 +139,6 @@
     <!-- Top Learning Toolbar -->
     <div class="learning-topbar d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="d-flex align-items-center gap-3">
-            <!-- [|||] Boxed 3-Bars Sidebar Toggle Button -->
-            <button type="button" class="btn-toggle-box" id="btnToggleSidebar" title="Đóng / Mở danh mục bài học" aria-label="Đóng mở danh sách bài học">
-                <span class="toggle-bar"></span>
-                <span class="toggle-bar"></span>
-                <span class="toggle-bar"></span>
-            </button>
-
             <!-- Breadcrumb Navigation -->
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 small">
@@ -187,11 +149,6 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-            <c:if test="${course.archived}">
-                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
-                    <i class="bi bi-archive me-1"></i>Đã lưu trữ
-                </span>
-            </c:if>
             <span class="badge bg-primary-subtle text-primary border px-2 py-1">
                 <i class="bi bi-collection-play me-1"></i>${course.totalLessons} bài học
             </span>
@@ -232,21 +189,10 @@
     <div class="learning-main-container">
         <!-- 1. LEFT SIDEBAR: Collapsible Course & Lesson List -->
         <aside id="sidebarWrapper" class="p-3">
-            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+            <div class="mb-3 pb-2 border-bottom">
                 <h6 class="fw-bold mb-0 text-truncate text-dark" title="${course.title}">
                     <i class="bi bi-journal-bookmark text-primary me-1"></i>${course.title}
                 </h6>
-                <button type="button" class="btn btn-sm btn-link text-muted p-0 d-lg-none" id="btnCloseSidebarMobile" title="Đóng danh mục">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-
-            <!-- Quick search filter in lesson list -->
-            <div class="mb-3">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="learnLessonFilter" class="form-control bg-light border-start-0" placeholder="Tìm kiếm bài học..." onkeyup="filterLearningLessons()">
-                </div>
             </div>
 
             <!-- Scrollable Lesson List -->
@@ -330,12 +276,6 @@
                         <div class="alert alert-warning py-2 px-3 small mb-3 d-flex align-items-center gap-2 border shadow-sm rounded-3">
                             <i class="bi bi-eye-slash-fill text-warning fs-5 flex-shrink-0"></i>
                             <span><strong>Bài học đã được tạm ẩn:</strong> Bạn vẫn có thể tiếp tục xem và hoàn thành bài giảng trong phiên học hiện tại. Sau khi chuyển sang bài học khác, bạn sẽ không thể quay lại bài học này nữa.</span>
-                        </div>
-                    </c:if>
-                    <c:if test="${course.archived}">
-                        <div class="alert alert-secondary py-2 px-3 small mb-3 d-flex align-items-center gap-2 border shadow-sm rounded-3">
-                            <i class="bi bi-archive text-secondary fs-5"></i>
-                            <span><strong>Khóa học đã lưu trữ:</strong> Khóa học này hiện đã ngừng nhận học viên mới. Toàn bộ nội dung học tập và tiến độ của bạn luôn được bảo đảm và tiếp tục truy cập trọn đời bình thường.</span>
                         </div>
                     </c:if>
 
@@ -463,73 +403,7 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-    // 1. Filter Lessons in Sidebar
-    function filterLearningLessons() {
-        const input = document.getElementById('learnLessonFilter').value.toLowerCase().trim();
-        const items = document.querySelectorAll('#learnLessonList .learn-item');
-        items.forEach(function(item) {
-            const title = item.getAttribute('data-title') || '';
-            if (!input || title.includes(input)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }
-
-    // 2. Collapsible Sidebar Management
-    const sidebar = document.getElementById('sidebarWrapper');
-    const btnToggle = document.getElementById('btnToggleSidebar');
-    const btnCloseMobile = document.getElementById('btnCloseSidebarMobile');
-
-    function setSidebarCollapsed(collapsed) {
-        if (!sidebar) return;
-        if (collapsed) {
-            sidebar.classList.add('collapsed');
-            if (btnToggle) {
-                btnToggle.setAttribute('title', 'Mở danh sách bài học');
-            }
-            localStorage.setItem('learn_sidebar_collapsed', 'true');
-        } else {
-            sidebar.classList.remove('collapsed');
-            if (btnToggle) {
-                btnToggle.setAttribute('title', 'Đóng danh sách bài học');
-            }
-            localStorage.setItem('learn_sidebar_collapsed', 'false');
-        }
-    }
-
-    if (btnToggle) {
-        btnToggle.addEventListener('click', function() {
-            const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
-            setSidebarCollapsed(!isCurrentlyCollapsed);
-        });
-    }
-
-    if (btnCloseMobile) {
-        btnCloseMobile.addEventListener('click', function() {
-            setSidebarCollapsed(true);
-        });
-    }
-
-    // Initialize sidebar state on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        const savedState = localStorage.getItem('learn_sidebar_collapsed');
-        if (savedState === 'true') {
-            setSidebarCollapsed(true);
-        } else if (savedState === 'false') {
-            setSidebarCollapsed(false);
-        } else {
-            // Default on small screen: collapsed; on desktop: open
-            if (window.innerWidth < 992) {
-                setSidebarCollapsed(true);
-            } else {
-                setSidebarCollapsed(false);
-            }
-        }
-    });
-
-    // 3. Render Expert's Reference in Accordion
+    // Render Expert's Reference in Markdown
     document.addEventListener('DOMContentLoaded', function() {
         const expEl = document.getElementById('expertContentRendered');
         if (expEl) {
@@ -539,7 +413,6 @@
             }
         }
     });
-
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

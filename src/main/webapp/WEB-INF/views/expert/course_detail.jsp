@@ -519,13 +519,15 @@
 
         <form action="${pageContext.request.contextPath}/expert/save-course" method="POST" id="courseDetailForm">
 
-            <c:if test="${isEdit}">
-
-                <input type="hidden" name="id" value="${course.id}">
-
-            </c:if>
-
-            <input type="hidden" name="redirect" value="detail">
+            <c:choose>
+                <c:when test="${isEdit}">
+                    <input type="hidden" name="id" value="${course.id}">
+                    <input type="hidden" name="redirect" value="detail">
+                </c:when>
+                <c:otherwise>
+                    <input type="hidden" name="redirect" value="lessons">
+                </c:otherwise>
+            </c:choose>
 
 
 
@@ -604,7 +606,7 @@
                         <div id="courseCustomCatDiv" class="mt-2" style="display: none;">
                             <div class="position-relative">
                                 <input type="text" name="customCategory" id="courseCustomCatInput" class="form-control form-control-sm saas-form-control border-primary pe-4"
-                                       placeholder="✨ Nhập tên danh mục đào tạo mới...">
+                                       placeholder="Nhập tên danh mục đào tạo mới...">
                                 <button type="button" class="btn btn-link btn-sm text-muted position-absolute end-0 top-50 translate-middle-y text-decoration-none p-1 me-1"
                                         onclick="cancelCustomCategory('courseCategoryCombobox', 'courseCustomCatDiv')" title="Hủy nhập danh mục mới">
                                     <i class="bi bi-x-lg"></i>
@@ -1113,7 +1115,7 @@ function initSearchableSelect(comboboxId, customDivId) {
                 addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i> Thêm danh mục "' + escapeHtml(query.trim()) + '"...';
                 addNewBtn.dataset.customText = query.trim();
             } else {
-                addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>+ Nhập danh mục mới...';
+                addNewBtn.innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i> Nhập danh mục mới...';
                 delete addNewBtn.dataset.customText;
             }
         }
