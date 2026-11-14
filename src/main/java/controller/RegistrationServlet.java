@@ -9,7 +9,6 @@ import service.CourseService;
 import entity.Course;
 import dao.RegistrationDao;
 import dto.RecentLearningDto;
-import dto.StudentAiRecommendationDto;
 import dto.RegistrationDto;
 import dto.UserDto;
 import entity.enums.PaymentStatus;
@@ -535,6 +534,15 @@ public class RegistrationServlet extends HttpServlet {
                 course = courseService.getCourseDetail(reg.getCourseId());
             }
 
+            // Đảm bảo số lượng bài học và tiến độ luôn được đồng bộ chính xác
+            if (course != null && reg.getTotalLessons() <= 0 && course.getTotalLessons() > 0) {
+                reg.setTotalLessons(course.getTotalLessons());
+                if (reg.getCompletedLessons() >= 0) {
+                    reg.setProgressPercentage(BigDecimal.valueOf(reg.getCompletedLessons() * 100.0 / reg.getTotalLessons())
+                            .setScale(1, java.math.RoundingMode.HALF_UP));
+                }
+            }
+
             req.setAttribute("registration", reg);
             req.setAttribute("course", course);
             req.getRequestDispatcher("/WEB-INF/views/registration/my_course_detail.jsp").forward(req, resp);
@@ -607,11 +615,9 @@ public class RegistrationServlet extends HttpServlet {
         }
 
         RecentLearningDto recentLearning = registrationService.getRecentLearning(currentUser.getId());
-        StudentAiRecommendationDto aiRecommendation = registrationService.getStudentAiRecommendations(currentUser.getId(), list);
 
         req.setAttribute("registrations", list);
         req.setAttribute("recentLearning", recentLearning);
-        req.setAttribute("aiRecommendation", aiRecommendation);
         req.setAttribute("totalCourses", totalCourses);
         req.setAttribute("inProgressCourses", inProgressCourses);
         req.setAttribute("completedCourses", completedCourses);

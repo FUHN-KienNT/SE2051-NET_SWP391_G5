@@ -264,7 +264,9 @@ public class RegistrationDao {
         StringBuilder sql = new StringBuilder(
             "SELECT r.id, r.user_id, u.full_name AS user_name, r.course_id, c.title AS course_title, " +
             "       r.registration_date, r.progress_percentage, r.status, r.payment_method, " +
-            "       r.payment_code, r.payment_amount, r.payment_status, r.paid_at " +
+            "       r.payment_code, r.payment_amount, r.payment_status, r.paid_at, " +
+            "       (SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = r.course_id AND l.is_active = true) AS total_lessons, " +
+            "       (SELECT COUNT(1) FROM lesson_progress lp WHERE lp.registration_id = r.id AND lp.status = 'COMPLETED') AS completed_lessons " +
             "FROM registrations r " +
             "LEFT JOIN users u ON r.user_id = u.id " +
             "LEFT JOIN courses c ON r.course_id = c.id " +
@@ -315,7 +317,9 @@ public class RegistrationDao {
     public Optional<RegistrationDto> findDtoById(Connection con, long id) throws SQLException {
         String sql = "SELECT r.id, r.user_id, u.full_name AS user_name, r.course_id, c.title AS course_title, " +
                      "       r.registration_date, r.progress_percentage, r.status, r.payment_method, " +
-                     "       r.payment_code, r.payment_amount, r.payment_status, r.paid_at " +
+                     "       r.payment_code, r.payment_amount, r.payment_status, r.paid_at, " +
+                     "       (SELECT COUNT(1) FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = r.course_id AND l.is_active = true) AS total_lessons, " +
+                     "       (SELECT COUNT(1) FROM lesson_progress lp WHERE lp.registration_id = r.id AND lp.status = 'COMPLETED') AS completed_lessons " +
                      "FROM registrations r " +
                      "LEFT JOIN users u ON r.user_id = u.id " +
                      "LEFT JOIN courses c ON r.course_id = c.id " +
@@ -356,6 +360,28 @@ public class RegistrationDao {
             dto.setPaymentStatus(PaymentStatus.fromDb(ps));
         }
         dto.setPaidAt(rs.getObject("paid_at", OffsetDateTime.class));
+
+        try {
+            int total = rs.getInt("total_lessons");
+            if (!rs.wasNull()) {
+                dto.setTotalLessons(total);
+            }
+        } catch (SQLException ignored) {}
+
+        try {
+            int completed = rs.getInt("completed_lessons");
+            if (!rs.wasNull()) {
+                dto.setCompletedLessons(completed);
+            }
+        } catch (SQLException ignored) {}
+
+        // Tính toán lại % tiến độ thực tế theo bài học đã hoàn thành
+        if (dto.getTotalLessons() > 0 && dto.getCompletedLessons() >= 0) {
+            BigDecimal dynamicPct = BigDecimal.valueOf(dto.getCompletedLessons() * 100.0 / dto.getTotalLessons())
+                    .setScale(1, java.math.RoundingMode.HALF_UP);
+            dto.setProgressPercentage(dynamicPct);
+        }
+
         return dto;
     }
 

@@ -115,24 +115,6 @@ public final class GeminiAiUtil {
         }
     }
 
-    public static class StudentRecommendationResult {
-        private final List<Long> recommendedCourseIds;
-        private final String advice;
-
-        public StudentRecommendationResult(List<Long> recommendedCourseIds, String advice) {
-            this.recommendedCourseIds = recommendedCourseIds != null ? recommendedCourseIds : new ArrayList<>();
-            this.advice = advice;
-        }
-
-        public List<Long> getRecommendedCourseIds() {
-            return recommendedCourseIds;
-        }
-
-        public String getAdvice() {
-            return advice;
-        }
-    }
-
     /**
      * Phân loại danh mục khóa học thông minh VÀ tự động viết mô tả bằng Gemini AI trong cùng 1 request:
      * @param courseTitle Tiêu đề khóa học hoặc tiêu đề Playlist
@@ -507,102 +489,6 @@ public final class GeminiAiUtil {
             }
         }
         return sb.toString();
-    }
-
-    /**
-     * Dùng Gemini AI để phân tích lịch sử học tập và đề xuất top khóa học phù hợp cùng lời khuyên học tập:
-     * - enrolledCourseTitles: Danh sách tiêu đề khóa học học viên đã tham gia
-     * - enrolledCategories: Danh sách danh mục học viên quan tâm
-     * - candidateCourses: Danh sách các khóa học hiện có mà học viên chưa đăng ký
-     */
-    public static StudentRecommendationResult recommendCoursesForStudent(
-            List<String> enrolledCourseTitles,
-            List<String> enrolledCategories,
-            List<CourseDto> candidateCourses) {
-        if (!isAvailable() || candidateCourses == null || candidateCourses.isEmpty()) {
-            return null;
-        }
-
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Bạn là chuyên gia cố vấn học tập tại Courson LMS. Dưới đây là thông tin học tập của học viên:\n");
-            if (enrolledCourseTitles != null && !enrolledCourseTitles.isEmpty()) {
-                sb.append("- Khóa học học viên đã tham gia: ")
-                  .append(String.join(", ", enrolledCourseTitles.subList(0, Math.min(5, enrolledCourseTitles.size()))))
-                  .append("\n");
-            }
-            if (enrolledCategories != null && !enrolledCategories.isEmpty()) {
-                sb.append("- Chủ đề học viên quan tâm: ")
-                  .append(String.join(", ", enrolledCategories.subList(0, Math.min(4, enrolledCategories.size()))))
-                  .append("\n");
-            }
-            sb.append("Danh sách các khóa học hiện có để gợi ý (chọn tối đa 3 khóa phù hợp nhất từ danh sách này):\n");
-            int count = 0;
-            for (CourseDto c : candidateCourses) {
-                if (count++ >= 8) break;
-                sb.append("  * ID: ").append(c.getId())
-                  .append(" | Tiêu đề: ").append(c.getTitle())
-                  .append(" | Danh mục: ").append(c.getCategoryName() != null ? c.getCategoryName() : "Khác")
-                  .append("\n");
-            }
-            sb.append("Yêu cầu:\n");
-            sb.append("1. Chọn ra tối đa 3 ID khóa học phù hợp nhất để xây dựng lộ trình nâng cao kiến thức cho học viên.\n");
-            sb.append("2. Đưa ra 1 câu lời khuyên học tập (advice) ngắn gọn (dưới 180 ký tự), tích cực và truyền cảm hứng.\n");
-            sb.append("Chỉ trả về JSON duy nhất: {\"recommendedCourseIds\": [1, 2], \"advice\": \"...\"} không kèm markdown.");
-
-            String requestBody = "{"
-                    + "\"contents\":[{\"parts\":[{\"text\":\"" + escapeJson(sb.toString()) + "\"}]}],"
-                    + "\"generationConfig\":{\"responseMimeType\":\"application/json\",\"thinkingConfig\":{\"thinkingBudget\":0},\"temperature\":0.3}"
-                    + "}";
-
-            String[] candidateModels = MODEL.equals("gemini-2.5-flash-lite")
-                    ? new String[]{"gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-flash-latest"}
-                    : new String[]{MODEL, "gemini-2.5-flash-lite"};
-
-            for (String modelName : candidateModels) {
-                String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + API_KEY;
-                HttpRequest req = HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Content-Type", "application/json")
-                        .timeout(Duration.ofSeconds(TIMEOUT_SECONDS))
-                        .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
-                        .build();
-
-                HttpResponse<String> resp = HTTP_CLIENT.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-                if (resp.statusCode() == 200) {
-                    String text = extractGeminiText(resp.body());
-                    String target = (text != null && !text.trim().isEmpty()) ? text : resp.body();
-                    List<Long> ids = extractLongArray(target, "recommendedCourseIds");
-                    if (ids.isEmpty()) {
-                        ids = extractLongArray(target, "recommendedIds");
-                    }
-                    String advice = extractField(target, "advice");
-                    if (!ids.isEmpty()) {
-                        return new StudentRecommendationResult(ids, advice);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Lỗi khi gọi Gemini AI gợi ý khóa học cho học viên: {0}", e.getMessage());
-        }
-        return null;
-    }
-
-    public static List<Long> extractLongArray(String json, String field) {
-        List<Long> result = new ArrayList<>();
-        if (json == null) return result;
-        Pattern p = Pattern.compile("\"" + Pattern.quote(field) + "\"\\s*:\\s*\\[([^\\]]*)\\]");
-        Matcher m = p.matcher(json);
-        if (m.find()) {
-            String arrayContent = m.group(1);
-            Matcher numMatcher = Pattern.compile("\\b(\\d+)\\b").matcher(arrayContent);
-            while (numMatcher.find()) {
-                try {
-                    result.add(Long.parseLong(numMatcher.group(1)));
-                } catch (NumberFormatException ignored) {}
-            }
-        }
-        return result;
     }
 
     private static String extractField(String json, String field) {

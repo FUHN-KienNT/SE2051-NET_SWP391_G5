@@ -178,6 +178,7 @@
                     </div>
 
                     <!-- Progress Bar -->
+                    <c:set var="displayTotalLessons" value="${registration.totalLessons > 0 ? registration.totalLessons : (course != null ? course.totalLessons : 0)}" />
                     <div class="my-3 p-3 rounded-3 bg-light border">
                         <div class="d-flex justify-content-between align-items-center mb-1 small">
                             <span class="fw-semibold text-dark"><i class="bi bi-bar-chart-steps me-1 text-primary"></i>Tiến độ khóa học</span>
@@ -190,7 +191,7 @@
                                  style="width: ${registration.progressPercentage != null ? registration.progressPercentage : 0}%;"></div>
                         </div>
                         <div class="d-flex justify-content-between text-muted" style="font-size: 0.78rem;">
-                            <span>Đã hoàn thành: <strong>${registration.completedLessons} / ${registration.totalLessons} bài học</strong></span>
+                            <span>Đã hoàn thành: <strong>${registration.completedLessons} / ${displayTotalLessons} bài học</strong></span>
                             <span>Quyền truy cập: <strong class="text-success"><i class="bi bi-infinity me-1"></i>Trọn đời</strong></span>
                         </div>
                     </div>
@@ -250,7 +251,7 @@
                             <p class="text-muted small mb-0">Theo dõi trạng thái hoàn thành của từng bài giảng và bài tập</p>
                         </div>
                         <span class="badge bg-light text-dark border px-2.5 py-1">
-                            ${registration.totalLessons} bài học &bull; ${fn:length(course.modules)} chương
+                            ${displayTotalLessons} bài học &bull; ${fn:length(course.modules)} chương
                         </span>
                     </div>
 
