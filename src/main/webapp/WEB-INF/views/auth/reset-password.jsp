@@ -294,12 +294,6 @@
                         </div>
 
                         <button type="submit" id="submitBtn" class="btn-submit">Lưu mật khẩu mới</button>
-
-                        <div style="text-align: center; margin-top: 24px;">
-                            <a href="${pageContext.request.contextPath}/auth/login" class="back-link">
-                                <i class="bi bi-arrow-left"></i> Quay lại đăng nhập
-                            </a>
-                        </div>
                     </form>
                 </c:otherwise>
             </c:choose>
