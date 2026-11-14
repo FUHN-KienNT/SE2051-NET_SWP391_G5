@@ -191,19 +191,7 @@
                 cursor: not-allowed;
             }
 
-            .back-link {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                color: #6B7280;
-                font-size: 0.88rem;
-                font-weight: 500;
-                text-decoration: none;
-                transition: color 0.15s;
-            }
-            .back-link:hover {
-                color: #F38020;
-            }
+
         </style>
     </head>
     <body>
@@ -242,11 +230,7 @@
                         <a href="${pageContext.request.contextPath}/auth/forgot-password" class="btn-submit">
                             Yêu cầu gửi lại link mới
                         </a>
-                        <div style="margin-top: 20px;">
-                            <a href="${pageContext.request.contextPath}/auth/login" class="back-link">
-                                <i class="bi bi-arrow-left"></i> Quay lại đăng nhập
-                            </a>
-                        </div>
+
                     </div>
                 </c:when>
 
