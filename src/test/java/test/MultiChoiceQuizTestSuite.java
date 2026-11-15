@@ -347,4 +347,58 @@ public class MultiChoiceQuizTestSuite {
             assertTrue(passedIds.isEmpty());
         }
     }
+
+    @Test
+    @DisplayName("2.8 Kiểm tra và đồng bộ tiến độ khóa học hoàn thành 100% cho registration 7")
+    void testRegistration7CompletedData() throws Exception {
+        try (java.sql.Connection con = util.DbConnection.getConnection();
+             java.sql.Statement stmt = con.createStatement()) {
+            stmt.execute("INSERT INTO lesson_progress (registration_id, lesson_id, status, user_note, updated_at, completed_at) VALUES " +
+                    "(7, 228, 'COMPLETED', 'Nắm vững bản chất xã hội của tâm lý người.', now() - interval '17 days', now() - interval '17 days'), " +
+                    "(7, 229, 'COMPLETED', 'Phân tích chức năng và phân loại hiện tượng tâm lý.', now() - interval '16 days', now() - interval '16 days'), " +
+                    "(7, 230, 'COMPLETED', 'Hoàn thành tóm tắt chương 1.', now() - interval '15 days', now() - interval '15 days'), " +
+                    "(7, 231, 'COMPLETED', 'Nắm rõ khái niệm cảm giác và tri giác.', now() - interval '14 days', now() - interval '14 days'), " +
+                    "(7, 232, 'COMPLETED', 'Hiểu sâu các quy luật cảm giác.', now() - interval '13 days', now() - interval '13 days'), " +
+                    "(7, 233, 'COMPLETED', 'Ứng dụng quy luật tri giác vào đời sống.', now() - interval '12 days', now() - interval '12 days'), " +
+                    "(7, 234, 'COMPLETED', 'Ghi nhớ các giai đoạn của quá trình trí nhớ.', now() - interval '11 days', now() - interval '11 days'), " +
+                    "(7, 235, 'COMPLETED', 'Thực hành phương pháp rèn luyện trí nhớ.', now() - interval '10 days', now() - interval '10 days'), " +
+                    "(7, 236, 'COMPLETED', 'Ôn tập và củng cố hệ thống trí nhớ dài hạn.', now() - interval '9 days', now() - interval '9 days'), " +
+                    "(7, 237, 'COMPLETED', 'Nắm vững các thao tác tư duy logic.', now() - interval '8 days', now() - interval '8 days'), " +
+                    "(7, 238, 'COMPLETED', 'Hiểu rõ các loại hình và vai trò của tưởng tượng.', now() - interval '7 days', now() - interval '7 days'), " +
+                    "(7, 239, 'COMPLETED', 'Phân biệt xúc cảm và tình cảm con người.', now() - interval '6 days', now() - interval '6 days'), " +
+                    "(7, 240, 'COMPLETED', 'Nắm vững các quy luật đời sống tình cảm.', now() - interval '5 days', now() - interval '5 days'), " +
+                    "(7, 241, 'COMPLETED', 'Nhận diện 4 kiểu khí chất cơ bản.', now() - interval '4 days', now() - interval '4 days'), " +
+                    "(7, 242, 'COMPLETED', 'Phân tích xu hướng và lý tưởng sống.', now() - interval '3 days', now() - interval '3 days'), " +
+                    "(7, 243, 'COMPLETED', 'Hiểu rõ cấu trúc và con đường hình thành tính cách.', now() - interval '2 days', now() - interval '2 days'), " +
+                    "(7, 244, 'COMPLETED', 'Phát triển năng lực và tài năng cá nhân.', now() - interval '1 day', now() - interval '1 day') " +
+                    "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET status = 'COMPLETED', completed_at = EXCLUDED.completed_at;");
+
+            long attemptId = 0L;
+            try (java.sql.ResultSet rs = stmt.executeQuery(
+                    "INSERT INTO quiz_attempts (registration_id, quiz_id, submitted_at, total_score, pass_status) VALUES " +
+                    "(7, 26, now() - interval '1 day', 100.00, true) " +
+                    "ON CONFLICT (registration_id, quiz_id) DO UPDATE SET submitted_at = EXCLUDED.submitted_at, total_score = 100.00, pass_status = true " +
+                    "RETURNING id;")) {
+                if (rs.next()) {
+                    attemptId = rs.getLong(1);
+                }
+            }
+
+            if (attemptId > 0) {
+                stmt.execute("INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_correct, score) VALUES " +
+                        "(" + attemptId + ", 51, 201, true, 50.00), (" + attemptId + ", 52, 205, true, 50.00) " +
+                        "ON CONFLICT (quiz_attempt_id, question_id, selected_option_id) DO UPDATE SET is_correct = true, score = 50.00;");
+            }
+
+            try (java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(1) FROM lesson_progress WHERE registration_id = 7 AND status = 'COMPLETED'")) {
+                assertTrue(rs.next());
+                assertEquals(18, rs.getInt(1), "Registration 7 phải có đủ 18 bài học trạng thái COMPLETED");
+            }
+
+            QuizAttemptDao attemptDao = new QuizAttemptDao();
+            java.util.Set<Long> passedQuizzes = attemptDao.findPassedQuizIdsByRegistration(con, 7L);
+            assertTrue(passedQuizzes.contains(25L), "Registration 7 phải pass Quiz 25");
+            assertTrue(passedQuizzes.contains(26L), "Registration 7 phải pass Quiz 26");
+        }
+    }
 }

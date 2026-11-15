@@ -252,20 +252,41 @@ public class EnrichMasterSeed {
         sb.append("    (3, 65, 'COMPLETED', 'Đã ghi nhớ tính cách cung Bạch Dương.', now() - interval '5 days', now() - interval '5 days'),\n");
         sb.append("    (4, 77, 'COMPLETED', 'Đã thiết lập dự án Spring Boot 3.', now() - interval '4 days', now() - interval '4 days'),\n");
         sb.append("    (6, 153, 'COMPLETED', 'Đã phát âm chuẩn thanh mẫu pinyin.', now() - interval '3 days', now() - interval '3 days'),\n");
+        sb.append("    -- Registration 7 (Khóa học Tâm lý học hoàn thành 100% - toàn bộ 18 bài học)\n");
         sb.append("    (7, 227, 'COMPLETED', 'Đã hiểu bản chất hiện tượng tâm lý người.', now() - interval '18 days', now() - interval '18 days'),\n");
+        sb.append("    (7, 228, 'COMPLETED', 'Nắm vững bản chất xã hội của tâm lý người.', now() - interval '17 days', now() - interval '17 days'),\n");
+        sb.append("    (7, 229, 'COMPLETED', 'Phân tích chức năng và phân loại hiện tượng tâm lý.', now() - interval '16 days', now() - interval '16 days'),\n");
+        sb.append("    (7, 230, 'COMPLETED', 'Hoàn thành tóm tắt chương 1.', now() - interval '15 days', now() - interval '15 days'),\n");
+        sb.append("    (7, 231, 'COMPLETED', 'Nắm rõ khái niệm cảm giác và tri giác.', now() - interval '14 days', now() - interval '14 days'),\n");
+        sb.append("    (7, 232, 'COMPLETED', 'Hiểu sâu các quy luật cảm giác.', now() - interval '13 days', now() - interval '13 days'),\n");
+        sb.append("    (7, 233, 'COMPLETED', 'Ứng dụng quy luật tri giác vào đời sống.', now() - interval '12 days', now() - interval '12 days'),\n");
+        sb.append("    (7, 234, 'COMPLETED', 'Ghi nhớ các giai đoạn của quá trình trí nhớ.', now() - interval '11 days', now() - interval '11 days'),\n");
+        sb.append("    (7, 235, 'COMPLETED', 'Thực hành phương pháp rèn luyện trí nhớ.', now() - interval '10 days', now() - interval '10 days'),\n");
+        sb.append("    (7, 236, 'COMPLETED', 'Ôn tập và củng cố hệ thống trí nhớ dài hạn.', now() - interval '9 days', now() - interval '9 days'),\n");
+        sb.append("    (7, 237, 'COMPLETED', 'Nắm vững các thao tác tư duy logic.', now() - interval '8 days', now() - interval '8 days'),\n");
+        sb.append("    (7, 238, 'COMPLETED', 'Hiểu rõ các loại hình và vai trò của tưởng tượng.', now() - interval '7 days', now() - interval '7 days'),\n");
+        sb.append("    (7, 239, 'COMPLETED', 'Phân biệt xúc cảm và tình cảm con người.', now() - interval '6 days', now() - interval '6 days'),\n");
+        sb.append("    (7, 240, 'COMPLETED', 'Nắm vững các quy luật đời sống tình cảm.', now() - interval '5 days', now() - interval '5 days'),\n");
+        sb.append("    (7, 241, 'COMPLETED', 'Nhận diện 4 kiểu khí chất cơ bản.', now() - interval '4 days', now() - interval '4 days'),\n");
+        sb.append("    (7, 242, 'COMPLETED', 'Phân tích xu hướng và lý tưởng sống.', now() - interval '3 days', now() - interval '3 days'),\n");
+        sb.append("    (7, 243, 'COMPLETED', 'Hiểu rõ cấu trúc và con đường hình thành tính cách.', now() - interval '2 days', now() - interval '2 days'),\n");
+        sb.append("    (7, 244, 'COMPLETED', 'Phát triển năng lực và tài năng cá nhân.', now() - interval '1 day', now() - interval '1 day'),\n");
         sb.append("    (8, 245, 'COMPLETED', 'Đã nhớ vị trí các nốt trên khuông nhạc.', now() - interval '25 days', now() - interval '25 days');\n\n");
 
         // Lịch sử làm bài trắc nghiệm mẫu
         sb.append("-- LỊCH SỬ TRẮC NGHIỆM MẪU\n");
         sb.append("INSERT INTO quiz_attempts (id, registration_id, quiz_id, submitted_at, total_score, pass_status) VALUES\n");
         sb.append("    (1, 1, 1, now() - interval '5 days', 100.00, true),\n");
-        sb.append("    (2, 7, 25, now() - interval '1 day', 100.00, true);\n\n");
+        sb.append("    (2, 7, 25, now() - interval '1 day', 100.00, true),\n");
+        sb.append("    (4, 7, 26, now() - interval '1 day', 100.00, true);\n\n");
 
         sb.append("INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_correct, score) VALUES\n");
         sb.append("    (1, 1, 1, true, 50.00),\n");
         sb.append("    (1, 2, 5, true, 50.00),\n");
         sb.append("    (2, 49, 193, true, 50.00),\n");
-        sb.append("    (2, 50, 197, true, 50.00)\n");
+        sb.append("    (2, 50, 197, true, 50.00),\n");
+        sb.append("    (4, 51, 201, true, 50.00),\n");
+        sb.append("    (4, 52, 205, true, 50.00)\n");
         sb.append("ON CONFLICT (quiz_attempt_id, question_id, selected_option_id) DO UPDATE SET is_correct = true, score = 50.00;\n\n");
 
         // Đồng bộ sequence

@@ -1009,7 +1009,25 @@ INSERT INTO lesson_progress (registration_id, lesson_id, status, user_note, upda
     (3,  65,  'COMPLETED',   'Đã ghi nhớ tính cách cung Bạch Dương.', now() - interval '5 days', now() - interval '5 days'),
     (4,  77,  'COMPLETED',   'Đã thiết lập dự án Spring Boot 3.', now() - interval '4 days', now() - interval '4 days'),
     (6,  153, 'COMPLETED',   'Đã phát âm chuẩn thanh mẫu pinyin.', now() - interval '3 days', now() - interval '3 days'),
+    -- Registration 7 (Khóa học Tâm lý học hoàn thành 100% - toàn bộ 18 bài học)
     (7,  227, 'COMPLETED',   'Đã hiểu bản chất hiện tượng tâm lý người.', now() - interval '18 days', now() - interval '18 days'),
+    (7,  228, 'COMPLETED',   'Nắm vững bản chất xã hội của tâm lý người.', now() - interval '17 days', now() - interval '17 days'),
+    (7,  229, 'COMPLETED',   'Phân tích chức năng và phân loại hiện tượng tâm lý.', now() - interval '16 days', now() - interval '16 days'),
+    (7,  230, 'COMPLETED',   'Hoàn thành tóm tắt chương 1.', now() - interval '15 days', now() - interval '15 days'),
+    (7,  231, 'COMPLETED',   'Nắm rõ khái niệm cảm giác và tri giác.', now() - interval '14 days', now() - interval '14 days'),
+    (7,  232, 'COMPLETED',   'Hiểu sâu các quy luật cảm giác.', now() - interval '13 days', now() - interval '13 days'),
+    (7,  233, 'COMPLETED',   'Ứng dụng quy luật tri giác vào đời sống.', now() - interval '12 days', now() - interval '12 days'),
+    (7,  234, 'COMPLETED',   'Ghi nhớ các giai đoạn của quá trình trí nhớ.', now() - interval '11 days', now() - interval '11 days'),
+    (7,  235, 'COMPLETED',   'Thực hành phương pháp rèn luyện trí nhớ.', now() - interval '10 days', now() - interval '10 days'),
+    (7,  236, 'COMPLETED',   'Ôn tập và củng cố hệ thống trí nhớ dài hạn.', now() - interval '9 days', now() - interval '9 days'),
+    (7,  237, 'COMPLETED',   'Nắm vững các thao tác tư duy logic.', now() - interval '8 days', now() - interval '8 days'),
+    (7,  238, 'COMPLETED',   'Hiểu rõ các loại hình và vai trò của tưởng tượng.', now() - interval '7 days', now() - interval '7 days'),
+    (7,  239, 'COMPLETED',   'Phân biệt xúc cảm và tình cảm con người.', now() - interval '6 days', now() - interval '6 days'),
+    (7,  240, 'COMPLETED',   'Nắm vững các quy luật đời sống tình cảm.', now() - interval '5 days', now() - interval '5 days'),
+    (7,  241, 'COMPLETED',   'Nhận diện 4 kiểu khí chất cơ bản.', now() - interval '4 days', now() - interval '4 days'),
+    (7,  242, 'COMPLETED',   'Phân tích xu hướng và lý tưởng sống.', now() - interval '3 days', now() - interval '3 days'),
+    (7,  243, 'COMPLETED',   'Hiểu rõ cấu trúc và con đường hình thành tính cách.', now() - interval '2 days', now() - interval '2 days'),
+    (7,  244, 'COMPLETED',   'Phát triển năng lực và tài năng cá nhân.', now() - interval '1 day', now() - interval '1 day'),
     (8,  245, 'COMPLETED',   'Đã nhớ vị trí các nốt trên khuông nhạc.', now() - interval '25 days', now() - interval '25 days'),
     -- Tiến độ của Student 2
     (9,  18,  'COMPLETED',   'Đã hoàn thành cài đặt môi trường Python.', now() - interval '4 days', now() - interval '4 days'),
@@ -1022,7 +1040,8 @@ INSERT INTO lesson_progress (registration_id, lesson_id, status, user_note, upda
 INSERT INTO quiz_attempts (id, registration_id, quiz_id, submitted_at, total_score, pass_status) VALUES
     (1, 1, 1,  now() - interval '5 days', 100.00, true),
     (2, 7, 25, now() - interval '1 day',  100.00, true),
-    (3, 9, 3,  now() - interval '3 days', 100.00, true);
+    (3, 9, 3,  now() - interval '3 days', 100.00, true),
+    (4, 7, 26, now() - interval '1 day',  100.00, true);
 
 INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_correct, score) VALUES
     (1, 1,  1,   true, 50.00),
@@ -1030,7 +1049,9 @@ INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_c
     (2, 49, 193, true, 50.00),
     (2, 50, 197, true, 50.00),
     (3, 5,  17,  true, 50.00),
-    (3, 6,  21,  true, 50.00)
+    (3, 6,  21,  true, 50.00),
+    (4, 51, 201, true, 50.00),
+    (4, 52, 205, true, 50.00)
 ON CONFLICT (quiz_attempt_id, question_id, selected_option_id) DO UPDATE SET is_correct = true, score = 50.00;
 
 -- ĐỒNG BỘ LẠI TẤT CẢ SEQUENCE POSTGRESQL
