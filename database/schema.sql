@@ -1,28 +1,34 @@
 -- =====================================================================
--- Courson LMS - PostgreSQL Master Consolidated Schema (14 bảng)
+-- Courson LMS - PostgreSQL Master Consolidated Schema
 --
--- 14 bảng quan hệ chuẩn hóa:
+-- Cấu trúc 14 bảng quan hệ cốt lõi + 2 bảng Token bảo mật:
 --   1. settings                  - Vai trò hệ thống & Danh mục khóa học
 --   2. users                     - Người dùng & Thông tin hồ sơ cá nhân
 --   3. email_verification_tokens - Token xác thực tài khoản qua email
---   4. courses                   - Khóa học, trạng thái & lịch lưu trữ
---   5. modules                   - Chương học / Học phần
---   6. lessons                   - Bài giảng & cờ ẩn/hiện bài học
---   7. quizzes                   - Bài kiểm tra trắc nghiệm
---   8. questions                 - Ngân hàng câu hỏi
---   9. answer_options            - Các phương án trả lời cho câu hỏi
---  10. quiz_questions            - Gán câu hỏi vào đề thi kèm điểm số
---  11. registrations             - Đăng ký khóa học & Thanh toán (Sepay, VNPay)
---  12. lesson_progress           - Tiến độ học bài & Ghi chú cá nhân học viên
---  13. quiz_attempts             - Lịch sử làm bài thi của học viên
---  14. quiz_answers              - Chi tiết lựa chọn và điểm từng câu hỏi
+--   4. password_reset_tokens     - Token đặt lại mật khẩu qua email
+--   5. courses                   - Khóa học, trạng thái, người quản lý/chuyên gia & lịch lưu trữ
+--   6. modules                   - Chương học / Học phần
+--   7. lessons                   - Bài giảng & cờ ẩn/hiện bài học
+--   8. quizzes                   - Bài kiểm tra trắc nghiệm & cờ ẩn/hiện
+--   9. questions                 - Ngân hàng câu hỏi (Single, Multi choice, True/False)
+--  10. answer_options            - Các phương án trả lời cho câu hỏi
+--  11. quiz_questions            - Gán câu hỏi vào đề thi kèm điểm số
+--  12. registrations             - Đăng ký khóa học & Thanh toán (Sepay, VNPay)
+--  13. lesson_progress           - Tiến độ học bài & Ghi chú cá nhân học viên
+--  14. quiz_attempts             - Lịch sử làm bài thi của học viên (hỗ trợ lưu tạm)
+--  15. quiz_answers              - Chi tiết lựa chọn và điểm từng câu hỏi (hỗ trợ Multi-choice)
 --
--- Tích hợp đầy đủ các bản cập nhật / Migrations:
+-- Tích hợp đầy đủ 100% các bản cập nhật / Migrations (01 -> 10):
 --   + 01_add_pending_review_to_courses: Trạng thái PENDING_REVIEW cho courses
---   + 02_add_archive_and_notes_columns: archive_at, archive_notice cho courses,
---                                       is_active cho lessons, user_note cho lesson_progress
+--   + 02_add_archive_and_notes_columns: archive_at, archive_notice cho courses; is_active cho lessons; user_note cho lesson_progress
 --   + 03_add_user_profile_columns: avatar_url, phone, birth_date cho users
---   + Đồng bộ tracking: updated_at và created_at cho lesson_progress
+--   + 04_add_lesson_progress_tracking: created_at, updated_at cho lesson_progress
+--   + 05_add_is_featured_to_courses: cờ is_featured và chỉ mục cho courses
+--   + 06_add_bio_to_users: trường bio tiểu sử cá nhân cho users
+--   + 07_add_password_reset_tokens: bảng và chỉ mục phục vụ đặt lại mật khẩu
+--   + 08_add_is_active_to_quizzes: cờ is_active ẩn/hiện bài thi trắc nghiệm
+--   + 09_support_multichoice_answers: unique constraint hỗ trợ chọn nhiều đáp án
+--   + 10_allow_null_submitted_at_quiz_attempts: cho phép submitted_at null khi đang làm bài
 -- =====================================================================
 
 -- Xóa các bảng cũ theo thứ tự phụ thuộc (nếu đã tồn tại) để reset sạch sẽ CSDL
@@ -381,17 +387,20 @@ INSERT INTO settings (id, type, name, value, priority, status, description) VALU
 ON CONFLICT (type, name) DO NOTHING;
 
 -- Cập nhật sequence của bảng settings lên giá trị tiếp theo
-SELECT setval('settings_id_seq', (SELECT MAX(id) FROM settings));
+SELECT setval(pg_get_serial_sequence('settings', 'id'), COALESCE((SELECT MAX(id) FROM settings), 1));
 
 -- 3. Initial Users (Mật khẩu mặc định: admin123 băm bằng BCrypt $2a$12)
-INSERT INTO users (id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, avatar_url, phone, birth_date) VALUES
-    (1, 'admin', 'admin@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản trị viên Hệ thống', 5, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0901234567', '1990-01-01'),
-    (2, 'manager1', 'manager@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản lý Khóa học', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0912345678', '1992-05-15'),
-    (3, 'expert1', 'expert@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Chuyên gia Nội dung', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0923456789', '1988-10-20'),
-    (4, 'student1', 'student@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Học viên Nguyễn Văn A', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0934567890', '2002-12-12')
-ON CONFLICT (username) DO NOTHING;
+INSERT INTO users (id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, avatar_url, phone, birth_date, bio) VALUES
+    (1, 'admin', 'admin@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản trị viên Hệ thống', 5, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0901234567', '1990-01-01', 'Quản trị viên cấp cao của Courson LMS, chịu trách nhiệm quản trị hệ thống và kiểm duyệt nội dung.'),
+    (2, 'manager1', 'manager@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Trần Quản Lý', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0912345678', '1992-05-15', 'Quản lý chương trình đào tạo chính của Courson LMS, phụ trách kiểm duyệt chất lượng và giám sát các khóa học trọng điểm.'),
+    (3, 'expert1', 'expert@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Nguyễn Chuyên Gia', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0923456789', '1988-10-20', 'Chuyên gia giảng dạy cao cấp với hơn 10 năm kinh nghiệm trong lĩnh vực công nghệ thông tin và khoa học ứng dụng.'),
+    (4, 'student1', 'student@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Nguyễn Văn A', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0934567890', '2002-12-12', 'Học viên tích cực tại Courson LMS, đang theo học lộ trình phát triển phần mềm và kỹ năng sống.'),
+    (5, 'student2', 'student2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Trần Thị B', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0945678901', '2003-08-20', 'Sinh viên năm 3 chuyên ngành kinh tế, tham gia học các khóa học kỹ năng mềm, ngoại ngữ và lập trình căn bản.'),
+    (6, 'manager2', 'manager2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Lê Hoàng Quản Lý', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0913579246', '1994-08-22', 'Phó ban quản lý đào tạo, phụ trách điều phối và hỗ trợ vận hành các khóa học ngoại ngữ, công nghệ mới.'),
+    (7, 'expert2', 'expert2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Phạm Minh Chuyên Gia', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE', NULL, '0924681357', '1991-03-12', 'Giảng viên chuyên môn về ngôn ngữ học ứng dụng, nghệ thuật âm nhạc và phát triển kỹ năng mềm.')
+ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash, status = 'ACTIVE', bio = EXCLUDED.bio;
 
 -- Cập nhật sequence của bảng users lên giá trị tiếp theo
-SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
+SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1));
 
 COMMIT;

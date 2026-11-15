@@ -5,17 +5,34 @@
 
 BEGIN;
 
--- 1. Thiết lập danh mục hệ thống
-INSERT INTO settings (type, name, value, priority, status, description) VALUES
-    ('COURSE_CATEGORY', 'Lập trình',               'PROGRAMMING',  1, 'ACTIVE', 'Phát triển phần mềm, web, kiến trúc hệ thống và AI'),
-    ('COURSE_CATEGORY', 'Nhân tướng học',         'PHYSIOGNOMY',  2, 'ACTIVE', 'Nhân tướng học, quan sát diện mạo và nhân trắc học ứng dụng'),
-    ('COURSE_CATEGORY', 'Chiêm tinh học',         'ASTROLOGY',    3, 'ACTIVE', 'Bí mật 12 cung hoàng đạo, các hành tinh và chiêm tinh'),
-    ('COURSE_CATEGORY', 'Tâm lý & Kỹ năng mềm',    'SOFT_SKILLS',  4, 'ACTIVE', 'Tâm lý học đại cương, hành vi con người và kỹ năng'),
-    ('COURSE_CATEGORY', 'Ngoại ngữ',              'LANGUAGES',    5, 'ACTIVE', 'Tiếng Anh, Tiếng Trung, Tiếng Nhật, Ngoại ngữ giao tiếp'),
-    ('COURSE_CATEGORY', 'Nghệ thuật & Sáng tạo',   'ART_CREATIVE', 6, 'ACTIVE', 'Nhạc lý, guitar, thanh nhạc, sáng tác và nghệ thuật')
+-- 1. Thiết lập vai trò người dùng hệ thống (USER_ROLE)
+INSERT INTO settings (id, type, name, value, priority, status, description) VALUES
+    (1, 'USER_ROLE', 'Guest',   'GUEST',   1, 'ACTIVE', 'Khách truy cập, chưa đăng nhập'),
+    (2, 'USER_ROLE', 'Student', 'STUDENT', 2, 'ACTIVE', 'Học viên'),
+    (3, 'USER_ROLE', 'Manager', 'MANAGER', 3, 'ACTIVE', 'Quản lý khoá học'),
+    (4, 'USER_ROLE', 'Expert',  'EXPERT',  4, 'ACTIVE', 'Chuyên gia tạo nội dung'),
+    (5, 'USER_ROLE', 'Admin',   'ADMIN',   5, 'ACTIVE', 'Quản trị hệ thống')
 ON CONFLICT (type, name) DO NOTHING;
 
--- 2. Dọn dẹp dữ liệu cũ theo ràng buộc khóa ngoại
+-- 2. Thiết lập đầy đủ 12 danh mục khóa học chuẩn (COURSE_CATEGORY)
+INSERT INTO settings (id, type, name, value, priority, status, description) VALUES
+    (6,  'COURSE_CATEGORY', 'Lập trình',               'PROGRAMMING',  1,  'ACTIVE', 'Khoá học lập trình, thuật toán, phát triển phần mềm'),
+    (7,  'COURSE_CATEGORY', 'Khoa học Dữ liệu & AI',   'DATA_AI',      2,  'ACTIVE', 'Trí tuệ nhân tạo, phân tích dữ liệu, Machine Learning'),
+    (8,  'COURSE_CATEGORY', 'Thiết kế',                'DESIGN',       3,  'ACTIVE', 'Thiết kế đồ họa, UI/UX, mỹ thuật số'),
+    (9,  'COURSE_CATEGORY', 'Kinh doanh',              'BUSINESS',     4,  'ACTIVE', 'Quản trị kinh doanh, khởi nghiệp, lãnh đạo doanh nghiệp'),
+    (10, 'COURSE_CATEGORY', 'Marketing',              'MARKETING',    5,  'ACTIVE', 'Marketing số, truyền thông, tiếp thị và thương hiệu'),
+    (11, 'COURSE_CATEGORY', 'Ngoại ngữ',              'LANGUAGES',    6,  'ACTIVE', 'Tiếng Anh giao tiếp, TOEIC, IELTS, Tiếng Nhật, Hàn, Hoa'),
+    (12, 'COURSE_CATEGORY', 'Kỹ năng mềm',            'SOFT_SKILLS',  7,  'ACTIVE', 'Kỹ năng giao tiếp, làm việc nhóm, tư duy phản biện'),
+    (13, 'COURSE_CATEGORY', 'Tài chính',              'FINANCE',      8,  'ACTIVE', 'Quản lý tài chính cá nhân, đầu tư'),
+    (14, 'COURSE_CATEGORY', 'Nghệ thuật & Sáng tạo',   'ART_CREATIVE', 9,  'ACTIVE', 'Nhiếp ảnh, quay dựng video, âm nhạc, hội họa'),
+    (15, 'COURSE_CATEGORY', 'Nhân tướng học',         'PHYSIOGNOMY',  10, 'ACTIVE', 'Kiến thức nhân tướng học, diện mạo và nhân trắc học ứng dụng'),
+    (16, 'COURSE_CATEGORY', 'Tử Vi & Phong Thủy',     'TU_VI',        11, 'ACTIVE', 'Nghiên cứu lá số Tử Vi, âm dương ngũ hành và giải đoán vận hạn'),
+    (17, 'COURSE_CATEGORY', 'Chiêm tinh học',         'ASTROLOGY',    12, 'ACTIVE', 'Khám phá bí mật 12 cung hoàng đạo và chiêm tinh học ứng dụng')
+ON CONFLICT (type, name) DO NOTHING;
+
+SELECT setval(pg_get_serial_sequence('settings', 'id'), COALESCE((SELECT MAX(id) FROM settings), 1));
+
+-- 3. Dọn dẹp dữ liệu cũ theo thứ tự ràng buộc khóa ngoại
 DELETE FROM quiz_answers;
 DELETE FROM quiz_attempts;
 DELETE FROM lesson_progress;
@@ -30,15 +47,17 @@ DELETE FROM courses;
 DELETE FROM password_reset_tokens;
 DELETE FROM email_verification_tokens;
 
--- 3. Khởi tạo 5 tài khoản thử nghiệm chuẩn (mật khẩu: '123' hoặc 'admin123')
-DELETE FROM users WHERE id IN (1, 2, 3, 4, 5);
-INSERT INTO users (id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, phone, birth_date) VALUES
-    (1, 'admin', 'admin@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản trị viên Hệ thống', 5, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0901234567', '1990-01-01'),
-    (2, 'manager1', 'manager@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản lý Khóa học', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0912345678', '1992-05-15'),
-    (3, 'expert1', 'expert@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Chuyên gia Giảng viên', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0923456789', '1988-10-20'),
-    (4, 'student1', 'student@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Nguyễn Văn A', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0934567890', '2002-12-12'),
-    (5, 'student2', 'student2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Trần Thị B', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0945678901', '2003-08-20')
-ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash, status = 'ACTIVE';
+-- 4. Khởi tạo 7 tài khoản thử nghiệm chuẩn (mỗi role 2 tài khoản, mật khẩu mặc định: '123' hoặc 'admin123')
+DELETE FROM users WHERE id IN (1, 2, 3, 4, 5, 6, 7);
+INSERT INTO users (id, username, email, password_hash, full_name, role_id, role_type, auth_provider, status, phone, birth_date, bio) VALUES
+    (1, 'admin', 'admin@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Quản trị viên Hệ thống', 5, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0901234567', '1990-01-01', 'Quản trị viên cấp cao của Courson LMS, chịu trách nhiệm quản trị hệ thống và kiểm duyệt nội dung.'),
+    (2, 'manager1', 'manager@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Trần Quản Lý', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0912345678', '1992-05-15', 'Quản lý chương trình đào tạo chính của Courson LMS, phụ trách kiểm duyệt chất lượng và giám sát các khóa học trọng điểm.'),
+    (3, 'expert1', 'expert@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Nguyễn Chuyên Gia', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0923456789', '1988-10-20', 'Chuyên gia giảng dạy cao cấp với hơn 10 năm kinh nghiệm trong lĩnh vực công nghệ thông tin và khoa học ứng dụng.'),
+    (4, 'student1', 'student@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Nguyễn Văn A', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0934567890', '2002-12-12', 'Học viên tích cực tại Courson LMS, đang theo học lộ trình phát triển phần mềm và kỹ năng sống.'),
+    (5, 'student2', 'student2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Trần Thị B', 2, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0945678901', '2003-08-20', 'Sinh viên năm 3 chuyên ngành kinh tế, tham gia học các khóa học kỹ năng mềm, ngoại ngữ và lập trình căn bản.'),
+    (6, 'manager2', 'manager2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Lê Hoàng Quản Lý', 3, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0913579246', '1994-08-22', 'Phó ban quản lý đào tạo, phụ trách điều phối và hỗ trợ vận hành các khóa học ngoại ngữ, công nghệ mới.'),
+    (7, 'expert2', 'expert2@courson.edu.vn', '$2a$12$Jl9I6uWRXBnYCHQmmh8o8eFWKFwQacRW3EWaTTLREbC6m8cWo2GTS', 'Phạm Minh Chuyên Gia', 4, 'USER_ROLE', 'LOCAL', 'ACTIVE', '0924681357', '1991-03-12', 'Giảng viên chuyên môn về ngôn ngữ học ứng dụng, nghệ thuật âm nhạc và phát triển kỹ năng mềm.')
+ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash, status = 'ACTIVE', bio = EXCLUDED.bio;
 
 -- COURSE 1: Nhân Tướng Học Thầy Viên Minh - Khái Niệm Nền Tảng Đến Ứng Dụng [PUBLISHED]
 INSERT INTO courses (id, title, category_id, category_type, description, price, status, manager_id, expert_id, is_featured, created_at, updated_at)
@@ -161,7 +180,7 @@ VALUES (3, 'Bí Mật Tính Cách & Chiêm Tinh 12 Cung Hoàng Đạo',
         (SELECT id FROM settings WHERE type = 'COURSE_CATEGORY' AND value = 'ASTROLOGY' LIMIT 1),
         'COURSE_CATEGORY',
         'Khám phá thế giới chiêm tinh học phương Tây qua 12 chòm sao hoàng đạo: tính cách cốt lõi, điểm mạnh yếu, xu hướng tình cảm và con đường sự nghiệp.',
-        0, 'DRAFT', 2, 3, 'Khóa học chưa đạt yêu cầu kiểm duyệt: Chương 1 còn thiếu bài tập trắc nghiệm và mô tả chi tiết của từng cung. Đề nghị Chuyên gia bổ sung trước khi gửi duyệt lại.', false, now() - interval '30 days', now() - interval '2 days');
+        0, 'DRAFT', 2, 7, 'Khóa học chưa đạt yêu cầu kiểm duyệt: Chương 1 còn thiếu bài tập trắc nghiệm và mô tả chi tiết của từng cung. Đề nghị Chuyên gia bổ sung trước khi gửi duyệt lại.', false, now() - interval '30 days', now() - interval '2 days');
 
 INSERT INTO modules (id, course_id, title, order_index, created_at) VALUES
     (8, 3, 'Chương 1: Các Cung Hoàng Đạo Tiên Phong (Lửa & Đất)', 1, now() - interval '30 days');
@@ -254,7 +273,7 @@ VALUES (5, 'Học Lập Trình .NET & C# Nền Tảng Đến Chuyên Sâu',
         (SELECT id FROM settings WHERE type = 'COURSE_CATEGORY' AND value = 'PROGRAMMING' LIMIT 1),
         'COURSE_CATEGORY',
         'Học lập trình nền tảng .NET và ngôn ngữ C# hiện đại. Tự tay xây dựng ứng dụng console, Web API với ASP.NET Core và Entity Framework Core.',
-        299000, 'PUBLISHED', 2, 3, true, now() - interval '30 days', now() - interval '2 days');
+        299000, 'PUBLISHED', 6, 3, true, now() - interval '30 days', now() - interval '2 days');
 
 INSERT INTO modules (id, course_id, title, order_index, created_at) VALUES
     (14, 5, 'Chương 1: Làm quen .NET & Cài đặt Visual Studio', 1, now() - interval '30 days');
@@ -323,7 +342,7 @@ VALUES (6, 'Nhập Môn Tự Học Tiếng Trung Từ Con Số 0',
         (SELECT id FROM settings WHERE type = 'COURSE_CATEGORY' AND value = 'LANGUAGES' LIMIT 1),
         'COURSE_CATEGORY',
         'Khóa học tiếng Trung sơ cấp chi tiết và dễ hiểu nhất: hệ thống phiên âm Pinyin, 4 thanh điệu, quy tắc viết chữ Hán và các câu giao tiếp căn bản.',
-        350000, 'PUBLISHED', 2, 3, true, now() - interval '30 days', now() - interval '2 days');
+        350000, 'PUBLISHED', 6, 7, true, now() - interval '30 days', now() - interval '2 days');
 
 INSERT INTO modules (id, course_id, title, order_index, created_at) VALUES
     (18, 6, 'Chương 1: Hệ thống Phiên âm Pinyin & Bảng chữ cái', 1, now() - interval '30 days');
@@ -440,7 +459,7 @@ VALUES (7, 'Tâm Lý Học Đại Cương: Bản Chất Con Người & Hành Vi'
         (SELECT id FROM settings WHERE type = 'COURSE_CATEGORY' AND value = 'SOFT_SKILLS' LIMIT 1),
         'COURSE_CATEGORY',
         'Nghiên cứu bản chất hiện tượng tâm lý người, quy luật cảm giác, tri giác, trí nhớ, tư duy, cảm xúc, khí chất và cấu trúc nhân cách.',
-        199000, 'PUBLISHED', 2, 3, false, now() - interval '30 days', now() - interval '2 days');
+        199000, 'PUBLISHED', 6, 7, false, now() - interval '30 days', now() - interval '2 days');
 
 INSERT INTO modules (id, course_id, title, order_index, created_at) VALUES
     (25, 7, 'Chương 1: Bản chất hiện tượng tâm lý người & Nhận thức cảm tính', 1, now() - interval '30 days');
@@ -476,7 +495,7 @@ VALUES (8, 'Khóa Học Nhạc Lý Cơ Bản & Thực Hành Guitar',
         (SELECT id FROM settings WHERE type = 'COURSE_CATEGORY' AND value = 'ART_CREATIVE' LIMIT 1),
         'COURSE_CATEGORY',
         'Khóa học nhạc lý bài bản kết hợp thực hành guitar. Khóa học đã lưu trữ nội dung và đóng cổng đăng ký mới. Học viên đã sở hữu được học tập trọn đời.',
-        0, 'ARCHIVED', 2, 3, now() - interval '1 month', 'Khóa học đã đóng đăng ký mới. Học viên đã sở hữu có quyền truy cập học tập trọn đời.', false, now() - interval '30 days', now() - interval '2 days');
+        0, 'ARCHIVED', 2, 7, now() - interval '1 month', 'Khóa học đã đóng đăng ký mới. Học viên đã sở hữu có quyền truy cập học tập trọn đời.', false, now() - interval '30 days', now() - interval '2 days');
 
 INSERT INTO modules (id, course_id, title, order_index, created_at) VALUES
     (27, 8, 'Chương 1: Khuông nhạc, Khóa nhạc & Nhịp phách', 1, now() - interval '30 days');
@@ -966,42 +985,56 @@ INSERT INTO quiz_questions (id, quiz_id, question_id, module_id, order_index, po
     (61, 31, 61, 31, 1, 50.00),
     (62, 31, 62, 31, 2, 50.00);
 
--- ĐĂNG KÝ KHÓA HỌC CHO TÀI KHOẢN STUDENT1 (ID=4)
+-- ĐĂNG KÝ KHÓA HỌC CHO TÀI KHOẢN STUDENT1 (ID=4) VÀ STUDENT2 (ID=5)
 INSERT INTO registrations (id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at) VALUES
-    (1, 4, 1, now() - interval '10 days', 47.06, 'ACTIVE',    NULL,     NULL,               0,      'FREE',    now() - interval '10 days'),
-    (2, 4, 2, now() - interval '9 days',  25.00, 'ACTIVE',    NULL,     NULL,               0,      'FREE',    now() - interval '9 days'),
-    (3, 4, 3, now() - interval '8 days',  16.67, 'ACTIVE',    NULL,     NULL,               0,      'FREE',    now() - interval '8 days'),
-    (4, 4, 4, now() - interval '7 days',  10.00, 'ACTIVE',    NULL,     NULL,               0,      'FREE',    now() - interval '7 days'),
-    (5, 4, 5, now() - interval '2 days',    0.00,  'PENDING',   'VNPAY',  'VNP_TEST_PENDING', 299000, 'PENDING', NULL),
-    (6, 4, 6, now() - interval '6 days',  15.00, 'ACTIVE',    NULL,     NULL,               0,      'FREE',    now() - interval '6 days'),
-    (7, 4, 7, now() - interval '20 days',100.0, 'COMPLETED', 'VNPAY',  'VNP_TEST_SUCCESS', 199000, 'SUCCESS', now() - interval '20 days'),
-    (8, 4, 8, now() - interval '40 days', 19.61, 'ACTIVE',    NULL,     NULL,               0,      'FREE',    now() - interval '40 days');
+    (1,  4, 1, now() - interval '10 days', 47.06, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '10 days'),
+    (2,  4, 2, now() - interval '9 days',  25.00, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '9 days'),
+    (3,  4, 3, now() - interval '8 days',  16.67, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '8 days'),
+    (4,  4, 4, now() - interval '7 days',  10.00, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '7 days'),
+    (5,  4, 5, now() - interval '2 days',    0.00, 'PENDING',   'VNPAY',  'VNP_TEST_PENDING',       299000, 'PENDING', NULL),
+    (6,  4, 6, now() - interval '6 days',  15.00, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '6 days'),
+    (7,  4, 7, now() - interval '20 days',100.0, 'COMPLETED', 'VNPAY',  'VNP_TEST_SUCCESS',       199000, 'SUCCESS', now() - interval '20 days'),
+    (8,  4, 8, now() - interval '40 days', 19.61, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '40 days'),
+    -- Demo phụ cho Student 2 (Trần Thị B): Đang học Python, Tiếng Trung và đăng ký chờ thanh toán Tâm lý học
+    (9,  5, 2, now() - interval '5 days',  12.50, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '5 days'),
+    (10, 5, 6, now() - interval '3 days',  25.00, 'ACTIVE',    NULL,     NULL,                     0,      'FREE',    now() - interval '3 days'),
+    (11, 5, 7, now() - interval '1 days',    0.00, 'PENDING',   'VNPAY',  'VNP_TEST_ST2_PENDING',   199000, 'PENDING', NULL);
 
--- TIẾN ĐỘ HỌC TẬP MẪU CHO STUDENT1
+-- TIẾN ĐỘ HỌC TẬP MẪU CHO STUDENT1 & STUDENT2
 INSERT INTO lesson_progress (registration_id, lesson_id, status, user_note, updated_at, completed_at) VALUES
-    (1, 1, 'COMPLETED', 'Đã nắm vững cốt cách nhân tướng học.', now() - interval '8 days', now() - interval '8 days'),
-    (1, 2, 'COMPLETED', 'Đã hiểu rõ ngũ quan và tam đình.', now() - interval '7 days', now() - interval '7 days'),
-    (1, 3, 'IN_PROGRESS', 'Đang thực hành quan sát thần khí.', now() - interval '2 hours', NULL),
-    (2, 18, 'COMPLETED', 'Đã cài đặt Python và VS Code thành công.', now() - interval '7 days', now() - interval '7 days'),
-    (3, 65, 'COMPLETED', 'Đã ghi nhớ tính cách cung Bạch Dương.', now() - interval '5 days', now() - interval '5 days'),
-    (4, 77, 'COMPLETED', 'Đã thiết lập dự án Spring Boot 3.', now() - interval '4 days', now() - interval '4 days'),
-    (6, 153, 'COMPLETED', 'Đã phát âm chuẩn thanh mẫu pinyin.', now() - interval '3 days', now() - interval '3 days'),
-    (7, 227, 'COMPLETED', 'Đã hiểu bản chất hiện tượng tâm lý người.', now() - interval '18 days', now() - interval '18 days'),
-    (8, 245, 'COMPLETED', 'Đã nhớ vị trí các nốt trên khuông nhạc.', now() - interval '25 days', now() - interval '25 days');
+    (1,  1,   'COMPLETED',   'Đã nắm vững cốt cách nhân tướng học.', now() - interval '8 days', now() - interval '8 days'),
+    (1,  2,   'COMPLETED',   'Đã hiểu rõ ngũ quan và tam đình.', now() - interval '7 days', now() - interval '7 days'),
+    (1,  3,   'IN_PROGRESS', 'Đang thực hành quan sát thần khí.', now() - interval '2 hours', NULL),
+    (2,  18,  'COMPLETED',   'Đã cài đặt Python và VS Code thành công.', now() - interval '7 days', now() - interval '7 days'),
+    (3,  65,  'COMPLETED',   'Đã ghi nhớ tính cách cung Bạch Dương.', now() - interval '5 days', now() - interval '5 days'),
+    (4,  77,  'COMPLETED',   'Đã thiết lập dự án Spring Boot 3.', now() - interval '4 days', now() - interval '4 days'),
+    (6,  153, 'COMPLETED',   'Đã phát âm chuẩn thanh mẫu pinyin.', now() - interval '3 days', now() - interval '3 days'),
+    (7,  227, 'COMPLETED',   'Đã hiểu bản chất hiện tượng tâm lý người.', now() - interval '18 days', now() - interval '18 days'),
+    (8,  245, 'COMPLETED',   'Đã nhớ vị trí các nốt trên khuông nhạc.', now() - interval '25 days', now() - interval '25 days'),
+    -- Tiến độ của Student 2
+    (9,  18,  'COMPLETED',   'Đã hoàn thành cài đặt môi trường Python.', now() - interval '4 days', now() - interval '4 days'),
+    (9,  19,  'COMPLETED',   'Hiểu rõ các khái niệm căn bản về Python.', now() - interval '3 days', now() - interval '3 days'),
+    (9,  20,  'IN_PROGRESS', 'Đang xem hướng dẫn tạo script đầu tiên.', now() - interval '1 day', NULL),
+    (10, 153, 'COMPLETED',   'Luyện phát âm các thanh mẫu cơ bản.', now() - interval '2 days', now() - interval '2 days'),
+    (10, 154, 'COMPLETED',   'Đã nhớ quy tắc 4 thanh điệu tiếng Trung.', now() - interval '1 day', now() - interval '1 day');
 
--- LỊCH SỬ TRẮC NGHIỆM MẪU
+-- LỊCH SỬ TRẮC NGHIỆM MẪU (STUDENT1 & STUDENT2)
 INSERT INTO quiz_attempts (id, registration_id, quiz_id, submitted_at, total_score, pass_status) VALUES
-    (1, 1, 1, now() - interval '5 days', 100.00, true),
-    (2, 7, 25, now() - interval '1 day', 100.00, true);
+    (1, 1, 1,  now() - interval '5 days', 100.00, true),
+    (2, 7, 25, now() - interval '1 day',  100.00, true),
+    (3, 9, 3,  now() - interval '3 days', 100.00, true);
 
 INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_correct, score) VALUES
-    (1, 1, 1, true, 50.00),
-    (1, 2, 5, true, 50.00),
+    (1, 1,  1,   true, 50.00),
+    (1, 2,  5,   true, 50.00),
     (2, 49, 193, true, 50.00),
-    (2, 50, 197, true, 50.00)
+    (2, 50, 197, true, 50.00),
+    (3, 5,  17,  true, 50.00),
+    (3, 6,  21,  true, 50.00)
 ON CONFLICT (quiz_attempt_id, question_id, selected_option_id) DO UPDATE SET is_correct = true, score = 50.00;
 
--- ĐỒNG BỘ LẠI SEQUENCE POSTGRESQL
+-- ĐỒNG BỘ LẠI TẤT CẢ SEQUENCE POSTGRESQL
+SELECT setval(pg_get_serial_sequence('settings', 'id'), COALESCE((SELECT MAX(id) FROM settings), 1));
 SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1));
 SELECT setval(pg_get_serial_sequence('courses', 'id'), COALESCE((SELECT MAX(id) FROM courses), 1));
 SELECT setval(pg_get_serial_sequence('modules', 'id'), COALESCE((SELECT MAX(id) FROM modules), 1));
@@ -1014,5 +1047,7 @@ SELECT setval(pg_get_serial_sequence('quiz_questions', 'id'), COALESCE((SELECT M
 SELECT setval(pg_get_serial_sequence('quiz_attempts', 'id'), COALESCE((SELECT MAX(id) FROM quiz_attempts), 1));
 SELECT setval(pg_get_serial_sequence('quiz_answers', 'id'), COALESCE((SELECT MAX(id) FROM quiz_answers), 1));
 SELECT setval(pg_get_serial_sequence('lesson_progress', 'id'), COALESCE((SELECT MAX(id) FROM lesson_progress), 1));
+SELECT setval(pg_get_serial_sequence('password_reset_tokens', 'id'), COALESCE((SELECT MAX(id) FROM password_reset_tokens), 1));
+SELECT setval(pg_get_serial_sequence('email_verification_tokens', 'id'), COALESCE((SELECT MAX(id) FROM email_verification_tokens), 1));
 
 COMMIT;
