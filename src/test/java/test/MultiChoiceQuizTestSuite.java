@@ -8,6 +8,7 @@ import dto.AnswerOptionDto;
 import dto.QuestionDto;
 import dto.QuizAnswerDto;
 import dto.QuizResultDto;
+import dto.UserDto;
 import entity.QuizAnswer;
 import entity.QuizAttempt;
 import entity.enums.QuestionType;
@@ -353,7 +354,12 @@ public class MultiChoiceQuizTestSuite {
     void testRegistration7CompletedData() throws Exception {
         try (java.sql.Connection con = util.DbConnection.getConnection();
              java.sql.Statement stmt = con.createStatement()) {
+            stmt.execute("INSERT INTO registrations (id, user_id, course_id, registration_date, progress_percentage, status, payment_method, payment_code, payment_amount, payment_status, paid_at) VALUES " +
+                    "(7, 4, 7, now() - interval '20 days', 100.0, 'COMPLETED', 'VNPAY', 'VNP_TEST_SUCCESS', 199000, 'SUCCESS', now() - interval '20 days') " +
+                    "ON CONFLICT (id) DO UPDATE SET status = 'COMPLETED', progress_percentage = 100.0;");
+
             stmt.execute("INSERT INTO lesson_progress (registration_id, lesson_id, status, user_note, updated_at, completed_at) VALUES " +
+                    "(7, 227, 'COMPLETED', 'Giới thiệu tổng quan tâm lý học nghề nghiệp.', now() - interval '18 days', now() - interval '18 days'), " +
                     "(7, 228, 'COMPLETED', 'Nắm vững bản chất xã hội của tâm lý người.', now() - interval '17 days', now() - interval '17 days'), " +
                     "(7, 229, 'COMPLETED', 'Phân tích chức năng và phân loại hiện tượng tâm lý.', now() - interval '16 days', now() - interval '16 days'), " +
                     "(7, 230, 'COMPLETED', 'Hoàn thành tóm tắt chương 1.', now() - interval '15 days', now() - interval '15 days'), " +
@@ -372,6 +378,10 @@ public class MultiChoiceQuizTestSuite {
                     "(7, 243, 'COMPLETED', 'Hiểu rõ cấu trúc và con đường hình thành tính cách.', now() - interval '2 days', now() - interval '2 days'), " +
                     "(7, 244, 'COMPLETED', 'Phát triển năng lực và tài năng cá nhân.', now() - interval '1 day', now() - interval '1 day') " +
                     "ON CONFLICT (registration_id, lesson_id) DO UPDATE SET status = 'COMPLETED', completed_at = EXCLUDED.completed_at;");
+
+            stmt.execute("INSERT INTO quiz_attempts (registration_id, quiz_id, submitted_at, total_score, pass_status) VALUES " +
+                    "(7, 25, now() - interval '2 days', 100.00, true) " +
+                    "ON CONFLICT (registration_id, quiz_id) DO UPDATE SET submitted_at = EXCLUDED.submitted_at, total_score = 100.00, pass_status = true;");
 
             long attemptId = 0L;
             try (java.sql.ResultSet rs = stmt.executeQuery(
@@ -400,5 +410,57 @@ public class MultiChoiceQuizTestSuite {
             assertTrue(passedQuizzes.contains(25L), "Registration 7 phải pass Quiz 25");
             assertTrue(passedQuizzes.contains(26L), "Registration 7 phải pass Quiz 26");
         }
+    }
+
+    @Test
+    @DisplayName("5. Kiểm thử Bảo mật & Phân quyền Quản lý Quiz (Ownership & Access Control)")
+    void testQuizManagementAccessControl() {
+        UserDto expert1 = new UserDto();
+        expert1.setId(3L);
+        expert1.setEmail("expert@courson.edu.vn");
+        expert1.setRoleName("EXPERT");
+
+        UserDto expert2 = new UserDto();
+        expert2.setId(7L);
+        expert2.setEmail("expert2@courson.edu.vn");
+        expert2.setRoleName("EXPERT");
+
+        UserDto admin = new UserDto();
+        admin.setId(1L);
+        admin.setEmail("admin@courson.edu.vn");
+        admin.setRoleName("ADMIN");
+
+        // 1. Expert 1 sở hữu Course 1 -> Kiểm tra quyền thành công
+        assertDoesNotThrow(() -> quizService.validateCourseManageAccess(1L, expert1));
+
+        // 2. Expert 2 sở hữu Course 3 -> Kiểm tra quyền thành công
+        assertDoesNotThrow(() -> quizService.validateCourseManageAccess(3L, expert2));
+
+        // 3. Expert 1 cố truy cập Course 3 của Expert 2 -> Chặn SecurityException (IDOR)
+        SecurityException ex1 = assertThrows(SecurityException.class,
+                () -> quizService.validateCourseManageAccess(3L, expert1));
+        assertTrue(ex1.getMessage().contains("Từ chối truy cập"));
+
+        // 4. Expert 2 cố truy cập Course 1 của Expert 1 -> Chặn SecurityException (IDOR)
+        SecurityException ex2 = assertThrows(SecurityException.class,
+                () -> quizService.validateCourseManageAccess(1L, expert2));
+        assertTrue(ex2.getMessage().contains("Từ chối truy cập"));
+
+        // 5. Admin có toàn quyền trên cả Course 1 và Course 3
+        assertDoesNotThrow(() -> quizService.validateCourseManageAccess(1L, admin));
+        assertDoesNotThrow(() -> quizService.validateCourseManageAccess(3L, admin));
+
+        // 6. getDefaultCourseId cho Expert 1 phải trả về khóa học thuộc quyền quản lý của Expert 1
+        Long defaultCourse1 = quizService.getDefaultCourseId(expert1);
+        assertNotNull(defaultCourse1);
+        assertDoesNotThrow(() -> quizService.validateCourseManageAccess(defaultCourse1, expert1));
+
+        // 7. getDefaultCourseId cho Expert 2 phải trả về khóa học thuộc quyền quản lý của Expert 2
+        Long defaultCourse2 = quizService.getDefaultCourseId(expert2);
+        assertNotNull(defaultCourse2);
+        assertDoesNotThrow(() -> quizService.validateCourseManageAccess(defaultCourse2, expert2));
+
+        // 8. Chặn Expert 2 xóa Quiz thuộc Course 1
+        assertThrows(SecurityException.class, () -> quizService.deleteQuiz(1L, expert2));
     }
 }

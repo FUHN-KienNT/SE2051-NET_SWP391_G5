@@ -134,6 +134,7 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void showQuizList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
 
@@ -157,9 +158,21 @@ public class QuizServlet extends HttpServlet {
 
         if (courseId == null) {
             try {
-                courseId = quizService.getDefaultCourseId();
+                courseId = quizService.getDefaultCourseId(currentUser);
             } catch (Exception e) {
                 req.setAttribute("error", "Không thể tải danh sách khóa học: " + e.getMessage());
+            }
+        }
+
+        if (courseId != null) {
+            try {
+                quizService.validateCourseManageAccess(courseId, currentUser);
+            } catch (SecurityException se) {
+                SessionUtil.setFlashError(req, se.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/home");
+                return;
+            } catch (Exception e) {
+                req.setAttribute("error", "Lỗi kiểm tra quyền khóa học: " + e.getMessage());
             }
         }
 
@@ -225,6 +238,7 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void showQuestionBank(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
 
@@ -248,9 +262,21 @@ public class QuizServlet extends HttpServlet {
 
         if (courseId == null) {
             try {
-                courseId = quizService.getDefaultCourseId();
+                courseId = quizService.getDefaultCourseId(currentUser);
             } catch (Exception e) {
                 req.setAttribute("error", "Không thể tải danh sách khóa học: " + e.getMessage());
+            }
+        }
+
+        if (courseId != null) {
+            try {
+                quizService.validateCourseManageAccess(courseId, currentUser);
+            } catch (SecurityException se) {
+                SessionUtil.setFlashError(req, se.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/home");
+                return;
+            } catch (Exception e) {
+                req.setAttribute("error", "Lỗi kiểm tra quyền khóa học: " + e.getMessage());
             }
         }
 
@@ -312,6 +338,7 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void showQuizDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String quizIdStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         if (quizIdStr == null || quizIdStr.trim().isEmpty()) {
@@ -322,6 +349,7 @@ public class QuizServlet extends HttpServlet {
 
         try {
             long quizId = Long.parseLong(quizIdStr.trim());
+            quizService.validateQuizManageAccess(quizId, currentUser);
             QuizDto quiz = quizService.getQuizDetail(quizId);
             req.setAttribute("quiz", quiz);
 
@@ -368,6 +396,10 @@ public class QuizServlet extends HttpServlet {
                     .collect(Collectors.toSet());
             req.setAttribute("assignedQuestionIds", assignedQuestionIds);
 
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             resp.sendRedirect(req.getContextPath() + "/quizzes/list?error=" + java.net.URLEncoder.encode(
                     "Không tìm thấy bài thi hoặc lỗi: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
@@ -378,12 +410,13 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void saveQuiz(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String courseIdStr = req.getParameter("courseId");
         String from = req.getParameter("from");
         QuizDto dto = null;
         try {
             dto = bindQuiz(req);
-            long id = quizService.saveQuiz(dto);
+            long id = quizService.saveQuiz(dto, currentUser);
 
             // Nếu submit từ trang list (hoặc không phải từ detail)
             if ("list".equalsIgnoreCase(from) || !"detail".equalsIgnoreCase(from)) {
@@ -403,6 +436,10 @@ public class QuizServlet extends HttpServlet {
                 target += "&courseId=" + courseIdStr.trim();
             }
             resp.sendRedirect(target + "&success=saved");
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             String redirectUrl;
             if ("list".equalsIgnoreCase(from) || !"detail".equalsIgnoreCase(from)) {
@@ -431,12 +468,13 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void deleteQuiz(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String quizIdStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         try {
             if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
-                quizService.deleteQuiz(Long.parseLong(quizIdStr.trim()));
+                quizService.deleteQuiz(Long.parseLong(quizIdStr.trim()), currentUser);
             }
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 resp.sendRedirect(
@@ -444,6 +482,10 @@ public class QuizServlet extends HttpServlet {
             } else {
                 resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&success=deleted");
             }
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             String redirectUrl = req.getContextPath() + "/quizzes/list?";
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
@@ -457,12 +499,13 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void toggleQuizActive(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String idStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String from = req.getParameter("from");
         try {
             long quizId = Long.parseLong(idStr);
-            boolean newStatus = quizService.toggleQuizActive(quizId);
+            boolean newStatus = quizService.toggleQuizActive(quizId, currentUser);
             String successMsg = newStatus ? "activated" : "deactivated";
 
             if ("detail".equalsIgnoreCase(from)) {
@@ -479,6 +522,10 @@ public class QuizServlet extends HttpServlet {
                 target += "courseId=" + courseIdStr.trim();
             }
             resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "success=" + successMsg);
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             String target = req.getContextPath() + "/quizzes/list?";
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
@@ -490,13 +537,14 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void saveQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String quizIdStr = req.getParameter("quizId");
         String courseIdStr = req.getParameter("courseId");
         String from = req.getParameter("from");
         QuestionDto dto = null;
         try {
             dto = bindQuestion(req);
-            long questionId = quizService.saveQuestion(dto);
+            long questionId = quizService.saveQuestion(dto, currentUser);
             boolean isNewQuestion = (dto.getId() == null || dto.getId() <= 0);
 
             // Nếu đến từ trang câu hỏi hoặc danh sách, redirect về trang ngân hàng câu hỏi
@@ -520,7 +568,7 @@ public class QuizServlet extends HttpServlet {
                 }
                 if (isNewQuestion) {
                     BigDecimal points = dto.getDefaultPoints() != null ? dto.getDefaultPoints() : BigDecimal.ONE;
-                    quizService.assignQuestion(quizId, questionId, points, 0);
+                    quizService.assignQuestion(quizId, questionId, points, 0, currentUser);
                     resp.sendRedirect(target + "&success=question_created_and_assigned");
                 } else {
                     resp.sendRedirect(target + "&success=question_updated");
@@ -536,6 +584,10 @@ public class QuizServlet extends HttpServlet {
             }
             resp.sendRedirect(req.getContextPath() + "/quizzes/questions?moduleId=" + dto.getModuleId()
                     + "&success=question_saved");
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             if ("questions".equalsIgnoreCase(from) || "list".equalsIgnoreCase(from)) {
                 String target = req.getContextPath() + "/quizzes/questions?";
@@ -572,12 +624,13 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void deleteQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String qIdStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         try {
             if (qIdStr != null && !qIdStr.trim().isEmpty()) {
-                quizService.deleteQuestion(Long.parseLong(qIdStr.trim()));
+                quizService.deleteQuestion(Long.parseLong(qIdStr.trim()), currentUser);
             }
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 resp.sendRedirect(req.getContextPath() + "/quizzes/questions?courseId=" + courseIdStr.trim()
@@ -586,6 +639,10 @@ public class QuizServlet extends HttpServlet {
             }
             resp.sendRedirect(req.getContextPath() + "/quizzes/questions?moduleId=" + moduleIdStr
                     + "&success=question_deleted");
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             String redirectUrl = req.getContextPath() + "/quizzes/questions?";
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
@@ -599,6 +656,7 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void assignQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String quizIdStr = req.getParameter("quizId");
         String questionIdStr = req.getParameter("questionId");
         String courseIdStr = req.getParameter("courseId");
@@ -617,12 +675,16 @@ public class QuizServlet extends HttpServlet {
             String orderStr = req.getParameter("order");
             int order = (orderStr != null && !orderStr.trim().isEmpty()) ? Integer.parseInt(orderStr.trim()) : 0;
 
-            quizService.assignQuestion(quizId, questionId, points, order);
+            quizService.assignQuestion(quizId, questionId, points, order, currentUser);
             String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 target += "&courseId=" + courseIdStr.trim();
             }
             resp.sendRedirect(target + "&success=assigned");
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             String target;
             if (quizIdStr != null && quizIdStr.trim().matches("\\d+")) {
@@ -639,6 +701,7 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void removeQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
         String quizIdStr = req.getParameter("quizId");
         String questionIdStr = req.getParameter("questionId");
         String courseIdStr = req.getParameter("courseId");
@@ -651,12 +714,16 @@ public class QuizServlet extends HttpServlet {
         try {
             long quizId = Long.parseLong(quizIdStr.trim());
             long questionId = Long.parseLong(questionIdStr.trim());
-            quizService.removeQuestion(quizId, questionId);
+            quizService.removeQuestion(quizId, questionId, currentUser);
             String target = req.getContextPath() + "/quizzes/detail?id=" + quizId;
             if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
                 target += "&courseId=" + courseIdStr.trim();
             }
             resp.sendRedirect(target + "&success=removed");
+        } catch (SecurityException se) {
+            SessionUtil.setFlashError(req, se.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home");
+            return;
         } catch (Exception e) {
             String target;
             if (quizIdStr != null && quizIdStr.trim().matches("\\d+")) {

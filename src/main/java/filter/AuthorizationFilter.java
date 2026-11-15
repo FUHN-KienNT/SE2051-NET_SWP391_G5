@@ -38,6 +38,19 @@ public class AuthorizationFilter implements Filter {
         routeRoles.put("/manager", managerOrAdmin);
         // Expert workspace (Expert Dashboard & Lesson Management) is for EXPERT only
         routeRoles.put("/expert", new HashSet<>(Arrays.asList("EXPERT", "ROLE_EXPERT")));
+
+        // Quiz administration is restricted to Staff (Admin, Manager) and Expert
+        Set<String> staffOrExpert = new HashSet<>(Arrays.asList("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER", "EXPERT", "ROLE_EXPERT"));
+        routeRoles.put("/quizzes/list", staffOrExpert);
+        routeRoles.put("/quizzes/questions", staffOrExpert);
+        routeRoles.put("/quizzes/detail", staffOrExpert);
+        routeRoles.put("/quizzes/save", staffOrExpert);
+        routeRoles.put("/quizzes/delete", staffOrExpert);
+        routeRoles.put("/quizzes/toggle-active", staffOrExpert);
+        routeRoles.put("/quizzes/save-question", staffOrExpert);
+        routeRoles.put("/quizzes/delete-question", staffOrExpert);
+        routeRoles.put("/quizzes/assign-question", staffOrExpert);
+        routeRoles.put("/quizzes/remove-question", staffOrExpert);
     }
 
     @Override
@@ -72,7 +85,7 @@ public class AuthorizationFilter implements Filter {
                 resp.sendRedirect(req.getContextPath() + "/manager/dashboard");
                 return;
             }
-            sendForbidden(resp);
+            sendForbidden(req, resp);
         }
     }
 
@@ -102,7 +115,8 @@ public class AuthorizationFilter implements Filter {
         return false;
     }
 
-    private void sendForbidden(HttpServletResponse resp) throws IOException {
-        resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: You do not have permission to access this resource.");
+    private void sendForbidden(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        SessionUtil.setFlashError(req, "Bạn không có quyền truy cập vào chức năng này.");
+        resp.sendRedirect(req.getContextPath() + "/home");
     }
 }

@@ -14,6 +14,7 @@ import dto.QuizAnswerDto;
 import dto.QuizAttemptDto;
 import dto.QuizDto;
 import dto.QuizResultDto;
+import dto.UserDto;
 import entity.AnswerOption;
 import entity.Question;
 import entity.Quiz;
@@ -120,6 +121,18 @@ public class QuizService {
         }
     }
 
+    public long saveQuiz(QuizDto dto, UserDto currentUser) {
+        if (currentUser != null && dto != null) {
+            if (dto.getModuleId() != null) {
+                validateModuleManageAccess(dto.getModuleId(), currentUser);
+            }
+            if (dto.getId() != null && dto.getId() > 0) {
+                validateQuizManageAccess(dto.getId(), currentUser);
+            }
+        }
+        return saveQuiz(dto);
+    }
+
     public long saveQuiz(QuizDto dto) {
         if (dto == null || dto.getModuleId() == null) {
             throw new IllegalArgumentException("Thông tin bài thi không hợp lệ.");
@@ -193,6 +206,13 @@ public class QuizService {
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi lưu bài thi: " + e.getMessage(), e);
         }
+    }
+
+    public void deleteQuiz(long quizId, UserDto currentUser) {
+        if (currentUser != null) {
+            validateQuizManageAccess(quizId, currentUser);
+        }
+        deleteQuiz(quizId);
     }
 
     public void deleteQuiz(long quizId) {
@@ -407,12 +427,119 @@ public class QuizService {
         }
     }
 
+    public Long getDefaultCourseId(UserDto user) {
+        if (user == null) {
+            return getDefaultCourseId();
+        }
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return getDefaultCourseId();
+        }
+        try (Connection con = DbConnection.getConnection()) {
+            List<CourseDto> managedCourses = courseDao.findSummariesByManagerOrExpert(con, user.getId());
+            if (managedCourses != null && !managedCourses.isEmpty()) {
+                return managedCourses.get(0).getId();
+            }
+            return null;
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
     public Long getDefaultCourseId() {
         try (Connection con = DbConnection.getConnection()) {
             List<entity.Course> allCourses = courseDao.findAll(con);
             return !allCourses.isEmpty() ? allCourses.get(0).getId() : null;
         } catch (SQLException e) {
             return null;
+        }
+    }
+
+    public void validateCourseManageAccess(Connection con, long courseId, UserDto user) throws SQLException {
+        if (user == null) {
+            throw new SecurityException("Vui lòng đăng nhập để thực hiện thao tác.");
+        }
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return;
+        }
+        entity.Course course = courseDao.findById(con, courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học #" + courseId));
+        boolean isOwner = (course.getExpertId() != null && course.getExpertId().equals(user.getId()))
+                || (course.getManagerId() != null && course.getManagerId().equals(user.getId()));
+        if (!isOwner) {
+            throw new SecurityException("Từ chối truy cập: Bạn không có quyền quản lý bài thi của khóa học #" + courseId);
+        }
+    }
+
+    public void validateCourseManageAccess(long courseId, UserDto user) {
+        try (Connection con = DbConnection.getConnection()) {
+            validateCourseManageAccess(con, courseId, user);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra quyền khóa học: " + e.getMessage(), e);
+        }
+    }
+
+    public void validateModuleManageAccess(Connection con, long moduleId, UserDto user) throws SQLException {
+        if (user == null) {
+            throw new SecurityException("Vui lòng đăng nhập để thực hiện thao tác.");
+        }
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return;
+        }
+        entity.Module module = moduleDao.findById(con, moduleId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương học #" + moduleId));
+        validateCourseManageAccess(con, module.getCourseId(), user);
+    }
+
+    public void validateModuleManageAccess(long moduleId, UserDto user) {
+        try (Connection con = DbConnection.getConnection()) {
+            validateModuleManageAccess(con, moduleId, user);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra quyền chương học: " + e.getMessage(), e);
+        }
+    }
+
+    public void validateQuizManageAccess(Connection con, long quizId, UserDto user) throws SQLException {
+        if (user == null) {
+            throw new SecurityException("Vui lòng đăng nhập để thực hiện thao tác.");
+        }
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return;
+        }
+        Quiz quiz = quizDao.findById(con, quizId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài thi #" + quizId));
+        validateModuleManageAccess(con, quiz.getModuleId(), user);
+    }
+
+    public void validateQuizManageAccess(long quizId, UserDto user) {
+        try (Connection con = DbConnection.getConnection()) {
+            validateQuizManageAccess(con, quizId, user);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra quyền bài thi: " + e.getMessage(), e);
+        }
+    }
+
+    public void validateQuestionManageAccess(Connection con, long questionId, UserDto user) throws SQLException {
+        if (user == null) {
+            throw new SecurityException("Vui lòng đăng nhập để thực hiện thao tác.");
+        }
+        String role = user.getRoleName();
+        if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+            return;
+        }
+        Question question = questionDao.findById(con, questionId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy câu hỏi #" + questionId));
+        validateModuleManageAccess(con, question.getModuleId(), user);
+    }
+
+    public void validateQuestionManageAccess(long questionId, UserDto user) {
+        try (Connection con = DbConnection.getConnection()) {
+            validateQuestionManageAccess(con, questionId, user);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra quyền câu hỏi: " + e.getMessage(), e);
         }
     }
 
@@ -477,6 +604,18 @@ public class QuizService {
         }
     }
 
+    public long saveQuestion(QuestionDto dto, UserDto currentUser) {
+        if (currentUser != null && dto != null) {
+            if (dto.getModuleId() != null) {
+                validateModuleManageAccess(dto.getModuleId(), currentUser);
+            }
+            if (dto.getId() != null && dto.getId() > 0) {
+                validateQuestionManageAccess(dto.getId(), currentUser);
+            }
+        }
+        return saveQuestion(dto);
+    }
+
     public long saveQuestion(QuestionDto dto) {
         validateQuestion(dto);
         try (Connection con = DbConnection.getConnection()) {
@@ -522,6 +661,13 @@ public class QuizService {
         }
     }
 
+    public void deleteQuestion(long questionId, UserDto currentUser) {
+        if (currentUser != null) {
+            validateQuestionManageAccess(questionId, currentUser);
+        }
+        deleteQuestion(questionId);
+    }
+
     public void deleteQuestion(long questionId) {
         try (Connection con = DbConnection.getConnection()) {
             int answers = questionDao.countAnswers(con, questionId);
@@ -540,6 +686,14 @@ public class QuizService {
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa câu hỏi: " + e.getMessage(), e);
         }
+    }
+
+    public void assignQuestion(long quizId, long questionId, BigDecimal points, int order, UserDto currentUser) {
+        if (currentUser != null) {
+            validateQuizManageAccess(quizId, currentUser);
+            validateQuestionManageAccess(questionId, currentUser);
+        }
+        assignQuestion(quizId, questionId, points, order);
     }
 
     public void assignQuestion(long quizId, long questionId, BigDecimal points, int order) {
@@ -583,6 +737,13 @@ public class QuizService {
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi gán câu hỏi vào bài thi: " + e.getMessage(), e);
         }
+    }
+
+    public void removeQuestion(long quizId, long questionId, UserDto currentUser) {
+        if (currentUser != null) {
+            validateQuizManageAccess(quizId, currentUser);
+        }
+        removeQuestion(quizId, questionId);
     }
 
     public void removeQuestion(long quizId, long questionId) {
@@ -1037,6 +1198,13 @@ public class QuizService {
         }
         result.setAnswers(new ArrayList<>(grouped.values()));
         return result;
+    }
+
+    public boolean toggleQuizActive(long quizId, UserDto currentUser) {
+        if (currentUser != null) {
+            validateQuizManageAccess(quizId, currentUser);
+        }
+        return toggleQuizActive(quizId);
     }
 
     public boolean toggleQuizActive(long quizId) {
