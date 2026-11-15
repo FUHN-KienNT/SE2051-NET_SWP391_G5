@@ -168,9 +168,8 @@ public class QuizServlet extends HttpServlet {
             try {
                 quizService.validateCourseManageAccess(courseId, currentUser);
             } catch (SecurityException se) {
-                SessionUtil.setFlashError(req, se.getMessage());
-                resp.sendRedirect(req.getContextPath() + "/home");
-                return;
+                req.setAttribute("error", se.getMessage());
+                courseId = quizService.getDefaultCourseId(currentUser);
             } catch (Exception e) {
                 req.setAttribute("error", "Lỗi kiểm tra quyền khóa học: " + e.getMessage());
             }
@@ -272,9 +271,8 @@ public class QuizServlet extends HttpServlet {
             try {
                 quizService.validateCourseManageAccess(courseId, currentUser);
             } catch (SecurityException se) {
-                SessionUtil.setFlashError(req, se.getMessage());
-                resp.sendRedirect(req.getContextPath() + "/home");
-                return;
+                req.setAttribute("error", se.getMessage());
+                courseId = quizService.getDefaultCourseId(currentUser);
             } catch (Exception e) {
                 req.setAttribute("error", "Lỗi kiểm tra quyền khóa học: " + e.getMessage());
             }
@@ -397,8 +395,8 @@ public class QuizServlet extends HttpServlet {
             req.setAttribute("assignedQuestionIds", assignedQuestionIds);
 
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             resp.sendRedirect(req.getContextPath() + "/quizzes/list?error=" + java.net.URLEncoder.encode(
@@ -437,8 +435,8 @@ public class QuizServlet extends HttpServlet {
             }
             resp.sendRedirect(target + "&success=saved");
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             String redirectUrl;
@@ -483,8 +481,8 @@ public class QuizServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/quizzes/list?moduleId=" + moduleIdStr + "&success=deleted");
             }
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             String redirectUrl = req.getContextPath() + "/quizzes/list?";
@@ -523,8 +521,8 @@ public class QuizServlet extends HttpServlet {
             }
             resp.sendRedirect(target + (target.endsWith("?") ? "" : "&") + "success=" + successMsg);
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             String target = req.getContextPath() + "/quizzes/list?";
@@ -585,8 +583,8 @@ public class QuizServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/quizzes/questions?moduleId=" + dto.getModuleId()
                     + "&success=question_saved");
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             if ("questions".equalsIgnoreCase(from) || "list".equalsIgnoreCase(from)) {
@@ -640,8 +638,8 @@ public class QuizServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/quizzes/questions?moduleId=" + moduleIdStr
                     + "&success=question_deleted");
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             String redirectUrl = req.getContextPath() + "/quizzes/questions?";
@@ -682,8 +680,8 @@ public class QuizServlet extends HttpServlet {
             }
             resp.sendRedirect(target + "&success=assigned");
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             String target;
@@ -721,8 +719,8 @@ public class QuizServlet extends HttpServlet {
             }
             resp.sendRedirect(target + "&success=removed");
         } catch (SecurityException se) {
-            SessionUtil.setFlashError(req, se.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home");
+            resp.sendRedirect(req.getContextPath() + "/quizzes/list?error="
+                    + java.net.URLEncoder.encode(se.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
             return;
         } catch (Exception e) {
             String target;
