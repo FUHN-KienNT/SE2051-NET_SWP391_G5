@@ -233,6 +233,16 @@
                         </div>
                     </div>
 
+                    <c:if test="${not empty param.error}">
+                        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4 py-2 px-3 small d-flex align-items-center justify-content-between" role="alert">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                <span><c:out value="${param.error}" /></span>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    </c:if>
+
                     <!-- Filter and Search Toolbar -->
                     <form method="GET" action="${pageContext.request.contextPath}/registrations/list"
                         class="saas-card p-3 mb-4">
@@ -241,7 +251,7 @@
                                 <label class="form-label small fw-semibold text-muted mb-1">Tìm kiếm từ khóa</label>
                                 <div class="position-relative">
                                     <input type="text" name="search" class="form-control saas-input ps-5"
-                                        placeholder="Tên học viên, mã đơn #ID..." value="${param.search}">
+                                        placeholder="Tên học viên, mã đơn #ID..." value="<c:out value='${param.search}' />">
                                     <i class="bi bi-search position-absolute text-muted"
                                         style="left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
                                 </div>

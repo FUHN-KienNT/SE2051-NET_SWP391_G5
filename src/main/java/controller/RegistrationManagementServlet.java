@@ -40,26 +40,25 @@ public class RegistrationManagementServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        processAction(req, resp);
+        String servletPath = req.getServletPath() != null ? req.getServletPath() : "";
+        if (servletPath.endsWith("/update-status")) {
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Phương thức GET không được hỗ trợ cho thao tác này.");
+            return;
+        }
+        if (servletPath.endsWith("/detail")) {
+            showRegistrationDetail(req, resp);
+        } else {
+            showRegistrationList(req, resp);
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        processAction(req, resp);
-    }
-
-    private void processAction(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String servletPath = req.getServletPath();
-        if (servletPath == null) {
-            servletPath = "";
-        }
-
-        if (servletPath.endsWith("/detail")) {
-            showRegistrationDetail(req, resp);
-        } else if (servletPath.endsWith("/update-status")) {
+        String servletPath = req.getServletPath() != null ? req.getServletPath() : "";
+        if (servletPath.endsWith("/update-status")) {
             updateRegistrationStatus(req, resp);
         } else {
-            showRegistrationList(req, resp);
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Phương thức POST không được hỗ trợ cho thao tác này.");
         }
     }
 
@@ -147,15 +146,46 @@ public class RegistrationManagementServlet extends HttpServlet {
     }
 
     private void updateRegistrationStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        if (!"MANAGER".equalsIgnoreCase(currentUser.getRoleName()) && !"ADMIN".equalsIgnoreCase(currentUser.getRoleName())) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện thao tác này.");
+            return;
+        }
+
         String idStr = req.getParameter("id");
         String statusStr = req.getParameter("status");
-        if (idStr != null && statusStr != null) {
-            long regId = Long.parseLong(idStr);
-            PaymentStatus pStatus = PaymentStatus.fromDb(statusStr);
-            registrationService.updatePayment(regId, pStatus, "MANUAL-" + System.currentTimeMillis(),
-                    OffsetDateTime.now());
+        if (idStr == null || statusStr == null) {
+            resp.sendRedirect(req.getContextPath() + "/registrations/list?error="
+                    + java.net.URLEncoder.encode("Thiếu thông tin đơn đăng ký hoặc trạng thái.", java.nio.charset.StandardCharsets.UTF_8));
+            return;
         }
-        resp.sendRedirect(req.getContextPath() + "/registrations/list");
+
+        try {
+            long regId = Long.parseLong(idStr.trim());
+            RegistrationDto registration = registrationService.getById(regId);
+            if (registration == null) {
+                resp.sendRedirect(req.getContextPath() + "/registrations/list?error="
+                        + java.net.URLEncoder.encode("Không tìm thấy đơn đăng ký #" + regId, java.nio.charset.StandardCharsets.UTF_8));
+                return;
+            }
+
+            if (!registrationService.canViewRegistration(registration, currentUser)) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền quản lý đơn đăng ký của khóa học này.");
+                return;
+            }
+
+            PaymentStatus pStatus = PaymentStatus.fromDb(statusStr.trim());
+            registrationService.updatePayment(regId, pStatus, "MANUAL-" + System.currentTimeMillis(), OffsetDateTime.now());
+            resp.sendRedirect(req.getContextPath() + "/registrations/detail?id=" + regId + "&success=status_updated");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            resp.sendRedirect(req.getContextPath() + "/registrations/list?error="
+                    + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Lỗi cập nhật trạng thái.", java.nio.charset.StandardCharsets.UTF_8));
+        }
     }
 }
 

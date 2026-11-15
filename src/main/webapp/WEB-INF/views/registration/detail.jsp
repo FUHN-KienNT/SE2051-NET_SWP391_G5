@@ -28,6 +28,25 @@
             </c:choose>
         </div>
 
+        <c:if test="${param.success == 'status_updated'}">
+            <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 py-2 px-3 small d-flex align-items-center justify-content-between" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <span>Cập nhật trạng thái đơn đăng ký thành công!</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </c:if>
+        <c:if test="${not empty param.error}">
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4 py-2 px-3 small d-flex align-items-center justify-content-between" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                    <span><c:out value="${param.error}" /></span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </c:if>
+
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="card-body p-4 p-md-5">
                 <div class="row g-4">

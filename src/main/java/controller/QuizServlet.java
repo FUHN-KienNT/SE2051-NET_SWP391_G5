@@ -38,6 +38,10 @@ public class QuizServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         String action = pathInfo != null && pathInfo.length() > 1 ? pathInfo.substring(1) : "list";
+        if ("submit".equals(action)) {
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Phương thức GET không được hỗ trợ để nộp bài thi.");
+            return;
+        }
         processAction(action, req, resp);
     }
 
@@ -738,7 +742,7 @@ public class QuizServlet extends HttpServlet {
     }
 
     private Long getAuthorizedStudentId(UserDto currentUser) {
-        if (currentUser == null) return null;
+        if (currentUser == null) return -1L;
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleName()) || "MANAGER".equalsIgnoreCase(currentUser.getRoleName())) {
             return null; // Admin / Manager có thể xem mọi đơn đăng ký
         }
@@ -814,11 +818,15 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void submitAttempt(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         String regIdStr = req.getParameter("registrationId");
         String quizIdStr = req.getParameter("quizId");
         try {
-            UserDto currentUser = SessionUtil.getCurrentUser(req);
-            Long authUserId = getAuthorizedStudentId(currentUser);
+            Long authUserId = currentUser.getId();
             QuizAttemptDto dto = bindAttempt(req);
             QuizResultDto result = quizService.submitAttempt(dto, authUserId);
             req.getSession().setAttribute("lastQuizResult", result);
@@ -839,12 +847,16 @@ public class QuizServlet extends HttpServlet {
     }
 
     private void showResult(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        if (currentUser == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
         String regIdStr = req.getParameter("registrationId");
         String quizIdStr = req.getParameter("quizId");
         try {
             long regId = Long.parseLong(regIdStr);
             long quizId = Long.parseLong(quizIdStr);
-            UserDto currentUser = SessionUtil.getCurrentUser(req);
             Long authUserId = getAuthorizedStudentId(currentUser);
             QuizResultDto result = quizService.getResult(regId, quizId, authUserId);
             QuizDto quiz = quizService.getQuizDetail(quizId);
