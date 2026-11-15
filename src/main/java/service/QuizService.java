@@ -50,6 +50,10 @@ public class QuizService {
     private final CourseDao courseDao;
     private final ModuleDao moduleDao;
 
+    public QuizService() {
+        this(new QuizDao(), new QuestionDao(), new QuizAttemptDao(), new RegistrationDao(), new CourseDao(), new ModuleDao());
+    }
+
     public QuizService(QuizDao quizDao, QuestionDao questionDao,
                        QuizAttemptDao quizAttemptDao, RegistrationDao registrationDao) {
         this(quizDao, questionDao, quizAttemptDao, registrationDao, new CourseDao(), new ModuleDao());
@@ -390,6 +394,46 @@ public class QuizService {
             return moduleDao.findByCourseId(con, courseId);
         } catch (SQLException e) {
             return Collections.emptyList();
+        }
+    }
+
+    public Long getCourseIdByModuleId(long moduleId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return moduleDao.findById(con, moduleId)
+                    .map(entity.Module::getCourseId)
+                    .orElse(null);
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
+    public Long getDefaultCourseId() {
+        try (Connection con = DbConnection.getConnection()) {
+            List<entity.Course> allCourses = courseDao.findAll(con);
+            return !allCourses.isEmpty() ? allCourses.get(0).getId() : null;
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
+    public entity.Module getModuleById(long moduleId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return moduleDao.findById(con, moduleId).orElse(null);
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
+    public CourseDto getCourseSummary(long courseId) {
+        try (Connection con = DbConnection.getConnection()) {
+            return courseDao.findById(con, courseId).map(c -> {
+                CourseDto dto = new CourseDto();
+                dto.setId(c.getId());
+                dto.setTitle(c.getTitle());
+                return dto;
+            }).orElse(null);
+        } catch (SQLException e) {
+            return null;
         }
     }
 

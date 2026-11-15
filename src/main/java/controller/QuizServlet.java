@@ -1,11 +1,5 @@
 package controller;
 
-import dao.CourseDao;
-import dao.ModuleDao;
-import dao.QuestionDao;
-import dao.QuizAttemptDao;
-import dao.QuizDao;
-import dao.RegistrationDao;
 import dto.AnswerOptionDto;
 import dto.CourseDto;
 import dto.ModuleDto;
@@ -34,16 +28,10 @@ import util.SessionUtil;
 @WebServlet(name = "QuizServlet", urlPatterns = { "/quizzes/*" })
 public class QuizServlet extends HttpServlet {
     private QuizService quizService;
-    private CourseDao courseDao;
-    private ModuleDao moduleDao;
 
     @Override
     public void init() throws ServletException {
-        this.courseDao = new CourseDao();
-        this.moduleDao = new ModuleDao();
-        this.quizService = new QuizService(
-                new QuizDao(), new QuestionDao(), new QuizAttemptDao(), new RegistrationDao(),
-                this.courseDao, this.moduleDao);
+        this.quizService = new QuizService();
     }
 
     @Override
@@ -159,12 +147,7 @@ public class QuizServlet extends HttpServlet {
         } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
             try {
                 long modId = Long.parseLong(moduleIdStr.trim());
-                try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                    java.util.Optional<entity.Module> modOpt = moduleDao.findById(con, modId);
-                    if (modOpt.isPresent()) {
-                        courseId = modOpt.get().getCourseId();
-                    }
-                }
+                courseId = quizService.getCourseIdByModuleId(modId);
             } catch (NumberFormatException e) {
                 req.setAttribute("error", "Mã chương học không hợp lệ: " + moduleIdStr);
             } catch (Exception e) {
@@ -173,11 +156,8 @@ public class QuizServlet extends HttpServlet {
         }
 
         if (courseId == null) {
-            try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                List<entity.Course> allCourses = courseDao.findAll(con);
-                if (!allCourses.isEmpty()) {
-                    courseId = allCourses.get(0).getId();
-                }
+            try {
+                courseId = quizService.getDefaultCourseId();
             } catch (Exception e) {
                 req.setAttribute("error", "Không thể tải danh sách khóa học: " + e.getMessage());
             }
@@ -258,12 +238,7 @@ public class QuizServlet extends HttpServlet {
         } else if (moduleIdStr != null && !moduleIdStr.trim().isEmpty()) {
             try {
                 long modId = Long.parseLong(moduleIdStr.trim());
-                try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                    java.util.Optional<entity.Module> modOpt = moduleDao.findById(con, modId);
-                    if (modOpt.isPresent()) {
-                        courseId = modOpt.get().getCourseId();
-                    }
-                }
+                courseId = quizService.getCourseIdByModuleId(modId);
             } catch (NumberFormatException e) {
                 req.setAttribute("error", "Mã chương học không hợp lệ: " + moduleIdStr);
             } catch (Exception e) {
@@ -272,11 +247,8 @@ public class QuizServlet extends HttpServlet {
         }
 
         if (courseId == null) {
-            try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                List<entity.Course> allCourses = courseDao.findAll(con);
-                if (!allCourses.isEmpty()) {
-                    courseId = allCourses.get(0).getId();
-                }
+            try {
+                courseId = quizService.getDefaultCourseId();
             } catch (Exception e) {
                 req.setAttribute("error", "Không thể tải danh sách khóa học: " + e.getMessage());
             }
@@ -362,10 +334,9 @@ public class QuizServlet extends HttpServlet {
                 }
             }
 
-            try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                java.util.Optional<entity.Module> modOpt = moduleDao.findById(con, quiz.getModuleId());
-                if (modOpt.isPresent()) {
-                    entity.Module module = modOpt.get();
+            try {
+                entity.Module module = quizService.getModuleById(quiz.getModuleId());
+                if (module != null) {
                     req.setAttribute("currentModule", module);
                     if (courseId == null) {
                         courseId = module.getCourseId();
@@ -375,16 +346,14 @@ public class QuizServlet extends HttpServlet {
                 req.setAttribute("error", "Không thể tải thông tin chương học: " + e.getMessage());
             }
 
-            //lay thong tin course
+            // lay thong tin course
             if (courseId != null) {
                 req.setAttribute("courseId", courseId);
-                try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                    courseDao.findById(con, courseId).ifPresent(c -> {
-                        CourseDto cDto = new CourseDto();
-                        cDto.setId(c.getId());
-                        cDto.setTitle(c.getTitle());
+                try {
+                    CourseDto cDto = quizService.getCourseSummary(courseId);
+                    if (cDto != null) {
                         req.setAttribute("course", cDto);
-                    });
+                    }
                 } catch (Exception e) {
                     req.setAttribute("error", "Không thể tải thông tin khóa học: " + e.getMessage());
                 }
