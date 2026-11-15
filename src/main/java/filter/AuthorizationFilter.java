@@ -76,13 +76,21 @@ public class AuthorizationFilter implements Filter {
             chain.doFilter(request, response);
         } else {
             if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
-                SessionUtil.setFlashError(req, "Tài khoản Quản trị viên không thuộc phạm vi Expert Studio. Hệ thống đã chuyển hướng bạn về Admin Dashboard.");
-                resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                String msg = "Tài khoản Quản trị viên không thuộc phạm vi Expert Studio. Hệ thống đã chuyển hướng bạn về Admin Dashboard.";
+                resp.sendRedirect(req.getContextPath() + "/admin/dashboard?error="
+                        + java.net.URLEncoder.encode(msg, java.nio.charset.StandardCharsets.UTF_8));
                 return;
             }
             if ("MANAGER".equalsIgnoreCase(role) || "ROLE_MANAGER".equalsIgnoreCase(role)) {
-                SessionUtil.setFlashError(req, "Tài khoản Quản lý không thuộc phạm vi Expert Studio. Hệ thống đã chuyển hướng bạn về Manager Dashboard.");
-                resp.sendRedirect(req.getContextPath() + "/manager/dashboard");
+                String msg = "Tài khoản Quản lý không thuộc phạm vi Expert Studio. Hệ thống đã chuyển hướng bạn về Manager Dashboard.";
+                resp.sendRedirect(req.getContextPath() + "/manager/dashboard?error="
+                        + java.net.URLEncoder.encode(msg, java.nio.charset.StandardCharsets.UTF_8));
+                return;
+            }
+            if ("EXPERT".equalsIgnoreCase(role) || "ROLE_EXPERT".equalsIgnoreCase(role)) {
+                String msg = "Tài khoản Chuyên gia không có quyền truy cập vào khu vực này. Hệ thống đã chuyển hướng bạn về Expert Dashboard.";
+                resp.sendRedirect(req.getContextPath() + "/expert/dashboard?error="
+                        + java.net.URLEncoder.encode(msg, java.nio.charset.StandardCharsets.UTF_8));
                 return;
             }
             sendForbidden(req, resp);
@@ -116,7 +124,8 @@ public class AuthorizationFilter implements Filter {
     }
 
     private void sendForbidden(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        SessionUtil.setFlashError(req, "Bạn không có quyền truy cập vào chức năng này.");
-        resp.sendRedirect(req.getContextPath() + "/home");
+        String msg = "Bạn không có quyền truy cập vào chức năng này.";
+        resp.sendRedirect(req.getContextPath() + "/home?error="
+                + java.net.URLEncoder.encode(msg, java.nio.charset.StandardCharsets.UTF_8));
     }
 }

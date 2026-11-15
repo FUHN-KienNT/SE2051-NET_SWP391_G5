@@ -401,6 +401,17 @@
 </style>
 
 <main class="main-content">
+    <c:if test="${not empty param.error}">
+        <div class="container pt-4">
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-xs mb-0 py-2 px-3 small d-flex align-items-center justify-content-between" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-6 text-danger"></i>
+                    <span><c:out value="${param.error}" /></span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </c:if>
 
     <section class="hero-section">
         <div class="container">
