@@ -217,14 +217,33 @@ body {
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="saas-label">Chuyên gia phụ trách (Assigned Expert) <span class="text-danger">*</span></label>
-                            <select name="expertId" class="form-select saas-select border-primary" required>
-                                <option value="">-- Chọn Chuyên gia --</option>
-                                <c:forEach var="exp" items="${experts}">
-                                    <option value="${exp.id}" ${course.expertId == exp.id ? 'selected' : ''}>${exp.fullName}</option>
-                                </c:forEach>
-                            </select>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="saas-label">Người quản lý (Assigned Manager) <span class="text-danger">*</span></label>
+                                <c:choose>
+                                    <c:when test="${sessionScope.CURRENT_USER.roleName == 'ADMIN'}">
+                                        <select name="managerId" class="form-select saas-select" required>
+                                            <option value="">-- Chọn Manager --</option>
+                                            <c:forEach var="mgr" items="${managers}">
+                                                <option value="${mgr.id}" ${course.managerId == mgr.id ? 'selected' : ''}>${mgr.fullName} (@${mgr.username})</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <input type="text" class="form-control saas-input bg-light" value="${course.managerName != null ? course.managerName : sessionScope.CURRENT_USER.fullName}" readonly>
+                                        <input type="hidden" name="managerId" value="${course.managerId != null ? course.managerId : sessionScope.CURRENT_USER.id}">
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="saas-label">Chuyên gia phụ trách (Assigned Expert) <span class="text-danger">*</span></label>
+                                <select name="expertId" class="form-select saas-select border-primary" required>
+                                    <option value="">-- Chọn Chuyên gia --</option>
+                                    <c:forEach var="exp" items="${experts}">
+                                        <option value="${exp.id}" ${course.expertId == exp.id ? 'selected' : ''}>${exp.fullName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mb-4">
@@ -283,6 +302,10 @@ body {
                         <li class="d-flex justify-content-between py-2 border-bottom">
                             <span class="text-muted">Mã khóa học:</span>
                             <span class="fw-bold">#${course.id}</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Người quản lý (Manager):</span>
+                            <span class="fw-semibold text-primary">${course.managerName != null ? course.managerName : 'Hệ thống'}</span>
                         </li>
                         <li class="d-flex justify-content-between py-2 border-bottom">
                             <span class="text-muted">Chuyên gia phụ trách:</span>

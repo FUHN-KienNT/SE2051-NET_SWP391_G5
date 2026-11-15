@@ -97,8 +97,9 @@ public class RegistrationManagementServlet extends HttpServlet {
             }
         }
 
-        // 1 lần tìm kiếm = 1 lần query xuống Database (Server-side search)
-        List<RegistrationDto> list = registrationService.searchRegistrations(courseId, search, paymentStatus, status);
+        // 1 lần tìm kiếm = 1 lần query xuống Database (Server-side search, Manager chỉ xem các đơn thuộc khóa học mình phụ trách)
+        Long managerId = "MANAGER".equalsIgnoreCase(currentUser.getRoleName()) ? currentUser.getId() : null;
+        List<RegistrationDto> list = registrationService.searchRegistrations(courseId, managerId, search, paymentStatus, status);
 
         req.setAttribute("course", course);
         req.setAttribute("registrations", list);

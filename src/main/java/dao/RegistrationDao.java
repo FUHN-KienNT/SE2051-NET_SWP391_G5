@@ -261,6 +261,10 @@ public class RegistrationDao {
      * Tìm kiếm và lọc danh sách đăng ký cho Manager & Admin (1 lần query duy nhất).
      */
     public List<RegistrationDto> search(Connection con, Long courseId, String keyword, String paymentStatus, String status) throws SQLException {
+        return search(con, courseId, null, keyword, paymentStatus, status);
+    }
+
+    public List<RegistrationDto> search(Connection con, Long courseId, Long managerId, String keyword, String paymentStatus, String status) throws SQLException {
         StringBuilder sql = new StringBuilder(
             "SELECT r.id, r.user_id, u.full_name AS user_name, r.course_id, c.title AS course_title, " +
             "       r.registration_date, r.progress_percentage, r.status, r.payment_method, " +
@@ -277,6 +281,10 @@ public class RegistrationDao {
         if (courseId != null && courseId > 0) {
             sql.append(" AND r.course_id = ?");
             params.add(courseId);
+        }
+        if (managerId != null && managerId > 0) {
+            sql.append(" AND c.manager_id = ?");
+            params.add(managerId);
         }
         if (paymentStatus != null && !paymentStatus.trim().isEmpty()) {
             sql.append(" AND r.payment_status = ?");

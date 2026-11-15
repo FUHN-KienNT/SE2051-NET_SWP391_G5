@@ -745,12 +745,15 @@ public RecentLearningDto getRecentLearning(long userId) {
     }
 
     public List<RegistrationDto> searchRegistrations(Long courseId, String keyword, String paymentStatus, String status) {
+        return searchRegistrations(courseId, null, keyword, paymentStatus, status);
+    }
+
+    public List<RegistrationDto> searchRegistrations(Long courseId, Long managerId, String keyword, String paymentStatus, String status) {
         try (Connection con = DbConnection.getConnection()) {
-            return registrationDao.search(con, courseId, keyword, paymentStatus, status);
+            return registrationDao.search(con, courseId, managerId, keyword, paymentStatus, status);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tìm kiếm danh sách đăng ký: " + e.getMessage(), e);
         }
-
     }
 
     public List<RegistrationDto> getByCourse(long courseId) {
@@ -895,26 +898,42 @@ public RecentLearningDto getRecentLearning(long userId) {
 
 
 
-        public boolean canViewCourseRegistrations(long courseId, UserDto user) {
+    public boolean canViewCourseRegistrations(long courseId, UserDto user) {
         if (user == null || user.getRoleName() == null) {
             return false;
         }
-        return "ADMIN".equalsIgnoreCase(user.getRoleName()) || "MANAGER".equalsIgnoreCase(user.getRoleName());
+        if ("ADMIN".equalsIgnoreCase(user.getRoleName())) {
+            return true;
+        }
+        if ("MANAGER".equalsIgnoreCase(user.getRoleName())) {
+            try (Connection con = DbConnection.getConnection()) {
+                return courseDao.findById(con, courseId)
+                        .map(c -> c.getManagerId() != null && c.getManagerId().equals(user.getId()))
+                        .orElse(false);
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+        return false;
     }
 
-
-
     public boolean canViewRegistration(RegistrationDto registration, UserDto user) {
-
         if (registration == null || user == null || user.getRoleName() == null) {
-
             return false;
-
         }
-        return Long.valueOf(user.getId()).equals(registration.getUserId())
-                || "ADMIN".equalsIgnoreCase(user.getRoleName())
-                || "MANAGER".equalsIgnoreCase(user.getRoleName());
-
+        if (Long.valueOf(user.getId()).equals(registration.getUserId()) || "ADMIN".equalsIgnoreCase(user.getRoleName())) {
+            return true;
+        }
+        if ("MANAGER".equalsIgnoreCase(user.getRoleName())) {
+            try (Connection con = DbConnection.getConnection()) {
+                return courseDao.findById(con, registration.getCourseId())
+                        .map(c -> c.getManagerId() != null && c.getManagerId().equals(user.getId()))
+                        .orElse(false);
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+        return false;
     }
 
 
@@ -952,16 +971,12 @@ public RecentLearningDto getRecentLearning(long userId) {
 
 
     public List<CourseDto> getCoursesForManager(UserDto user) {
-
         if (user == null || user.getRoleName() == null) {
-
             return Collections.emptyList();
-
         }
-
+        Long managerId = "MANAGER".equalsIgnoreCase(user.getRoleName()) ? user.getId() : null;
         try (Connection con = DbConnection.getConnection()) {
-
-            List<Course> courses = courseDao.searchAdmin(con, null, null, null, null);
+            List<Course> courses = courseDao.searchAdmin(con, null, null, managerId, null);
 
             List<CourseDto> list = new ArrayList<>();
 

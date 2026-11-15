@@ -477,7 +477,7 @@ body {
                         <h2 class="saas-card-title">
                             <i class="bi bi-journals text-success"></i> Khóa học phụ trách
                         </h2>
-                        <a href="${pageContext.request.contextPath}/admin/courses" class="small fw-semibold text-decoration-none text-primary">
+                        <a href="${pageContext.request.contextPath}/manager/courses" class="small fw-semibold text-decoration-none text-primary">
                             Xem tất cả <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>
@@ -485,7 +485,7 @@ body {
                         <c:forEach var="course" items="${recentCourses}">
                             <div class="course-item-hover p-3">
                                 <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
-                                    <a href="${pageContext.request.contextPath}/admin/course-detail?id=${course.id}" class="text-decoration-none text-dark fw-semibold text-truncate flex-grow-1" style="min-width: 0;" title="${course.title}">
+                                    <a href="${pageContext.request.contextPath}/manager/course-detail?id=${course.id}" class="text-decoration-none text-dark fw-semibold text-truncate flex-grow-1" style="min-width: 0;" title="${course.title}">
                                         ${course.title}
                                     </a>
                                     <c:choose>

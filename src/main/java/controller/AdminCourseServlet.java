@@ -113,9 +113,15 @@ public class AdminCourseServlet extends HttpServlet {
         String fromDashboard = req.getParameter("fromDashboard");
         String targetStatus = req.getParameter("status");
         String moderationNote = req.getParameter("moderationNote");
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        boolean isManager = currentUser != null && "MANAGER".equalsIgnoreCase(currentUser.getRoleName());
         if (idStr != null) {
             try {
                 long courseId = Long.parseLong(idStr.trim());
+                if (isManager && !courseService.canManageCourse(courseId, currentUser)) {
+                    resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=" + URLEncoder.encode("Bạn chỉ có quyền thao tác trên khóa học do mình phụ trách.", StandardCharsets.UTF_8));
+                    return;
+                }
                 CourseDto course = courseService.getCourseDetail(courseId);
                 CourseStatus newStatus;
                 if (targetStatus != null && !targetStatus.trim().isEmpty()) {
@@ -202,13 +208,22 @@ public class AdminCourseServlet extends HttpServlet {
      * 2. Gọi courseService.getExperts(), settingService, userService lấy danh sách cho bộ lọc.
      */
     private void showCourseList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        boolean isManager = currentUser != null && "MANAGER".equalsIgnoreCase(currentUser.getRoleName());
+
         String search = req.getParameter("search");
         String categoryIdStr = req.getParameter("categoryId");
         String managerIdStr = req.getParameter("managerId");
         String status = req.getParameter("status");
 
         Long categoryId = (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) ? Long.parseLong(categoryIdStr.trim()) : null;
-        Long managerId = (managerIdStr != null && !managerIdStr.trim().isEmpty()) ? Long.parseLong(managerIdStr.trim()) : null;
+        Long managerId;
+        if (isManager) {
+            // Manager chỉ xem được các khóa học do chính mình phụ trách
+            managerId = currentUser.getId();
+        } else {
+            managerId = (managerIdStr != null && !managerIdStr.trim().isEmpty()) ? Long.parseLong(managerIdStr.trim()) : null;
+        }
         if (status != null && status.trim().isEmpty()) status = null;
 
         List<CourseDto> courses = courseService.searchAdminCourses(search, categoryId, managerId, status);
@@ -237,14 +252,25 @@ public class AdminCourseServlet extends HttpServlet {
      * 2. Gọi courseService.getExperts(), settingService, userService nạp dữ liệu phân công.
      */
     private void showCourseDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDto currentUser = SessionUtil.getCurrentUser(req);
+        boolean isManager = currentUser != null && "MANAGER".equalsIgnoreCase(currentUser.getRoleName());
+
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.trim().isEmpty()) {
             try {
                 long courseId = Long.parseLong(idStr.trim());
+                if (isManager && !courseService.canManageCourse(courseId, currentUser)) {
+                    resp.sendRedirect(req.getContextPath() + "/manager/courses?error=" + URLEncoder.encode("Bạn chỉ có quyền xem thông tin khóa học do mình phụ trách.", StandardCharsets.UTF_8));
+                    return;
+                }
                 CourseDto course = courseService.getCourseDetail(courseId);
+                if (course == null) {
+                    resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=invalid_course");
+                    return;
+                }
                 req.setAttribute("course", course);
             } catch (Exception e) {
-                resp.sendRedirect(req.getContextPath() + "/admin/courses?error=invalid_course");
+                resp.sendRedirect(req.getContextPath() + req.getServletPath() + "/courses?error=invalid_course");
                 return;
             }
         }
@@ -266,18 +292,36 @@ public class AdminCourseServlet extends HttpServlet {
     }
 
     /**
-     * Lưu thông tin khóa học và phân công Expert.
+     * Lưu thông tin khóa học và phân công Expert/Manager.
      * 1. Gọi bindCourse(req) để đọc dữ liệu form.
      * 2. Gọi courseService.saveCourse(dto) để cập nhật vào bảng 'courses'.
      */
     private void saveCourse(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         CourseDto dto = bindCourse(req);
         UserDto currentUser = SessionUtil.getCurrentUser(req);
-        if (dto.getManagerId() == null && currentUser != null) {
-            dto.setManagerId(currentUser.getId());
+        boolean isManager = currentUser != null && "MANAGER".equalsIgnoreCase(currentUser.getRoleName());
+        boolean isNew = (dto.getId() == null || dto.getId() <= 0);
+
+        if (isManager) {
+            if (isNew) {
+                // Khóa học do Manager tạo tự động gán chính Manager đó phụ trách
+                dto.setManagerId(currentUser.getId());
+            } else {
+                // Manager chỉ được sửa khóa học do chính mình phụ trách
+                if (!courseService.canManageCourse(dto.getId(), currentUser)) {
+                    resp.sendRedirect(req.getContextPath() + "/manager/courses?error=" + URLEncoder.encode("Bạn chỉ có quyền cập nhật khóa học do mình phụ trách.", StandardCharsets.UTF_8));
+                    return;
+                }
+                // Giữ nguyên managerId của chính manager
+                dto.setManagerId(currentUser.getId());
+            }
+        } else {
+            // Admin tạo hoặc sửa: nếu chưa có managerId thì mặc định gán admin hiện tại
+            if (dto.getManagerId() == null && currentUser != null) {
+                dto.setManagerId(currentUser.getId());
+            }
         }
         try {
-            boolean isNew = (dto.getId() == null || dto.getId() <= 0);
             if (isNew) {
                 // Khóa học mới tạo luôn luôn khởi tạo ở trạng thái DRAFT (Bản nháp) để Expert xây dựng nội dung
                 dto.setStatus(CourseStatus.DRAFT);
@@ -341,6 +385,14 @@ public class AdminCourseServlet extends HttpServlet {
         String statusStr = req.getParameter("status");
         dto.setStatus(statusStr != null ? CourseStatus.fromDb(statusStr) : CourseStatus.DRAFT);
         dto.setModerationNote(req.getParameter("moderationNote"));
+
+        // Gán Manager phụ trách khóa học
+        String managerIdStr = req.getParameter("managerId");
+        if (managerIdStr != null && !managerIdStr.trim().isEmpty()) {
+            try {
+                dto.setManagerId(Long.parseLong(managerIdStr.trim()));
+            } catch (NumberFormatException ignored) {}
+        }
         
         // Gán Expert phụ trách khóa học (theo SRS)
         String expertIdStr = req.getParameter("expertId");
