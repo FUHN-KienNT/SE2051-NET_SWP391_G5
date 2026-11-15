@@ -211,8 +211,8 @@
                                     <span class="badge ${currentLessonId == l.id ? 'bg-white text-primary' : 'bg-light text-muted border'} flex-shrink-0" style="width: 26px;">
                                         ${lessonSeq}
                                     </span>
-                                    <img src="${l.thumbnailUrl}" class="rounded flex-shrink-0" style="width: 42px; height: 26px; object-fit: cover;" alt="${l.title}"
-                                         onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
+                                    <img src="${l.thumbnailUrl}" class="rounded flex-shrink-0" style="width: 42px; height: 26px; object-fit: cover; object-position: center;" alt="${l.title}"
+                                         onerror="if (this.src.indexOf('maxresdefault') !== -1) { this.src = this.src.replace('maxresdefault', 'mqdefault'); } else { this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'; }">
                                     <div class="text-truncate flex-grow-1">
                                         <span class="d-block text-truncate fw-semibold">${l.title}</span>
                                         <c:if test="${!l.active}">
@@ -403,8 +403,8 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-    // Render Expert's Reference in Markdown
-    document.addEventListener('DOMContentLoaded', function() {
+    // Render tài liệu tham khảo dạng Markdown của giảng viên
+    function renderExpertMarkdown() {
         const expEl = document.getElementById('expertContentRendered');
         if (expEl) {
             const raw = expEl.innerHTML.trim();
@@ -412,7 +412,8 @@
                 expEl.innerHTML = marked.parse(expEl.textContent.replace(/__(.*?)__/g, '<u>$1</u>'));
             }
         }
-    });
+    }
+    renderExpertMarkdown();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

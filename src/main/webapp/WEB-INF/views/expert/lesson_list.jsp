@@ -339,6 +339,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        object-position: center;
     }
 
     /* Pills & Tags */
@@ -710,7 +711,7 @@
                                                 </c:if>
                                                 <div class="lesson-thumb-box">
                                                     <img src="${l.thumbnailUrl}" alt="${l.title}"
-                                                         onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
+                                                         onerror="if (this.src.indexOf('maxresdefault') !== -1) { this.src = this.src.replace('maxresdefault', 'mqdefault'); } else { this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'; }">
                                                 </div>
                                                 <div class="min-w-0">
                                                     <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">

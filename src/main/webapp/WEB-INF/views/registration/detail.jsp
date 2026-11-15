@@ -137,14 +137,15 @@
 </main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    function initProgressBars() {
         document.querySelectorAll('[data-progress]').forEach(function(el) {
             var val = el.getAttribute('data-progress');
             if (val !== null && val !== '') {
                 el.style.width = Math.min(Math.max(parseFloat(val) || 0, 0), 100) + '%';
             }
         });
-    });
+    }
+    initProgressBars();
 </script>
 
 <jsp:include page="../common/footer.jsp" />

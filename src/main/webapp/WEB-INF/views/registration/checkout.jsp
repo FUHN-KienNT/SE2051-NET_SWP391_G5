@@ -228,7 +228,7 @@
                     <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-start border-4 border-primary">
                         <div class="d-flex align-items-start gap-3">
                             <div class="form-check pt-0.5">
-                                <input class="form-check-input fs-5" type="checkbox" id="agreeTerms" name="agreeTerms" required style="cursor: pointer;">
+                                <input class="form-check-input fs-5" type="checkbox" id="agreeTerms" name="agreeTerms" required style="cursor: pointer;" onchange="updateSubmitState()">
                             </div>
                             <div>
                                 <label class="form-check-label fw-semibold text-dark mb-1" for="agreeTerms" style="cursor: pointer;">
@@ -347,40 +347,36 @@
 </main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    function updateSubmitState() {
         const agreeCheck = document.getElementById('agreeTerms');
         const submitBtn = document.getElementById('btnSubmitCheckout');
         const agreeHint = document.getElementById('agreeHint');
 
-        function updateSubmitState() {
-            if (agreeCheck && submitBtn) {
-                const isChecked = agreeCheck.checked;
-                submitBtn.disabled = !isChecked;
-                if (isChecked) {
-                    submitBtn.classList.remove('opacity-50');
-                    submitBtn.style.cursor = 'pointer';
-                    if (agreeHint) {
-                        agreeHint.classList.add('text-success');
-                        agreeHint.classList.remove('text-danger');
-                        agreeHint.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Đã xác nhận cam kết. Bạn có thể tiến hành thanh toán.';
-                    }
-                } else {
-                    submitBtn.classList.add('opacity-50');
-                    submitBtn.style.cursor = 'not-allowed';
-                    if (agreeHint) {
-                        agreeHint.classList.remove('text-success');
-                        agreeHint.classList.add('text-danger');
-                        agreeHint.innerHTML = '<i class="bi bi-info-circle me-1"></i>Vui lòng tích chọn cam kết trên để kích hoạt nút thanh toán.';
-                    }
+        if (agreeCheck && submitBtn) {
+            const isChecked = agreeCheck.checked;
+            submitBtn.disabled = !isChecked;
+            if (isChecked) {
+                submitBtn.classList.remove('opacity-50');
+                submitBtn.style.cursor = 'pointer';
+                if (agreeHint) {
+                    agreeHint.classList.add('text-success');
+                    agreeHint.classList.remove('text-danger');
+                    agreeHint.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Đã xác nhận cam kết. Bạn có thể tiến hành thanh toán.';
+                }
+            } else {
+                submitBtn.classList.add('opacity-50');
+                submitBtn.style.cursor = 'not-allowed';
+                if (agreeHint) {
+                    agreeHint.classList.remove('text-success');
+                    agreeHint.classList.add('text-danger');
+                    agreeHint.innerHTML = '<i class="bi bi-info-circle me-1"></i>Vui lòng tích chọn cam kết trên để kích hoạt nút thanh toán.';
                 }
             }
         }
+    }
 
-        if (agreeCheck) {
-            agreeCheck.addEventListener('change', updateSubmitState);
-            updateSubmitState();
-        }
-    });
+    // Tự động kiểm tra trạng thái lúc tải trang
+    updateSubmitState();
 </script>
 
 <jsp:include page="../common/footer.jsp" />

@@ -132,8 +132,8 @@
                                                                     #${globalLessonIndex}
                                                                 </span>
                                                                 <div class="position-relative flex-shrink-0" style="width: 84px; height: 48px;">
-                                                                    <img src="${l.thumbnailUrl}" class="w-100 h-100 rounded shadow-sm" style="object-fit: cover;" alt="<c:out value='${l.title}'/>"
-                                                                         onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'">
+                                                                    <img src="${l.thumbnailUrl}" class="w-100 h-100 rounded shadow-sm" style="object-fit: cover; object-position: center;" alt="<c:out value='${l.title}'/>"
+                                                                         onerror="if (this.src.indexOf('maxresdefault') !== -1) { this.src = this.src.replace('maxresdefault', 'mqdefault'); } else { this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300'; }">
                                                                     <span class="position-absolute bottom-0 end-0 bg-dark bg-opacity-75 text-white px-1 rounded-1" style="font-size: 9px;">
                                                                         <i class="bi bi-play-fill"></i>
                                                                     </span>

@@ -132,13 +132,13 @@ public class RecentLearningDto {
         if (courseTitle != null) {
             String lower = courseTitle.toLowerCase();
             if (lower.contains("nhân tướng") || lower.contains("viên minh")) {
-                return "https://img.youtube.com/vi/WVPVpNDKUwM/hqdefault.jpg";
+                return "https://img.youtube.com/vi/WVPVpNDKUwM/maxresdefault.jpg";
             }
             if (lower.contains("tử vi") || lower.contains("tvk6")) {
-                return "https://img.youtube.com/vi/p3HlEXDp0vU/hqdefault.jpg";
+                return "https://img.youtube.com/vi/p3HlEXDp0vU/maxresdefault.jpg";
             }
             if (lower.contains("hoàng đạo") || lower.contains("xà phu")) {
-                return "https://img.youtube.com/vi/qJYOYE3uzJc/hqdefault.jpg";
+                return "https://img.youtube.com/vi/qJYOYE3uzJc/maxresdefault.jpg";
             }
         }
         return thumb;

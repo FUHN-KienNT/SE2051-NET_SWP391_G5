@@ -26,15 +26,20 @@
     }
     .hero-thumb-wrapper {
         position: relative;
-        border-radius: 12px;
+        border-radius: 14px;
         overflow: hidden;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-        max-height: 210px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background-color: #0b0f19;
+        display: block;
     }
     .hero-thumb-wrapper img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        object-position: center;
+        display: block;
         transition: transform 0.4s ease;
     }
     .hero-thumb-wrapper:hover img {
@@ -45,17 +50,18 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 54px;
-        height: 54px;
+        width: 56px;
+        height: 56px;
         background: rgba(243, 128, 32, 0.95);
         color: #ffffff;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         box-shadow: 0 0 20px rgba(243, 128, 32, 0.6);
         transition: all 0.25s ease;
+        z-index: 2;
     }
     .hero-thumb-wrapper:hover .hero-play-btn {
         transform: translate(-50%, -50%) scale(1.12);
@@ -123,6 +129,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        object-position: center;
         transition: transform 0.4s ease;
     }
     .course-grid-card:hover .card-thumb-container img {
@@ -159,32 +166,80 @@
         overflow: hidden;
     }
 
-    /* Filter Toolbar Tabs */
-    .filter-tab-btn {
-        border-radius: 30px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        padding: 7px 18px;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        color: #64748b;
-        transition: all 0.2s ease;
-        text-decoration: none;
-    }
-    .filter-tab-btn:hover {
+    /* Segmented Filter Tabs & Modern SaaS Toolbar */
+    .saas-tabs {
+        display: inline-flex;
+        align-items: center;
         background: #f1f5f9;
-        color: #1e293b;
+        padding: 3px;
+        border-radius: 8px;
+        gap: 2px;
     }
-    .filter-tab-btn.active {
-        background: #1e293b;
-        color: #ffffff;
-        border-color: #1e293b;
-        box-shadow: 0 4px 10px rgba(30, 41, 59, 0.2);
+    .saas-tab-btn {
+        border: none;
+        background: transparent;
+        padding: 6px 14px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #64748b;
+        border-radius: 6px;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
-    .filter-tab-btn .badge {
-        font-size: 0.72rem;
-        padding: 3px 7px;
-        border-radius: 20px;
+    .saas-tab-btn:hover {
+        color: #0f172a;
+    }
+    .saas-tab-btn.active {
+        background: #ffffff;
+        color: #0f172a;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .saas-tab-badge {
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 9999px;
+    }
+    .saas-tab-btn.active .saas-tab-badge {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    /* SaaS Search Box */
+    .saas-search-box {
+        position: relative;
+        min-width: 220px;
+    }
+    .saas-search-icon {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.8125rem;
+        pointer-events: none;
+    }
+    .saas-search-input {
+        width: 100%;
+        padding: 6px 12px 6px 32px;
+        font-size: 0.8125rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #0f172a;
+        transition: all 0.15s ease;
+        outline: none;
+    }
+    .saas-search-input:focus {
+        background: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
 </style>
 
@@ -338,7 +393,8 @@
                     <div class="col-lg-5 col-md-5">
                         <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${recentLearning.registrationId}&lessonId=${recentLearning.lessonId}" 
                            class="d-block hero-thumb-wrapper text-decoration-none" title="Nhấn để tiếp tục học">
-                            <img src="${recentLearning.thumbnailUrl}" alt="${recentLearning.courseTitle}" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'">
+                            <img src="${recentLearning.thumbnailUrl}" alt="${recentLearning.courseTitle}"
+                                 onerror="if (this.src.indexOf('maxresdefault') !== -1) { this.src = this.src.replace('maxresdefault', 'mqdefault'); } else { this.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'; }">
                             <div class="hero-play-btn">
                                 <i class="bi bi-play-fill ms-1"></i>
                             </div>
@@ -370,52 +426,46 @@
             </c:when>
 
             <c:otherwise>
-                <div class="bg-white p-3 p-md-4 rounded-4 border mb-4 shadow-sm">
-                    <div class="row g-3 align-items-center">
+                <!-- Modern Toolbar: Segmented Tabs & Live Search & Filters (Format chuẩn Expert Dashboard) -->
+                <div class="bg-white p-3 rounded-3 border mb-4 shadow-sm">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         
-                        <!-- Status Tabs -->
-                        <div class="col-12 col-xl-6">
-                            <div class="d-flex flex-wrap gap-2" id="statusFilterGroup">
-                                <button type="button" class="filter-tab-btn active" data-status="ALL">
-                                    Tất cả <span class="badge bg-secondary ms-1">${totalCourses}</span>
-                                </button>
-                                <button type="button" class="filter-tab-btn" data-status="IN_PROGRESS">
-                                    Đang học <span class="badge bg-warning text-dark ms-1">${inProgressCourses}</span>
-                                </button>
-                                <button type="button" class="filter-tab-btn" data-status="COMPLETED">
-                                    Đã hoàn thành <span class="badge bg-success ms-1">${completedCourses}</span>
-                                </button>
-                                <c:if test="${pendingCourses > 0}">
-                                    <button type="button" class="filter-tab-btn" data-status="PENDING">
-                                        Chờ thanh toán <span class="badge bg-warning ms-1">${pendingCourses}</span>
-                                    </button>
-                                </c:if>
-                            </div>
+                        <!-- Segmented Status Tabs (3 Tab học tập chuẩn: Tất cả, Đang học, Hoàn thành) -->
+                        <div class="saas-tabs" id="statusFilterTabs">
+                            <button type="button" class="saas-tab-btn active" data-filter="ALL" onclick="filterCourses('ALL', this)">
+                                Tất cả <span class="saas-tab-badge">${totalCourses}</span>
+                            </button>
+                            <button type="button" class="saas-tab-btn" data-filter="IN_PROGRESS" onclick="filterCourses('IN_PROGRESS', this)">
+                                Đang học <span class="saas-tab-badge">${inProgressCourses}</span>
+                            </button>
+                            <button type="button" class="saas-tab-btn" data-filter="COMPLETED" onclick="filterCourses('COMPLETED', this)">
+                                Đã hoàn thành <span class="saas-tab-badge">${completedCourses}</span>
+                            </button>
                         </div>
 
-                        <!-- Category Dropdown + Sort -->
-                        <div class="col-12 col-xl-5 ms-xl-auto">
-                            <div class="row g-2 justify-content-xl-end">
-                                <!-- Category Filter -->
-                                <div class="col-6">
-                                    <select class="form-select" id="categoryFilter">
-                                        <option value="ALL">Tất cả danh mục</option>
-                                        <c:forEach var="cat" items="${categories}">
-                                            <option value="${cat}">${cat}</option>
-                                        </c:forEach>
-                                    </select>
-                                </div>
-
-                                <!-- Sort Dropdown -->
-                                <div class="col-6">
-                                    <select class="form-select" id="sortSelect">
-                                        <option value="recent">Mới nhất</option>
-                                        <option value="progress-desc">Tiến độ cao</option>
-                                        <option value="progress-asc">Tiến độ thấp</option>
-                                        <option value="name-asc">Tên A-Z</option>
-                                    </select>
-                                </div>
+                        <!-- Right Controls: Live Search + Category Filter + Sort -->
+                        <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
+                            <!-- Live Instant Search -->
+                            <div class="saas-search-box">
+                                <i class="bi bi-search saas-search-icon"></i>
+                                <input type="text" id="courseSearchInput" class="saas-search-input" placeholder="Tìm theo tên khóa học..." oninput="handleCourseSearch()">
                             </div>
+
+                            <!-- Category Filter Dropdown -->
+                            <select class="form-select form-select-sm" id="categoryFilter" style="width: auto; min-width: 145px; font-size: 0.8125rem; padding: 6px 28px 6px 12px; border-radius: 8px; border-color: #cbd5e1; background-color: #f8fafc;" onchange="applyFilters()">
+                                <option value="ALL">Tất cả danh mục</option>
+                                <c:forEach var="cat" items="${categories}">
+                                    <option value="${cat}">${cat}</option>
+                                </c:forEach>
+                            </select>
+
+                            <!-- Sort Dropdown -->
+                            <select class="form-select form-select-sm" id="sortSelect" style="width: auto; min-width: 125px; font-size: 0.8125rem; padding: 6px 28px 6px 12px; border-radius: 8px; border-color: #cbd5e1; background-color: #f8fafc;" onchange="applyFilters()">
+                                <option value="recent">Mới nhất</option>
+                                <option value="progress-desc">Tiến độ cao</option>
+                                <option value="progress-asc">Tiến độ thấp</option>
+                                <option value="name-asc">Tên A-Z</option>
+                            </select>
                         </div>
 
                     </div>
@@ -429,7 +479,7 @@
                              data-title="${r.courseTitle}"
                              data-expert="${r.expertName}"
                              data-category="${r.categoryName}"
-                             data-status="${(r.status == 'COMPLETED' or (r.totalLessons > 0 and r.completedLessons >= r.totalLessons)) ? 'COMPLETED' : (r.status == 'PENDING' ? 'PENDING' : 'IN_PROGRESS')}"
+                             data-status="${(r.status == 'COMPLETED' or (r.totalLessons > 0 and r.completedLessons >= r.totalLessons)) ? 'COMPLETED' : 'IN_PROGRESS'}"
                              data-progress="${r.progressPercentage}">
                             
                             <div class="course-grid-card">
@@ -449,14 +499,9 @@
                                                 <i class="bi bi-check-circle-fill me-1"></i>Đã hoàn thành
                                             </span>
                                         </c:when>
-                                        <c:when test="${r.status == 'ACTIVE'}">
+                                        <c:otherwise>
                                             <span class="card-status-badge bg-primary text-white">
                                                 <i class="bi bi-play-circle-fill me-1"></i>Đang học
-                                            </span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="card-status-badge bg-warning text-dark">
-                                                <i class="bi bi-clock-fill me-1"></i>Chờ thanh toán
                                             </span>
                                         </c:otherwise>
                                     </c:choose>
@@ -498,46 +543,29 @@
 
                                     <!-- Action Button Footer -->
                                     <div class="mt-3 pt-3 border-top">
-                                        <c:choose>
-                                            <c:when test="${r.status == 'ACTIVE' || r.status == 'COMPLETED'}">
-                                                <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${r.id}${not empty r.lastLessonId ? '&lessonId=' : ''}${r.lastLessonId}" 
-                                                   class="btn btn-primary w-100 fw-semibold rounded-pill py-2 d-flex align-items-center justify-content-center">
-                                                    <i class="bi bi-play-circle-fill me-2 fs-5 lh-1"></i>
-                                                    <span>
-                                                        <c:choose>
-                                                            <c:when test="${r.progressPercentage >= 100 or r.status == 'COMPLETED'}">Ôn tập lại</c:when>
-                                                            <c:when test="${r.completedLessons > 0}">Tiếp tục học</c:when>
-                                                            <c:otherwise>Vào học ngay</c:otherwise>
-                                                        </c:choose>
-                                                    </span>
-                                                </a>
-                                                <a href="${pageContext.request.contextPath}/registrations/my-detail?id=${r.id}" 
-                                                   class="btn btn-link text-decoration-none text-muted w-100 py-1 text-center small mt-1" 
-                                                   style="font-size: 0.82rem;">
-                                                    <i class="bi bi-list-check me-1 text-primary"></i>Chi tiết tiến độ khóa học &rarr;
-                                                </a>
+                                        <a href="${pageContext.request.contextPath}/courses/learn?registrationId=${r.id}${not empty r.lastLessonId ? '&lessonId=' : ''}${r.lastLessonId}" 
+                                           class="btn btn-primary w-100 fw-semibold rounded-pill py-2 d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-play-circle-fill me-2 fs-5 lh-1"></i>
+                                            <span>
+                                                <c:choose>
+                                                    <c:when test="${r.progressPercentage >= 100 or r.status == 'COMPLETED'}">Ôn tập lại</c:when>
+                                                    <c:when test="${r.completedLessons > 0}">Tiếp tục học</c:when>
+                                                    <c:otherwise>Vào học ngay</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/registrations/my-detail?id=${r.id}" 
+                                           class="btn btn-link text-decoration-none text-muted w-100 py-1 text-center small mt-1" 
+                                           style="font-size: 0.82rem;">
+                                            <i class="bi bi-list-check me-1 text-primary"></i>Chi tiết tiến độ khóa học &rarr;
+                                        </a>
 
-                                                <!-- Recent studied lesson hint -->
-                                                <c:if test="${not empty r.lastLessonTitle}">
-                                                    <div class="text-muted small text-truncate mt-2 text-center" style="font-size: 0.78rem;" title="${r.lastLessonTitle}">
-                                                        <i class="bi bi-play-circle text-primary me-1"></i>Bài gần nhất: ${r.lastLessonTitle}
-                                                    </div>
-                                                </c:if>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <a href="${pageContext.request.contextPath}/registrations/payment?courseId=${r.courseId}" 
-                                                   class="btn btn-warning w-100 fw-bold rounded-pill py-2 d-flex align-items-center justify-content-center text-dark shadow-sm">
-                                                    <i class="bi bi-credit-card-2-front-fill me-2 fs-5 lh-1"></i>
-                                                    <span>Thanh toán ngay</span>
-                                                </a>
-                                                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
-                                                    <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.72rem;">Mã ĐK: #${r.id}</span>
-                                                    <a href="${pageContext.request.contextPath}/registrations/my-detail?id=${r.id}" class="text-decoration-none text-muted small" style="font-size: 0.8rem;">
-                                                        <i class="bi bi-info-circle me-1"></i>Chi tiết &rarr;
-                                                    </a>
-                                                </div>
-                                            </c:otherwise>
-                                        </c:choose>
+                                        <!-- Recent studied lesson hint -->
+                                        <c:if test="${not empty r.lastLessonTitle}">
+                                            <div class="text-muted small text-truncate mt-2 text-center" style="font-size: 0.78rem;" title="${r.lastLessonTitle}">
+                                                <i class="bi bi-play-circle text-primary me-1"></i>Bài gần nhất: ${r.lastLessonTitle}
+                                            </div>
+                                        </c:if>
                                     </div>
 
                                 </div>
@@ -557,7 +585,7 @@
                     <h5 class="fw-bold text-dark">Không tìm thấy khóa học nào phù hợp</h5>
                     <p class="text-muted small">Vui lòng điều chỉnh lại bộ lọc trạng thái hoặc danh mục.</p>
                     <div>
-                        <button type="button" class="btn btn-outline-primary btn-sm px-4 rounded-pill fw-semibold" id="resetFiltersBtn">
+                        <button type="button" class="btn btn-outline-primary btn-sm px-4 rounded-pill fw-semibold" id="resetFiltersBtn" onclick="resetFilters()">
                             <i class="bi bi-arrow-counterclockwise me-1"></i>Xem tất cả
                         </button>
                     </div>
@@ -571,37 +599,65 @@
 
 <jsp:include page="../common/footer.jsp" />
 
-<!-- REAL-TIME FILTER JAVASCRIPT -->
+<!-- REAL-TIME FILTER & INSTANT SEARCH JAVASCRIPT (Format chuẩn Expert Dashboard) -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const categoryFilter = document.getElementById('categoryFilter');
-    const sortSelect = document.getElementById('sortSelect');
-    const statusButtons = document.querySelectorAll('#statusFilterGroup .filter-tab-btn');
-    const coursesGrid = document.getElementById('coursesGrid');
-    const noResultsMessage = document.getElementById('noResultsMessage');
-    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    let currentFilter = 'ALL';
 
-    if (!coursesGrid) return;
+    function filterCourses(status, btnEl) {
+        currentFilter = status;
+        const tabBtns = document.querySelectorAll('#statusFilterTabs .saas-tab-btn');
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+        if (btnEl) {
+            btnEl.classList.add('active');
+        }
+        applyFilters();
+    }
 
-    let currentStatus = 'ALL';
+    function handleCourseSearch() {
+        applyFilters();
+    }
 
-    function filterAndSortCourses() {
+    function removeVietnameseDiacritics(str) {
+        if (!str) return '';
+        return str.normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    }
+
+    function applyFilters() {
+        const searchInput = document.getElementById('courseSearchInput');
+        const rawQuery = (searchInput ? searchInput.value : '').trim();
+        const query = rawQuery.toLowerCase();
+        const queryNoAccents = removeVietnameseDiacritics(query);
+
+        const categoryFilter = document.getElementById('categoryFilter');
         const selectedCat = categoryFilter ? categoryFilter.value : 'ALL';
-        const cards = Array.from(coursesGrid.querySelectorAll('.course-card-wrapper'));
 
+        const coursesGrid = document.getElementById('coursesGrid');
+        if (!coursesGrid) return;
+
+        const cards = Array.from(coursesGrid.querySelectorAll('.course-card-wrapper'));
         let visibleCount = 0;
 
         cards.forEach(card => {
-            const cat = card.getAttribute('data-category') || '';
             const status = card.getAttribute('data-status') || '';
+            const cat = card.getAttribute('data-category') || '';
+            const title = (card.getAttribute('data-title') || '').toLowerCase();
+            const titleNoAccents = removeVietnameseDiacritics(title);
+            const expert = (card.getAttribute('data-expert') || '').toLowerCase();
 
-            // 1. Status Filter
-            const matchStatus = (currentStatus === 'ALL') || (status === currentStatus);
+            // 1. Lọc theo trạng thái tab
+            const matchesStatus = (currentFilter === 'ALL') || (status === currentFilter);
 
-            // 2. Category Filter
-            const matchCategory = (selectedCat === 'ALL') || (cat === selectedCat);
+            // 2. Lọc theo danh mục khóa học
+            const matchesCategory = (selectedCat === 'ALL') || (cat === selectedCat);
 
-            if (matchStatus && matchCategory) {
+            // 3. Tìm kiếm tức thì theo tên khóa học, danh mục, giảng viên (hỗ trợ tiếng Việt có/không dấu)
+            const matchesQuery = !query ||
+                title.includes(query) || titleNoAccents.includes(queryNoAccents) ||
+                cat.toLowerCase().includes(query) || expert.includes(query);
+
+            if (matchesStatus && matchesCategory && matchesQuery) {
                 card.classList.remove('d-none');
                 visibleCount++;
             } else {
@@ -609,7 +665,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // 3. Sorting
+        // 4. Sắp xếp danh sách
+        const sortSelect = document.getElementById('sortSelect');
         const sortMode = sortSelect ? sortSelect.value : 'recent';
         cards.sort((a, b) => {
             if (sortMode === 'name-asc') {
@@ -625,7 +682,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const progB = parseFloat(b.getAttribute('data-progress') || 0);
                 return progA - progB;
             } else {
-                // Default 'recent' by registration ID descending
+                // Mặc định: Gần nhất theo ID đăng ký giảm dần
                 const idA = parseInt(a.getAttribute('data-id') || 0);
                 const idB = parseInt(b.getAttribute('data-id') || 0);
                 return idB - idA;
@@ -634,9 +691,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         cards.forEach(card => coursesGrid.appendChild(card));
 
-        // Toggle empty message
+        // 5. Cập nhật trạng thái thông báo không tìm thấy kết quả
+        const noResultsMessage = document.getElementById('noResultsMessage');
         if (noResultsMessage) {
-            if (visibleCount === 0) {
+            if (visibleCount === 0 && cards.length > 0) {
                 noResultsMessage.classList.remove('d-none');
             } else {
                 noResultsMessage.classList.add('d-none');
@@ -644,39 +702,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Status Tab Click Event
-    statusButtons.forEach(btn => {
-        btn.addEventListener('click', function () {
-            statusButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            currentStatus = this.getAttribute('data-status');
-            filterAndSortCourses();
-        });
-    });
+    function resetFilters() {
+        const searchInput = document.getElementById('courseSearchInput');
+        if (searchInput) searchInput.value = '';
 
-    // Category Filter Event
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', filterAndSortCourses);
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) categoryFilter.value = 'ALL';
+
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) sortSelect.value = 'recent';
+
+        const allTab = document.querySelector('#statusFilterTabs .saas-tab-btn[data-filter="ALL"]');
+        filterCourses('ALL', allTab);
     }
 
-    // Sort Dropdown Event
-    if (sortSelect) {
-        sortSelect.addEventListener('change', filterAndSortCourses);
-    }
-
-    // Reset Filters Button
-    if (resetFiltersBtn) {
-        resetFiltersBtn.addEventListener('click', function () {
-            if (categoryFilter) categoryFilter.value = 'ALL';
-            if (sortSelect) sortSelect.value = 'recent';
-
-            statusButtons.forEach(b => b.classList.remove('active'));
-            const allBtn = document.querySelector('#statusFilterGroup .filter-tab-btn[data-status="ALL"]');
-            if (allBtn) allBtn.classList.add('active');
-            currentStatus = 'ALL';
-
-            filterAndSortCourses();
-        });
-    }
-});
+    // Tự động khởi tạo bộ lọc ban đầu khi tải trang
+    applyFilters();
 </script>

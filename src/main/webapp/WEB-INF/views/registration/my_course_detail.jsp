@@ -135,8 +135,8 @@
                 <div class="col-md-4 col-lg-3">
                     <div class="position-relative rounded-3 overflow-hidden shadow-sm" style="height: 180px;">
                         <img src="${not empty registration.courseThumbnailUrl ? registration.courseThumbnailUrl : course.thumbnailUrl}"
-                             alt="${registration.courseTitle}" class="w-100 h-100" style="object-fit: cover;"
-                             onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'">
+                             alt="${registration.courseTitle}" class="w-100 h-100" style="object-fit: cover; object-position: center;"
+                             onerror="if (this.src.indexOf('maxresdefault') !== -1) { this.src = this.src.replace('maxresdefault', 'mqdefault'); } else { this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'; }">
                         <span class="position-absolute top-0 start-0 m-2 badge bg-primary bg-opacity-90 px-2 py-1">
                             ${not empty registration.categoryName ? registration.categoryName : (not empty course.categoryName ? course.categoryName : 'Khóa học')}
                         </span>

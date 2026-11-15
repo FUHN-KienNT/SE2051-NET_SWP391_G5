@@ -108,7 +108,12 @@
                                     <strong id="timerCountdown" class="${isExpired ? 'text-danger' : 'text-primary'} font-monospace fs-6">
                                         <c:choose>
                                             <c:when test="${isExpired}">00:00 (Hết hạn)</c:when>
-                                            <c:otherwise>--:--</c:otherwise>
+                                            <c:when test="${not empty remainingSeconds and remainingSeconds > 0}">
+                                                <fmt:formatNumber var="initMin" value="${(remainingSeconds - (remainingSeconds % 60)) / 60}" pattern="00"/>
+                                                <fmt:formatNumber var="initSec" value="${remainingSeconds % 60}" pattern="00"/>
+                                                ${initMin}:${initSec}
+                                            </c:when>
+                                            <c:otherwise>15:00</c:otherwise>
                                         </c:choose>
                                     </strong>
                                 </p>
@@ -222,21 +227,14 @@
 </main>
 
 <script>
-    // Khởi tạo Bootstrap tooltips để hiển thị tooltip khi di chuột vào SePay
-    document.addEventListener('DOMContentLoaded', function () {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    });
-
-    // Đồng bộ thời gian đếm ngược chính xác với thời gian phiên và VNPay
+    // 1. Đồng bộ thời gian đếm ngược chính xác với thời gian phiên và VNPay (chạy tức thì)
     let secondsLeft = ${remainingSeconds != null ? remainingSeconds : 0};
     const timerEl = document.getElementById('timerCountdown');
     const submitBtn = document.getElementById('btnSubmitPayment');
     const expiredAlert = document.getElementById('expiredAlert');
 
     function renderTimer() {
+        if (!timerEl) return;
         if (secondsLeft <= 0) {
             timerEl.innerText = '00:00 (Hết hạn)';
             timerEl.className = 'text-danger font-monospace fs-6';
@@ -268,6 +266,17 @@
             }
         }, 1000);
     }
+
+    // 2. Khởi tạo Bootstrap tooltips an toàn sau khi thư viện Bootstrap đã sẵn sàng
+    function initPaymentTooltips() {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (el) {
+                new bootstrap.Tooltip(el);
+            });
+        }
+    }
+    window.addEventListener('DOMContentLoaded', initPaymentTooltips);
 </script>
 
 <jsp:include page="../common/footer.jsp" />

@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,14 +33,14 @@ import util.VnPayUtil;
 import util.VnPayUtil.VnPayVerifyResult;
 
 /**
- * Controller phục vụ phân hệ Đăng ký học viên (Student Course Registration):
- * - Checkout khóa học (Course Checkout)
- * - Thanh toán khóa học (Online Payment / Confirm / Webhook Callbacks)
- * - Khóa học của tôi & Tiến độ học (My Courses / Registration History)
- * - Đăng ký / Hủy đăng ký (Enroll / Cancel)
+ * Controller phục vụ phân hệ Đăng ký học viên (Student Course Registration): -
+ * Checkout khóa học (Course Checkout) - Thanh toán khóa học (Online Payment /
+ * Confirm / Webhook Callbacks) - Khóa học của tôi & Tiến độ học (My Courses /
+ * Registration History) - Đăng ký / Hủy đăng ký (Enroll / Cancel)
  */
-@WebServlet(name = "RegistrationServlet", urlPatterns = { "/registrations/*" })
+@WebServlet(name = "RegistrationServlet", urlPatterns = {"/registrations/*"})
 public class RegistrationServlet extends HttpServlet {
+
     private RegistrationService registrationService;
     private CourseService courseService;
 
@@ -348,7 +349,7 @@ public class RegistrationServlet extends HttpServlet {
                 req.setAttribute("isExpired", isExpired);
                 req.setAttribute("paymentCode",
                         pendingReg != null && pendingReg.getPaymentCode() != null ? pendingReg.getPaymentCode()
-                                : ("CR" + System.currentTimeMillis() % 1000000));
+                        : ("CR" + System.currentTimeMillis() % 1000000));
             }
         } catch (NumberFormatException e) {
             SessionUtil.setFlashError(req, "Mã khóa học không hợp lệ: " + courseIdStr);
@@ -389,8 +390,8 @@ public class RegistrationServlet extends HttpServlet {
     }
 
     /**
-     * Khởi tạo giao dịch thanh toán qua VNPay và chuyển hướng tới cổng thanh toán
-     * VNPay Sandbox
+     * Khởi tạo giao dịch thanh toán qua VNPay và chuyển hướng tới cổng thanh
+     * toán VNPay Sandbox
      */
     private void createVnPayPayment(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         UserDto currentUser = SessionUtil.getCurrentUser(req);
@@ -485,8 +486,9 @@ public class RegistrationServlet extends HttpServlet {
     // #m_tiendo [TRẠM 1/4 - CONTROLLER]: Lấy danh sách đăng ký bằng getByUser() và
     // lấy bài học gần nhất bằng getRecentLearning()
     /**
-     * Màn hình [Chi tiết khóa học & Tiến độ học tập của Học viên] (My Course Detail).
-     * Chỉ phục vụ học viên đã đăng ký, hiển thị tổng quan tiến độ, đề cương bài học và quiz.
+     * Màn hình [Chi tiết khóa học & Tiến độ học tập của Học viên] (My Course
+     * Detail). Chỉ phục vụ học viên đã đăng ký, hiển thị tổng quan tiến độ, đề
+     * cương bài học và quiz.
      */
     private void showStudentCourseDetail(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -576,12 +578,17 @@ public class RegistrationServlet extends HttpServlet {
             req.setAttribute("successMessage", flashSuccess);
         }
 
-        List<RegistrationDto> list = registrationService.getByUser(currentUser.getId());
+        List<RegistrationDto> rawList = registrationService.getByUser(currentUser.getId());
+        List<RegistrationDto> list = new ArrayList<>();
+        for (RegistrationDto r : rawList) {
+            if (r.getStatus() == RegistrationStatus.ACTIVE || r.getStatus() == RegistrationStatus.COMPLETED) {
+                list.add(r);
+            }
+        }
 
         int totalCourses = list.size();
         int inProgressCourses = 0;
         int completedCourses = 0;
-        int pendingCourses = 0;
         int totalCompletedLessons = 0;
         BigDecimal sumProgress = BigDecimal.ZERO;
         Set<String> categories = new LinkedHashSet<>();
@@ -590,11 +597,7 @@ public class RegistrationServlet extends HttpServlet {
             if (r.getCategoryName() != null && !r.getCategoryName().trim().isEmpty()) {
                 categories.add(r.getCategoryName().trim());
             }
-            if (r.getCourseStatus() == entity.enums.CourseStatus.DRAFT) {
-                // Khóa học đang tạm khóa bảo trì / soạn nháp
-            } else if (r.getStatus() == RegistrationStatus.PENDING) {
-                pendingCourses++;
-            } else if (r.getStatus() == RegistrationStatus.COMPLETED
+            if (r.getStatus() == RegistrationStatus.COMPLETED
                     || (r.getTotalLessons() > 0 && r.getCompletedLessons() >= r.getTotalLessons())) {
                 completedCourses++;
             } else if (r.getStatus() == RegistrationStatus.ACTIVE) {
@@ -621,7 +624,6 @@ public class RegistrationServlet extends HttpServlet {
         req.setAttribute("totalCourses", totalCourses);
         req.setAttribute("inProgressCourses", inProgressCourses);
         req.setAttribute("completedCourses", completedCourses);
-        req.setAttribute("pendingCourses", pendingCourses);
         req.setAttribute("avgProgress", avgProgress);
         req.setAttribute("totalCompletedLessons", totalCompletedLessons);
         req.setAttribute("categories", categories);
@@ -657,6 +659,7 @@ public class RegistrationServlet extends HttpServlet {
     }
 
     private static class VnPayValidationResult {
+
         final VnPayProcessStatus status;
         final RegistrationDto registration;
         final VnPayVerifyResult verifyResult;
@@ -672,8 +675,8 @@ public class RegistrationServlet extends HttpServlet {
     }
 
     /**
-     * Xác thực và đối soát đồng nhất 100% giữa Return URL (Browser) và IPN Webhook
-     * (Server-to-Server)
+     * Xác thực và đối soát đồng nhất 100% giữa Return URL (Browser) và IPN
+     * Webhook (Server-to-Server)
      */
     private VnPayValidationResult validateAndProcessVnPay(Map<String, String[]> parameterMap) {
         VnPayVerifyResult result = VnPayUtil.verifyPayment(parameterMap);
@@ -701,7 +704,7 @@ public class RegistrationServlet extends HttpServlet {
             if (result.getAmount().compareTo(reg.getPaymentAmount()) != 0) {
                 return new VnPayValidationResult(VnPayProcessStatus.INVALID_AMOUNT, reg, result,
                         "Số tiền thanh toán (" + result.getAmount() + ") không khớp với giá trị đơn hàng ("
-                                + reg.getPaymentAmount() + ").");
+                        + reg.getPaymentAmount() + ").");
             }
         }
 
@@ -722,12 +725,13 @@ public class RegistrationServlet extends HttpServlet {
                     OffsetDateTime.now());
             return new VnPayValidationResult(VnPayProcessStatus.FAILED, reg, result,
                     "Thanh toán VNPay không thành công: " + result.getMessage() + " (Mã: " + result.getResponseCode()
-                            + ").");
+                    + ").");
         }
     }
 
     /**
-     * Xử lý kết quả trả về từ trình duyệt khách hàng sau khi thanh toán trên VNPay
+     * Xử lý kết quả trả về từ trình duyệt khách hàng sau khi thanh toán trên
+     * VNPay
      */
     private void paymentReturn(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         VnPayValidationResult val = validateAndProcessVnPay(req.getParameterMap());
@@ -752,7 +756,7 @@ public class RegistrationServlet extends HttpServlet {
                 SessionUtil.setFlashError(req, val.message);
                 resp.sendRedirect(
                         req.getContextPath() + (reg != null ? ("/registrations/payment?courseId=" + reg.getCourseId())
-                                : "/registrations/my"));
+                        : "/registrations/my"));
                 break;
             case ALREADY_CONFIRMED:
                 SessionUtil.setFlashSuccess(req,
@@ -768,14 +772,14 @@ public class RegistrationServlet extends HttpServlet {
                 SessionUtil.setFlashError(req, val.message);
                 resp.sendRedirect(
                         req.getContextPath() + (reg != null ? ("/registrations/payment?courseId=" + reg.getCourseId())
-                                : "/registrations/my"));
+                        : "/registrations/my"));
                 break;
         }
     }
 
     /**
-     * Webhook / IPN tiếp nhận thông báo kết quả thanh toán bất đồng bộ từ máy chủ
-     * VNPay
+     * Webhook / IPN tiếp nhận thông báo kết quả thanh toán bất đồng bộ từ máy
+     * chủ VNPay
      */
     private void paymentCallback(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
