@@ -322,9 +322,9 @@
 
                                             <!-- Quizzes in Module -->
                                             <c:forEach var="q" items="${m.quizzes}">
-                                                <div class="list-group-item d-flex align-items-center justify-content-between py-2.5 px-3 bg-warning bg-opacity-10 border-top">
+                                                <div class="list-group-item d-flex align-items-center justify-content-between py-2.5 px-3 ${q.passed ? 'bg-success bg-opacity-10 border-success-subtle' : 'bg-warning bg-opacity-10'} border-top">
                                                     <div class="d-flex align-items-center gap-2.5 overflow-hidden me-2">
-                                                        <i class="bi bi-patch-question-fill text-warning fs-5 flex-shrink-0"></i>
+                                                        <i class="bi ${q.passed ? 'bi-patch-check-fill text-success' : 'bi-patch-question-fill text-warning'} fs-5 flex-shrink-0"></i>
                                                         <div class="overflow-hidden">
                                                             <span class="fw-semibold text-dark small d-block text-truncate">${q.title}</span>
                                                             <small class="text-muted" style="font-size: 0.72rem;">
@@ -333,11 +333,22 @@
                                                             </small>
                                                         </div>
                                                     </div>
-                                                    <a href="${pageContext.request.contextPath}/quizzes/overview?quizId=${q.id}&registrationId=${registration.id}"
-                                                       class="btn btn-sm btn-warning py-1 px-3 fw-semibold rounded-pill text-dark shadow-xs flex-shrink-0"
-                                                       style="font-size: 0.75rem;">
-                                                        <i class="bi bi-pencil-square me-1"></i>Làm bài tập
-                                                    </a>
+                                                    <c:choose>
+                                                        <c:when test="${q.passed}">
+                                                            <a href="${pageContext.request.contextPath}/quizzes/overview?quizId=${q.id}&registrationId=${registration.id}"
+                                                               class="btn btn-sm btn-success py-1 px-3 fw-semibold rounded-pill text-white shadow-xs flex-shrink-0"
+                                                               style="font-size: 0.75rem;">
+                                                                <i class="bi bi-check-circle-fill me-1"></i>Đã pass quiz
+                                                            </a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <a href="${pageContext.request.contextPath}/quizzes/overview?quizId=${q.id}&registrationId=${registration.id}"
+                                                               class="btn btn-sm btn-warning py-1 px-3 fw-semibold rounded-pill text-dark shadow-xs flex-shrink-0"
+                                                               style="font-size: 0.75rem;">
+                                                                <i class="bi bi-pencil-square me-1"></i>Làm bài tập
+                                                            </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </div>
                                             </c:forEach>
                                         </div>

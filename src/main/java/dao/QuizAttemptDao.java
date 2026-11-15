@@ -9,8 +9,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class QuizAttemptDao {
     private static final String SQL_FIND_BY_REG_AND_QUIZ = "SELECT id, registration_id, quiz_id, started_at, submitted_at, total_score, pass_status FROM quiz_attempts WHERE registration_id = ? AND quiz_id = ? ORDER BY id DESC LIMIT 1";
@@ -19,6 +21,20 @@ public class QuizAttemptDao {
     private static final String SQL_FIND_ANSWERS = "SELECT id, quiz_attempt_id, question_id, selected_option_id, is_correct, score FROM quiz_answers WHERE quiz_attempt_id = ?";
     private static final String SQL_DELETE_ANSWERS = "DELETE FROM quiz_answers WHERE quiz_attempt_id = ?";
     private static final String SQL_INSERT_ANSWER = "INSERT INTO quiz_answers (quiz_attempt_id, question_id, selected_option_id, is_correct, score) VALUES (?, ?, ?, ?, ?) RETURNING id";
+    private static final String SQL_FIND_PASSED_QUIZ_IDS = "SELECT quiz_id FROM quiz_attempts WHERE registration_id = ? AND pass_status = TRUE AND submitted_at IS NOT NULL";
+
+    public Set<Long> findPassedQuizIdsByRegistration(Connection con, long registrationId) throws SQLException {
+        Set<Long> set = new HashSet<>();
+        try (PreparedStatement ps = con.prepareStatement(SQL_FIND_PASSED_QUIZ_IDS)) {
+            ps.setLong(1, registrationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    set.add(rs.getLong("quiz_id"));
+                }
+            }
+        }
+        return set;
+    }
 
     public Optional<QuizAttempt> findByRegistrationAndQuiz(Connection con, long registrationId, long quizId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_REG_AND_QUIZ)) {

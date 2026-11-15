@@ -10,6 +10,7 @@ import dao.LessonProgressDao;
 
 import dao.ModuleDao;
 
+import dao.QuizAttemptDao;
 import dao.QuizDao;
 
 import dao.RegistrationDao;
@@ -73,6 +74,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import java.util.Map;
+import java.util.Set;
 
 import java.util.List;
 
@@ -211,6 +213,8 @@ public class CourseService {
     private final RegistrationDao registrationDao;
 
     private final QuizDao quizDao = new QuizDao();
+
+    private final QuizAttemptDao quizAttemptDao = new QuizAttemptDao();
 
     private final SettingDao settingDao = new SettingDao();
 
@@ -3859,6 +3863,8 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
 
             }
 
+            Set<Long> passedQuizIds = quizAttemptDao.findPassedQuizIdsByRegistration(con, registrationId);
+
             if (courseDto.getModules() != null) {
 
                 for (ModuleDto m : courseDto.getModules()) {
@@ -3878,6 +3884,20 @@ public void reorderLessons(long targetModuleId, List<Long> orderedLessonIds) {
                             } else {
 
                                 l.setProgressStatus(LessonProgressStatus.NOT_STARTED);
+
+                            }
+
+                        }
+
+                    }
+
+                    if (m.getQuizzes() != null) {
+
+                        for (QuizDto q : m.getQuizzes()) {
+
+                            if (q.getId() != null && passedQuizIds.contains(q.getId())) {
+
+                                q.setPassed(true);
 
                             }
 

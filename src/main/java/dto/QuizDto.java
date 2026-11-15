@@ -12,6 +12,7 @@ public class QuizDto {
     private Integer timeLimitMinutes;
     private int orderIndex;
     private boolean active = false;
+    private boolean passed = false;
     private int attemptCount = 0;
     private List<QuestionDto> questions = new ArrayList<>();
 
@@ -89,6 +90,22 @@ public class QuizDto {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isPassed() {
+        return passed;
+    }
+
+    public void setPassed(boolean passed) {
+        this.passed = passed;
+    }
+
+    public boolean isPassStatus() {
+        return passed;
+    }
+
+    public void setPassStatus(boolean passStatus) {
+        this.passed = passStatus;
     }
 
     public List<QuestionDto> getQuestions() {

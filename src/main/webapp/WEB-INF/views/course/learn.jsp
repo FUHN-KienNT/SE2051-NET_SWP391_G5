@@ -133,6 +133,25 @@
         color: #ffffff;
         border-color: #f38020;
     }
+    .learn-quiz-item.passed {
+        background-color: #f0fdf4 !important;
+        border: 1px dashed #86efac !important;
+    }
+    .learn-quiz-item.passed:hover {
+        background-color: #dcfce7 !important;
+        border-color: #22c55e !important;
+        transform: translateX(2px);
+    }
+    .learn-quiz-item.passed .quiz-icon-badge {
+        background-color: #dcfce7;
+        color: #16a34a;
+        border: 1px solid #86efac;
+    }
+    .learn-quiz-item.passed:hover .quiz-icon-badge {
+        background-color: #16a34a;
+        color: #ffffff;
+        border-color: #16a34a;
+    }
 </style>
 
 <div class="learning-wrapper">
@@ -230,12 +249,12 @@
                         <c:forEach var="q" items="${m.quizzes}">
                             <c:if test="${q.active}">
                                 <a href="${pageContext.request.contextPath}/quizzes/overview?registrationId=${registrationId}&quizId=${q.id}"
-                                   class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 rounded-2 mb-1 learn-item learn-quiz-item"
+                                   class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-2 rounded-2 mb-1 learn-item learn-quiz-item ${q.passed ? 'passed' : ''}"
                                    data-title="${q.title.toLowerCase()}"
                                    title="${q.title}">
                                     <span class="quiz-icon-badge flex-shrink-0 d-inline-flex align-items-center justify-content-center rounded-2"
                                           style="width: 30px; height: 30px;">
-                                        <i class="bi bi-patch-question-fill" style="font-size: 14px;"></i>
+                                        <i class="bi ${q.passed ? 'bi-patch-check-fill' : 'bi-patch-question-fill'}" style="font-size: 14px;"></i>
                                     </span>
                                     <div class="text-truncate flex-grow-1">
                                         <span class="d-block text-truncate fw-semibold text-dark" style="font-size: 13px;">${q.title}</span>
@@ -245,9 +264,18 @@
                                             <span>Đạt: ${q.passScore} đ</span>
                                         </div>
                                     </div>
-                                    <span class="badge rounded-pill flex-shrink-0 fw-medium" style="font-size: 10px; background-color: #fff0df; color: #d97706; border: 1px solid #fcd5b5;">
-                                        Quiz
-                                    </span>
+                                    <c:choose>
+                                        <c:when test="${q.passed}">
+                                            <span class="badge rounded-pill flex-shrink-0 fw-medium bg-success text-white d-inline-flex align-items-center gap-1" style="font-size: 10px;">
+                                                <i class="bi bi-check-circle-fill"></i> Đã pass quiz
+                                            </span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge rounded-pill flex-shrink-0 fw-medium" style="font-size: 10px; background-color: #fff0df; color: #d97706; border: 1px solid #fcd5b5;">
+                                                Làm quiz
+                                            </span>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </a>
                             </c:if>
                         </c:forEach>

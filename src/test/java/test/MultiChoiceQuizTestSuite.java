@@ -324,4 +324,27 @@ public class MultiChoiceQuizTestSuite {
         admin.setRoleName("ADMIN");
         assertTrue(servlet.isStaffOrExpert(admin), "ADMIN có quyền quản lý");
     }
+
+    @Test
+    @DisplayName("2.7 Kiểm tra trạng thái đã pass quiz trên QuizDto và QuizAttemptDao")
+    void testQuizPassedStatusTracking() throws Exception {
+        dto.QuizDto quizDto = new dto.QuizDto();
+        assertFalse(quizDto.isPassed());
+        assertFalse(quizDto.isPassStatus());
+
+        quizDto.setPassed(true);
+        assertTrue(quizDto.isPassed());
+        assertTrue(quizDto.isPassStatus());
+
+        quizDto.setPassStatus(false);
+        assertFalse(quizDto.isPassed());
+
+        // Test QuizAttemptDao.findPassedQuizIdsByRegistration
+        try (java.sql.Connection con = util.DbConnection.getConnection()) {
+            QuizAttemptDao attemptDao = new QuizAttemptDao();
+            java.util.Set<Long> passedIds = attemptDao.findPassedQuizIdsByRegistration(con, 999999999L);
+            assertNotNull(passedIds);
+            assertTrue(passedIds.isEmpty());
+        }
+    }
 }
