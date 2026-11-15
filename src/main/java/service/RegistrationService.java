@@ -7,6 +7,7 @@ import dao.CourseDao;
 import dao.LessonProgressDao;
 
 import dao.RegistrationDao;
+import dao.UserDao;
 
 import dto.CourseDto;
 import dto.LessonDto;
@@ -19,6 +20,7 @@ import dto.RegistrationDto;
 import dto.UserDto;
 
 import entity.Course;
+import entity.User;
 
 import entity.Registration;
 
@@ -894,6 +896,25 @@ public RecentLearningDto getRecentLearning(long userId) {
 
         }
 
+    }
+
+    public void updateStudentProfile(long userId, String fullName, String phone) {
+        try (Connection con = DbConnection.getConnection()) {
+            UserDao userDao = new UserDao();
+            Optional<User> userOpt = userDao.findById(con, userId);
+            if (userOpt.isPresent()) {
+                User u = userOpt.get();
+                if (fullName != null && !fullName.trim().isEmpty()) {
+                    u.setFullName(fullName.trim());
+                }
+                if (phone != null && !phone.trim().isEmpty()) {
+                    u.setPhone(phone.trim());
+                }
+                userDao.update(con, u);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật thông tin học viên: " + e.getMessage(), e);
+        }
     }
 
 

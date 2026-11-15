@@ -6,7 +6,6 @@ import dao.LessonProgressDao;
 import dao.ModuleDao;
 import dto.CourseDto;
 import service.CourseService;
-import entity.Course;
 import dao.RegistrationDao;
 import dto.RecentLearningDto;
 import dto.RegistrationDto;
@@ -157,8 +156,9 @@ public class RegistrationServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + courseId);
                 return;
             }
-            try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                new CourseDao().findById(con, courseId).ifPresent(c -> req.setAttribute("course", c));
+            CourseDto course = registrationService.getCourseSummary(courseId);
+            if (course != null) {
+                req.setAttribute("course", course);
             }
         } catch (NumberFormatException e) {
             SessionUtil.setFlashError(req, "Mã khóa học không hợp lệ: " + courseIdStr);
@@ -191,10 +191,7 @@ public class RegistrationServlet extends HttpServlet {
         }
         try {
             long courseId = Long.parseLong(courseIdStr.trim());
-            Course course = null;
-            try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                course = new CourseDao().findById(con, courseId).orElse(null);
-            }
+            CourseDto course = registrationService.getCourseSummary(courseId);
             if (course == null) {
                 SessionUtil.setFlashError(req, "Khóa học không tồn tại.");
                 resp.sendRedirect(req.getContextPath() + "/courses/catalog");
@@ -215,19 +212,13 @@ public class RegistrationServlet extends HttpServlet {
             String phone = req.getParameter("studentPhone");
             String updateProfile = req.getParameter("updateProfile");
             if ("true".equalsIgnoreCase(updateProfile) || "on".equalsIgnoreCase(updateProfile)) {
-                try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                    dao.UserDao userDao = new dao.UserDao();
-                    entity.User u = userDao.findById(con, currentUser.getId()).orElse(null);
-                    if (u != null) {
-                        u.setFullName(certName.trim());
-                        if (phone != null && !phone.trim().isEmpty()) {
-                            u.setPhone(phone.trim());
-                        }
-                        userDao.update(con, u);
-                        currentUser.setFullName(u.getFullName());
-                        currentUser.setPhone(u.getPhone());
-                        SessionUtil.setCurrentUser(req, currentUser);
+                try {
+                    registrationService.updateStudentProfile(currentUser.getId(), certName, phone);
+                    currentUser.setFullName(certName.trim());
+                    if (phone != null && !phone.trim().isEmpty()) {
+                        currentUser.setPhone(phone.trim());
                     }
+                    SessionUtil.setCurrentUser(req, currentUser);
                 } catch (Exception ignored) {
                 }
             }
@@ -298,10 +289,7 @@ public class RegistrationServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/courses/detail?id=" + courseId);
                 return;
             }
-            Course course = null;
-            try (java.sql.Connection con = util.DbConnection.getConnection()) {
-                course = new CourseDao().findById(con, courseId).orElse(null);
-            }
+            CourseDto course = registrationService.getCourseSummary(courseId);
             if (course != null) {
                 req.setAttribute("course", course);
 
